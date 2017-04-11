@@ -1,17 +1,16 @@
 class BatchProvider(object):
 
-    def __init__(self):
-        self.upstream_providers = []
-
     def initialize_all(self):
-        for p in self.upstream_providers:
+        for p in self.get_upstream_providers():
             p.initialize_all()
         self.initialize()
 
     def add_upstream_provider(self, provider):
-        self.upstream_providers.append(provider)
+        self.get_upstream_providers().append(provider)
 
     def get_upstream_providers(self):
+        if not hasattr(self, 'upstream_providers'):
+            self.upstream_providers = []
         return self.upstream_providers
 
     def initialize(self):

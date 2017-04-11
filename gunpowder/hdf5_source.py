@@ -1,4 +1,5 @@
 import h5py
+import numpy as np
 from batch_provider import BatchProvider
 from provider_spec import ProviderSpec
 from batch import Batch
@@ -6,8 +7,6 @@ from batch import Batch
 class Hdf5Source(BatchProvider):
 
     def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None):
-
-        super(Hdf5Source, self).__init__()
 
         f = h5py.File(filename, 'r')
 
@@ -53,28 +52,46 @@ class Hdf5Source(BatchProvider):
             raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
 
         bb = batch_spec.get_bounding_box()
+        common_bb = self.__intersect(bb, self.get_spec().get_bounding_box())
 
-        print("Filling batch of size %s"%(str(bb)))
+        print("Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
         batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
             print("Reading raw...")
-            batch.raw = self.__read(f, self.raw_dataset, bb)
+            batch.raw = self.__read(f, self.raw_dataset, bb, common_bb)
             if batch.spec.with_gt:
                 print("Reading gt...")
-                batch.gt = self.__read(f, self.gt_dataset, bb)
+                batch.gt = self.__read(f, self.gt_dataset, bb, common_bb)
             if batch.spec.with_gt_mask:
                 print("Reading gt mask...")
-                batch.gt_mask = self.__read(f, self.gt_dataset_mask, bb)
+                batch.gt_mask = self.__read(f, self.gt_dataset_mask, bb, common_bb)
 
         return batch
 
-    def __read(self, f, ds, bb):
-        self.__check_bb(f, ds, bb)
-        return f[ds][bb]
+    def __intersect(self, bb1, bb2):
+        return tuple(
+                slice(max(bb1[d].start, bb2[d].start),min(bb1[d].stop, bb2[d].stop))
+                for d in range(len(bb1))
+        )
+
+    def __read(self, f, ds, target_bb, data_bb, no_data_value=0):
+        self.__check_bb(f, ds, data_bb)
+        a = np.zeros(
+                tuple(target_bb[d].stop - target_bb[d].start for d in range(len(target_bb))),
+                dtype=f[ds].dtype
+        )
+        if no_data_value != 0:
+            a[:] = no_data_value
+        data_in_target = tuple(
+                slice(data_bb[d].start - target_bb[d].start, data_bb[d].stop - target_bb[d].start)
+                for d in range(len(target_bb))
+        )
+        a[data_in_target] = f[ds][data_bb]
+        return a
 
     def __check_bb(self, f, ds, bb):
         shape = f[ds].shape
-        assert(len(shape) == len(bb), "Bounding box %s mismatches dimensions in %s[%s]"%(str(bb), self.filename, ds))
+        assert len(shape) == len(bb), "Bounding box %s mismatches dimensions in %s[%s]"%(str(bb), self.filename, ds)
         for d in range(len(shape)):
-            assert(bb[d].start >= 0)
-            assert(bb[d].stop <= shape[d])
+            assert bb[d].start >= 0, "Bounding box not contained in volume"
+            assert bb[d].stop <= shape[d], "Bounding box not contained in volume"

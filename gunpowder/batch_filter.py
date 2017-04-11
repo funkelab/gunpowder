@@ -25,10 +25,10 @@ class BatchFilter(BatchProvider):
     '''
 
     def get_upstream_provider(self):
-        assert(len(self.get_upstream_providers()) == 1, "BatchFilters need to have exactly one upstream provider")
+        assert len(self.get_upstream_providers()) == 1, "BatchFilters need to have exactly one upstream provider"
         return self.get_upstream_providers()[0]
 
-    def get_spec():
+    def get_spec(self):
         return self.get_upstream_provider().get_spec()
 
     def request_batch(self, batch_spec):
