@@ -57,16 +57,16 @@ class Hdf5Source(BatchProvider):
         bb = batch_spec.get_bounding_box()
         common_bb = self.__intersect(bb, spec.get_bounding_box())
 
-        print("Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
+        print("Hdf5Source: Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
         batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
-            print("Reading raw...")
+            print("Hdf5Source: Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, bb, common_bb)
             if batch.spec.with_gt:
-                print("Reading gt...")
+                print("Hdf5Source: Reading gt...")
                 batch.gt = self.__read(f, self.gt_dataset, bb, common_bb)
             if batch.spec.with_gt_mask:
-                print("Reading gt mask...")
+                print("Hdf5Source: Reading gt mask...")
                 batch.gt_mask = self.__read(f, self.gt_mask_dataset, bb, common_bb)
 
         return batch

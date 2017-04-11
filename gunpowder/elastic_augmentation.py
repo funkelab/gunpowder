@@ -49,8 +49,8 @@ class ElasticAugmentation(BatchFilter):
         for d in range(dims):
             self.transformation[d] -= bb_min[d]
 
-        print("requested batch of " + str(output_shape))
-        print("Need data in " + str(bb_min) + " -- " + str(bb_max))
+        print("ElasticAugmentation: downstream request shape = " + str(output_shape))
+        print("ElasticAugmentation: upstream request shape = " + str(batch_spec.shape))
 
     def process(self, batch):
 

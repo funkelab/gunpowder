@@ -48,8 +48,8 @@ class PreCache(BatchFilter):
         while not self.stopped.is_set():
             batch_spec = self.batch_spec_generator()
             batch = self.get_upstream_provider().request_batch(batch_spec)
-            print("Worker %d: putting a batch in the queue..."%i)
+            print("PreCache Worker %d: putting a batch in the queue..."%i)
             if self.stopped.is_set():
                 return
             self.batches.put(batch)
-            print("Worker %d: ...done"%i)
+            print("PreCache Worker %d: ...done"%i)
