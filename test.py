@@ -7,6 +7,7 @@ source2 = gunpowder.Hdf5Source('test2.hdf', raw_dataset='volumes/raw', gt_datase
 choose = gunpowder.RandomProvider()
 random1 = gunpowder.RandomLocation()
 random2 = gunpowder.RandomLocation()
+reject = gunpowder.Reject()
 jitter = gunpowder.ElasticAugmentation([1,20,20], [0,2,2], [math.pi/4.0,math.pi/4.0])
 grow_boundary = gunpowder.GrowBoundary(steps=3, only_xy=True)
 snapshot = gunpowder.Snapshot(every=1)
@@ -22,6 +23,7 @@ snapshot.\
         add_upstream_provider(precache).\
         add_upstream_provider(grow_boundary).\
         add_upstream_provider(jitter).\
+        add_upstream_provider(reject).\
         add_upstream_provider(choose)
 
 snapshot.initialize_all()
