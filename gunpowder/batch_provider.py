@@ -7,6 +7,7 @@ class BatchProvider(object):
 
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
+        return provider
 
     def get_upstream_providers(self):
         if not hasattr(self, 'upstream_providers'):

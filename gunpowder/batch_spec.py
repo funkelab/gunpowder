@@ -10,14 +10,15 @@ class BatchSpec:
         self.with_gt_mask = with_gt_mask
 
     def get_offset(self):
-
-        if self.offset is None:
-            return (0,)*len(self.shape)
-
         return self.offset
 
     def get_bounding_box(self):
+
         offset = self.get_offset()
+
+        if offset is None:
+            return None
+
         return tuple(
                 slice(offset[d], self.shape[d] + offset[d])
                 for d in range(len(self.shape))
