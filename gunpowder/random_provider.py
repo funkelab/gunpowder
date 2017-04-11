@@ -9,10 +9,10 @@ class RandomProvider(BatchProvider):
         self.spec = None
         for provider in self.get_upstream_providers():
             if self.spec is None:
-                spec = provider.get_spec()
+                self.spec = provider.get_spec()
             else:
-                self.spec.has_gt &= spec.has_gt
-                self.spec.has_gt_mask &= spec.has_gt_mask
+                self.spec.has_gt &= provider.get_spec().has_gt
+                self.spec.has_gt_mask &= provider.get_spec().has_gt_mask
 
     def get_spec(self):
         return self.spec
