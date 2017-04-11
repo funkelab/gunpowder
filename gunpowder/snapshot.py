@@ -21,11 +21,11 @@ class Snapshot(BatchFilter):
             snapshot_name = os.path.join(self.output_dir, str(self.snapshot_num).zfill(8) + '.hdf')
             print("Snapshot: saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
-                f['raw'] = batch.raw
-                f['raw'].attrs['offset'] = batch.spec.offset
+                f['volumes/raw'] = batch.raw
+                f['volumes/raw'].attrs['offset'] = batch.spec.offset
                 if batch.gt is not None:
-                    f['gt'] = batch.gt
+                    f['volumes/labels/neuron_ids'] = batch.gt
                 if batch.gt_mask is not None:
-                    f['gt_mask'] = batch.gt_mask
+                    f['volumes/labels/mask'] = batch.gt_mask
 
         self.snapshot_num += 1

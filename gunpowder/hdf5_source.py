@@ -25,7 +25,7 @@ class Hdf5Source(BatchProvider):
             else:
                 dims = f[ds].shape
                 assert(len(dims) == len(self.dims))
-                self.dims = (min(self.dims[d], dims[d]) for d in range(len(dims)))
+                self.dims = tuple(min(self.dims[d], dims[d]) for d in range(len(dims)))
 
         f.close()
 
@@ -39,20 +39,23 @@ class Hdf5Source(BatchProvider):
         self.filename = filename
         self.raw_dataset = raw_dataset
         self.gt_dataset = gt_dataset
+        self.gt_mask_dataset = gt_mask_dataset
 
     def get_spec(self):
         return self.spec
 
     def request_batch(self, batch_spec):
 
-        if batch_spec.with_gt and not self.has_gt:
+        spec = self.get_spec()
+
+        if batch_spec.with_gt and not spec.has_gt:
             raise RuntimeError("Asked for GT in a non-GT source.")
 
-        if batch_spec.with_gt_mask and not self.has_gt_mask:
+        if batch_spec.with_gt_mask and not spec.has_gt_mask:
             raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
 
         bb = batch_spec.get_bounding_box()
-        common_bb = self.__intersect(bb, self.get_spec().get_bounding_box())
+        common_bb = self.__intersect(bb, spec.get_bounding_box())
 
         print("Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
         batch = Batch(batch_spec)
@@ -64,7 +67,7 @@ class Hdf5Source(BatchProvider):
                 batch.gt = self.__read(f, self.gt_dataset, bb, common_bb)
             if batch.spec.with_gt_mask:
                 print("Reading gt mask...")
-                batch.gt_mask = self.__read(f, self.gt_dataset_mask, bb, common_bb)
+                batch.gt_mask = self.__read(f, self.gt_mask_dataset, bb, common_bb)
 
         return batch
 
