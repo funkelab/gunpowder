@@ -3,8 +3,11 @@ from batch_filter import BatchFilter
 
 class Reject(BatchFilter):
 
-    def __init__(self, max_masked=0.5):
-        self.max_masked = max_masked
+    def __init__(self, min_masked=0.5):
+        self.min_masked = min_masked
+
+    def initialize(self):
+        assert self.get_upstream_provider().get_spec().has_gt_mask, "Reject can only be used if GT masks are provided"
 
     def request_batch(self, batch_spec):
 
@@ -13,6 +16,8 @@ class Reject(BatchFilter):
         have_good_batch = False
         while not have_good_batch:
             batch = self.get_upstream_provider().request_batch(copy.copy(batch_spec))
-            have_good_batch = batch.gt_mask.mean()<self.max_masked
+            mask_ratio = batch.gt_mask.mean()
+            have_good_batch = mask_ratio>=self.min_masked
 
+        print("Reject: good batch with mask ratio %f found at "%mask_ratio + str(batch.spec.get_bounding_box()))
         return batch
