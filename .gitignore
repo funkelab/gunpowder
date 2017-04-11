@@ -1,0 +1,5 @@
+*.sw[pmn]
+*.pyc
+build
+dist
+augment.egg-info
