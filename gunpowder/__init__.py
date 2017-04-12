@@ -10,3 +10,4 @@ from precache import PreCache
 from grow_boundary import GrowBoundary
 from reject import Reject
 from simple_augment import SimpleAugment
+from defect_augment import DefectAugment
