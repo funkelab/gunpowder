@@ -21,7 +21,6 @@ class DefectAugment(BatchFilter):
         for c in range(batch.spec.shape[self.axis]):
 
             r = random.random()
-            print("DefectAugment: r = " + str(r))
 
             section_selector = tuple(
                     slice(None if d != self.axis else c, None if d != self.axis else c+1)
@@ -35,6 +34,7 @@ class DefectAugment(BatchFilter):
 
             elif r < prob_low_contrast_threshold:
 
+                print("Lower contrast " + str(section_selector))
                 section = batch.raw[section_selector].astype(np.float32)
 
                 mean = section.mean()
