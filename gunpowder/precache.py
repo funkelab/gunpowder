@@ -45,6 +45,9 @@ class PreCache(BatchFilter):
 
     def __run_worker(self, i):
 
+        import random
+        random.seed(42)
+
         while not self.stopped.is_set():
             batch_spec = self.batch_spec_generator()
             batch = self.get_upstream_provider().request_batch(batch_spec)

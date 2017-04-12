@@ -7,3 +7,5 @@ class Batch:
         self.raw = None
         self.gt = None
         self.gt_mask = None
+        self.gt_affinities = None
+        self.affinity_neighborhood = None

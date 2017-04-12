@@ -28,3 +28,5 @@ class Snapshot(BatchFilter):
                     f['volumes/labels/neuron_ids'] = batch.gt
                 if batch.gt_mask is not None:
                     f['volumes/labels/mask'] = batch.gt_mask
+                if batch.gt_affinities is not None:
+                    f['volumes/gt_affs'] = batch.gt_affinities
