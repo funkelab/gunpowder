@@ -60,6 +60,12 @@ class Hdf5Source(BatchProvider):
         print("Hdf5Source: Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
         batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
+            if 'resolution' in f[self.raw_dataset].attrs:
+                batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
+                print("Hdf5Source: providing batch with resolution of " + str(batch.spec.resolution))
+            else:
+                print("Hdf5Source: WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
+                batch.spec.resolution = (1,1,1)
             print("Hdf5Source: Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, bb, common_bb)
             if batch.spec.with_gt:
