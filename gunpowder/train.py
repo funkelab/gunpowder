@@ -4,27 +4,30 @@ import numpy as np
 import time
 from multiprocessing import Process
 
-def init_solver(solver_parameters, device):
+def init_solver(solver_parameters, use_gpu=None):
+
     # TODO: are the following two lines needed here?
-    caffe.set_mode_gpu()
-    caffe.select_device(device, False)
+    if use_gpu is not None:
+        caffe.set_mode_gpu()
+        caffe.select_device(use_gpu, False)
 
     return caffe.get_solver(solver_parameters)
 
-def train(solver, device, batch_provider):
+def train(solver, batch_provider, use_gpu=None):
 
     # since this might launch processes, we have to do that in the main process
     batch_provider.initialize_all()
 
     # start training in an own process, so that we can gracefully exit if the 
     # process dies
-    process = Process(target=__train, args=(solver, device, batch_provider))
+    process = Process(target=__train, args=(solver, batch_provider, use_gpu))
     process.start()
     process.join()
 
-def __train(solver, device, batch_provider):
+def __train(solver, batch_provider, use_gpu):
 
-    caffe.select_device(device, False)
+    if use_gpu is not None:
+        caffe.select_device(use_gpu, False)
 
     net_io = NetInputWrapper(solver.net)
 

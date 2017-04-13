@@ -89,7 +89,7 @@ solver_parameters.type = 'Adam'
 solver_parameters.display = 1
 solver_parameters.train_state.add_stage('euclid')
 
-device = 0
-solver = gunpowder.init_solver(solver_parameters, device)
+use_gpu = None
+solver = gunpowder.init_solver(solver_parameters, use_gpu)
 
-gunpowder.train(solver, device, snapshot_final)
+gunpowder.train(solver, snapshot_final, use_gpu)
