@@ -2,6 +2,7 @@ from ext import caffe
 from net_input_wrapper import NetInputWrapper
 import numpy as np
 import time
+from multiprocessing import Process
 
 def init_solver(solver_parameters, device):
     # TODO: are the following two lines needed here?
@@ -12,11 +13,20 @@ def init_solver(solver_parameters, device):
 
 def train(solver, device, batch_provider):
 
+    # since this might launch processes, we have to do that in the main process
+    batch_provider.initialize_all()
+
+    # start training in an own process, so that we can gracefully exit if the 
+    # process dies
+    process = Process(target=__train, args=(solver, device, batch_provider))
+    process.start()
+    process.join()
+
+def __train(solver, device, batch_provider):
+
     caffe.select_device(device, False)
 
     net_io = NetInputWrapper(solver.net)
-
-    batch_provider.initialize_all()
 
     # Loop from current iteration to last iteration
     for i in range(solver.iter, solver.max_iter):
