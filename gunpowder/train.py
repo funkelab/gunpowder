@@ -35,8 +35,8 @@ def __train(solver, device, batch_provider):
 
         batch = batch_provider.request_batch(None)
         data = {
-            'data': batch.raw[np.newaxis,:],
-            'labels': batch.gt_affinities[np.newaxis,:],
+            'data': batch.raw[np.newaxis,np.newaxis,:],
+            'label': batch.gt_affinities[np.newaxis,:],
             'components': batch.gt[np.newaxis,np.newaxis,:],
         }
 
