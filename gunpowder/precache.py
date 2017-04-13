@@ -23,6 +23,7 @@ class PreCache(BatchFilter):
         self.batch_spec_generator = batch_spec_generator
         self.batches = multiprocessing.Queue(maxsize=cache_size)
         self.workers = [ multiprocessing.Process(target=self.__run_worker, args=(i,)) for i in range(num_workers) ]
+        self.stopped = None
 
     def __del__(self):
         print("PreCache: being killed")
@@ -31,11 +32,12 @@ class PreCache(BatchFilter):
 
     def initialize(self):
 
-        self.stopped = multiprocessing.Event()
-        self.stopped.clear()
-        for worker in self.workers:
-            worker.start()
-        atexit.register(self.__del__)
+        if self.stopped is None:
+            self.stopped = multiprocessing.Event()
+            self.stopped.clear()
+            for worker in self.workers:
+                worker.start()
+            atexit.register(self.__del__)
 
     def request_batch(self, batch_spec):
         print("PreCache: getting batch from queue...")
