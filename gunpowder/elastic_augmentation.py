@@ -59,3 +59,5 @@ class ElasticAugmentation(BatchFilter):
             batch.gt = augment.apply_transformation(batch.gt, self.transformation, interpolate=False)
         if batch.gt_mask is not None:
             batch.gt_mask = augment.apply_transformation(batch.gt_mask, self.transformation, interpolate=False)
+
+        batch.spec.shape = self.transformation.shape[1:]
