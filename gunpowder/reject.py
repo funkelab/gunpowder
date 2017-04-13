@@ -18,6 +18,8 @@ class Reject(BatchFilter):
             batch = self.get_upstream_provider().request_batch(copy.copy(batch_spec))
             mask_ratio = batch.gt_mask.mean()
             have_good_batch = mask_ratio>=self.min_masked
+            if not have_good_batch:
+                print("Reject: reject batch with mask ratio %f at "%mask_ratio + str(batch.spec.get_bounding_box()))
 
         print("Reject: good batch with mask ratio %f found at "%mask_ratio + str(batch.spec.get_bounding_box()))
         return batch
