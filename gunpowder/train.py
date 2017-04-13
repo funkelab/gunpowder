@@ -26,11 +26,16 @@ def train(solver, device, batch_provider):
         batch = batch_provider.request_batch(None)
         data = {
             'data': batch.raw[np.newaxis,:],
-            'labels': batch.gt[np.newaxis,:],
-            'components': batch.gt_affinities[np.newaxis,:],
+            'labels': batch.gt_affinities[np.newaxis,:],
+            'components': batch.gt[np.newaxis,np.newaxis,:],
         }
-        if batch.gt_mask is not None:
-            data['scale'] = batch.gt_mask[np.newaxis,:]
+
+        if 'scale' in net_io.inputs:
+            frac_pos = np.clip(batch.gt_affinities.mean(), 0.05, 0.95)
+            w_pos = 1.0 / (2.0 * frac_pos)
+            w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
+            error_scale = scale_errors(batch.gt_affinities, w_neg, w_pos)
+            data['scale'] = error_scale[np.newaxis,:]
 
         net_io.set_inputs(data)
 
@@ -38,3 +43,7 @@ def train(solver, device, batch_provider):
         while gc.collect():
             pass
         time_of_iteration = time.time() - start
+
+def scale_errors(data, factor_low, factor_high):
+    scaled_data = np.add((data >= 0.5) * factor_high, (data < 0.5) * factor_low)
+    return scaled_data
