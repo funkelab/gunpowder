@@ -15,3 +15,4 @@ from exclude_labels import ExcludeLabels
 from add_gt_affinities import AddGtAffinities
 from solver_parameters import SolverParameters
 from train import init_solver, train
+from crop_gt import CropGt

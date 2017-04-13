@@ -16,8 +16,9 @@ class BatchSpec:
             BatchSpec.next_id.value += 1
         return next_id
 
-    def __init__(self, shape, offset=None, resolution=None, with_gt=False, with_gt_mask=False, with_gt_affinities=False):
-        self.shape = shape
+    def __init__(self, input_shape, output_shape, offset=None, resolution=None, with_gt=False, with_gt_mask=False, with_gt_affinities=False):
+        self.shape = input_shape
+        self.output_shape = output_shape
         self.offset = offset
         self.resolution = resolution
         self.with_gt = with_gt
