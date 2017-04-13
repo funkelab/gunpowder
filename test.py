@@ -51,3 +51,25 @@ for i in range(num_batches):
     batch = snapshot_final.request_batch(None)
 
 print("Got %d batches in %fs"%(num_batches,time.time()-start))
+
+print("Trying training...")
+
+solver_parameters = gunpowder.SolverParameters()
+solver_parameters.train_net = 'net_train_euclid.prototxt'
+solver_parameters.base_lr = 0.00005
+solver_parameters.momentum = 0.99
+solver_parameters.weight_decay = 0.000005
+solver_parameters.lr_policy = 'inv'
+solver_parameters.gamma = 0.0001
+solver_parameters.power = 0.75
+solver_parameters.max_iter = 6000
+solver_parameters.snapshot = 2000
+solver_parameters.snapshot_prefix = 'net'
+solver_parameters.type = 'Adam'
+solver_parameters.display = 1
+solver_parameters.train_state.add_stage('euclid')
+
+device = 0
+solver = gunpowder.init_solver(solver_parameters, device)
+
+gunpowder.train(solver, device, snapshot_final)
