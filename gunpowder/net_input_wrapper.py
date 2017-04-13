@@ -36,5 +36,9 @@ class NetInputWrapper:
 
     def set_inputs(self, data):
         for set_key in self.input_specs.keys():
-            np.copyto(self.inputs[set_key], np.ascontiguousarray(data[set_key]).astype(np.float32))
-            self.net.set_layer_input_arrays(self.input_specs[set_key].memory_layer, self.inputs[set_key], None)
+            try:
+                np.copyto(self.inputs[set_key], np.ascontiguousarray(data[set_key]).astype(np.float32))
+                self.net.set_layer_input_arrays(self.input_specs[set_key].memory_layer, self.inputs[set_key], None)
+            except:
+                print("Could not set input '%s':"%set_key)
+                raise
