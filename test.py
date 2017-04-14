@@ -9,23 +9,20 @@ random.seed(42)
 affinity_neighborhood = malis.mknhood3d()
 print(affinity_neighborhood)
 
-source1 =\
-        gunpowder.Hdf5Source(
-                'test2.hdf',
-                raw_dataset='volumes/raw',
-                gt_dataset='volumes/labels/neuron_ids',
-                gt_mask_dataset='volumes/labels/mask') +\
-        gunpowder.RandomLocation()
+# simulate many sources (here we point to the same file always)
+sources = tuple(
+    gunpowder.Hdf5Source(
+            'test2.hdf',
+            raw_dataset='volumes/raw',
+            gt_dataset='volumes/labels/neuron_ids',
+            gt_mask_dataset='volumes/labels/mask') +\
+    gunpowder.RandomLocation()
+    for i in range(10)
+)
 
-source2 =\
-        gunpowder.Hdf5Source(
-                'test2.hdf',
-                raw_dataset='volumes/raw',
-                gt_dataset='volumes/labels/neuron_ids',
-                gt_mask_dataset='volumes/labels/mask') +\
-        gunpowder.RandomLocation()
-
+# create a batch provider by concatenation of filters
 batch_provider =\
+        sources +\
         gunpowder.RandomProvider() +\
         gunpowder.Snapshot(every=1, output_dir='snapshots_original') +\
         gunpowder.ExcludeLabels([416759, 397008], 8) +\
@@ -47,9 +44,6 @@ batch_provider =\
                         with_gt_affinities=True),
                 cache_size=10,
                 num_workers=2)
-
-batch_provider.add_upstream_provider(source1)
-batch_provider.add_upstream_provider(source2)
 
 print("Trying to get a batch...")
 

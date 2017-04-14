@@ -17,4 +17,4 @@ from solver_parameters import SolverParameters
 from train import init_solver, train
 from crop_gt import CropGt
 
-import batch_filter_chain
+import batch_provider_tree
