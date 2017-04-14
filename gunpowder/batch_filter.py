@@ -54,4 +54,3 @@ class BatchFilter(BatchProvider):
         spec as needed, it will be passed downstream.
         '''
         raise RuntimeError("Class %s does not implement 'process'"%self.__class__)
-

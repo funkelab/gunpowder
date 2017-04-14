@@ -33,6 +33,7 @@ class PreCache(BatchFilter):
     def initialize(self):
 
         if self.stopped is None:
+            print("PreCache: starting %d workers"%len(self.workers))
             self.stopped = multiprocessing.Event()
             self.stopped.clear()
             for worker in self.workers:
@@ -48,6 +49,7 @@ class PreCache(BatchFilter):
     def __run_worker(self, i):
 
         while not self.stopped.is_set():
+            print("PreCache Worker %d: requesting a batch..."%i)
             batch_spec = self.batch_spec_generator()
             batch = self.get_upstream_provider().request_batch(batch_spec)
             print("PreCache Worker %d: putting a batch in the queue..."%i)
