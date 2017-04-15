@@ -1,0 +1,30 @@
+import numpy as np
+from batch_filter import BatchFilter
+
+class Normalize(BatchFilter):
+    '''Normalize the raw volume to values between 0 and 1.
+    '''
+
+    def __init__(self, factor=None, dtype=np.float32):
+
+        self.factor = factor
+        self.dtype = dtype
+
+    def process(self, batch):
+
+        factor = self.factor
+
+        if factor is None:
+
+            print("Normalize: automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
+
+            if batch.raw.dtype == np.uint8:
+                factor = 1.0/255
+            elif batch.raw.dtype == np.float32:
+                assert batch.raw.min() >= 0 and batch.raw.max() <= 1, "Raw values are float but not in [0,1], I don't know how to normalize. Please provide a factor."
+                factor = 1.0
+            else:
+                raise RuntimeError("Automatic normalization for " + str(batch.raw.dtype) + " not implemented, please provide a factor.")
+
+        print("Normalize: scaling raw data with " + str(factor))
+        batch.raw = batch.raw.astype(self.dtype)*factor

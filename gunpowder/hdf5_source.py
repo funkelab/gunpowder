@@ -75,6 +75,7 @@ class Hdf5Source(BatchProvider):
                 print("Hdf5Source: Reading gt mask...")
                 batch.gt_mask = self.__read(f, self.gt_mask_dataset, bb, common_bb)
 
+        print("Hdf5Source: done")
         return batch
 
     def __intersect(self, bb1, bb2):

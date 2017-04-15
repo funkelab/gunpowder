@@ -1,4 +1,4 @@
-import gunpowder
+from gunpowder import *
 import math
 import time
 import random
@@ -11,32 +11,37 @@ print(affinity_neighborhood)
 
 # simulate many sources (here we point to the same file always)
 sources = tuple(
-    gunpowder.Hdf5Source(
+    Hdf5Source(
             'test2.hdf',
             raw_dataset='volumes/raw',
             gt_dataset='volumes/labels/neuron_ids',
             gt_mask_dataset='volumes/labels/mask') +\
-    gunpowder.RandomLocation()
+    Normalize() +\
+    RandomLocation()
     for i in range(10)
 )
 
 # create a batch provider by concatenation of filters
 batch_provider =\
         sources +\
-        gunpowder.RandomProvider() +\
-        gunpowder.Snapshot(every=1, output_dir='snapshots_original') +\
-        gunpowder.ExcludeLabels([416759, 397008], 8) +\
-        gunpowder.Reject() +\
-        gunpowder.ElasticAugmentation([1,20,20], [0,2,2], [0,math.pi/2.0]) +\
-        gunpowder.SimpleAugment(transpose_only_xy=True) +\
-        gunpowder.DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +\
-        gunpowder.CropGt(1) +\
-        gunpowder.GrowBoundary(steps=3, only_xy=True) +\
-        gunpowder.AddGtAffinities(affinity_neighborhood) +\
-        gunpowder.CropGt() +\
-        gunpowder.Snapshot(every=1) +\
-        gunpowder.PreCache(
-                lambda : gunpowder.BatchSpec(
+        RandomProvider() +\
+        Snapshot(every=1, output_dir='snapshots_original') +\
+        ExcludeLabels([416759, 397008], 8) +\
+        Reject() +\
+        ElasticAugmentation([1,20,20], [0,2,2], [0,math.pi/2.0]) +\
+        SimpleAugment(transpose_only_xy=True) +\
+        IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +\
+        DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +\
+        CropGt(1) +\
+        GrowBoundary(steps=3, only_xy=True) +\
+        AddGtAffinities(affinity_neighborhood) +\
+        CropGt() +\
+        Snapshot(every=1) +\
+        IntensityScaleShift(2, -1) +\
+        ZeroOutConstSections() +\
+        Snapshot(every=1, output_dir='snapshots_final') +\
+        PreCache(
+                lambda : BatchSpec(
                         (84,268,268),
                         (56,56,56),
                         with_gt=True,
@@ -52,7 +57,7 @@ batch = batch_provider.request_batch(None)
 
 # print("Starting training...")
 
-# solver_parameters = gunpowder.SolverParameters()
+# solver_parameters = SolverParameters()
 # solver_parameters.train_net = 'net_train_euclid.prototxt'
 # solver_parameters.base_lr = 0.00005
 # solver_parameters.momentum = 0.99
@@ -68,6 +73,6 @@ batch = batch_provider.request_batch(None)
 # solver_parameters.train_state.add_stage('euclid')
 
 # use_gpu = None
-# solver = gunpowder.init_solver(solver_parameters, use_gpu)
+# solver = init_solver(solver_parameters, use_gpu)
 
-# gunpowder.train(solver, batch_provider, use_gpu)
+# train(solver, batch_provider, use_gpu)
