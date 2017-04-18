@@ -1,6 +1,7 @@
 from source import Source
 from batch_spec import BatchSpec
 from batch import Batch
+from batch_filter import BatchFilter
 from hdf5_source import Hdf5Source
 from random_location import RandomLocation
 from random_provider import RandomProvider
