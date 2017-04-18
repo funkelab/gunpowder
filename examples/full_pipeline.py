@@ -36,16 +36,10 @@ sources = tuple(
     for i in range(10)
 )
 
-class AddGrid(BatchFilter):
-    def process(self, batch):
-        batch.raw[:,::10,:] = 1
-        batch.raw[:,:,::10] = 1
-
 # create a batch provider by concatenation of filters
 batch_provider = (
         sources +
         RandomProvider() +
-        AddGrid() + # for debugging only
         ExcludeLabels([416759, 397008], 8) +
         Reject() +
         Snapshot(every=1, output_dir='snapshots_original') +
