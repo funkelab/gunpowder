@@ -1,4 +1,3 @@
-from source import Source
 from batch_spec import BatchSpec
 from batch import Batch
 from batch_filter import BatchFilter
