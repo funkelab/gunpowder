@@ -19,15 +19,26 @@ source =
             gt_mask_dataset='volumes/labels/mask')
 ```
 
-You can add upstream batch providers to modify the batch in various ways. This
-can be used for on-the-fly data augmentation, e.g.:
+Batch providers can be asked for a batch by providing a (possibly partial)
+specification (e.g., shape, offset, which kind of ground-truth to provide).
 
+In the DAG, batch specifications flow upstream, and batches downstream.
+Starting from a source, you can add downstream batch providers to modify the
+batch in various ways.
+
+One use-case is on-the-fly data augmentation, e.g.:
 ```
 augment =
     ElasticAugmentation(
         control_point_spacing=[4,40,40],
         jitter_sigma=[0,2,2],
         rotation_interval=[0,math.pi/2.0])
+```
+
+Another example is random selection of locations inside a source:
+```
+random =
+    RandomLocation()
 ```
 
 Training itself is modelled as a batch provider. It takes a batch, performs one
@@ -42,7 +53,7 @@ train =
 
 Putting it together, a very simple pipeline for training 1000 iterations would be
 ```
-pipeline = source + augment + train
+pipeline = source + random + augment + train
 pipeline.initialize_all()
 
 for i in range(1000):
