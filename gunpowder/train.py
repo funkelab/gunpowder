@@ -2,7 +2,7 @@ import multiprocessing
 import atexit
 import time
 import numpy as np
-from net_input_wrapper import NetInputWrapper
+from net_io_wrapper import NetIoWrapper
 from ext import caffe
 from batch_filter import BatchFilter
 
@@ -10,11 +10,8 @@ class TrainProcessDied(Exception):
     pass
 
 class Train(BatchFilter):
-    '''If a ground-truth mask is set and is not 1 everywhere, creates two 
-    versions of the ground-truth labels, one for the positive and one for the 
-    negative Malis pass.
-
-    Use this filter after your ground-truth and mask are finalized.
+    '''Performs one training iteration for each batch that passes through. 
+    Augments the batch with the predicted affinities.
     '''
 
     def __init__(self, solver_parameters, use_gpu=None, dry_run=False):
@@ -74,7 +71,7 @@ class Train(BatchFilter):
         if use_gpu is not None:
             caffe.select_device(use_gpu, False)
 
-        net_io = NetInputWrapper(solver.net)
+        net_io = NetIoWrapper(solver.net)
 
         while not self.stopped.is_set():
 
@@ -101,12 +98,14 @@ class Train(BatchFilter):
                 batch.loss = 0
             else:
                 loss = solver.step(1)
-                # TODO: add prediction, gradient, loss
+                output = net_io.get_outputs()
+                batch.prediction = output['aff_pred']
+                # TODO: add gradient and loss
 
             time_of_iteration = time.time() - start
 
             self.batch_out.put(batch)
-            print("Train process: finished batch")
+            print("Train process: finished batch in " + str(time_of_iteration) + "s")
 
     def __prepare_euclidean(self, batch, data):
 

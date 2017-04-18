@@ -11,7 +11,15 @@ def get_net_input_specs(net):
                 input_specs[input_spec.name] = input_spec
     return input_specs
 
+def get_net_output_specs(net, blob_names):
+    output_specs = {}
+    for blob_name in blob_names:
+        output_spec = OutputSpec(blob_name, net.blobs[blob_name], np.shape(net.blobs[blob_name].data))
+        output_specs[output_spec.name] = output_spec
+    return output_specs
+
 class InputSpec(object):
+
     def __init__(self, name, memory_layer, blob, shape, phase=0):
         self.name = name
         self.memory_layer = memory_layer
@@ -19,14 +27,21 @@ class InputSpec(object):
         self.shape = shape
         self.phase = phase # only added to the network  
 
+class OutputSpec(object):
+
+    def __init__(self, name, blob, shape):
+        self.name = name
+        self.blob = blob
+        self.shape = shape
+
 # Wrapper around a networks set_input_arrays to prevent memory leaks of locked 
 # up arrays
-class NetInputWrapper:
+class NetIoWrapper:
 
     def __init__(self, net):
-        input_specs = get_net_input_specs(net)
         self.net = net
-        self.input_specs = input_specs
+        self.input_specs = get_net_input_specs(net)
+        self.output_specs = get_net_output_specs(net, ['aff_pred'])
         self.inputs = {}
 
         for set_key in self.input_specs.keys():
@@ -42,3 +57,9 @@ class NetInputWrapper:
             except:
                 print("Could not set input '%s':"%set_key)
                 raise
+
+    def get_outputs(self):
+        outputs = {}
+        for set_key in self.output_specs.keys():
+            outputs[set_key] = self.output_specs[set_key].blob.data
+        return outputs
