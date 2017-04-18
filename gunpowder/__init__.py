@@ -15,11 +15,11 @@ from defect_augment import DefectAugment
 from exclude_labels import ExcludeLabels
 from add_gt_affinities import AddGtAffinities
 from solver_parameters import SolverParameters
-from train import init_solver, train
 from crop_gt import CropGt
 from intensity_augment import IntensityAugment
 from normalize import Normalize
 from intensity_scale_shift import IntensityScaleShift
 from zero_out_const_sections import ZeroOutConstSections
+from train import Train
 
 import batch_provider_tree
