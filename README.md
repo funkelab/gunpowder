@@ -24,9 +24,9 @@ specification (e.g., shape, offset, which kind of ground-truth to provide).
 
 In the DAG, batch specifications flow upstream, and batches downstream.
 Starting from a source, you can add downstream batch providers to modify the
-batch in various ways.
+specification (upstream) or batch (downstream) in various ways.
 
-One use-case is on-the-fly data augmentation, e.g.:
+This can be used for on-the-fly data augmentation, e.g.:
 ```python
 augment =
     ElasticAugmentation(
@@ -34,8 +34,10 @@ augment =
         jitter_sigma=[0,2,2],
         rotation_interval=[0,math.pi/2.0])
 ```
+Here, the batch specification is automatically changed to request an upstream
+batch large enough to perform the elastic augmentation seamlessly.
 
-Another example is random selection of locations inside a source:
+Another example is the random selection of locations inside a source:
 ```python
 random =
     RandomLocation()
