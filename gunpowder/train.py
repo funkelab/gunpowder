@@ -22,6 +22,9 @@ class Train(BatchFilter):
             caffe.select_device(use_gpu, False)
 
         self.solver = caffe.get_solver(solver_parameters)
+        if solver_parameters.resume_from is not None:
+            print("Train: restoring solver state from " + solver_parameters.resume_from)
+            self.solver.restore(solver_parameters.resume_from)
         self.batch_in = multiprocessing.Queue(maxsize=1)
         self.batch_out = multiprocessing.Queue(maxsize=1)
         self.stopped = None
