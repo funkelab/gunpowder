@@ -21,25 +21,35 @@ sources = tuple(
     for i in range(10)
 )
 
+class AddGrid(BatchFilter):
+    def process(self, batch):
+        batch.raw[:,::10,:] = 1
+        batch.raw[:,:,::10] = 1
+
 # create a batch provider by concatenation of filters
-batch_provider =\
-        sources +\
-        RandomProvider() +\
-        Snapshot(every=1, output_dir='snapshots_original') +\
-        ExcludeLabels([416759, 397008], 8) +\
-        Reject() +\
-        ElasticAugmentation([1,20,20], [0,2,2], [0,math.pi/2.0]) +\
-        SimpleAugment(transpose_only_xy=True) +\
-        IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +\
-        DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +\
-        CropGt(1) +\
-        GrowBoundary(steps=3, only_xy=True) +\
-        AddGtAffinities(affinity_neighborhood) +\
-        CropGt() +\
-        Snapshot(every=1) +\
-        IntensityScaleShift(2, -1) +\
-        ZeroOutConstSections() +\
-        Snapshot(every=1, output_dir='snapshots_final') +\
+batch_provider = (
+        sources +
+        RandomProvider() +
+        # for debugging only
+        AddGrid() +
+        ExcludeLabels([416759, 397008], 8) +
+        Reject() +
+        Snapshot(every=1, output_dir='snapshots_original') +
+        # don't rotate for testing purposes
+        # ElasticAugmentation([2,20,20], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugmentation([4,40,40], [0,2,2], [0,0]) +
+        # don't simple augment for testing purposes
+        # SimpleAugment(transpose_only_xy=True) +
+        IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
+        DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +
+        CropGt(1) +
+        GrowBoundary(steps=3, only_xy=True) +
+        AddGtAffinities(affinity_neighborhood) +
+        CropGt() +
+        Snapshot(every=1) +
+        IntensityScaleShift(2, -1) +
+        ZeroOutConstSections() +
+        Snapshot(every=1, output_dir='snapshots_final') +
         PreCache(
                 lambda : BatchSpec(
                         (84,268,268),
@@ -47,8 +57,9 @@ batch_provider =\
                         with_gt=True,
                         with_gt_mask=True,
                         with_gt_affinities=True),
-                cache_size=10,
+                cache_size=10, # boring defaults for testing
                 num_workers=2)
+)
 
 print("Trying to get a batch...")
 
