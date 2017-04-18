@@ -10,7 +10,7 @@ In `gunpowder`, you assemble a training pipeline as a directed acyclic graph
 (DAG) of batch providers. Everything starts with a "source", a batch provider
 with no inputs, i.e., a leaf in the DAG.
 
-```
+```python
 source =
     Hdf5Source(
             'example.hdf',
@@ -27,7 +27,7 @@ Starting from a source, you can add downstream batch providers to modify the
 batch in various ways.
 
 One use-case is on-the-fly data augmentation, e.g.:
-```
+```python
 augment =
     ElasticAugmentation(
         control_point_spacing=[4,40,40],
@@ -36,7 +36,7 @@ augment =
 ```
 
 Another example is random selection of locations inside a source:
-```
+```python
 random =
     RandomLocation()
 ```
@@ -44,7 +44,7 @@ random =
 Training itself is modelled as a batch provider. It takes a batch, performs one
 training iteration, and adds the current prediction and loss to the batch:
 
-```
+```python
 solver_parameters = SolverParameters()
 # set solver parameters (network, learning rate, optimizer, etc.)
 train =
@@ -52,7 +52,7 @@ train =
 ```
 
 Putting it together, a very simple pipeline for training 1000 iterations would be
-```
+```python
 pipeline = source + random + augment + train
 pipeline.initialize_all()
 
