@@ -3,7 +3,7 @@ import atexit
 import time
 import numpy as np
 from net_io_wrapper import NetIoWrapper
-from ext import caffe
+import caffe
 from batch_filter import BatchFilter
 
 class TrainProcessDied(Exception):
