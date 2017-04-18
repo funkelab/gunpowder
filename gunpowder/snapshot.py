@@ -32,3 +32,8 @@ class Snapshot(BatchFilter):
                     f['volumes/labels/mask'] = batch.gt_mask
                 if batch.gt_affinities is not None:
                     f['volumes/gt_affs'] = batch.gt_affinities
+                if batch.prediction is not None:
+                    f['volumes/predicted_affs'] = batch.prediction
+                if batch.gradient is not None:
+                    f['volumes/gradient'] = batch.gradient
+                    f['volumes/gradient'].attrs['loss'] = batch.loss
