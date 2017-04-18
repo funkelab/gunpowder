@@ -3,6 +3,8 @@ gunpowder
 
 A data-loading and training DAG for greentea.
 
+Based on [`PyGreentea`](https://github.com/TuragaLab/PyGreentea) by William Grisaitis and Fabian Tschopp.
+
 Usage
 -----
 
