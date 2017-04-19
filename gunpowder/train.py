@@ -75,8 +75,8 @@ class Train(BatchFilter):
 
         solver = caffe.get_solver(self.solver_parameters)
         if self.solver_parameters.resume_from is not None:
-            logger.debug("Train process: restoring solver state from " + solver_parameters.resume_from)
-            solver.restore(solver_parameters.resume_from)
+            logger.debug("Train process: restoring solver state from " + self.solver_parameters.resume_from)
+            solver.restore(self.solver_parameters.resume_from)
 
         net_io = NetIoWrapper(solver.net)
 
