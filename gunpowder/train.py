@@ -16,22 +16,13 @@ class Train(BatchFilter):
 
     def __init__(self, solver_parameters, use_gpu=None, dry_run=False):
 
-        # TODO: are the following two lines needed here?
-        if use_gpu is not None:
-            caffe.set_mode_gpu()
-            caffe.select_device(use_gpu, False)
-
-        self.solver = caffe.get_solver(solver_parameters)
-        if solver_parameters.resume_from is not None:
-            print("Train: restoring solver state from " + solver_parameters.resume_from)
-            self.solver.restore(solver_parameters.resume_from)
         self.batch_in = multiprocessing.Queue(maxsize=1)
         self.batch_out = multiprocessing.Queue(maxsize=1)
         self.stopped = None
 
         # start training in an own process, so that we can gracefully exit if 
         # the process dies
-        self.train_process = multiprocessing.Process(target=self.__train, args=(self.solver, use_gpu))
+        self.train_process = multiprocessing.Process(target=self.__train, args=(use_gpu,))
 
         self.dry_run = dry_run
         self.solver_parameters = solver_parameters
@@ -70,10 +61,19 @@ class Train(BatchFilter):
         batch.gradient = out.gradient
         batch.loss = out.loss
 
-    def __train(self, solver, use_gpu):
+    def __train(self, use_gpu):
 
         if use_gpu is not None:
+            print("Train process: using GPU %d"%use_gpu)
+            caffe.enumerate_devices(False)
+            caffe.set_devices((use_gpu,))
+            caffe.set_mode_gpu()
             caffe.select_device(use_gpu, False)
+
+        solver = caffe.get_solver(self.solver_parameters)
+        if self.solver_parameters.resume_from is not None:
+            print("Train process: restoring solver state from " + solver_parameters.resume_from)
+            solver.restore(solver_parameters.resume_from)
 
         net_io = NetIoWrapper(solver.net)
 
@@ -89,15 +89,16 @@ class Train(BatchFilter):
             }
 
             if self.solver_parameters.train_state.get_stage(0) == 'euclid':
-                print("Train: preparing input data for Euclidean training")
+                print("Train process: preparing input data for Euclidean training")
                 self.__prepare_euclidean(batch, data)
             else:
-                print("Train: preparing input data for Malis training")
+                print("Train process: preparing input data for Malis training")
                 self.__prepare_malis(batch, data)
 
             net_io.set_inputs(data)
 
             if self.dry_run:
+                print("Train process: DRY RUN, LOSS WILL BE 0")
                 batch.prediction = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
                 batch.gradient = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
                 batch.loss = 0
