@@ -34,6 +34,7 @@ class Train(BatchFilter):
         self.train_process = multiprocessing.Process(target=self.__train, args=(self.solver, use_gpu))
 
         self.dry_run = dry_run
+        self.solver_parameters = solver_parameters
 
     def initialize(self):
 
@@ -84,13 +85,14 @@ class Train(BatchFilter):
             batch = self.batch_in.get()
             data = {
                 'data': batch.raw[np.newaxis,np.newaxis,:],
-                'label': batch.gt_affinities[np.newaxis,:],
-                'components': batch.gt[np.newaxis,np.newaxis,:],
+                'aff_label': batch.gt_affinities[np.newaxis,:],
             }
 
-            if 'scale' in net_io.inputs:
+            if self.solver_parameters.train_state.get_stage(0) == 'euclid':
+                print("Train: preparing input data for Euclidean training")
                 self.__prepare_euclidean(batch, data)
             else:
+                print("Train: preparing input data for Malis training")
                 self.__prepare_malis(batch, data)
 
             net_io.set_inputs(data)
@@ -136,7 +138,7 @@ class Train(BatchFilter):
         gt_neg_pass = np.array(batch.gt)
         gt_neg_pass[batch.gt_mask==0] = next_id
 
-        data['components'] = np.array([gt_neg_pass, gt_pos_pass])
+        data['comp_label'] = np.array([[gt_neg_pass, gt_pos_pass]])
 
         # Why don't we update gt_affinities in the same way?
         # -> not needed
