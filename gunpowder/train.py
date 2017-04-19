@@ -42,9 +42,9 @@ class Train(BatchFilter):
 
     def process(self, batch):
 
-        print("Train: sending batch to training process...")
+        # print("Train: sending batch to training process...")
         self.batch_in.put(batch)
-        print("Train: sent, waiting for result...")
+        # print("Train: sent, waiting for result...")
         out = None
         while out is None:
             # print("Train: current train batch is " + str(out))
@@ -55,7 +55,7 @@ class Train(BatchFilter):
                 if not self.train_process.is_alive():
                     print("Train: training process is not alive anymore")
                     raise TrainProcessDied()
-        print("Train: got training result")
+        # print("Train: got training result")
 
         batch.prediction = out.prediction
         batch.gradient = out.gradient
@@ -81,7 +81,7 @@ class Train(BatchFilter):
 
             start = time.time()
 
-            print("Train process: waiting for batch...")
+            # print("Train process: waiting for batch...")
             batch = self.batch_in.get()
             data = {
                 'data': batch.raw[np.newaxis,np.newaxis,:],
@@ -112,8 +112,7 @@ class Train(BatchFilter):
             time_of_iteration = time.time() - start
 
             self.batch_out.put(batch)
-            print("Train process: loss=%f"%batch.loss)
-            print("Train process: finished training iteration in " + str(time_of_iteration) + "s")
+            print("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
 
     def __prepare_euclidean(self, batch, data):
 
