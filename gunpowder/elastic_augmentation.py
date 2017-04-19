@@ -4,6 +4,9 @@ import itertools
 import random
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ElasticAugmentation(BatchFilter):
     '''Elasticly deform a batch. Requests larger batches upstream to avoid data 
     loss due to rotation and jitter.'''
@@ -49,8 +52,8 @@ class ElasticAugmentation(BatchFilter):
         for d in range(dims):
             self.transformation[d] -= bb_min[d]
 
-        print("ElasticAugmentation: downstream request shape = " + str(output_shape))
-        print("ElasticAugmentation: upstream request shape = " + str(batch_spec.shape))
+        logger.debug("ElasticAugmentation: downstream request shape = " + str(output_shape))
+        logger.debug("ElasticAugmentation: upstream request shape = " + str(batch_spec.shape))
 
     def process(self, batch):
 

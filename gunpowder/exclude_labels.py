@@ -2,6 +2,9 @@ import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ExcludeLabels(BatchFilter):
 
     def __init__(self, labels, include_context, background_value=0):
@@ -22,7 +25,7 @@ class ExcludeLabels(BatchFilter):
                 include_mask[batch.gt==label] = 0
 
         distance_to_include = distance_transform_edt(include_mask, sampling=batch.spec.resolution)
-        print("ExcludeLabels: max distance to foreground is " + str(distance_to_include.max()))
+        logger.debug("ExcludeLabels: max distance to foreground is " + str(distance_to_include.max()))
 
         # 1 marks included regions, plus a context area around them
         include_mask = distance_to_include<self.include_context

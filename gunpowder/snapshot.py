@@ -2,6 +2,9 @@ from batch_filter import BatchFilter
 import h5py
 import os
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Snapshot(BatchFilter):
 
     def __init__(self, output_dir='snapshots', every=100):
@@ -20,7 +23,7 @@ class Snapshot(BatchFilter):
                 pass
 
             snapshot_name = os.path.join(self.output_dir, str(id).zfill(8) + '.hdf')
-            print("Snapshot: saving to " + snapshot_name)
+            logger.debug("Snapshot: saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
                 f['volumes/raw'] = batch.raw
                 f['volumes/raw'].attrs['offset'] = batch.spec.offset

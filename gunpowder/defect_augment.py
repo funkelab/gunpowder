@@ -2,6 +2,9 @@ import random
 import numpy as np
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class DefectAugment(BatchFilter):
 
     def __init__(self, prob_missing=0.05, prob_low_contrast=0.05, contrast_scale=0.1, axis=0):
@@ -29,12 +32,12 @@ class DefectAugment(BatchFilter):
 
             if r < prob_missing_threshold:
 
-                print("Zero-out " + str(section_selector))
+                logger.debug("Zero-out " + str(section_selector))
                 batch.raw[section_selector] = 0
 
             elif r < prob_low_contrast_threshold:
 
-                print("Lower contrast " + str(section_selector))
+                logger.debug("Lower contrast " + str(section_selector))
                 section = batch.raw[section_selector].astype(np.float32)
 
                 mean = section.mean()

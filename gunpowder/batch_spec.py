@@ -1,5 +1,8 @@
 import multiprocessing
 
+import logging
+logger = logging.getLogger(__name__)
+
 class BatchSpec:
     '''A possibly partial specification of a batch.
 
@@ -25,7 +28,7 @@ class BatchSpec:
         self.with_gt_mask = with_gt_mask
         self.with_gt_affinities = with_gt_affinities
         self.id = BatchSpec.get_next_id()
-        print("BatchSpec: created new spec with id " + str(self.id))
+        logger.debug("BatchSpec: created new spec with id " + str(self.id))
 
     def get_bounding_box(self):
 

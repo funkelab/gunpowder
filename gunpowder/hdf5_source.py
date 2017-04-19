@@ -4,6 +4,9 @@ from batch_provider import BatchProvider
 from provider_spec import ProviderSpec
 from batch import Batch
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Hdf5Source(BatchProvider):
 
     def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None):
@@ -57,25 +60,25 @@ class Hdf5Source(BatchProvider):
         bb = batch_spec.get_bounding_box()
         common_bb = self.__intersect(bb, spec.get_bounding_box())
 
-        print("Hdf5Source: Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
+        logger.debug("Hdf5Source: Filling batch request for %s with data from %s"%(str(bb),str(common_bb)))
         batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
             if 'resolution' in f[self.raw_dataset].attrs:
                 batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
-                print("Hdf5Source: providing batch with resolution of " + str(batch.spec.resolution))
+                logger.debug("Hdf5Source: providing batch with resolution of " + str(batch.spec.resolution))
             else:
-                print("Hdf5Source: WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
+                logger.warning("Hdf5Source: WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
                 batch.spec.resolution = (1,1,1)
-            print("Hdf5Source: Reading raw...")
+            logger.debug("Hdf5Source: Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, bb, common_bb)
             if batch.spec.with_gt:
-                print("Hdf5Source: Reading gt...")
+                logger.debug("Hdf5Source: Reading gt...")
                 batch.gt = self.__read(f, self.gt_dataset, bb, common_bb)
             if batch.spec.with_gt_mask:
-                print("Hdf5Source: Reading gt mask...")
+                logger.debug("Hdf5Source: Reading gt mask...")
                 batch.gt_mask = self.__read(f, self.gt_mask_dataset, bb, common_bb)
 
-        print("Hdf5Source: done")
+        logger.debug("Hdf5Source: done")
         return batch
 
     def __intersect(self, bb1, bb2):

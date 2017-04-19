@@ -6,6 +6,9 @@ from net_io_wrapper import NetIoWrapper
 import caffe
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class TrainProcessDied(Exception):
     pass
 
@@ -37,25 +40,25 @@ class Train(BatchFilter):
 
     def __del__(self):
 
-        print("Train: being killed")
+        logger.debug("Train: being killed")
         self.train_process.terminate()
 
     def process(self, batch):
 
-        # print("Train: sending batch to training process...")
+        # logger.debug("Train: sending batch to training process...")
         self.batch_in.put(batch)
-        # print("Train: sent, waiting for result...")
+        # logger.debug("Train: sent, waiting for result...")
         out = None
         while out is None:
-            # print("Train: current train batch is " + str(out))
+            # logger.debug("Train: current train batch is " + str(out))
             try:
                 out = self.batch_out.get(timeout=1)
             except:
-                # print("Train: output queue is still empty")
+                # logger.debug("Train: output queue is still empty")
                 if not self.train_process.is_alive():
-                    print("Train: training process is not alive anymore")
+                    logger.error("Train: training process is not alive anymore")
                     raise TrainProcessDied()
-        # print("Train: got training result")
+        # logger.debug("Train: got training result")
 
         batch.prediction = out.prediction
         batch.gradient = out.gradient
@@ -64,7 +67,7 @@ class Train(BatchFilter):
     def __train(self, use_gpu):
 
         if use_gpu is not None:
-            print("Train process: using GPU %d"%use_gpu)
+            logger.debug("Train process: using GPU %d"%use_gpu)
             caffe.enumerate_devices(False)
             caffe.set_devices((use_gpu,))
             caffe.set_mode_gpu()
@@ -72,7 +75,7 @@ class Train(BatchFilter):
 
         solver = caffe.get_solver(self.solver_parameters)
         if self.solver_parameters.resume_from is not None:
-            print("Train process: restoring solver state from " + solver_parameters.resume_from)
+            logger.debug("Train process: restoring solver state from " + solver_parameters.resume_from)
             solver.restore(solver_parameters.resume_from)
 
         net_io = NetIoWrapper(solver.net)
@@ -81,7 +84,7 @@ class Train(BatchFilter):
 
             start = time.time()
 
-            # print("Train process: waiting for batch...")
+            # logger.debug("Train process: waiting for batch...")
             batch = self.batch_in.get()
             data = {
                 'data': batch.raw[np.newaxis,np.newaxis,:],
@@ -89,16 +92,16 @@ class Train(BatchFilter):
             }
 
             if self.solver_parameters.train_state.get_stage(0) == 'euclid':
-                print("Train process: preparing input data for Euclidean training")
+                logger.debug("Train process: preparing input data for Euclidean training")
                 self.__prepare_euclidean(batch, data)
             else:
-                print("Train process: preparing input data for Malis training")
+                logger.debug("Train process: preparing input data for Malis training")
                 self.__prepare_malis(batch, data)
 
             net_io.set_inputs(data)
 
             if self.dry_run:
-                print("Train process: DRY RUN, LOSS WILL BE 0")
+                logger.warning("Train process: DRY RUN, LOSS WILL BE 0")
                 batch.prediction = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
                 batch.gradient = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
                 batch.loss = 0
@@ -112,7 +115,7 @@ class Train(BatchFilter):
             time_of_iteration = time.time() - start
 
             self.batch_out.put(batch)
-            print("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
+            logger.info("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
 
     def __prepare_euclidean(self, batch, data):
 

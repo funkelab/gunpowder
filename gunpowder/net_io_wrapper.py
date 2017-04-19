@@ -1,5 +1,8 @@
 import numpy as np
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_net_input_specs(net):
     input_specs = {}
     for layer in net.layers:
@@ -55,7 +58,7 @@ class NetIoWrapper:
                 np.copyto(self.inputs[set_key], np.ascontiguousarray(data[set_key]).astype(np.float32))
                 self.net.set_layer_input_arrays(self.input_specs[set_key].memory_layer, self.inputs[set_key], None)
             except:
-                print("Could not set input '%s':"%set_key)
+                logger.error("Could not set input '%s':"%set_key)
                 raise
 
     def get_outputs(self):

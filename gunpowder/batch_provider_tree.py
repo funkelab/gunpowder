@@ -1,5 +1,8 @@
 from batch_provider import BatchProvider
 
+import logging
+logger = logging.getLogger(__name__)
+
 class BatchProviderTree(BatchProvider):
 
     def __init__(self, inputs=None, output=None):
@@ -28,7 +31,7 @@ class BatchProviderTree(BatchProvider):
     def __add__(self, batch_provider):
 
         assert isinstance(batch_provider, BatchProvider), "Can only add BatchProvider to provider trees."
-        print("BatchProviderTree: linking %s -> %s"%(type(self.output).__name__,type(batch_provider).__name__))
+        logger.debug("BatchProviderTree: linking %s -> %s"%(type(self.output).__name__,type(batch_provider).__name__))
 
         batch_provider.add_upstream_provider(self.output)
         return BatchProviderTree(self.inputs, batch_provider)
@@ -40,7 +43,7 @@ class BatchProviderTree(BatchProvider):
             assert isinstance(batch_provider, BatchProvider), "Can only add BatchProvider to provider trees."
 
         for batch_provider in batch_providers:
-            print("BatchProviderTree: linking %s -> %s"%(type(batch_provider).__name__,type(self).__name__))
+            logger.debug("BatchProviderTree: linking %s -> %s"%(type(batch_provider).__name__,type(self).__name__))
             self.add_upstream_provider(batch_provider)
 
         return BatchProviderTree(list(batch_providers), self.output)
@@ -48,7 +51,7 @@ class BatchProviderTree(BatchProvider):
 def batch_provider_add(self, batch_provider):
 
     assert isinstance(batch_provider, BatchProvider), "Can only add BatchProvider to batch providers."
-    print("BatchProviderTree: linking %s -> %s"%(type(self).__name__,type(batch_provider).__name__))
+    logger.debug("BatchProviderTree: linking %s -> %s"%(type(self).__name__,type(batch_provider).__name__))
 
     batch_provider.add_upstream_provider(self)
     return BatchProviderTree([self], batch_provider)
@@ -60,7 +63,7 @@ def batch_provider_radd(self, batch_providers):
         assert isinstance(batch_provider, BatchProvider), "Can only add BatchProvider to batch providers."
 
     for batch_provider in batch_providers:
-        print("BatchProviderTree: linking %s -> %s"%(type(batch_provider).__name__,type(self).__name__))
+        logger.debug("BatchProviderTree: linking %s -> %s"%(type(batch_provider).__name__,type(self).__name__))
         self.add_upstream_provider(batch_provider)
 
     return BatchProviderTree(list(batch_providers), self)

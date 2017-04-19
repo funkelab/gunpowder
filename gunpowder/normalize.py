@@ -1,6 +1,9 @@
 import numpy as np
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Normalize(BatchFilter):
     '''Normalize the raw volume to values between 0 and 1.
     '''
@@ -16,7 +19,7 @@ class Normalize(BatchFilter):
 
         if factor is None:
 
-            print("Normalize: automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
+            logger.debug("Normalize: automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
 
             if batch.raw.dtype == np.uint8:
                 factor = 1.0/255
@@ -26,5 +29,5 @@ class Normalize(BatchFilter):
             else:
                 raise RuntimeError("Automatic normalization for " + str(batch.raw.dtype) + " not implemented, please provide a factor.")
 
-        print("Normalize: scaling raw data with " + str(factor))
+        logger.debug("Normalize: scaling raw data with " + str(factor))
         batch.raw = batch.raw.astype(self.dtype)*factor

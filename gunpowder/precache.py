@@ -3,6 +3,9 @@ import atexit
 from batch_filter import BatchFilter
 from batch_spec import BatchSpec
 
+import logging
+logger = logging.getLogger(__name__)
+
 class PreCache(BatchFilter):
 
     def __init__(self, batch_spec_generator, cache_size=50, num_workers=20):
@@ -26,14 +29,14 @@ class PreCache(BatchFilter):
         self.stopped = None
 
     def __del__(self):
-        print("PreCache: being killed")
+        logger.debug("PreCache: being killed")
         for worker in self.workers:
             worker.terminate()
 
     def initialize(self):
 
         if self.stopped is None:
-            print("PreCache: starting %d workers"%len(self.workers))
+            logger.debug("PreCache: starting %d workers"%len(self.workers))
             self.stopped = multiprocessing.Event()
             self.stopped.clear()
             for worker in self.workers:
@@ -41,19 +44,19 @@ class PreCache(BatchFilter):
             atexit.register(self.__del__)
 
     def request_batch(self, batch_spec):
-        print("PreCache: getting batch from queue...")
+        logger.debug("PreCache: getting batch from queue...")
         batch = self.batches.get()
-        print("PreCache: ...got it")
+        logger.debug("PreCache: ...got it")
         return batch
 
     def __run_worker(self, i):
 
         while not self.stopped.is_set():
-            print("PreCache Worker %d: requesting a batch..."%i)
+            logger.debug("PreCache Worker %d: requesting a batch..."%i)
             batch_spec = self.batch_spec_generator()
             batch = self.get_upstream_provider().request_batch(batch_spec)
-            print("PreCache Worker %d: putting a batch in the queue..."%i)
+            logger.debug("PreCache Worker %d: putting a batch in the queue..."%i)
             if self.stopped.is_set():
                 return
             self.batches.put(batch)
-            print("PreCache Worker %d: ...done"%i)
+            logger.debug("PreCache Worker %d: ...done"%i)

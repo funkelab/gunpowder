@@ -2,6 +2,9 @@ import malis
 import numpy as np
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class AddGtAffinities(BatchFilter):
 
     def __init__(self, affinity_neighborhood):
@@ -15,10 +18,10 @@ class AddGtAffinities(BatchFilter):
 
         # do nothing if gt affinities are already present
         if batch.gt_affinities is not None:
-            print("AddGtAffinities: batch already contains affinities, skipping")
+            logger.debug("AddGtAffinities: batch already contains affinities, skipping")
             return
 
-        print("AddGtAffinities: computing ground-truth affinities from labels")
+        logger.debug("AddGtAffinities: computing ground-truth affinities from labels")
         batch.gt_affinities = malis.seg_to_affgraph(
                 batch.gt.astype(np.int32),
                 self.affinity_neighborhood).astype(np.float32)

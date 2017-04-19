@@ -1,6 +1,9 @@
 import random
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class SimpleAugment(BatchFilter):
 
     def __init__(self, transpose_only_xy=True):
@@ -19,13 +22,13 @@ class SimpleAugment(BatchFilter):
             random.shuffle(t)
             self.transpose = tuple(t)
 
-        print("SimpleAugment: downstream request shape = " + str(batch_spec.shape))
-        print("SimpleAugment: mirror = " + str(self.mirror))
-        print("SimpleAugment: transpose = " + str(self.transpose))
+        logger.debug("SimpleAugment: downstream request shape = " + str(batch_spec.shape))
+        logger.debug("SimpleAugment: mirror = " + str(self.mirror))
+        logger.debug("SimpleAugment: transpose = " + str(self.transpose))
 
         batch_spec.shape = tuple(batch_spec.shape[self.transpose[d]] for d in range(len(batch_spec.shape)))
 
-        print("SimpleAugment: upstream request shape = " + str(batch_spec.shape))
+        logger.debug("SimpleAugment: upstream request shape = " + str(batch_spec.shape))
 
     def process(self, batch):
 

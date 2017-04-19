@@ -1,5 +1,8 @@
 from batch_filter import BatchFilter
 
+import logging
+logger = logging.getLogger(__name__)
+
 class CropGt(BatchFilter):
     '''Crop the ground-truth in a batch to the networks output size as given in 
     the batch spec.
@@ -55,7 +58,7 @@ class CropGt(BatchFilter):
 
     def __crop(self, a, offset, shape):
 
-        print("Cropping GT from %s to %s"%(str(a.shape), shape))
+        logger.debug("Cropping GT from %s to %s"%(str(a.shape), shape))
 
         for d in range(len(shape)):
             assert a.shape[d] >= shape[d], "The ground-truth was already cropped to a smaller size, I don't know what to do."
