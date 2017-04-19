@@ -105,12 +105,14 @@ class Train(BatchFilter):
                 loss = solver.step(1)
                 output = net_io.get_outputs()
                 batch.prediction = output['aff_pred']
-                # TODO: add gradient and loss
+                batch.loss = loss
+                # TODO: add gradient
 
             time_of_iteration = time.time() - start
 
             self.batch_out.put(batch)
-            print("Train process: finished batch in " + str(time_of_iteration) + "s")
+            print("Train process: loss=%f"%batch.loss)
+            print("Train process: finished training iteration in " + str(time_of_iteration) + "s")
 
     def __prepare_euclidean(self, batch, data):
 
