@@ -1,4 +1,3 @@
-import copy
 from batch_provider import BatchProvider
 
 class BatchFilter(BatchProvider):

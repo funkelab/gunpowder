@@ -1,4 +1,6 @@
-class Batch:
+from freezable import Freezable
+
+class Batch(Freezable):
     '''Contains the requested batch.
     '''
 
@@ -13,3 +15,5 @@ class Batch:
         self.prediction = None
         self.gradient = None
         self.loss = None
+
+        self.freeze()

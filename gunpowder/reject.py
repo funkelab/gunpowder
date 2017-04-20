@@ -22,7 +22,7 @@ class Reject(BatchFilter):
             mask_ratio = batch.gt_mask.mean()
             have_good_batch = mask_ratio>=self.min_masked
             if not have_good_batch:
-                logger.debug("Reject: reject batch with mask ratio %f at "%mask_ratio + str(batch.spec.get_bounding_box()))
+                logger.debug("Reject: reject batch with mask ratio %f at "%mask_ratio + str(batch.spec.output_roi.get_bounding_box()))
 
-        logger.debug("Reject: good batch with mask ratio %f found at "%mask_ratio + str(batch.spec.get_bounding_box()))
+        logger.debug("Reject: good batch with mask ratio %f found at "%mask_ratio + str(batch.spec.output_roi.get_bounding_box()))
         return batch

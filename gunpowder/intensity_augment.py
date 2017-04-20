@@ -12,12 +12,12 @@ class IntensityAugment(BatchFilter):
 
     def process(self, batch):
 
-        assert not self.z_section_wise or len(batch.spec.shape) == 3, "If you specify 'z_section_wise', I expect 3D data."
+        assert not self.z_section_wise or batch.spec.input_roi.dims() == 3, "If you specify 'z_section_wise', I expect 3D data."
         assert batch.raw.dtype == np.float32 or batch.raw.dtype == np.float64, "Intensity augmentation requires float types for the raw volume (not " + str(batch.raw.dtype) + "). Consider using Normalize before."
         assert batch.raw.min() >= 0 and batch.raw.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
 
         if self.z_section_wise:
-            for z in range(batch.spec.shape[0]):
+            for z in range(batch.spec.input_roi.get_shape()[0]):
                 batch.raw[z] = self.__augment(
                         batch.raw[z],
                         np.random.uniform(low=self.scale_min, high=self.scale_max),

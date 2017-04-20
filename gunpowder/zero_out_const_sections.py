@@ -13,8 +13,8 @@ class ZeroOutConstSections(BatchFilter):
 
     def process(self, batch):
 
-        assert len(batch.spec.shape) == 3, "This filter only works on 3D data."
+        assert batch.spec.input_roi.dims() == 3, "This filter only works on 3D data."
 
-        for z in range(batch.spec.shape[0]):
+        for z in range(batch.spec.input_roi.get_shape()[0]):
             if batch.raw[z].min() == batch.raw[z].max():
                 batch.raw[z] = 0

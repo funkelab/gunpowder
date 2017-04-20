@@ -26,11 +26,10 @@ class Snapshot(BatchFilter):
             logger.debug("Snapshot: saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
                 f['volumes/raw'] = batch.raw
-                f['volumes/raw'].attrs['offset'] = batch.spec.offset
+                f['volumes/raw'].attrs['offset'] = batch.spec.input_roi.get_offset()
                 if batch.gt is not None:
                     f['volumes/labels/neuron_ids'] = batch.gt
-                    if batch.gt_offset is not None:
-                        f['volumes/labels/neuron_ids'].attrs['offset'] = batch.gt_offset
+                    f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gt_mask is not None:
                     f['volumes/labels/mask'] = batch.gt_mask
                 if batch.gt_affinities is not None:
@@ -39,4 +38,5 @@ class Snapshot(BatchFilter):
                     f['volumes/predicted_affs'] = batch.prediction
                 if batch.gradient is not None:
                     f['volumes/gradient'] = batch.gradient
-                    f['volumes/gradient'].attrs['loss'] = batch.loss
+                if batch.loss is not None:
+                    f['/'].attrs['loss'] = batch.loss

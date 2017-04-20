@@ -18,6 +18,7 @@ from intensity_augment import IntensityAugment
 from normalize import Normalize
 from intensity_scale_shift import IntensityScaleShift
 from zero_out_const_sections import ZeroOutConstSections
+from padding import Padding
 
 import batch_provider_tree
 

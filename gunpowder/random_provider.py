@@ -1,4 +1,5 @@
 import random
+import copy
 from batch_provider import BatchProvider
 
 class RandomProvider(BatchProvider):
@@ -9,7 +10,7 @@ class RandomProvider(BatchProvider):
         self.spec = None
         for provider in self.get_upstream_providers():
             if self.spec is None:
-                self.spec = provider.get_spec()
+                self.spec = copy.deepcopy(provider.get_spec())
             else:
                 self.spec.has_gt &= provider.get_spec().has_gt
                 self.spec.has_gt_mask &= provider.get_spec().has_gt_mask
@@ -18,5 +19,4 @@ class RandomProvider(BatchProvider):
         return self.spec
 
     def request_batch(self, batch_spec):
-        assert batch_spec.get_bounding_box() is None, "You can not ask a RandomProvider for a concrete position (it doesn't have a unique bounding box)"
         return random.choice(self.get_upstream_providers()).request_batch(batch_spec)
