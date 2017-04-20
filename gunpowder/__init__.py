@@ -22,3 +22,13 @@ from zero_out_const_sections import ZeroOutConstSections
 from train import Train
 
 import batch_provider_tree
+
+import logging
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument(
+        "-v", "--verbose",
+        action="store_true")
+args = parser.parse_args()
+if args.verbose:
+    logging.basicConfig(level=logging.DEBUG)
