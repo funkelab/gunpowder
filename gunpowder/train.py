@@ -131,12 +131,6 @@ class Train(BatchFilter):
 
     def __prepare_malis(self, batch, data):
 
-        if batch.gt_mask is None:
-            return
-
-        if batch.gt_mask.mean() == 1:
-            return
-
         next_id = batch.gt.max() + 1
 
         gt_pos_pass = batch.gt
@@ -144,6 +138,7 @@ class Train(BatchFilter):
         gt_neg_pass[batch.gt_mask==0] = next_id
 
         data['comp_label'] = np.array([[gt_neg_pass, gt_pos_pass]])
+        data['nhood'] = batch.affinity_neighborhood[np.newaxis,np.newaxis,:]
 
         # Why don't we update gt_affinities in the same way?
         # -> not needed
