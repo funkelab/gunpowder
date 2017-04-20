@@ -40,7 +40,7 @@ class Train(BatchFilter):
 
     def __del__(self):
 
-        logger.debug("Train: being killed")
+        logger.info("terminating train process...")
         self.train_process.terminate()
 
     def process(self, batch):

@@ -29,7 +29,7 @@ class PreCache(BatchFilter):
         self.stopped = None
 
     def __del__(self):
-        logger.debug("PreCache: being killed")
+        logger.info("terminating workers...")
         for worker in self.workers:
             worker.terminate()
 
