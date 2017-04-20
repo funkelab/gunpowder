@@ -4,7 +4,7 @@ import time
 import numpy as np
 from net_io_wrapper import NetIoWrapper
 import caffe
-from batch_filter import BatchFilter
+from ..batch_filter import BatchFilter
 
 import logging
 logger = logging.getLogger(__name__)
