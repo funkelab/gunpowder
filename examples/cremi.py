@@ -12,10 +12,9 @@ print(affinity_neighborhood)
 # simulate many sources (here we point to the same file always)
 sources = tuple(
     Hdf5Source(
-            'test2.hdf',
+            'sample_A_20160501.hdf',
             raw_dataset='volumes/raw',
-            gt_dataset='volumes/labels/neuron_ids',
-            gt_mask_dataset='volumes/labels/mask') +
+            gt_dataset='volumes/labels/neuron_ids') +
     Normalize() +
     RandomLocation()
     for i in range(10)
@@ -26,7 +25,7 @@ batch_provider = (
         sources +
         RandomProvider() +
         ExcludeLabels([416759, 397008], 8) +
-        Reject() +
+        # Reject() +
         ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         SimpleAugment(transpose_only_xy=True) +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
@@ -40,7 +39,7 @@ batch_provider = (
                         (84,268,268),
                         (56,56,56),
                         with_gt=True,
-                        with_gt_mask=True,
+                        with_gt_mask=False,
                         with_gt_affinities=True),
                 cache_size=20,
                 num_workers=10) +
@@ -50,12 +49,11 @@ batch_provider = (
 
 n = 20
 print("Training for " + str(n) + " iterations")
-batch_provider.initialize_all()
 for i in range(n):
     batch_provider.request_batch(
             BatchSpec(
                         (84,268,268),
                         (56,56,56),
                         with_gt=True,
-                        with_gt_mask=True,
+                        with_gt_mask=False,
                         with_gt_affinities=True))
