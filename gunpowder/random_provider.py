@@ -8,6 +8,7 @@ class RandomProvider(BatchProvider):
 
     def initialize(self):
         self.spec = None
+        assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the RandomProvider"
         for provider in self.get_upstream_providers():
             if self.spec is None:
                 self.spec = copy.deepcopy(provider.get_spec())
