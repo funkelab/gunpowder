@@ -1,10 +1,14 @@
 import multiprocessing
+import Queue
 import atexit
 from batch_filter import BatchFilter
 from batch_spec import BatchSpec
 
 import logging
 logger = logging.getLogger(__name__)
+
+class WorkersFailedException(Exception):
+    pass
 
 class PreCache(BatchFilter):
 
@@ -29,6 +33,13 @@ class PreCache(BatchFilter):
         self.stopped = None
 
     def __del__(self):
+        self.stop_workers()
+
+    def workers_alive(self):
+        return all([worker.is_alive() for worker in self.workers])
+
+    def stop_workers(self):
+
         logger.info("terminating workers...")
         for worker in self.workers:
             worker.terminate()
@@ -47,7 +58,15 @@ class PreCache(BatchFilter):
 
     def request_batch(self, batch_spec):
         logger.debug("PreCache: getting batch from queue...")
-        batch = self.batches.get()
+        batch = None
+        while batch is None:
+            try:
+                batch = self.batches.get(timeout=1)
+            except Queue.Empty:
+                logging.info("waiting for batch...")
+            if not self.workers_alive():
+                self.stop_workers()
+                raise WorkersFailedException()
         logger.debug("PreCache: ...got it")
         return batch
 
