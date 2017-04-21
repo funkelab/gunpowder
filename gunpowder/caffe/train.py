@@ -1,7 +1,7 @@
 import multiprocessing
-import atexit
 import time
 import numpy as np
+import os
 from net_io_wrapper import NetIoWrapper
 import caffe
 from ..batch_filter import BatchFilter
@@ -21,7 +21,6 @@ class Train(BatchFilter):
 
         self.batch_in = multiprocessing.Queue(maxsize=1)
         self.batch_out = multiprocessing.Queue(maxsize=1)
-        self.stopped = None
 
         # start training in an own process, so that we can gracefully exit if 
         # the process dies
@@ -31,47 +30,51 @@ class Train(BatchFilter):
         self.solver_parameters = solver_parameters
 
     def setup(self):
+        self.__start_worker()
 
-        if self.stopped is None:
-            self.stopped = multiprocessing.Event()
-            self.stopped.clear()
-            self.train_process.start()
-            atexit.register(self.__del__)
-
-    def __del__(self):
-        self.stop_train_process()
-
-    def stop_train_process(self):
-
-        logger.info("terminating train process...")
-        self.train_process.terminate()
-        self.train_process.join()
+    def teardown(self):
+        self.__stop_worker()
 
     def process(self, batch):
 
-        # logger.debug("Train: sending batch to training process...")
         self.batch_in.put(batch)
-        # logger.debug("Train: sent, waiting for result...")
+
         out = None
         while out is None:
-            # logger.debug("Train: current train batch is " + str(out))
+
             try:
+
                 out = self.batch_out.get(timeout=1)
+
             except:
-                # logger.debug("Train: output queue is still empty")
+
                 if not self.train_process.is_alive():
+
                     logger.error("Train: training process is not alive anymore")
-                    self.stop_train_process()
+                    self.__stop_worker()
                     raise TrainProcessDied()
-        # logger.debug("Train: got training result")
 
         batch.prediction = out.prediction
         batch.gradient = out.gradient
         batch.loss = out.loss
 
+    def __del__(self):
+        self.__stop_worker()
+
+    def __stop_worker(self):
+
+        self.train_process.start()
+
+    def __stop_worker(self):
+
+        logger.info("terminating train process...")
+        self.train_process.terminate()
+        self.train_process.join()
+
     def __train(self, use_gpu):
 
         if use_gpu is not None:
+
             logger.debug("Train process: using GPU %d"%use_gpu)
             caffe.enumerate_devices(False)
             caffe.set_devices((use_gpu,))
@@ -85,11 +88,10 @@ class Train(BatchFilter):
 
         net_io = NetIoWrapper(solver.net)
 
-        while not self.stopped.is_set():
+        while not self.__parent_died():
 
             start = time.time()
 
-            # logger.debug("Train process: waiting for batch...")
             batch = self.batch_in.get()
             data = {
                 'data': batch.raw[np.newaxis,np.newaxis,:],
@@ -119,8 +121,14 @@ class Train(BatchFilter):
 
             time_of_iteration = time.time() - start
 
-            self.batch_out.put(batch)
-            logger.info("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
+            while not self.__parent_died():
+
+                try:
+                    self.batch_out.put(batch, timeout=1)
+                    logger.info("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
+                    break
+                except:
+                    pass
 
     def __prepare_euclidean(self, batch, data):
 
@@ -162,3 +170,6 @@ class Train(BatchFilter):
         #
         #   We set all affinities outside GT regions to 0 -> no loss in masked 
         #   out area.
+
+    def __parent_died(self):
+        return os.getppid() == 1

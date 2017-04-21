@@ -1,4 +1,5 @@
 from batch_provider import BatchProvider
+import atexit
 
 import logging
 logger = logging.getLogger(__name__)
@@ -9,11 +10,16 @@ class BatchProviderTree(BatchProvider):
         self.inputs = inputs
         self.output = output
         self.initialized = False
+        atexit.register(self.teardown)
+
+    def __del__(self):
+        self.teardown()
 
     def setup(self):
         self.__rec_setup(self.output)
 
     def teardown(self):
+        logger.debug("tearing down gunpowder DAG")
         self.__rec_teardown(self.output)
 
     def add_upstream_provider(self, batch_provider):
@@ -32,15 +38,19 @@ class BatchProviderTree(BatchProvider):
     def request_batch(self, batch_spec):
 
         if not self.initialized:
+
             self.setup()
             self.initialized = True
 
         try:
+
             return self.output.request_batch(batch_spec)
-        except e:
+
+        except:
+
             logger.error("encountered an exception, tearing down DAG")
             self.teardown()
-            raise e
+            raise
 
     def __add__(self, batch_provider):
 
