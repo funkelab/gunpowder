@@ -39,6 +39,9 @@ class Train(BatchFilter):
             atexit.register(self.__del__)
 
     def __del__(self):
+        self.stop_train_process()
+
+    def stop_train_process(self):
 
         logger.info("terminating train process...")
         self.train_process.terminate()
@@ -58,6 +61,7 @@ class Train(BatchFilter):
                 # logger.debug("Train: output queue is still empty")
                 if not self.train_process.is_alive():
                     logger.error("Train: training process is not alive anymore")
+                    self.stop_train_process()
                     raise TrainProcessDied()
         # logger.debug("Train: got training result")
 
