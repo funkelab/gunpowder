@@ -1,10 +1,10 @@
 import multiprocessing
 import time
 import numpy as np
-import os
 from net_io_wrapper import NetIoWrapper
 import caffe
 from ..batch_filter import BatchFilter
+from ..producer_pool import ProducerPool
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,115 +19,91 @@ class Train(BatchFilter):
 
     def __init__(self, solver_parameters, use_gpu=None, dry_run=False):
 
+        # start training as a producer pool, so that we can gracefully exit if 
+        # anything goes wrong
+        self.worker = ProducerPool([lambda gpu=use_gpu: self.__train(gpu)], queue_size=1)
         self.batch_in = multiprocessing.Queue(maxsize=1)
-        self.batch_out = multiprocessing.Queue(maxsize=1)
-
-        # start training in an own process, so that we can gracefully exit if 
-        # the process dies
-        self.train_process = multiprocessing.Process(target=self.__train, args=(use_gpu,))
 
         self.dry_run = dry_run
         self.solver_parameters = solver_parameters
+        self.solver_initialized = False
 
     def setup(self):
-        self.__start_worker()
+        self.worker.start()
 
     def teardown(self):
-        self.__stop_worker()
+        self.worker.stop()
 
     def process(self, batch):
 
         self.batch_in.put(batch)
 
-        out = None
-        while out is None:
-
-            try:
-
-                out = self.batch_out.get(timeout=1)
-
-            except:
-
-                if not self.train_process.is_alive():
-
-                    logger.error("Train: training process is not alive anymore")
-                    self.__stop_worker()
-                    raise TrainProcessDied()
+        try:
+            out = self.worker.get()
+        except WorkersDied:
+            raise TrainProcessDied()
 
         batch.prediction = out.prediction
         batch.gradient = out.gradient
         batch.loss = out.loss
 
-    def __del__(self):
-        self.__stop_worker()
-
-    def __start_worker(self):
-        self.train_process.start()
-
-    def __stop_worker(self):
-
-        logger.info("terminating train process...")
-        self.train_process.terminate()
-        self.train_process.join()
-
     def __train(self, use_gpu):
 
-        if use_gpu is not None:
+        start = time.time()
 
-            logger.debug("Train process: using GPU %d"%use_gpu)
-            caffe.enumerate_devices(False)
-            caffe.set_devices((use_gpu,))
-            caffe.set_mode_gpu()
-            caffe.select_device(use_gpu, False)
+        if not self.solver_initialized:
 
-        solver = caffe.get_solver(self.solver_parameters)
-        if self.solver_parameters.resume_from is not None:
-            logger.debug("Train process: restoring solver state from " + self.solver_parameters.resume_from)
-            solver.restore(self.solver_parameters.resume_from)
+            logger.info("Initializing solver...")
 
-        net_io = NetIoWrapper(solver.net)
+            if use_gpu is not None:
 
-        while not self.__parent_died():
+                logger.debug("Train process: using GPU %d"%use_gpu)
+                caffe.enumerate_devices(False)
+                caffe.set_devices((use_gpu,))
+                caffe.set_mode_gpu()
+                caffe.select_device(use_gpu, False)
 
-            start = time.time()
+            self.solver = caffe.get_solver(self.solver_parameters)
+            if self.solver_parameters.resume_from is not None:
+                logger.debug("Train process: restoring solver state from " + self.solver_parameters.resume_from)
+                self.solver.restore(self.solver_parameters.resume_from)
 
-            batch = self.batch_in.get()
-            data = {
-                'data': batch.raw[np.newaxis,np.newaxis,:],
-                'aff_label': batch.gt_affinities[np.newaxis,:],
-            }
+            self.net_io = NetIoWrapper(self.solver.net)
 
-            if self.solver_parameters.train_state.get_stage(0) == 'euclid':
-                logger.debug("Train process: preparing input data for Euclidean training")
-                self.__prepare_euclidean(batch, data)
-            else:
-                logger.debug("Train process: preparing input data for Malis training")
-                self.__prepare_malis(batch, data)
+            self.solver_initialized = True
 
-            net_io.set_inputs(data)
+        batch = self.batch_in.get()
 
-            if self.dry_run:
-                logger.warning("Train process: DRY RUN, LOSS WILL BE 0")
-                batch.prediction = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
-                batch.gradient = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
-                batch.loss = 0
-            else:
-                loss = solver.step(1)
-                output = net_io.get_outputs()
-                batch.prediction = output['aff_pred']
-                batch.loss = loss
-                # TODO: add gradient
+        data = {
+            'data': batch.raw[np.newaxis,np.newaxis,:],
+            'aff_label': batch.gt_affinities[np.newaxis,:],
+        }
 
-            time_of_iteration = time.time() - start
+        if self.solver_parameters.train_state.get_stage(0) == 'euclid':
+            logger.debug("Train process: preparing input data for Euclidean training")
+            self.__prepare_euclidean(batch, data)
+        else:
+            logger.debug("Train process: preparing input data for Malis training")
+            self.__prepare_malis(batch, data)
 
-            while not self.__parent_died():
+        self.net_io.set_inputs(data)
 
-                try:
-                    self.batch_out.put(batch, timeout=1)
-                    logger.info("Train process: iteration=%d loss=%f time=%f"%(solver.iter,batch.loss,time_of_iteration))
-                    break
-                except:
-                    pass
+        if self.dry_run:
+            logger.warning("Train process: DRY RUN, LOSS WILL BE 0")
+            batch.prediction = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
+            batch.gradient = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
+            batch.loss = 0
+        else:
+            loss = self.solver.step(1)
+            output = self.net_io.get_outputs()
+            batch.prediction = output['aff_pred']
+            batch.loss = loss
+            # TODO: add gradient
+
+        time_of_iteration = time.time() - start
+        logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))
+
+        return batch
 
     def __prepare_euclidean(self, batch, data):
 
@@ -169,6 +145,3 @@ class Train(BatchFilter):
         #
         #   We set all affinities outside GT regions to 0 -> no loss in masked 
         #   out area.
-
-    def __parent_died(self):
-        return os.getppid() == 1
