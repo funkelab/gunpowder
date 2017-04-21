@@ -32,3 +32,9 @@ from zero_out_const_sections import ZeroOutConstSections
 from padding import Padding
 from print_profiling_stats import PrintProfilingStats
 import batch_provider_tree
+
+def set_verbose(verbose=True):
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
