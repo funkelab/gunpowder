@@ -32,6 +32,8 @@ class PreCache(BatchFilter):
         logger.info("terminating workers...")
         for worker in self.workers:
             worker.terminate()
+        for worker in self.workers:
+            worker.join()
 
     def initialize(self):
 

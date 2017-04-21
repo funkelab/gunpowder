@@ -42,6 +42,7 @@ class Train(BatchFilter):
 
         logger.info("terminating train process...")
         self.train_process.terminate()
+        self.train_process.join()
 
     def process(self, batch):
 
