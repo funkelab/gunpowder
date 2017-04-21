@@ -6,7 +6,7 @@ class RandomProvider(BatchProvider):
     '''Randomly selects one of the upstream providers.
     '''
 
-    def initialize(self):
+    def setup(self):
         self.spec = None
         assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the RandomProvider"
         for provider in self.get_upstream_providers():

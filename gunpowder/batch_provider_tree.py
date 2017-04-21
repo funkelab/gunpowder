@@ -8,9 +8,13 @@ class BatchProviderTree(BatchProvider):
     def __init__(self, inputs=None, output=None):
         self.inputs = inputs
         self.output = output
+        self.initialized = False
 
-    def initialize_all(self):
-        return self.output.initialize_all()
+    def setup(self):
+        self.__rec_setup(self.output)
+
+    def teardown(self):
+        self.__rec_teardown(self.output)
 
     def add_upstream_provider(self, batch_provider):
         for input in self.inputs:
@@ -26,7 +30,17 @@ class BatchProviderTree(BatchProvider):
         return self.output.get_spec()
 
     def request_batch(self, batch_spec):
-        return self.output.request_batch(batch_spec)
+
+        if not self.initialized:
+            self.setup()
+            self.initialized = True
+
+        try:
+            return self.output.request_batch(batch_spec)
+        except e:
+            logger.error("encountered an exception, tearing down DAG")
+            self.teardown()
+            raise e
 
     def __add__(self, batch_provider):
 
@@ -47,6 +61,18 @@ class BatchProviderTree(BatchProvider):
             self.add_upstream_provider(batch_provider)
 
         return BatchProviderTree(list(batch_providers), self.output)
+
+    def __rec_setup(self, provider):
+
+        for upstream_provider in provider.get_upstream_providers():
+            self.__rec_setup(upstream_provider)
+        provider.setup()
+
+    def __rec_teardown(self, provider):
+
+        for upstream_provider in provider.get_upstream_providers():
+            self.__rec_teardown(upstream_provider)
+        provider.teardown()
 
 def batch_provider_add(self, batch_provider):
 

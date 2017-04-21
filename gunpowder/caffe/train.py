@@ -30,7 +30,7 @@ class Train(BatchFilter):
         self.dry_run = dry_run
         self.solver_parameters = solver_parameters
 
-    def initialize(self):
+    def setup(self):
 
         if self.stopped is None:
             self.stopped = multiprocessing.Event()

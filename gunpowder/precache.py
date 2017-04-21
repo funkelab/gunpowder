@@ -47,7 +47,7 @@ class PreCache(BatchFilter):
         for worker in self.workers:
             worker.join()
 
-    def initialize(self):
+    def setup(self):
 
         if self.stopped is None:
             logger.debug("starting %d workers"%len(self.workers))

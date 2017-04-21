@@ -15,7 +15,7 @@ class Padding(BatchFilter):
         self.padding = padding
         self.outside_raw_value = outside_raw_value
 
-    def initialize(self):
+    def setup(self):
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 

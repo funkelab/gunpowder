@@ -1,10 +1,5 @@
 class BatchProvider(object):
 
-    def initialize_all(self):
-        for p in self.get_upstream_providers():
-            p.initialize_all()
-        self.initialize()
-
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
         return provider
@@ -14,11 +9,19 @@ class BatchProvider(object):
             self.upstream_providers = []
         return self.upstream_providers
 
-    def initialize(self):
+    def setup(self):
         '''To be implemented in subclasses.
 
         Called during initialization of the DAG. Callees can assume that all 
-        upstream providers are initialized already.
+        upstream providers are set up already.
+        '''
+        pass
+
+    def teardown(self):
+        '''To be implemented in subclasses.
+
+        Called during destruction of the DAG. Subclasses should use this to stop 
+        worker processes, if they used some.
         '''
         pass
 

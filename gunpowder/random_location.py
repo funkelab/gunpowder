@@ -12,7 +12,7 @@ class RandomLocation(BatchFilter):
     /inside/ the provder's roi.
     '''
 
-    def initialize(self):
+    def setup(self):
 
         provider_spec = self.get_upstream_provider().get_spec()
         if provider_spec.roi.get_bounding_box() is None:

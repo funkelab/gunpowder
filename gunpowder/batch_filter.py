@@ -7,10 +7,14 @@ class BatchFilter(BatchProvider):
     Subclasses need to implement at least 'process' to modify a passed batch 
     (downstream). Optionally, the following methods can be implemented:
 
-        initialize
+        setup
 
             Initialize this filter. Called after setup of the DAG. All upstream 
-            providers will be initialized already.
+            providers will be set up already.
+
+        teardown
+
+            Destruct this filter, free resources, stop worker processes.
 
         get_spec
 
