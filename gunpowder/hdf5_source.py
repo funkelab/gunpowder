@@ -35,6 +35,9 @@ class Hdf5Source(BatchProvider):
                 assert(len(dims) == len(self.dims))
                 self.dims = tuple(min(self.dims[d], dims[d]) for d in range(len(dims)))
 
+        if 'resolution' not in f[raw_dataset].attrs:
+            logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
+
         f.close()
 
         self.spec = ProviderSpec()
@@ -73,7 +76,6 @@ class Hdf5Source(BatchProvider):
                 batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
                 logger.debug("providing batch with resolution of " + str(batch.spec.resolution))
             else:
-                logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
                 batch.spec.resolution = (1,1,1)
             logger.debug("Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, input_roi)
