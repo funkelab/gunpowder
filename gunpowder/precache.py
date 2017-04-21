@@ -36,7 +36,6 @@ class PreCache(BatchFilter):
         self.__start_workers()
 
     def teardown(self):
-        print("PreCache: teardown called")
         self.__stop_workers()
 
     def request_batch(self, batch_spec):
