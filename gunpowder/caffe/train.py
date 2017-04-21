@@ -61,8 +61,7 @@ class Train(BatchFilter):
     def __del__(self):
         self.__stop_worker()
 
-    def __stop_worker(self):
-
+    def __start_worker(self):
         self.train_process.start()
 
     def __stop_worker(self):
