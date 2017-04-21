@@ -25,7 +25,6 @@ from simple_augment import SimpleAugment
 from defect_augment import DefectAugment
 from exclude_labels import ExcludeLabels
 from add_gt_affinities import AddGtAffinities
-from crop_gt import CropGt
 from intensity_augment import IntensityAugment
 from normalize import Normalize
 from intensity_scale_shift import IntensityScaleShift
