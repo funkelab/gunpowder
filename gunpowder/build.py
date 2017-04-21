@@ -4,7 +4,11 @@ class build(object):
         self.batch_provider = batch_provider
 
     def __enter__(self):
-        self.batch_provider.setup()
+        try:
+            self.batch_provider.setup()
+        except:
+            self.batch_provider.teardown()
+            raise
         return self.batch_provider
 
     def __exit__(self, type, value, traceback):

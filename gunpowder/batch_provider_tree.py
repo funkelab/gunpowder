@@ -1,4 +1,5 @@
 from batch_provider import BatchProvider
+import traceback
 
 import logging
 logger = logging.getLogger(__name__)
@@ -17,11 +18,12 @@ class BatchProviderTree(BatchProvider):
         if not self.initialized:
             self.__rec_setup(self.output)
             self.initialized = True
+        else:
+            logger.warning("batch provider setup() called more than once")
 
     def teardown(self):
-        if self.initialized:
-            self.__rec_teardown(self.output)
-            self.initialized = False
+        self.__rec_teardown(self.output)
+        self.initialized = False
 
     def add_upstream_provider(self, batch_provider):
         for input in self.inputs:
@@ -73,7 +75,14 @@ class BatchProviderTree(BatchProvider):
 
         for upstream_provider in provider.get_upstream_providers():
             self.__rec_teardown(upstream_provider)
-        provider.teardown()
+
+        try:
+            provider.teardown()
+        except Exception as e:
+            # don't stop on exceptions, try to tear down as much as possible of 
+            # the DAG
+            logger.error("encountered exception during teardown: " + str(e))
+            traceback.print_exc()
 
 def batch_provider_add(self, batch_provider):
 
