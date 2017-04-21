@@ -18,16 +18,18 @@ class Hdf5Source(BatchProvider):
         self.gt_dataset = gt_dataset
         self.gt_mask_dataset = gt_mask_dataset
 
-        f = h5py.File(filename, 'r')
+    def setup(self):
+
+        f = h5py.File(self.filename, 'r')
 
         self.dims = None
-        for ds in [raw_dataset, gt_mask_dataset, gt_mask_dataset]:
+        for ds in [self.raw_dataset, self.gt_mask_dataset, self.gt_mask_dataset]:
 
             if ds is None:
                 continue
 
             if ds not in f:
-                raise RuntimeError("%s not in %s"%(ds,filename))
+                raise RuntimeError("%s not in %s"%(ds,self.filename))
 
             if self.dims is None:
                 self.dims = f[ds].shape
@@ -36,7 +38,7 @@ class Hdf5Source(BatchProvider):
                 assert(len(dims) == len(self.dims))
                 self.dims = tuple(min(self.dims[d], dims[d]) for d in range(len(dims)))
 
-        if 'resolution' not in f[raw_dataset].attrs:
+        if 'resolution' not in f[self.raw_dataset].attrs:
             logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
 
         f.close()
@@ -46,8 +48,18 @@ class Hdf5Source(BatchProvider):
                 (0,)*len(self.dims),
                 self.dims
         )
-        self.spec.has_gt = gt_dataset is not None
-        self.spec.has_gt_mask = gt_mask_dataset is not None
+
+        if self.gt_mask_dataset is not None:
+            with h5py.File(self.filename, 'r') as f:
+                mask = np.array(f[self.gt_mask_dataset])
+                good = np.where(mask > 0)
+                print(good)
+                min_good = tuple(np.min(good[d])     for d in range(len(self.dims)))
+                max_good = tuple(np.max(good[d]) + 1 for d in range(len(self.dims)))
+                self.spec.gt_roi = Roi(min_good, tuple(max_good[d] - min_good[d] for d in range(len(self.dims))))
+
+        self.spec.has_gt = self.gt_dataset is not None
+        self.spec.has_gt_mask = self.gt_mask_dataset is not None
 
     def get_spec(self):
         return self.spec

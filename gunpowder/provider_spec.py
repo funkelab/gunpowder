@@ -8,6 +8,7 @@ class ProviderSpec(Freezable):
     def __init__(self):
 
         self.roi = Roi()
+        self.gt_roi = None
         self.has_gt = False
         self.has_gt_mask = False
 
