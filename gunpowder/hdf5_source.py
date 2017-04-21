@@ -26,7 +26,7 @@ class Hdf5Source(BatchProvider):
                 continue
 
             if ds not in f:
-                raise RuntimeError("%s not in %s"%(raw_dataset,filename))
+                raise RuntimeError("%s not in %s"%(ds,filename))
 
             if self.dims is None:
                 self.dims = f[ds].shape
