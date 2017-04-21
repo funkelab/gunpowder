@@ -31,6 +31,7 @@ from intensity_scale_shift import IntensityScaleShift
 from zero_out_const_sections import ZeroOutConstSections
 from padding import Padding
 from print_profiling_stats import PrintProfilingStats
+from build import build
 import batch_provider_tree
 
 def set_verbose(verbose=True):

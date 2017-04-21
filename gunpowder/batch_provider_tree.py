@@ -1,5 +1,4 @@
 from batch_provider import BatchProvider
-import atexit
 
 import logging
 logger = logging.getLogger(__name__)
@@ -10,17 +9,19 @@ class BatchProviderTree(BatchProvider):
         self.inputs = inputs
         self.output = output
         self.initialized = False
-        atexit.register(self.teardown)
 
     def __del__(self):
         self.teardown()
 
     def setup(self):
-        self.__rec_setup(self.output)
+        if not self.initialized:
+            self.__rec_setup(self.output)
+            self.initialized = True
 
     def teardown(self):
-        logger.debug("tearing down gunpowder DAG")
-        self.__rec_teardown(self.output)
+        if self.initialized:
+            self.__rec_teardown(self.output)
+            self.initialized = False
 
     def add_upstream_provider(self, batch_provider):
         for input in self.inputs:
@@ -38,19 +39,9 @@ class BatchProviderTree(BatchProvider):
     def request_batch(self, batch_spec):
 
         if not self.initialized:
+            raise RuntimeError("You are requesting a batch from an uninitialized provider ('setup()' has not been called). Avoid this by using the 'gunpowder.build' context manager, which also takes care of tearing the provider down if it is not used anymore.")
 
-            self.setup()
-            self.initialized = True
-
-        try:
-
-            return self.output.request_batch(batch_spec)
-
-        except:
-
-            logger.error("encountered an exception, tearing down DAG")
-            self.teardown()
-            raise
+        return self.output.request_batch(batch_spec)
 
     def __add__(self, batch_provider):
 
