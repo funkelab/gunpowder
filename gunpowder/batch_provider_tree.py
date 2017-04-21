@@ -11,9 +11,6 @@ class BatchProviderTree(BatchProvider):
         self.output = output
         self.initialized = False
 
-    def __del__(self):
-        self.teardown()
-
     def setup(self):
         if not self.initialized:
             self.__rec_setup(self.output)
