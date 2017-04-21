@@ -43,4 +43,4 @@ class BatchSpec(Freezable):
 
         self.freeze()
 
-        logger.debug("BatchSpec: created new spec with id " + str(self.id))
+        logger.debug("created new spec with id " + str(self.id))

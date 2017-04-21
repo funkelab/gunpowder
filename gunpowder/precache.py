@@ -49,7 +49,7 @@ class PreCache(BatchFilter):
     def initialize(self):
 
         if self.stopped is None:
-            logger.debug("PreCache: starting %d workers"%len(self.workers))
+            logger.debug("starting %d workers"%len(self.workers))
             self.stopped = multiprocessing.Event()
             self.stopped.clear()
             for worker in self.workers:
@@ -57,7 +57,7 @@ class PreCache(BatchFilter):
             atexit.register(self.__del__)
 
     def request_batch(self, batch_spec):
-        logger.debug("PreCache: getting batch from queue...")
+        logger.debug("getting batch from queue...")
         batch = None
         while batch is None:
             try:
@@ -65,9 +65,10 @@ class PreCache(BatchFilter):
             except Queue.Empty:
                 logging.info("waiting for batch...")
             if not self.workers_alive():
+                logger.error("at least one of my workers died")
                 self.stop_workers()
                 raise WorkersFailedException()
-        logger.debug("PreCache: ...got it")
+        logger.debug("...got it")
         return batch
 
     def __run_worker(self, i):

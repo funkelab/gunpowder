@@ -65,26 +65,26 @@ class Hdf5Source(BatchProvider):
         if not self.spec.roi.contains(output_roi):
             raise RuntimeError("Output ROI of batch %s outside of my ROI %s"%(output_roi,self.spec.roi))
 
-        logger.debug("Hdf5Source: Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
+        logger.debug("Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
 
         batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
             if 'resolution' in f[self.raw_dataset].attrs:
                 batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
-                logger.debug("Hdf5Source: providing batch with resolution of " + str(batch.spec.resolution))
+                logger.debug("providing batch with resolution of " + str(batch.spec.resolution))
             else:
-                logger.warning("Hdf5Source: WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
+                logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
                 batch.spec.resolution = (1,1,1)
-            logger.debug("Hdf5Source: Reading raw...")
+            logger.debug("Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, input_roi)
             if batch.spec.with_gt:
-                logger.debug("Hdf5Source: Reading gt...")
+                logger.debug("Reading gt...")
                 batch.gt = self.__read(f, self.gt_dataset, output_roi)
             if batch.spec.with_gt_mask:
-                logger.debug("Hdf5Source: Reading gt mask...")
+                logger.debug("Reading gt mask...")
                 batch.gt_mask = self.__read(f, self.gt_mask_dataset, output_roi)
 
-        logger.debug("Hdf5Source: done")
+        logger.debug("done")
         return batch
 
     def __read(self, f, ds, roi):

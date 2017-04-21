@@ -23,7 +23,7 @@ class Snapshot(BatchFilter):
                 pass
 
             snapshot_name = os.path.join(self.output_dir, str(id).zfill(8) + '.hdf')
-            logger.debug("Snapshot: saving to " + snapshot_name)
+            logger.debug("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
                 f['volumes/raw'] = batch.raw
                 f['volumes/raw'].attrs['offset'] = batch.spec.input_roi.get_offset()

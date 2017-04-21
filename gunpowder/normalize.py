@@ -19,7 +19,7 @@ class Normalize(BatchFilter):
 
         if factor is None:
 
-            logger.debug("Normalize: automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
+            logger.debug("automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
 
             if batch.raw.dtype == np.uint8:
                 factor = 1.0/255
@@ -29,5 +29,5 @@ class Normalize(BatchFilter):
             else:
                 raise RuntimeError("Automatic normalization for " + str(batch.raw.dtype) + " not implemented, please provide a factor.")
 
-        logger.debug("Normalize: scaling raw data with " + str(factor))
+        logger.debug("scaling raw data with " + str(factor))
         batch.raw = batch.raw.astype(self.dtype)*factor

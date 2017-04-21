@@ -55,10 +55,10 @@ class AddGtAffinities(BatchFilter):
 
         # do nothing if gt affinities are already present
         if batch.gt_affinities is not None:
-            logger.warning("AddGtAffinities: batch already contains affinities, skipping")
+            logger.warning("batch already contains affinities, skipping")
             return
 
-        logger.debug("AddGtAffinities: computing ground-truth affinities from labels")
+        logger.debug("computing ground-truth affinities from labels")
         batch.gt_affinities = malis.seg_to_affgraph(
                 batch.gt.astype(np.int32),
                 self.affinity_neighborhood).astype(np.float32)

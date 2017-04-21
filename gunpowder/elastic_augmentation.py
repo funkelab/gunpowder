@@ -47,8 +47,8 @@ class ElasticAugmentation(BatchFilter):
         batch_spec.input_roi = self.__recompute_roi(batch_spec.input_roi, self.input_transformation)
         batch_spec.output_roi = self.__recompute_roi(batch_spec.output_roi, self.output_transformation)
 
-        logger.debug("ElasticAugmentation: downstream request shape = " + str(target_shape))
-        logger.debug("ElasticAugmentation: upstream request shape = " + str(batch_spec.input_roi.get_shape()))
+        logger.debug("downstream request shape = " + str(target_shape))
+        logger.debug("upstream request shape = " + str(batch_spec.input_roi.get_shape()))
 
     def process(self, batch):
 

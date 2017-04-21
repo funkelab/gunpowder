@@ -24,10 +24,10 @@ class SimpleAugment(BatchFilter):
             random.shuffle(t)
             self.transpose = tuple(t)
 
-        logger.debug("SimpleAugment: downstream request input roi = " + str(batch_spec.input_roi))
-        logger.debug("SimpleAugment: downstream request output roi = " + str(batch_spec.output_roi))
-        logger.debug("SimpleAugment: mirror = " + str(self.mirror))
-        logger.debug("SimpleAugment: transpose = " + str(self.transpose))
+        logger.debug("downstream request input roi = " + str(batch_spec.input_roi))
+        logger.debug("downstream request output roi = " + str(batch_spec.output_roi))
+        logger.debug("mirror = " + str(self.mirror))
+        logger.debug("transpose = " + str(self.transpose))
 
         reverse_transpose = [0]*dims
         for d in range(dims):
@@ -36,8 +36,8 @@ class SimpleAugment(BatchFilter):
         self.__transpose_spec(batch_spec, reverse_transpose)
         self.__mirror_spec(batch_spec, self.mirror)
 
-        logger.debug("SimpleAugment: upstream request input roi = " + str(batch_spec.input_roi))
-        logger.debug("SimpleAugment: upstream request output roi = " + str(batch_spec.output_roi))
+        logger.debug("upstream request input roi = " + str(batch_spec.input_roi))
+        logger.debug("upstream request output roi = " + str(batch_spec.output_roi))
 
     def process(self, batch):
 
@@ -61,10 +61,10 @@ class SimpleAugment(BatchFilter):
             if batch.gt_mask is not None:
                 batch.gt_mask = batch.gt_mask.transpose(self.transpose)
 
-        logger.debug("SimpleAugment: upstream batch shape = " + str(batch.spec.input_roi.get_shape()))
+        logger.debug("upstream batch shape = " + str(batch.spec.input_roi.get_shape()))
         self.__mirror_spec(batch.spec, self.mirror)
         self.__transpose_spec(batch.spec, self.transpose)
-        logger.debug("SimpleAugment: downstream batch shape = " + str(batch.spec.input_roi.get_shape()))
+        logger.debug("downstream batch shape = " + str(batch.spec.input_roi.get_shape()))
 
     def __mirror_spec(self, spec, mirror):
 
