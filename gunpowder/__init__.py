@@ -1,3 +1,15 @@
+import logging
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument(
+        "-v", "--verbose",
+        action="store_true")
+args = parser.parse_args()
+if args.verbose:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig()
+
 from batch_spec import BatchSpec
 from batch import Batch
 from batch_filter import BatchFilter
@@ -19,15 +31,4 @@ from normalize import Normalize
 from intensity_scale_shift import IntensityScaleShift
 from zero_out_const_sections import ZeroOutConstSections
 from padding import Padding
-
 import batch_provider_tree
-
-import logging
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument(
-        "-v", "--verbose",
-        action="store_true")
-args = parser.parse_args()
-if args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
