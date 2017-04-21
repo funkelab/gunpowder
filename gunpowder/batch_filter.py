@@ -1,4 +1,5 @@
 from batch_provider import BatchProvider
+from profiling import Timing
 
 class BatchFilter(BatchProvider):
     '''Convenience wrapper for BatchProviders with exactly one input provider.
@@ -32,9 +33,19 @@ class BatchFilter(BatchProvider):
 
     def request_batch(self, batch_spec):
 
+        timing = Timing(self)
+
+        timing.start()
         self.prepare(batch_spec)
+        timing.stop()
+
         batch = self.get_upstream_provider().request_batch(batch_spec)
+
+        timing.start()
         self.process(batch)
+        timing.stop()
+
+        batch.profiling_stats.add(timing)
 
         return batch
 

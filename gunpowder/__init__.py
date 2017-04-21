@@ -8,7 +8,7 @@ args = parser.parse_args()
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 else:
-    logging.basicConfig()
+    logging.basicConfig(level=logging.INFO)
 
 from batch_spec import BatchSpec
 from batch import Batch
@@ -31,4 +31,5 @@ from normalize import Normalize
 from intensity_scale_shift import IntensityScaleShift
 from zero_out_const_sections import ZeroOutConstSections
 from padding import Padding
+from print_profiling_stats import PrintProfilingStats
 import batch_provider_tree

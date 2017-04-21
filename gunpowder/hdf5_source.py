@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+from profiling import Timing
 from batch_provider import BatchProvider
 from provider_spec import ProviderSpec
 from batch import Batch
@@ -53,6 +54,9 @@ class Hdf5Source(BatchProvider):
 
     def request_batch(self, batch_spec):
 
+        timing = Timing(self)
+        timing.start()
+
         spec = self.get_spec()
 
         if batch_spec.with_gt and not spec.has_gt:
@@ -87,6 +91,10 @@ class Hdf5Source(BatchProvider):
                 batch.gt_mask = self.__read(f, self.gt_mask_dataset, output_roi)
 
         logger.debug("done")
+
+        timing.stop()
+        batch.profiling_stats.add(timing)
+
         return batch
 
     def __read(self, f, ds, roi):

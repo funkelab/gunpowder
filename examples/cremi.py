@@ -44,7 +44,8 @@ batch_provider = (
                         with_gt_affinities=True),
                 cache_size=20,
                 num_workers=10) +
-        Snapshot(every=1)
+        Snapshot(every=1) +
+        PrintProfilingStats()
 )
 
 n = 20

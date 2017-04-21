@@ -3,6 +3,7 @@ import Queue
 import atexit
 from batch_filter import BatchFilter
 from batch_spec import BatchSpec
+from profiling import Timing
 
 import logging
 logger = logging.getLogger(__name__)
@@ -57,6 +58,10 @@ class PreCache(BatchFilter):
             atexit.register(self.__del__)
 
     def request_batch(self, batch_spec):
+
+        timing = Timing(self)
+        timing.start()
+
         logger.debug("getting batch from queue...")
         batch = None
         while batch is None:
@@ -69,6 +74,10 @@ class PreCache(BatchFilter):
                 self.stop_workers()
                 raise WorkersFailedException()
         logger.debug("...got it")
+
+        timing.stop()
+        batch.profiling_stats.add(timing)
+
         return batch
 
     def __run_worker(self, i):

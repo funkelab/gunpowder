@@ -1,5 +1,6 @@
 import copy
 from batch_filter import BatchFilter
+from profiling import Timing
 
 import logging
 logger = logging.getLogger(__name__)
@@ -14,6 +15,9 @@ class Reject(BatchFilter):
 
     def request_batch(self, batch_spec):
 
+        timing = Timing(self)
+        timing.start()
+
         batch_spec.with_gt_mask = True
 
         have_good_batch = False
@@ -25,4 +29,8 @@ class Reject(BatchFilter):
                 logger.debug("reject batch with mask ratio %f at "%mask_ratio + str(batch.spec.output_roi.get_bounding_box()))
 
         logger.debug("good batch with mask ratio %f found at "%mask_ratio + str(batch.spec.output_roi.get_bounding_box()))
+
+        timing.stop()
+        batch.profiling_stats.add(timing)
+
         return batch
