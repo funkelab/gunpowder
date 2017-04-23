@@ -2,6 +2,7 @@ import time
 import multiprocessing
 import Queue
 import os
+import sys
 
 import logging
 logger = logging.getLogger(__name__)
@@ -115,13 +116,18 @@ class ProducerPool(object):
         stop = False
         while not stop:
 
+            result = None
+
             try:
                 result = target()
             except Exception as e:
                 result = e
                 stop = True
+            except:
+                logger.error(sys.exc_info()[0])
+                stop = True
 
-            while True:
+            while result is not None:
 
                 if os.getppid() != parent_pid:
                     logger.debug("worker %d: watch-dog died, stopping"%os.getpid())
@@ -130,7 +136,7 @@ class ProducerPool(object):
 
                 try:
                     self.__result_queue.put(result, timeout=1)
-                    break
+                    result = None
                 except Queue.Full:
                     logger.debug("worker %d: result queue is full, waiting to place my result"%os.getpid())
 
