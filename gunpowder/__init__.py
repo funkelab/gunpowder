@@ -33,6 +33,7 @@ from padding import Padding
 from print_profiling_stats import PrintProfilingStats
 from build import build
 from producer_pool import ProducerPool
+from roi import Roi
 import batch_provider_tree
 
 def set_verbose(verbose=True):

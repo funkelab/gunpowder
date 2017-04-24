@@ -1,25 +1,38 @@
 from freezable import Freezable
+from coordinate import Coordinate
 
 class Roi(Freezable):
     '''A rectengular region of interest, defined by an offset and a shape.
     '''
 
     def __init__(self, offset=None, shape=None):
-        self.__offset = None if not offset else tuple(offset)
-        self.__shape = None if not shape else tuple(shape)
+        self.__offset = None if offset is None else Coordinate(offset)
+        self.__shape = None if shape is None else Coordinate(shape)
         self.freeze()
 
     def set_offset(self, offset):
-        self.__offset = tuple(offset)
+        self.__offset = Coordinate(offset)
 
     def set_shape(self, shape):
-        self.__shape = tuple(shape)
+        self.__shape = Coordinate(shape)
 
     def get_offset(self):
         return self.__offset
 
+    def get_begin(self):
+        '''Smallest coordinate inside ROI.'''
+        return self.__offset
+
+    def get_end(self):
+        '''Smallest coordinate which is component-wise larger than any inside ROI.'''
+        return self.__offset + self.__shape
+
     def get_shape(self):
         return self.__shape
+
+    def get_center(self):
+
+        return self.__offset + self.__shape/2
 
     def get_bounding_box(self):
 
@@ -35,7 +48,7 @@ class Roi(Freezable):
 
         if self.__shape is None:
             return 0
-        return len(self.__shape)
+        return self.__shape.dims()
 
     def size(self):
 
@@ -49,13 +62,23 @@ class Roi(Freezable):
 
     def contains(self, other):
 
-        bb1 = self.get_bounding_box()
-        bb2 = other.get_bounding_box()
-        contained = [
-                bb1[d].start <= bb2[d].start and bb1[d].stop >= bb2[d].stop
-                for d in range(self.dims())
-        ]
-        return all(contained)
+        if isinstance(other, Roi):
+
+            bb1 = self.get_bounding_box()
+            bb2 = other.get_bounding_box()
+            contained = [
+                    bb1[d].start <= bb2[d].start and bb1[d].stop >= bb2[d].stop
+                    for d in range(self.dims())
+            ]
+            return all(contained)
+
+        elif isinstance(other, Coordinate):
+
+            return all([ p >= b and p < e for p, b, e in zip(other, self.get_begin(), self.get_end() )])
+
+        else:
+
+            raise RuntimeError("contains() can only be applied to Roi and Coordinate")
 
     def intersects(self, other):
 
@@ -74,11 +97,11 @@ class Roi(Freezable):
 
         assert self.dims() == other.dims()
 
-        offset = tuple(
+        offset = Coordinate(
                 max(self.__offset[d], other.__offset[d])
                 for d in range(self.dims())
         )
-        shape = tuple(
+        shape = Coordinate(
                 min(self.__offset[d] + self.__shape[d], other.__offset[d] + other.__shape[d]) - offset[d]
                 for d in range(self.dims())
         )
@@ -86,11 +109,33 @@ class Roi(Freezable):
         return Roi(offset, shape)
 
     def shift(self, by):
-        offset = tuple(
-                self.__offset[d] + by[d]
-                for d in range(self.dims())
-        )
-        return Roi(offset, self.__shape)
+
+        return Roi(self.__offset + by, self.__shape)
+
+    def grow(self, amount_neg, amount_pos):
+        '''Grow a ROI by the given amounts in each direction:
+
+        amount_neg: Coordinate or None
+
+            Amount (per dimension) to grow into the negative direction.
+
+        amount_pos: Coordinate or None
+
+            Amount (per dimension) to grow into the positive direction.
+        '''
+
+        if amount_neg is None:
+            amount_neg = Coordinate((0,)*self.dims())
+        if amount_pos is None:
+            amount_pos = Coordinate((0,)*self.dims())
+
+        assert len(amount_neg) == self.dims()
+        assert len(amount_pos) == self.dims()
+
+        offset = self.__offset - amount_neg
+        shape = self.__shape + amount_neg + amount_pos
+
+        return Roi(offset, shape)
 
     def __repr__(self):
-        return str(self.__offset) + "+" + str(self.__shape)
+        return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
