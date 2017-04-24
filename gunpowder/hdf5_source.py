@@ -53,7 +53,6 @@ class Hdf5Source(BatchProvider):
             with h5py.File(self.filename, 'r') as f:
                 mask = np.array(f[self.gt_mask_dataset])
                 good = np.where(mask > 0)
-                print(good)
                 min_good = tuple(np.min(good[d])     for d in range(len(self.dims)))
                 max_good = tuple(np.max(good[d]) + 1 for d in range(len(self.dims)))
                 self.spec.gt_roi = Roi(min_good, tuple(max_good[d] - min_good[d] for d in range(len(self.dims))))
