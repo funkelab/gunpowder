@@ -18,11 +18,15 @@ class Timing(Freezable):
         self.__time += (time.time() - self.__start)
         self.__start = 0
 
+    def elapsed(self):
+
+        if self.__start == 0:
+            return self.__time
+
+        return self.__time + (time.time() - self.__start)
+
     def get_name(self):
         return self.__name
-
-    def get_time(self):
-        return self.__time
 
     def __repr__(self):
         return self.__name + ": " + str(self.__time)
