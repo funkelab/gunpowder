@@ -3,6 +3,7 @@ import multiprocessing
 import Queue
 import os
 import sys
+import traceback
 
 import logging
 logger = logging.getLogger(__name__)
@@ -131,6 +132,7 @@ class ProducerPool(object):
                     result = target()
                 except Exception as e:
                     result = e
+                    traceback.print_exc()
                     # don't stop on normal exceptions -- place them in result queue 
                     # and let them be handled by caller
                 except:
