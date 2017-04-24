@@ -1,5 +1,6 @@
 from batch_filter import BatchFilter
 from roi import Roi
+from coordinate import Coordinate
 import copy
 import numpy as np
 
@@ -12,7 +13,7 @@ class Padding(BatchFilter):
     '''
 
     def __init__(self, padding, outside_raw_value=0):
-        self.padding = padding
+        self.padding = Coordinate(padding)
         self.outside_raw_value = outside_raw_value
 
     def setup(self):
@@ -21,18 +22,10 @@ class Padding(BatchFilter):
 
         assert self.spec.roi.get_bounding_box() is not None, "Padding can only be applied after a source that provides a bounding box."
 
-        offset = tuple(
-                self.upstream_spec.roi.get_offset()[d] - self.padding[d]
-                for  d in range(self.upstream_spec.roi.dims())
-        )
-        shape = tuple(
-                self.upstream_spec.roi.get_shape()[d] + 2*self.padding[d]
-                for  d in range(self.upstream_spec.roi.dims())
-        )
-        self.spec.roi = Roi(offset, shape)
+        self.spec.roi = self.upstream_spec.roi.grow(self.padding, self.padding)
 
-        logger.info("Upstream roi: " + str(self.upstream_spec.roi))
-        logger.info("Provided roi:" + str(self.spec.roi))
+        logger.debug("Upstream roi: " + str(self.upstream_spec.roi))
+        logger.debug("Provided roi:" + str(self.spec.roi))
 
     def get_spec(self):
         return self.spec
