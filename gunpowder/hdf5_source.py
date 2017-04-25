@@ -56,6 +56,7 @@ class Hdf5Source(BatchProvider):
                 min_good = tuple(np.min(good[d])     for d in range(len(self.dims)))
                 max_good = tuple(np.max(good[d]) + 1 for d in range(len(self.dims)))
                 self.spec.gt_roi = Roi(min_good, tuple(max_good[d] - min_good[d] for d in range(len(self.dims))))
+                logger.info("GT ROI for source " + str(self) + ": " + str(self.spec.gt_roi))
 
         self.spec.has_gt = self.gt_dataset is not None
         self.spec.has_gt_mask = self.gt_mask_dataset is not None
@@ -111,3 +112,7 @@ class Hdf5Source(BatchProvider):
     def __read(self, f, ds, roi):
 
         return np.array(f[ds][roi.get_bounding_box()])
+
+    def __repr__(self):
+
+        return self.filename
