@@ -4,7 +4,7 @@ import numpy as np
 from net_io_wrapper import NetIoWrapper
 import caffe
 from ..batch_filter import BatchFilter
-from ..producer_pool import ProducerPool
+from ..producer_pool import ProducerPool, WorkersDied
 
 import logging
 logger = logging.getLogger(__name__)
