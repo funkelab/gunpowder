@@ -40,6 +40,7 @@ def train():
             SimpleAugment(transpose_only_xy=True) +
             IntensityAugment(0.9, 1.1, -0.1, 0.1) +
             AddGtAffinities(affinity_neighborhood) +
+            # Needed for real training:
             # IntensityScaleShift(2, -1) +
             PreCache(
                     lambda : BatchSpec(
@@ -51,6 +52,8 @@ def train():
                     cache_size=10,
                     num_workers=20) +
             Snapshot(every=1) +
+            # Needed for real training (get it from gunpowder.caffe):
+            # Train() +
             PrintProfilingStats()
     )
 
