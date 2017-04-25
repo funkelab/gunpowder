@@ -22,8 +22,7 @@ def train():
                 gt_mask_dataset='volumes/labels/mask') +
         Normalize() +
         Padding([100,100,100]) +
-        RandomLocation() +
-        Reject()
+        RandomLocation()
         for i in range(10)
     )
 
@@ -32,6 +31,12 @@ def train():
             sources +
             RandomProvider() +
             ElasticAugmentation([40,40,40], [0,1,1], [0,math.pi/2.0]) +
+            # For SegEM, we have to mask-reject after the elastic augmentation, 
+            # otherwise we get stuck in requests that can't be fullfilled: If 
+            # rotation is pi/2, for example, there is no way to have more than 
+            # 50% GT in the requested output ROI upstream. The requested output 
+            # ROI would be much larger than the GT ROI provided by a source.
+            Reject() +
             SimpleAugment(transpose_only_xy=True) +
             IntensityAugment(0.9, 1.1, -0.1, 0.1) +
             AddGtAffinities(affinity_neighborhood) +
