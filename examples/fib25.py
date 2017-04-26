@@ -4,20 +4,32 @@ def train():
 
     set_verbose()
 
-    # create a batch provider by concatenation of filters
-    batch_provider = (
+    sources = tuple(
             DvidSource(
                     'gs://flyem-public-connectome',
-                    'medulla-training',
-                    'training2-grayscale',
-                    'training2-groundtruth',
+                    'CXtraining',
+                    sample + '-grayscale',
+                    sample + '-groundtruth',
                     ) +
+            RandomLocation()
+            for sample in ['pb1', 'pb2']
+    )
+
+    # create a batch provider by concatenation of filters
+    batch_provider = (
+            sources +
             RandomProvider() +
+            PreCache(
+                lambda : BatchSpec(
+                    (256,256,256),
+                    (256,256,256),
+                    with_gt=True
+            )) +
             Snapshot(every=1) +
             PrintProfilingStats()
     )
 
-    n = 1
+    n = 10
     print("Training for " + str(n) + " iterations")
     with build(batch_provider) as b:
         for i in range(n):
