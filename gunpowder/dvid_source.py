@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 class DvidSource(BatchProvider):
 
+    stores = {}
+
     def __init__(self, url, repository, raw_array_name, gt_array_name=None):
 
         self.url = url
@@ -25,9 +27,15 @@ class DvidSource(BatchProvider):
 
     def setup(self):
 
-        logger.info("establishing connection to " + self.url)
 
-        self.store = DicedStore(self.url)
+        if self.url in DvidSource.stores:
+            logger.info("re-using existing connection to " + self.url)
+            self.store = DvidSource.stores[self.url]
+        else:
+            logger.info("establishing connection to " + self.url)
+            self.store = DicedStore(self.url)
+            DvidSource.stores[self.url] = self.store
+
         self.repository = self.store.open_repo(self.repository_name)
 
         logger.info("DVID repository contains: " + str(self.repository.list_instances()))
