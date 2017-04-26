@@ -11,8 +11,6 @@ NV_GPU=0 nvidia-docker run --rm \
     -v $(pwd):/workspace \
     -v /groups/turaga/home:/groups/turaga/home \
     -v /nrs/turaga:/nrs/turaga:shared \
-    -v $HOME/src/gunpowder:/opt/gunpowder \
-    -v $HOME/src/augment:/opt/augment \
     --name $NAME \
-    turagalab/greentea:cuda8.0-cudnn6-caffe_gt-2017.04.17-pygt-0.9.4b \
+    funkey/gunpowder:latest \
     bash -c 'PYTHONPATH=$PYTHONPATH:/opt/gunpowder:/opt/augment python -u cremi.py'
