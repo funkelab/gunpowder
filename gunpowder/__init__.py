@@ -34,6 +34,7 @@ from print_profiling_stats import PrintProfilingStats
 from build import build
 from producer_pool import ProducerPool
 from roi import Roi
+from chunk import Chunk
 import batch_provider_tree
 
 def set_verbose(verbose=True):

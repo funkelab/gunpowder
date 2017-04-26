@@ -22,7 +22,17 @@ class BatchSpec(Freezable):
             BatchSpec.__next_id.value += 1
         return next_id
 
-    def __init__(self, input_shape, output_shape, input_offset=None, output_offset=None, resolution=None, with_gt=False, with_gt_mask=False, with_gt_affinities=False):
+    def __init__(
+            self,
+            input_shape,
+            output_shape,
+            input_offset=None,
+            output_offset=None,
+            resolution=None,
+            with_gt=False,
+            with_gt_mask=False,
+            with_gt_affinities=False,
+            with_prediction=False):
 
         input_shape = Coordinate(input_shape)
         output_shape = Coordinate(output_shape)
@@ -47,6 +57,7 @@ class BatchSpec(Freezable):
         self.with_gt = with_gt
         self.with_gt_mask = with_gt_mask
         self.with_gt_affinities = with_gt_affinities
+        self.with_prediction = with_prediction
         self.id = BatchSpec.get_next_id()
 
         self.freeze()

@@ -140,5 +140,15 @@ class Roi(Freezable):
 
         return Roi(offset, shape)
 
+    def __add__(self, other):
+
+        assert isinstance(other, tuple), "can only add Coordinate or tuples to Roi"
+        return self.shift(other)
+
+    def __sub__(self, other):
+
+        assert isinstance(other, Coordinate), "can only subtract Coordinate from Roi"
+        return self.shift(-other)
+
     def __repr__(self):
         return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
