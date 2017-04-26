@@ -92,7 +92,7 @@ class Hdf5Source(BatchProvider):
                 batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
                 logger.debug("providing batch with resolution of " + str(batch.spec.resolution))
             else:
-                batch.spec.resolution = (1,1,1)
+                batch.spec.resolution = (1,)*self.dims
             logger.debug("Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, input_roi)
             if batch.spec.with_gt:
