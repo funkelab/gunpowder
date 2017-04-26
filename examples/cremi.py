@@ -16,6 +16,8 @@ random.seed(42)
 def train():
     set_verbose()
     affinity_neighborhood = malis.mknhood3d()
+    solver_paramaters = caffe.SolverParameters()
+    solver_paramaters.train_net = 'net.prototxt'
     print(affinity_neighborhood)
     data_source_trees = tuple(
         Hdf5Source(
@@ -42,10 +44,11 @@ def train():
             lambda : batch_spec,
             cache_size=10,
             num_workers=5) +
+        Train(solver_paramaters, use_gpu=0) +
         Snapshot(every=1)
     )
     n = 10
-    print("Fetching minibatches for", n, "iterations")
+    print("Training for", n, "iterations")
     batch_spec = BatchSpec(
         (84,268,268),
         (56,56,56),
@@ -56,9 +59,6 @@ def train():
     with build(batch_provider_tree) as minibatch_maker:
         for i in range(n):
             minibatch_maker.request_batch(batch_spec)
-    solver_paramaters = caffe.SolverParameters()
-    trainer = caffe.Train(solver_paramaters, use_gpu=0)
-    #TODO: implement training
     print("Finished")
 
 
