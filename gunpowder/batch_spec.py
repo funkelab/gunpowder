@@ -1,6 +1,7 @@
 import multiprocessing
 from freezable import Freezable
 from roi import Roi
+from coordinate import Coordinate
 
 import logging
 logger = logging.getLogger(__name__)
@@ -23,15 +24,22 @@ class BatchSpec(Freezable):
 
     def __init__(self, input_shape, output_shape, input_offset=None, output_offset=None, resolution=None, with_gt=False, with_gt_mask=False, with_gt_affinities=False):
 
+        input_shape = Coordinate(input_shape)
+        output_shape = Coordinate(output_shape)
+
         if input_offset is None:
-            input_offset = (0,)*len(input_shape)
+            input_offset = Coordinate((0,)*input_shape.dims())
+        else:
+            input_offset = Coordinate(input_offset)
 
         if output_offset is None:
             # assume output roi is centered in input roi
-            output_offset = tuple(
-                    int((input_shape[d] - output_shape[d])/2)
-                    for d in range(len(input_shape))
-            )
+            output_offset = input_offset + (input_shape - output_shape)/2
+        else:
+            output_offset = Coordinate(output_offset)
+
+        if resolution is not None:
+            resolution = Coordinate(resolution)
 
         self.input_roi = Roi(input_offset, input_shape)
         self.output_roi = Roi(output_offset, output_shape)
