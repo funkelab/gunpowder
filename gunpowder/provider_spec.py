@@ -13,3 +13,12 @@ class ProviderSpec(Freezable):
         self.has_gt_mask = False
 
         self.freeze()
+
+    def __repr__(self):
+
+        r  = "raw ROI    : " + str(self.roi) + "\n"
+        r += "GT  ROI    : " + str(self.gt_roi) + "\n"
+        r += "has GT     : " + str(self.has_gt) + "\n"
+        r += "has GT mask: " + str(self.has_gt_mask)
+
+        return r
