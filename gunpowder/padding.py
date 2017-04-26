@@ -12,8 +12,20 @@ class Padding(BatchFilter):
     if your requested batches can be larger than what your source provides.
     '''
 
-    def __init__(self, padding, outside_raw_value=0):
-        self.padding = Coordinate(padding)
+    def __init__(self, padding=None, outside_raw_value=0):
+        '''If padding is None (default), implements an infinite padding. In this 
+        case, the reported provider spec is the same as the upstream provider 
+        spec, but access outside the ROI is permitted.
+
+        If padding is a Coordinate, this amount will be added to the upstream 
+        ROI in the positive and negative direction, and the thus grown ROI will 
+        be reported downstream as the new provider spec. Futhermore, access 
+        outside of the grown ROI will result in an exception.
+        '''
+        if padding is not None:
+            self.padding = Coordinate(padding)
+        else:
+            self.padding = None
         self.outside_raw_value = outside_raw_value
 
     def setup(self):
@@ -22,7 +34,8 @@ class Padding(BatchFilter):
 
         assert self.spec.roi.get_bounding_box() is not None, "Padding can only be applied after a source that provides a bounding box."
 
-        self.spec.roi = self.upstream_spec.roi.grow(self.padding, self.padding)
+        if self.padding is not None:
+            self.spec.roi = self.upstream_spec.roi.grow(self.padding, self.padding)
 
         logger.debug("Upstream roi: " + str(self.upstream_spec.roi))
         logger.debug("Provided roi:" + str(self.spec.roi))
@@ -31,6 +44,10 @@ class Padding(BatchFilter):
         return self.spec
 
     def prepare(self, batch_spec):
+
+        if self.padding is not None:
+            if not self.spec.roi.intersects(batch_spec.input_roi):
+                raise RuntimeError("Input ROI of batch " + str(batch_spec.input_roi) + " lies outside of my ROI " + str(self.spec.roi))
 
         # remember request batch spec
         self.request_batch_spec = copy.deepcopy(batch_spec)
@@ -42,7 +59,7 @@ class Padding(BatchFilter):
         batch_spec.output_roi = batch_spec.output_roi.intersect(self.upstream_spec.roi)
 
         if batch_spec.input_roi is None or batch_spec.output_roi is None:
-            logger.warning("Requested batch lies entirely in padded region.")
+            logger.warning("Requested batch lies entirely outside of upstream ROI.")
             batch_spec.input_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
             batch_spec.output_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
 
