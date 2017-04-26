@@ -10,6 +10,9 @@ class Roi(Freezable):
         self.__shape = None if shape is None else Coordinate(shape)
         self.freeze()
 
+        if self.__offset is not None and self.__shape is not None:
+            assert self.__offset.dims() == self.__shape.dims(), "offset dimension %d != shape dimension %d"%(self.__offset.dims(),self.__shape.dims())
+
     def set_offset(self, offset):
         self.__offset = Coordinate(offset)
 
