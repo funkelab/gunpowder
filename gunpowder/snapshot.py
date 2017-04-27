@@ -32,11 +32,15 @@ class Snapshot(BatchFilter):
                     f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gt_mask is not None:
                     f['volumes/labels/mask'] = batch.gt_mask
+                    f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gt_affinities is not None:
                     f['volumes/gt_affs'] = batch.gt_affinities
+                    f['volumes/gt_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.prediction is not None:
                     f['volumes/predicted_affs'] = batch.prediction
+                    f['volumes/predicted_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gradient is not None:
                     f['volumes/gradient'] = batch.gradient
+                    f['volumes/gradient'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
