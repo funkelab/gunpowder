@@ -20,7 +20,7 @@ class Chunk(BatchFilter):
 
     def request_batch(self, batch_spec):
 
-        logger.info("batch with input ROI " + str(batch_spec.input_roi) + " requested")
+        logger.info("batch with spec " + str(batch_spec) + " requested")
 
         stride = self.chunk_spec_template.output_roi.get_shape()
 
@@ -38,7 +38,7 @@ class Chunk(BatchFilter):
                     self.chunk_spec_template.output_roi.get_offset() + Coordinate(offset),
             )
 
-            logger.info("requesting chunk at " + str(chunk_spec.input_roi))
+            logger.info("requesting chunk " + str(chunk_spec))
 
             chunk = self.get_upstream_provider().request_batch(chunk_spec)
 
@@ -51,7 +51,7 @@ class Chunk(BatchFilter):
             if chunk.spec.with_gt_mask:
                 self.__fill(batch.gt_mask, chunk.gt_mask, batch_spec.output_roi, chunk.spec.output_roi)
             if chunk.spec.with_prediction:
-                self.__fill(batch.prediction, chunk.prediction, batch_spec.output_roi, chunk.spec.output_roi)
+                self.__fill(batch.prediction, chunk.prediction, batch_spec.output_roi, chunk.spec.output_roi, affs=True)
 
             for d in range(self.dims):
                 offset[d] += stride[d]
@@ -80,7 +80,7 @@ class Chunk(BatchFilter):
 
         return batch
 
-    def __fill(self, a, b, roi_a, roi_b):
+    def __fill(self, a, b, roi_a, roi_b, affs=False):
 
         logger.debug("filling " + str(roi_b) + " into " + str(roi_a))
 
@@ -91,4 +91,7 @@ class Chunk(BatchFilter):
         common_in_a_roi = common_roi - roi_a.get_offset()
         common_in_b_roi = common_roi - roi_b.get_offset()
 
-        a[common_in_a_roi.get_bounding_box()] = b[common_in_b_roi.get_bounding_box()]
+        if affs:
+            a[(slice(None),) + common_in_a_roi.get_bounding_box()] = b[(slice(None),) + common_in_b_roi.get_bounding_box()]
+        else:
+            a[common_in_a_roi.get_bounding_box()] = b[common_in_b_roi.get_bounding_box()]

@@ -63,3 +63,15 @@ class BatchSpec(Freezable):
         self.freeze()
 
         logger.debug("created new spec with id " + str(self.id))
+
+    def __repr__(self):
+
+        r  = "input ROI   : " + str(self.input_roi) + "\n"
+        r += "output ROI  : " + str(self.output_roi) + "\n"
+        r += "resolution  : " + str(self.resolution) + "\n"
+        r += "with GT     : " + str(self.with_gt) + "\n"
+        r += "with GT mask: " + str(self.with_gt_mask) + "\n"
+        r += "with predict: " + str(self.with_prediction) + "\n"
+        r += "ID          : " + str(self.id)
+
+        return r
