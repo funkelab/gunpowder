@@ -6,9 +6,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Snapshot(BatchFilter):
+    '''Save a passing batch in an HDF file.'''
 
-    def __init__(self, output_dir='snapshots', every=100):
+    def __init__(self, output_dir='snapshots', output_filename='{id}.hdf', every=100):
+        '''
+        output_dir: string
+
+            The directory to save the snapshots. Will be created, if it does not exist.
+
+        output_filename: string
+
+            Template for output filenames. '{id}' in the string will be replaced 
+            with the ID of the batch.
+
+        every:
+
+            How often to save a batch. 'every=1' indicates that every batch will 
+            be stored, 'every=2' every second and so on.
+        '''
         self.output_dir = output_dir
+        self.output_filename = output_filename
         self.every = max(1,every)
 
     def process(self, batch):
@@ -18,11 +35,11 @@ class Snapshot(BatchFilter):
         if id%self.every == 0:
 
             try:
-                os.mkdir(self.output_dir)
+                os.makedirs(self.output_dir)
             except:
                 pass
 
-            snapshot_name = os.path.join(self.output_dir, str(id).zfill(8) + '.hdf')
+            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8)))
             logger.debug("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
                 f['volumes/raw'] = batch.raw
