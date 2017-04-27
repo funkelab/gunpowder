@@ -1,6 +1,7 @@
 import multiprocessing
 import time
 import numpy as np
+import os
 from net_io_wrapper import NetIoWrapper
 import caffe
 from ..batch_filter import BatchFilter
@@ -17,6 +18,10 @@ class Predict(BatchFilter):
     '''
 
     def __init__(self, prototxt, weights, use_gpu=None):
+
+        for f in [prototxt, weights]:
+            if not os.path.isfile(f):
+                raise RuntimeError("%s does not exist"%f)
 
         # start prediction as a producer pool, so that we can gracefully exit if 
         # anything goes wrong
