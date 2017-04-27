@@ -95,6 +95,7 @@ class Train(BatchFilter):
             batch.loss = 0
         else:
             loss = self.solver.step(1)
+            self.__consistency_check()
             output = self.net_io.get_outputs()
             batch.prediction = output['aff_pred']
             batch.loss = loss
@@ -145,3 +146,9 @@ class Train(BatchFilter):
         #
         #   We set all affinities outside GT regions to 0 -> no loss in masked 
         #   out area.
+
+    def __consistency_check(self):
+
+        diffs = self.net_io.get_outputs()
+        for k,v in diffs:
+            assert not np.isnan(v).any(), "Detected NaN in output diff " + k

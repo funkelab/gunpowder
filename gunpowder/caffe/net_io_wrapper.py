@@ -66,3 +66,9 @@ class NetIoWrapper:
         for set_key in self.output_specs.keys():
             outputs[set_key] = self.output_specs[set_key].blob.data
         return outputs
+
+    def get_output_diffs(self):
+        diffs = {}
+        for set_key in self.output_specs.keys():
+            diffs[set_key] = self.output_specs[set_key].blob.diff
+        return diffs
