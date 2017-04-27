@@ -78,6 +78,7 @@ class Predict(BatchFilter):
 
         loss = self.net.forward()
         output = self.net_io.get_outputs()
-        batch.prediction = output['aff_pred']
+        assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
+        batch.prediction = output['aff_pred'][0]
 
         return batch
