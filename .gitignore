@@ -3,4 +3,4 @@ snapshots
 *.pyc
 build
 dist
-augment.egg-info
+*.egg-info
