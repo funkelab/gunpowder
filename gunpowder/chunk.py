@@ -46,11 +46,11 @@ class Chunk(BatchFilter):
                 batch = self.__setup_batch(batch_spec, chunk)
 
             self.__fill(batch.raw, chunk.raw, batch_spec.input_roi, chunk.spec.input_roi)
-            if chunk.spec.with_gt:
+            if chunk.gt is not None:
                 self.__fill(batch.gt, chunk.gt, batch_spec.output_roi, chunk.spec.output_roi)
-            if chunk.spec.with_gt_mask:
+            if chunk.gt_mask is not None:
                 self.__fill(batch.gt_mask, chunk.gt_mask, batch_spec.output_roi, chunk.spec.output_roi)
-            if chunk.spec.with_prediction:
+            if chunk.prediction is not None:
                 self.__fill(batch.prediction, chunk.prediction, batch_spec.output_roi, chunk.spec.output_roi, affs=True)
 
             for d in range(self.dims):
@@ -68,13 +68,13 @@ class Chunk(BatchFilter):
 
         batch = Batch(batch_spec)
         batch.raw = np.zeros(batch_spec.input_roi.get_shape(), reference.raw.dtype)
-        if reference.spec.with_gt:
+        if reference.gt is not None:
             batch.gt = np.zeros(batch.spec.output_roi.get_shape(), reference.gt.dtype)
             batch.spec.with_gt = True
-        if reference.spec.with_gt_mask:
+        if reference.gt_mask is not None:
             batch.gt_mask = np.zeros(batch.spec.output_roi.get_shape(), reference.gt_mask.dtype)
             batch.spec.with_gt_mask = True
-        if reference.spec.with_prediction:
+        if reference.prediction is not None:
             batch.prediction = np.zeros((3,) + batch.spec.output_roi.get_shape(), reference.prediction.dtype)
             batch.spec.with_prediction = True
 
