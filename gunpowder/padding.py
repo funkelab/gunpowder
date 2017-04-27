@@ -53,7 +53,7 @@ class Padding(BatchFilter):
         self.request_batch_spec = copy.deepcopy(batch_spec)
 
         # change batch spec to fit into upstream spec
-        logger.debug("previous input request ROI: %s"%batch_spec.input_roi)
+        logger.debug("request: %s"%batch_spec)
         logger.debug("upstream ROI: %s"%self.upstream_spec.roi)
         batch_spec.input_roi = batch_spec.input_roi.intersect(self.upstream_spec.roi)
         batch_spec.output_roi = batch_spec.output_roi.intersect(self.upstream_spec.roi)
@@ -63,7 +63,7 @@ class Padding(BatchFilter):
             batch_spec.input_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
             batch_spec.output_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
 
-        logger.debug("new input request ROI: %s"%batch_spec.input_roi)
+        logger.debug("new request: %s"%batch_spec)
 
     def process(self, batch):
 
