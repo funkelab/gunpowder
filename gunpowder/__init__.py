@@ -35,6 +35,7 @@ from build import build
 from producer_pool import ProducerPool
 from roi import Roi
 from chunk import Chunk
+from coordinate import Coordinate
 import batch_provider_tree
 
 def set_verbose(verbose=True):
