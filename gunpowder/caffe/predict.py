@@ -48,6 +48,7 @@ class Predict(BatchFilter):
             raise PredictProcessDied()
 
         batch.prediction = out.prediction
+        batch.spec.with_prediction = True
 
     def __predict(self, use_gpu):
 
