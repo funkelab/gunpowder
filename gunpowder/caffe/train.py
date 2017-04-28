@@ -95,7 +95,7 @@ class Train(BatchFilter):
             batch.loss = 0
         else:
             loss = self.solver.step(1)
-            self.__consistency_check()
+            # self.__consistency_check()
             output = self.net_io.get_outputs()
             batch.prediction = output['aff_pred']
             batch.loss = loss
@@ -150,5 +150,5 @@ class Train(BatchFilter):
     def __consistency_check(self):
 
         diffs = self.net_io.get_outputs()
-        for k,v in diffs:
-            assert not np.isnan(v).any(), "Detected NaN in output diff " + k
+        for k in diffs:
+            assert not np.isnan(diffs[k]).any(), "Detected NaN in output diff " + k
