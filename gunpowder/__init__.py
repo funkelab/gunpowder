@@ -1,14 +1,4 @@
 import logging
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument(
-        "-v", "--verbose",
-        action="store_true")
-args = parser.parse_args()
-if args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
 
 from batch_spec import BatchSpec
 from batch import Batch
