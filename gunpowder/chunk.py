@@ -31,15 +31,16 @@ class Chunk(BatchFilter):
         offset = np.array(begin)
         while (offset < end).all():
 
-            chunk_spec = BatchSpec(
-                    self.chunk_spec_template.input_roi.get_shape(),
-                    self.chunk_spec_template.output_roi.get_shape(),
-                    offset,
-                    self.chunk_spec_template.output_roi.get_offset() + Coordinate(offset),
-            )
+            # create a copy of the requested batch spec
+            chunk_spec = copy.deepcopy(batch_spec)
+
+            # change size and offset of the batch spec
+            chunk_spec.input_roi = chunk_spec_template.input_roi + offset
+            chunk_spec.output_roi = chunk_spec_template.output_roi + offset
 
             logger.info("requesting chunk " + str(chunk_spec))
 
+            # get a chunk
             chunk = self.get_upstream_provider().request_batch(chunk_spec)
 
             if batch is None:
@@ -70,13 +71,10 @@ class Chunk(BatchFilter):
         batch.raw = np.zeros(batch_spec.input_roi.get_shape(), reference.raw.dtype)
         if reference.gt is not None:
             batch.gt = np.zeros(batch.spec.output_roi.get_shape(), reference.gt.dtype)
-            batch.spec.with_gt = True
         if reference.gt_mask is not None:
             batch.gt_mask = np.zeros(batch.spec.output_roi.get_shape(), reference.gt_mask.dtype)
-            batch.spec.with_gt_mask = True
         if reference.prediction is not None:
             batch.prediction = np.zeros((3,) + batch.spec.output_roi.get_shape(), reference.prediction.dtype)
-            batch.spec.with_prediction = True
 
         return batch
 
