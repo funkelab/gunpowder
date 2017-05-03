@@ -10,25 +10,25 @@ import gunpowder
 from gunpowder import caffe
 from gunpowder import *
 
-
-random.seed(42)
-
 def train():
+
     set_verbose()
+
     affinity_neighborhood = malis.mknhood3d()
     solver_paramaters = caffe.SolverParameters()
     solver_paramaters.train_net = 'net.prototxt'
-    print(affinity_neighborhood)
+
     data_source_trees = tuple(
         Hdf5Source(
-            'sample_A_20160501.hdf',
+            sample,
             raw_dataset='volumes/raw',
             gt_dataset='volumes/labels/neuron_ids'
         ) +
         Normalize() +
         RandomLocation()
-        for i in range(10)
+        for sample in ['sample_A_20160501.hdf', 'sample_B_20160501', 'sample_C_20160501']
     )
+
     batch_provider_tree = (
         data_source_trees +
         RandomProvider() +
@@ -47,8 +47,10 @@ def train():
         Train(solver_paramaters, use_gpu=0) +
         Snapshot(every=1)
     )
+
     n = 10
     print("Training for", n, "iterations")
+
     batch_spec = BatchSpec(
         (84,268,268),
         (56,56,56),
@@ -56,9 +58,11 @@ def train():
         with_gt_mask=False,
         with_gt_affinities=True
     )
+
     with build(batch_provider_tree) as minibatch_maker:
         for i in range(n):
             minibatch_maker.request_batch(batch_spec)
+
     print("Finished")
 
 
