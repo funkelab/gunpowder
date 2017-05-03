@@ -15,8 +15,21 @@ def train():
     set_verbose()
 
     affinity_neighborhood = malis.mknhood3d()
-    solver_paramaters = caffe.SolverParameters()
-    solver_paramaters.train_net = 'net.prototxt'
+    solver_parameters = caffe.SolverParameters()
+    solver_parameters.train_net = 'net.prototxt'
+    solver_parameters.base_lr = 1e-4
+    solver_parameters.momentum = 0.95
+    solver_parameters.momentum2 = 0.999
+    solver_parameters.delta = 1e-8
+    solver_parameters.weight_decay = 0.000005
+    solver_parameters.lr_policy = 'inv'
+    solver_parameters.gamma = 0.0001
+    solver_parameters.power = 0.75
+    solver_parameters.snapshot = 2000
+    solver_parameters.snapshot_prefix = 'net'
+    solver_parameters.type = 'Adam'
+    solver_parameters.resume_from = None
+    solver_parameters.train_state.add_stage('euclid')
 
     data_source_trees = tuple(
         Hdf5Source(
@@ -26,7 +39,7 @@ def train():
         ) +
         Normalize() +
         RandomLocation()
-        for sample in ['sample_A_20160501.hdf', 'sample_B_20160501', 'sample_C_20160501']
+        for sample in ['sample_A_20160501.hdf', 'sample_B_20160501.hdf', 'sample_C_20160501.hdf']
     )
 
     batch_provider_tree = (
@@ -44,7 +57,7 @@ def train():
             lambda : batch_spec,
             cache_size=10,
             num_workers=5) +
-        Train(solver_paramaters, use_gpu=0) +
+        caffe.Train(solver_parameters, use_gpu=0) +
         Snapshot(every=1)
     )
 
