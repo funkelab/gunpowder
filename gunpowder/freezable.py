@@ -9,3 +9,6 @@ class Freezable(object):
 
     def freeze(self):
         self.__isfrozen = True
+
+    def thaw(self):
+        self.__isfrozen = False
