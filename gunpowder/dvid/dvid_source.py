@@ -4,72 +4,37 @@ from ..batch import Batch
 from ..roi import Roi
 from ..profiling import Timing
 from ..coordinate import Coordinate
-from diced import DicedStore
+from libdvid import DVIDNodeService
 
 import logging
 logger = logging.getLogger(__name__)
 
+class ReadFailed(Exception):
+    pass
+
 class DvidSource(BatchProvider):
 
-    stores = {}
-
-    def __init__(self, url, repository, raw_array_name, gt_array_name=None):
+    def __init__(self, url, uuid, raw_array_name, gt_array_name=None):
 
         self.url = url
-        self.repository_name = repository
+        self.uuid = uuid
         self.raw_array_name = raw_array_name
         self.gt_array_name = gt_array_name
-        self.store = None
-        self.repository = None
+        self.node_service = None
         self.dims = 0
-        self.raw_array = None
-        self.gt_array = None
         self.spec = ProviderSpec()
 
     def setup(self):
 
+        logger.info("establishing connection to " + self.url)
+        self.node_service = DVIDNodeService(self.url, self.uuid)
 
-        if self.url in DvidSource.stores:
-            logger.info("re-using existing connection to " + self.url)
-            self.store = DvidSource.stores[self.url]
-        else:
-            logger.info("establishing connection to " + self.url)
-            self.store = DicedStore(self.url)
-            DvidSource.stores[self.url] = self.store
-
-        self.repository = self.store.open_repo(self.repository_name)
-
-        logger.info("DVID repository contains: " + str(self.repository.list_instances()))
-        logger.info("opening " + str(self.raw_array_name) + " for raw")
-
-        self.raw_array = self.repository.get_array(self.raw_array_name)
-        self.dims = self.raw_array.get_numdims()
-
-        raw_extents = self.raw_array.get_extents()
-        self.spec.roi = Roi(
-                (raw_extents[d].start for d in range(self.dims)),
-                (raw_extents[d].stop - raw_extents[d].start for d in range(self.dims))
-        )
-
+        self.spec.roi = self.__get_roi(self.raw_array_name)
         if self.gt_array_name is not None:
-
-            logger.info("opening " + str(self.gt_array_name) + " for GT")
-
-            self.gt_array = self.repository.get_array(self.gt_array_name)
-            assert self.gt_array.get_numdims() == self.dims, "Dimensions of GT and raw differ"
-
-            gt_extents = self.gt_array.get_extents()
-            self.spec.gt_roi = Roi(
-                    (gt_extents[d].start for d in range(self.dims)),
-                    (gt_extents[d].stop - gt_extents[d].start for d in range(self.dims))
-            )
-
+            self.spec.gt_roi = self.__get_roi(self.gt_array_name)
             self.spec.has_gt = True
-
         else:
-
             self.spec.has_gt = False
-
         self.spec.has_gt_mask = False
 
         logger.info("DVID source spec:\n" + str(self.spec))
@@ -106,13 +71,53 @@ class DvidSource(BatchProvider):
         logger.warning("setting resolution to " + str(batch.spec.resolution))
 
         logger.debug("Reading raw...")
-        batch.raw = self.raw_array[batch_spec.input_roi.get_bounding_box()]
+        batch.raw = self.__read_raw(batch_spec.input_roi)
         if batch.spec.with_gt:
             logger.debug("Reading gt...")
-            batch.gt = self.gt_array[batch_spec.output_roi.get_bounding_box()]
+            batch.gt = self.__read_gt(batch_spec.output_roi)
         logger.debug("done")
 
         timing.stop()
         batch.profiling_stats.add(timing)
 
         return batch
+
+    def __get_roi(self, array_name):
+
+        info = self.node_service.get_typeinfo(array_name)
+        roi_min = info['Extended']['MinPoint']
+        if roi_min is not None:
+            roi_min = Coordinate(roi_min[::-1])
+        roi_max = info['Extended']['MaxPoint']
+        if roi_max is not None:
+            roi_max = Coordinate(roi_max[::-1])
+
+        return Roi(roi_min, roi_max - roi_min)
+
+    def __read_raw(self, roi):
+
+        for i in range(5):
+            try:
+                return self.node_service.get_gray3D(
+                        self.raw_array_name,
+                        roi.get_shape(),
+                        roi.get_offset(),
+                        throttle=False)
+            except:
+                pass
+
+        raise ReadFailed("Reading raw from DvidSource " + self.url + " failed more than " + str(self.retry) + " times")
+
+    def __read_gt(self, roi):
+
+        for i in range(5):
+            try:
+                return self.node_service.get_labels3D(
+                        self.gt_array_name,
+                        roi.get_shape(),
+                        roi.get_offset(),
+                        throttle=False)
+            except:
+                pass
+
+        raise ReadFailed("Reading GT from DvidSource " + self.url + " failed more than " + str(self.retry) + " times")
