@@ -1,9 +1,10 @@
-from batch_provider import BatchProvider
-from provider_spec import ProviderSpec
-from batch import Batch
-from roi import Roi
+from ..batch_provider import BatchProvider
+from ..provider_spec import ProviderSpec
+from ..batch import Batch
+from ..roi import Roi
+from ..profiling import Timing
+from ..coordinate import Coordinate
 from diced import DicedStore
-from profiling import Timing
 
 import logging
 logger = logging.getLogger(__name__)
