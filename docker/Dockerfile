@@ -63,13 +63,11 @@ RUN python setup.py install
 
 # install gunpowder
 
-ENV GUNPOWDER_REVISION=7a27348d84d8a587317b3812595b64928c0e8130
-WORKDIR /src
-RUN git clone https://github.com/funkey/gunpowder && \
-    cd gunpowder && \
-    git checkout ${GUNPOWDER_REVISION}
 WORKDIR /src/gunpowder
-RUN python setup.py install
+ENV GUNPOWDER_REVISION=7a27348d84d8a587317b3812595b64928c0e8130
+RUN git clone https://github.com/funkey/gunpowder . && \
+    git checkout ${GUNPOWDER_REVISION} && \
+    pip install -e .
 
 # test the container
 
