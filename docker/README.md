@@ -20,8 +20,11 @@ sudo add-apt-repository \
    stable"
 sudo apt-get update
 sudo apt-get install docker-ce
-sudo docker run hello-world
-sudo apt-get install nvidia-docker
+
+# add your user to the docker group
+sudo usermod -a -G docker $USER
+
+docker run hello-world
 
 # install nvidia-docker
 wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb
@@ -29,17 +32,17 @@ sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
 
 # start nvidia-docker (if failed above)
 sudo service nvidia-docker start
-sudo nvidia-docker run --rm nvidia/cuda nvidida-smi
+nvidia-docker run --rm nvidia/cuda nvidida-smi
 ```
 
 ## Build image
 
 ```bash
-sudo nvidia-docker build -t gunpowder .
+docker build -t gunpowder .
 ```
 
 ## Run image as container
 
 ```bash
-sudo nvidia-docker run gunpowder
+nvidia-docker run --rm gunpowder
 ```

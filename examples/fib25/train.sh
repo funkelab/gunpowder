@@ -5,14 +5,14 @@ rm net_iter*
 
 NAME=$(basename "$PWD")
 
-sudo nvidia-docker rm -f $NAME
+nvidia-docker rm -f $NAME
 
 USER_ID=${UID}
 USER_HOME=${HOME}
 
 echo "Starting as user ${USER_ID} with home ${HOME}"
 
-NV_GPU=1 sudo nvidia-docker run --rm \
+NV_GPU=1 nvidia-docker run --rm \
     -u ${USER_ID} \
     -e HOME=${USER_HOME} \
     -v ${PWD}:/run \
