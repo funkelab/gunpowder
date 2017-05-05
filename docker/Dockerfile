@@ -61,6 +61,12 @@ RUN git clone https://github.com/funkey/augment
 WORKDIR /src/augment
 RUN python setup.py install
 
+WORKDIR /src
+RUN git clone https://github.com/TuragaLab/dvision
+WORKDIR /src/dvision
+RUN pip install -r requirements.txt
+RUN python setup.py install
+
 # install gunpowder
 
 WORKDIR /src/gunpowder
