@@ -70,8 +70,8 @@ RUN python setup.py install
 # install gunpowder
 
 WORKDIR /src/gunpowder
-ENV GUNPOWDER_REVISION=7a27348d84d8a587317b3812595b64928c0e8130
-RUN git clone https://github.com/funkey/gunpowder . && \
+ENV GUNPOWDER_REVISION=9a44247157f0b23f9ce25536fd06eec3b6c6ce44
+RUN git clone https://github.com/TuragaLab/gunpowder . && \
     git checkout ${GUNPOWDER_REVISION} && \
     pip install -e .
 
