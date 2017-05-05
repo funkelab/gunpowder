@@ -2,20 +2,16 @@ from __future__ import print_function
 
 import malis
 
-import gunpowder
-from gunpowder import caffe
 from gunpowder import *
+from gunpowder.caffe import Train, SolverParameters
 from gunpowder.dvid import DvidSource
-
-print(dir(gunpowder))
-print(gunpowder.__file__)
 
 def train():
 
     set_verbose()
 
     affinity_neighborhood = malis.mknhood3d()
-    solver_parameters = gunpowder.caffe.SolverParameters()
+    solver_parameters = SolverParameters()
     solver_parameters.train_net = 'net.prototxt'
     solver_parameters.base_lr = 1e-4
     solver_parameters.momentum = 0.95
@@ -31,24 +27,6 @@ def train():
     solver_parameters.resume_from = None
     solver_parameters.train_state.add_stage('euclid')
 
-    data_source_trees = tuple(
-        DvidSource(
-            hostname='slowpoke3',
-            port=32788,
-            uuid='341',
-            raw_array_name='grayscale',
-            gt_array_name='groundtruth_pruned',
-        ) +
-        # Hdf5Source(
-        #     filename="/groups/turaga/home/turagas/data/CREMI/sample_A_20160501.hdf",
-        #     raw_dataset='volumes/raw',
-        #     gt_dataset='volumes/labels/neuron_ids'
-        # ) + 
-        Normalize() +
-        RandomLocation()
-        for _ in [None]
-    )
-
     batch_spec = BatchSpec(
         (84,268,268),
         (56,56,56),
@@ -59,14 +37,22 @@ def train():
 
     # create a batch provider by concatenation of filters
     batch_provider = (
-        data_source_trees +
+        DvidSource(
+            hostname='slowpoke3',
+            port=32788,
+            uuid='341',
+            raw_array_name='grayscale',
+            gt_array_name='groundtruth_pruned',
+        ) +
+        Normalize() +
+        RandomLocation() +
         AddGtAffinities(affinity_neighborhood) + 
         PreCache(
             lambda: batch_spec,
             cache_size=3,
             num_workers=2
         ) +
-        caffe.Train(solver_parameters, use_gpu=0) +
+        Train(solver_parameters, use_gpu=0) +
         Snapshot(every=1)
     )
 
