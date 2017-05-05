@@ -4,3 +4,8 @@ snapshots
 build
 dist
 *.egg-info
+net_iter*
+.idea
+*.hdf
+*.h5
+
