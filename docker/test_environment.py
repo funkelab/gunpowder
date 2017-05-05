@@ -1,5 +1,6 @@
 import gunpowder
 import gunpowder.caffe
+import gunpowder.dvid
 
 if __name__ == "__main__":
     solver_parameters = gunpowder.caffe.SolverParameters()
