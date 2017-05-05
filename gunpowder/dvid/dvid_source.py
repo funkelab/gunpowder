@@ -4,19 +4,29 @@ from ..batch import Batch
 from ..roi import Roi
 from ..profiling import Timing
 from ..coordinate import Coordinate
-from libdvid import DVIDNodeService
+import dvision
 
 import logging
 logger = logging.getLogger(__name__)
 
+
 class ReadFailed(Exception):
     pass
 
+
 class DvidSource(BatchProvider):
 
-    def __init__(self, url, uuid, raw_array_name, gt_array_name=None):
-
-        self.url = url
+    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None):
+        """
+        :param hostname: str of hostname for DVID server
+        :param port: int of port for DVID server
+        :param uuid: str of UUID of node on DVID server
+        :param raw_array_name: str of data instance for image data
+        :param gt_array_name: str of data instance for segmentation label data
+        """
+        self.hostname = hostname
+        self.port = port
+        self.url = "http://{}:{}".format(self.hostname, self.port)
         self.uuid = uuid
         self.raw_array_name = raw_array_name
         self.gt_array_name = gt_array_name
@@ -25,10 +35,6 @@ class DvidSource(BatchProvider):
         self.spec = ProviderSpec()
 
     def setup(self):
-
-        logger.info("establishing connection to " + self.url)
-        self.node_service = DVIDNodeService(self.url, self.uuid)
-
         self.spec.roi = self.__get_roi(self.raw_array_name)
         if self.gt_array_name is not None:
             self.spec.gt_roi = self.__get_roi(self.gt_array_name)
@@ -83,8 +89,8 @@ class DvidSource(BatchProvider):
         return batch
 
     def __get_roi(self, array_name):
-
-        info = self.node_service.get_typeinfo(array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, array_name)
+        info = data_instance.info
         roi_min = info['Extended']['MinPoint']
         if roi_min is not None:
             roi_min = Coordinate(roi_min[::-1])
@@ -92,32 +98,29 @@ class DvidSource(BatchProvider):
         if roi_max is not None:
             roi_max = Coordinate(roi_max[::-1])
 
-        return Roi(roi_min, roi_max - roi_min)
+        return Roi(offset=roi_min, shape=roi_max - roi_min)
 
     def __read_raw(self, roi):
-
-        for i in range(5):
-            try:
-                return self.node_service.get_gray3D(
-                        self.raw_array_name,
-                        roi.get_shape(),
-                        roi.get_offset(),
-                        throttle=False)
-            except:
-                pass
-
-        raise ReadFailed("Reading raw from DvidSource " + self.url + " failed more than " + str(self.retry) + " times")
+        slices = roi.get_bounding_box()
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.raw_array_name)
+        try:
+            return data_instance[slices]
+        except Exception as e:
+            print(e)
+            msg = "Failure reading raw at slices {} with {}".format(slices, repr(self))
+            raise ReadFailed(msg)
 
     def __read_gt(self, roi):
+        slices = roi.get_bounding_box()
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.gt_array_name)
+        try:
+            return data_instance[slices]
+        except Exception as e:
+            print(e)
+            msg = "Failure reading GT at slices {} with {}".format(slices, repr(self))
+            raise ReadFailed(msg)
 
-        for i in range(5):
-            try:
-                return self.node_service.get_labels3D(
-                        self.gt_array_name,
-                        roi.get_shape(),
-                        roi.get_offset(),
-                        throttle=False)
-            except:
-                pass
-
-        raise ReadFailed("Reading GT from DvidSource " + self.url + " failed more than " + str(self.retry) + " times")
+    def __repr__(self):
+        return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
+            self.hostname, self.port, self.uuid, self.raw_array_name, self.gt_array_name
+        )
