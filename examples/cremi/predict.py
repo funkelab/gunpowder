@@ -19,7 +19,7 @@ def predict():
 
     pipeline = (
         Hdf5Source(
-                'test1.hdf',
+                'sample_A_20160501.hdf',
                 raw_dataset='volumes/raw',
                 gt_dataset='volumes/labels/neuron_ids') +
         Padding() +
