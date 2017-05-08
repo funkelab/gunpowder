@@ -28,6 +28,8 @@ from chunk import Chunk
 from coordinate import Coordinate
 import batch_provider_tree
 
+logging.basicConfig(level=logging.INFO)
+
 def set_verbose(verbose=True):
     if verbose:
         logging.basicConfig(level=logging.DEBUG)
