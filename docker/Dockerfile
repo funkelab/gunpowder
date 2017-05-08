@@ -67,7 +67,7 @@ ENV PYTHONPATH /src/dvision:$PYTHONPATH
 # install gunpowder
 
 WORKDIR /src/gunpowder
-ENV GUNPOWDER_REVISION=825a9d3204750a0a679d04a9b342e4ffb126abf3
+ENV GUNPOWDER_REVISION=7bc277db183bbf42ede04c51719671d8502b397e
 RUN git clone https://github.com/TuragaLab/gunpowder . && \
     git checkout ${GUNPOWDER_REVISION}
 ENV PYTHONPATH /src/gunpowder:$PYTHONPATH
