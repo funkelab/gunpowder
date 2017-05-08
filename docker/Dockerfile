@@ -35,7 +35,7 @@ RUN pip install --upgrade pip && \
     for req in $(cat python/requirements.txt) pydot; do pip install $req; done
 
 WORKDIR $CAFFE_ROOT/build
-RUN cmake -DUSE_INDEX_64=1 -DUSE_CUDA=1 -DUSE_LIBDNN=0 -DUSE_CUDNN=1 -DUSE_OPENMP=0 -DUSE_GREENTEA=0 .. && \
+RUN cmake -DUSE_INDEX_64=1 -DUSE_CUDA=1 -DUSE_LIBDNN=1 -DUSE_CUDNN=1 -DUSE_OPENMP=0 -DUSE_GREENTEA=0 .. && \
     make --jobs $(nproc)
 
 # setup env to find pycaffe
