@@ -3,6 +3,7 @@ from batch_spec import BatchSpec
 from batch import Batch
 from coordinate import Coordinate
 import numpy as np
+import copy
 
 import logging
 logger = logging.getLogger(__name__)
