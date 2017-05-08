@@ -1,47 +1,53 @@
 from gunpowder import *
+from gunpowder.caffe import *
 import random
 import numpy as np
-
-class DummyPrediction(BatchFilter):
-
-    def process(self, batch):
-
-        print("adding dummy predictions for " + str(batch.spec.output_roi))
-        batch.prediction = np.zeros((3,) + batch.spec.output_roi.get_shape(), dtype=np.float32)
-        batch.prediction[0,:] = random.random()
-        batch.prediction[1,:] = random.random()
-        batch.prediction[2,:] = random.random()
-        batch.spec.with_prediction = True
+import os
 
 def predict():
 
-    chunk_size = Coordinate((200,200,200))
+    iteration = 10000
+    prototxt = 'net.prototxt'
+    weights  = 'net_iter_%d.caffemodel'%iteration
+
+    input_size = Coordinate((84,268,268))
+    output_size = Coordinate((56,56,56))
 
     pipeline = (
-        Hdf5Source(
-                'sample_A_20160501.hdf',
-                raw_dataset='volumes/raw',
-                gt_dataset='volumes/labels/neuron_ids') +
-        Padding() +
-        Normalize() +
-        DummyPrediction() +
-        # chunk into sizes that prediction can handle at once
-        Chunk(
-                BatchSpec(
-                        chunk_size,
-                        chunk_size - (5,5,5)
-                )
-        ) +
-        Snapshot(every=1)
+            Hdf5Source(
+                    'sample_A_20160501.hdf',
+                    raw_dataset='volumes/raw') +
+            Normalize() +
+            Padding() +
+            IntensityScaleShift(2, -1) +
+            ZeroOutConstSections() +
+            Predict(prototxt, weights, use_gpu=0) +
+            Snapshot(
+                    every=1,
+                    output_dir=os.path.join('chunks', '%d'%iteration),
+                    output_filename='chunk.hdf'
+            ) +
+            PrintProfilingStats() +
+            Chunk(
+                    BatchSpec(
+                            input_size,
+                            output_size
+                    )
+            ) +
+            Snapshot(
+                    every=1,
+                    output_dir=os.path.join('processed', '%d'%iteration),
+                    output_filename='sample_A_20160501.hdf'
+            )
     )
 
     # request a "batch" of the size of the whole dataset
     with build(pipeline) as p:
-        spec = p.get_spec()
+        shape = p.get_spec().roi.get_shape()
         p.request_batch(
                 BatchSpec(
-                        spec.roi.get_shape(),
-                        spec.roi.get_shape() - (5,5,5)
+                        shape,
+                        shape - (input_size-output_size)
                 )
         )
 
