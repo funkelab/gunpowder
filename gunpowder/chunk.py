@@ -36,8 +36,8 @@ class Chunk(BatchFilter):
             chunk_spec = copy.deepcopy(batch_spec)
 
             # change size and offset of the batch spec
-            chunk_spec.input_roi = self.chunk_spec_template.input_roi + offset
-            chunk_spec.output_roi = self.chunk_spec_template.output_roi + offset
+            chunk_spec.input_roi = self.chunk_spec_template.input_roi + Coordinate(offset)
+            chunk_spec.output_roi = self.chunk_spec_template.output_roi + Coordinate(offset)
 
             logger.info("requesting chunk " + str(chunk_spec))
 
