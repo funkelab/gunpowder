@@ -1,6 +1,6 @@
 .PHONY: default push
 default:
-	docker build -t caffe ./caffe
+	docker build --pull -t caffe ./caffe
 	-docker rmi -f funkey/caffe:latest
 	docker tag `docker build -t caffe ./caffe | grep 'Successfully built' | sed 's/Successfully built //'` funkey/caffe:latest
 	docker build --no-cache -t gunpowder ./caffe/gunpowder
