@@ -10,3 +10,6 @@ default:
 push: default
 	docker push funkey/caffe:latest
 	docker push funkey/gunpowder:latest
+
+test:
+	docker run --rm gunpowder:latest
