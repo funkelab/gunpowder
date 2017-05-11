@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class Snapshot(BatchFilter):
     '''Save a passing batch in an HDF file.'''
 
-    def __init__(self, output_dir='snapshots', output_filename='{id}.hdf', every=100):
+    def __init__(self, output_dir='snapshots', output_filename='{id}.hdf', every=1):
         '''
         output_dir: string
 
@@ -22,7 +22,8 @@ class Snapshot(BatchFilter):
         every:
 
             How often to save a batch. 'every=1' indicates that every batch will 
-            be stored, 'every=2' every second and so on.
+            be stored, 'every=2' every second and so on. By default, every batch 
+            will be stored.
         '''
         self.output_dir = output_dir
         self.output_filename = output_filename
