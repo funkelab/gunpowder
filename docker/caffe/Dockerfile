@@ -32,7 +32,7 @@ WORKDIR $CAFFE_ROOT
 RUN git clone ${CAFFE_REPOSITORY} . && \
     git checkout ${CAFFE_REVISION}
 RUN pip install --upgrade pip && \
-    for req in $(cat python/requirements.txt) pydot; do pip install $req; done
+    for req in wheel $(cat python/requirements.txt) pydot; do pip install $req; done
 
 WORKDIR $CAFFE_ROOT/build
 RUN cmake -DUSE_INDEX_64=1 -DUSE_CUDA=1 -DUSE_LIBDNN=1 -DUSE_CUDNN=1 -DUSE_OPENMP=0 -DUSE_GREENTEA=0 .. && \
