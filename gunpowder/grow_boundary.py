@@ -16,6 +16,8 @@ class GrowBoundary(BatchFilter):
         self.__grow(batch.gt, batch.gt_mask, self.only_xy)
 
     def __grow(self, gt, gt_mask=None, only_xy=False):
+        if gt_mask is not None:
+            assert gt.shape == gt_mask.shape
 
         if only_xy:
             assert len(gt.shape) == 3
