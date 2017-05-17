@@ -5,6 +5,7 @@ build
 dist
 *.egg-info
 net_iter*
+*.prototxt
 .idea
 *.hdf
 *.h5
