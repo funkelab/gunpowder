@@ -43,22 +43,19 @@ class Snapshot(BatchFilter):
             snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8)))
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
-                f['volumes/raw'] = batch.raw
-                f['volumes/raw'].attrs['offset'] = batch.spec.input_roi.get_offset()
-                if batch.gt is not None:
-                    f['volumes/labels/neuron_ids'] = batch.gt
-                    f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gt_mask is not None:
-                    f['volumes/labels/mask'] = batch.gt_mask
-                    f['volumes/labels/mask'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gt_affinities is not None:
-                    f['volumes/gt_affs'] = batch.gt_affinities
-                    f['volumes/gt_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.prediction is not None:
-                    f['volumes/predicted_affs'] = batch.prediction
-                    f['volumes/predicted_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gradient is not None:
-                    f['volumes/gradient'] = batch.gradient
-                    f['volumes/gradient'].attrs['offset'] = batch.spec.output_roi.get_offset()
+                input_offset = batch.spec.input_roi.get_offset()
+                output_offset = batch.spec.output_roi.get_offset()
+                for array_key, array_data, array_offset in [
+                    ('volumes/raw', batch.raw, input_offset),
+                    ('volumes/labels/neuron_ids', batch.gt, output_offset),
+                    ('volumes/labels/mask', batch.gt_mask, output_offset),
+                    ('volumes/gt_affs', batch.gt_affinities, output_offset),
+                    ('volumes/predicted_affs', batch.prediction, output_offset),
+                    ('volumes/gradient', batch.gradient, output_offset),
+                ]:
+                    if array_data is not None:
+                        dataset = f.create_dataset(name=array_key, data=array_data)
+                        dataset.attrs['offset'] = array_offset
+                        dataset.attrs['resolution'] = batch.spec.resolution
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
