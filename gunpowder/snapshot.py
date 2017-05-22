@@ -50,7 +50,7 @@ class Snapshot(BatchFilter):
                     f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gt_mask is not None:
                     f['volumes/labels/mask'] = batch.gt_mask
-                    f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
+                    f['volumes/labels/mask'].attrs['offset'] = batch.spec.output_roi.get_offset()
                 if batch.gt_affinities is not None:
                     f['volumes/gt_affs'] = batch.gt_affinities
                     f['volumes/gt_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
