@@ -1,10 +1,9 @@
 import logging
 
-from gunpowder.ext import dvision
-
-from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
+from gunpowder.ext import dvision
+from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
@@ -18,13 +17,20 @@ class ReadFailed(Exception):
 
 class DvidSource(BatchProvider):
 
-    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None):
+    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None, resolution=None):
         """
-        :param hostname: str of hostname for DVID server
-        :param port: int of port for DVID server
-        :param uuid: str of UUID of node on DVID server
-        :param raw_array_name: str of data instance for image data
-        :param gt_array_name: str of data instance for segmentation label data
+        :param hostname: hostname for DVID server
+        :type hostname: str
+        :param port: port for DVID server
+        :type port: int
+        :param uuid: UUID of node on DVID server
+        :type uuid: str
+        :param raw_array_name: DVID data instance for image data
+        :type raw_array_name: str
+        :param gt_array_name: DVID data instance for segmentation label data
+        :type gt_array_name: str
+        :param resolution: resolution of source voxels in nanometers
+        :type resolution: tuple
         """
         self.hostname = hostname
         self.port = port
@@ -32,6 +38,7 @@ class DvidSource(BatchProvider):
         self.uuid = uuid
         self.raw_array_name = raw_array_name
         self.gt_array_name = gt_array_name
+        self.specified_resolution = resolution
         self.node_service = None
         self.dims = 0
         self.spec = ProviderSpec()
@@ -45,10 +52,21 @@ class DvidSource(BatchProvider):
             self.spec.has_gt = False
         self.spec.has_gt_mask = False
 
-        logger.info("DVID source spec:\n" + str(self.spec))
+        logger.info("DvidSource.spec:\n{}".format(self.spec))
 
     def get_spec(self):
         return self.spec
+
+    @property
+    def resolution(self):
+        if self.specified_resolution is not None:
+            return self.specified_resolution
+        else:
+            fib25_resolution = (8, 8, 8)
+            logger.warning("WARNING: your source does not contain resolution information. "
+                           "I will assume {}. "
+                           "This might not be what you want.".format(fib25_resolution))
+            return fib25_resolution
 
     def request_batch(self, batch_spec):
 
@@ -66,17 +84,16 @@ class DvidSource(BatchProvider):
         input_roi = batch_spec.input_roi
         output_roi = batch_spec.output_roi
         if not self.spec.roi.contains(input_roi):
-            raise RuntimeError("Input ROI of batch %s outside of my ROI %s"%(input_roi,self.spec.roi))
+            raise RuntimeError("Input ROI of batch {} outside of my ROI {}".format(input_roi, self.spec.roi))
         if not self.spec.roi.contains(output_roi):
-            raise RuntimeError("Output ROI of batch %s outside of my ROI %s"%(output_roi,self.spec.roi))
+            raise RuntimeError("Output ROI of batch {} outside of my ROI {}".format(output_roi, self.spec.roi))
 
-        logger.debug("Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
+        logger.debug("Filling batch request for input {} and output {}".format(input_roi, output_roi))
 
         batch = Batch(batch_spec)
 
         # TODO: get resolution from repository
-        batch.spec.resolution = (1,)*self.dims
-        logger.warning("setting resolution to " + str(batch.spec.resolution))
+        batch.spec.resolution = self.resolution
 
         logger.debug("Reading raw...")
         batch.raw = self.__read_raw(batch_spec.input_roi)

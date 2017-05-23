@@ -28,9 +28,15 @@ class BatchProvider(object):
     def get_spec(self):
         '''To be implemented in subclasses.
         '''
-        raise RuntimeError("Class %s does not implement 'get_spec'"%self.__class__)
+        raise NotImplementedError("Class %s does not implement 'get_spec'"%self.__class__)
 
     def request_batch(self, batch_spec):
         '''To be implemented in subclasses.
         '''
-        raise RuntimeError("Class %s does not implement 'request_batch'"%self.__class__)
+        raise NotImplementedError("Class %s does not implement 'request_batch'"%self.__class__)
+
+    @property
+    def resolution(self):
+        '''To be implemented in subclasses.
+        '''
+        raise NotImplementedError("Class %s does not implement 'resolution'" % self.__class__)

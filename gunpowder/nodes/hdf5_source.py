@@ -1,9 +1,9 @@
 import logging
 
-from gunpowder.ext import h5py
 import numpy as np
 
 from gunpowder.batch import Batch
+from gunpowder.ext import h5py
 from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
@@ -11,14 +11,16 @@ from gunpowder.roi import Roi
 
 logger = logging.getLogger(__name__)
 
+
 class Hdf5Source(BatchProvider):
 
-    def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None):
+    def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None, resolution=None):
 
         self.filename = filename
         self.raw_dataset = raw_dataset
         self.gt_dataset = gt_dataset
         self.gt_mask_dataset = gt_mask_dataset
+        self.specified_resolution = resolution
 
     def setup(self):
 
@@ -39,9 +41,6 @@ class Hdf5Source(BatchProvider):
                 dims = f[ds].shape
                 assert(len(dims) == len(self.dims))
                 self.dims = tuple(min(self.dims[d], dims[d]) for d in range(len(dims)))
-
-        if 'resolution' not in f[self.raw_dataset].attrs:
-            logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
 
         f.close()
 
@@ -89,12 +88,9 @@ class Hdf5Source(BatchProvider):
         logger.debug("Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
 
         batch = Batch(batch_spec)
+        batch.spec.resolution = self.resolution
+        logger.debug("providing batch with resolution of {}".format(batch.spec.resolution))
         with h5py.File(self.filename, 'r') as f:
-            if 'resolution' in f[self.raw_dataset].attrs:
-                batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
-                logger.debug("providing batch with resolution of " + str(batch.spec.resolution))
-            else:
-                batch.spec.resolution = (1,) * len(self.dims)
             logger.debug("Reading raw...")
             batch.raw = self.__read(f, self.raw_dataset, input_roi)
             if batch.spec.with_gt:
@@ -118,3 +114,18 @@ class Hdf5Source(BatchProvider):
     def __repr__(self):
 
         return self.filename
+
+    @property
+    def resolution(self):
+        if self.specified_resolution is not None:
+            return self.specified_resolution
+        else:
+            try:
+                with h5py.File(self.filename, 'r') as f:
+                    return tuple(f[self.raw_dataset].attrs['resolution'])
+            except KeyError:
+                default_resolution = (1,) * len(self.dims)
+                logger.warning("WARNING: your source does not contain resolution information"
+                               " (no attribute 'resolution' in raw dataset). I will assume {}. "
+                               "This might not be what you want.".format(default_resolution))
+                return default_resolution
