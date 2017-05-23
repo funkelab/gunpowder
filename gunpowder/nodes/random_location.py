@@ -1,6 +1,6 @@
 from batch_filter import BatchFilter
 from random import randint
-from coordinate import Coordinate
+from gunpowder.coordinate import Coordinate
 
 import logging
 logger = logging.getLogger(__name__)

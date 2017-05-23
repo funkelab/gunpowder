@@ -1,6 +1,8 @@
-import random
 import copy
-from batch_provider import BatchProvider
+import random
+
+from gunpowder.nodes.batch_provider import BatchProvider
+
 
 class RandomProvider(BatchProvider):
     '''Randomly selects one of the upstream providers.

@@ -1,5 +1,5 @@
-from batch_provider import BatchProvider
-from profiling import Timing
+from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.profiling import Timing
 
 class BatchFilter(BatchProvider):
     '''Convenience wrapper for BatchProviders with exactly one input provider.

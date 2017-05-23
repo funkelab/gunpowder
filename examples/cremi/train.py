@@ -1,21 +1,17 @@
 from __future__ import print_function
 
 import math
-import random
-import time
 
-import malis
-
-import gunpowder
-from gunpowder import caffe
+from gunpowder.ext import malis
 from gunpowder import *
+from gunpowder.caffe import *
 
 def train():
 
     set_verbose()
 
     affinity_neighborhood = malis.mknhood3d()
-    solver_parameters = caffe.SolverParameters()
+    solver_parameters = SolverParameters()
     solver_parameters.train_net = 'net.prototxt'
     solver_parameters.base_lr = 1e-4
     solver_parameters.momentum = 0.95
@@ -57,7 +53,7 @@ def train():
             lambda : batch_spec,
             cache_size=10,
             num_workers=5) +
-        caffe.Train(solver_parameters, use_gpu=0) +
+        Train(solver_parameters, use_gpu=0) +
         Snapshot(every=1)
     )
 

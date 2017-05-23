@@ -1,9 +1,9 @@
-import augment
+from gunpowder.ext import augment
 import numpy as np
 import random
 import copy
 from batch_filter import BatchFilter
-from roi import Roi
+from gunpowder.roi import Roi
 
 import logging
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 import copy
 from batch_filter import BatchFilter
-from profiling import Timing
+from gunpowder.profiling import Timing
 
 import logging
 logger = logging.getLogger(__name__)

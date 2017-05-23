@@ -1,8 +1,7 @@
+import os
+
 from gunpowder import *
 from gunpowder.caffe import *
-import random
-import numpy as np
-import os
 
 def predict():
 

@@ -1,11 +1,12 @@
-from batch_filter import BatchFilter
-from batch_spec import BatchSpec
-from batch import Batch
-from coordinate import Coordinate
-import numpy as np
 import copy
-
 import logging
+
+import numpy as np
+
+from gunpowder.batch import Batch
+from gunpowder.coordinate import Coordinate
+from gunpowder.nodes.batch_filter import BatchFilter
+
 logger = logging.getLogger(__name__)
 
 class Chunk(BatchFilter):

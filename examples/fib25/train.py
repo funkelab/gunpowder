@@ -4,7 +4,6 @@ import malis
 
 from gunpowder import *
 from gunpowder.caffe import Train, SolverParameters
-from gunpowder.dvid import DvidSource
 
 def train():
 

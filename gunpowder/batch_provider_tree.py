@@ -1,7 +1,8 @@
-from batch_provider import BatchProvider
+import logging
 import traceback
 
-import logging
+from gunpowder.nodes.batch_provider import BatchProvider
+
 logger = logging.getLogger(__name__)
 
 class BatchProviderTree(BatchProvider):

@@ -1,6 +1,6 @@
 from batch_filter import BatchFilter
-from roi import Roi
-from coordinate import Coordinate
+from gunpowder.roi import Roi
+from gunpowder.coordinate import Coordinate
 import copy
 import numpy as np
 

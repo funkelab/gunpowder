@@ -1,12 +1,14 @@
-import h5py
-import numpy as np
-from profiling import Timing
-from batch_provider import BatchProvider
-from provider_spec import ProviderSpec
-from batch import Batch
-from roi import Roi
-
 import logging
+
+from gunpowder.ext import h5py
+import numpy as np
+
+from gunpowder.batch import Batch
+from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.profiling import Timing
+from gunpowder.provider_spec import ProviderSpec
+from gunpowder.roi import Roi
+
 logger = logging.getLogger(__name__)
 
 class Hdf5Source(BatchProvider):

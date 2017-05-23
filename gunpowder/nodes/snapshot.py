@@ -1,5 +1,5 @@
 from batch_filter import BatchFilter
-import h5py
+from gunpowder.ext import h5py
 import os
 
 import logging

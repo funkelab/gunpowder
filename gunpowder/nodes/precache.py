@@ -1,10 +1,7 @@
 import multiprocessing
-import Queue
-import os
 from batch_filter import BatchFilter
-from batch_spec import BatchSpec
-from profiling import Timing
-from producer_pool import ProducerPool
+from gunpowder.profiling import Timing
+from gunpowder.producer_pool import ProducerPool
 
 import logging
 logger = logging.getLogger(__name__)

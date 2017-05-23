@@ -1,13 +1,15 @@
-import multiprocessing
-import time
-import numpy as np
-import os
-from net_io_wrapper import NetIoWrapper
-import caffe
-from ..batch_filter import BatchFilter
-from ..producer_pool import ProducerPool, WorkersDied
-
 import logging
+import multiprocessing
+import os
+import time
+
+import numpy as np
+
+from gunpowder.caffe.net_io_wrapper import NetIoWrapper
+from gunpowder.ext import caffe
+from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.producer_pool import ProducerPool, WorkersDied
+
 logger = logging.getLogger(__name__)
 
 class PredictProcessDied(Exception):

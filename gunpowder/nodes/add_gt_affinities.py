@@ -1,9 +1,11 @@
-import malis
-import numpy as np
 import copy
-from batch_filter import BatchFilter
-
 import logging
+
+from gunpowder.ext import malis
+import numpy as np
+
+from gunpowder.nodes.batch_filter import BatchFilter
+
 logger = logging.getLogger(__name__)
 
 class AddGtAffinities(BatchFilter):
