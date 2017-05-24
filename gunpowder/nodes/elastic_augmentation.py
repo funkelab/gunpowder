@@ -57,7 +57,7 @@ class ElasticAugmentation(BatchFilter):
         for (volume_type, volume) in batch.volumes.items():
             volume.data = augment.apply_transformation(
                     volume.data,
-                    self.input_transformation,
+                    self.input_transformation if volume_type == VolumeType.RAW else self.output_transformation,
                     interpolate=volume.interpolate)
 
         batch.spec.input_roi = self.request_input_roi
