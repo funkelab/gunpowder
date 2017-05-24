@@ -57,7 +57,7 @@ class BatchSpec(Freezable):
 
         self.freeze()
 
-        logger.debug("created new spec with id " + str(self.id))
+        logger.debug("created new spec:\n" + str(self))
 
     def __repr__(self):
 
