@@ -61,6 +61,7 @@ class Snapshot(BatchFilter):
                     }[volume_type]
 
                     offset = input_offset if volume_type == VolumeType.RAW else output_offset
+                    offset*= batch.spec.resolution
                     dataset = f.create_dataset(name=ds_name, data=volume.data)
                     dataset.attrs['offset'] = offset
                     dataset.attrs['resolution'] = batch.spec.resolution
