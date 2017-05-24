@@ -3,6 +3,7 @@ import logging
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
+from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,15 @@ class Reject(BatchFilter):
         timing = Timing(self)
         timing.start()
 
-        batch_spec.with_gt_mask = True
+        # ask for GT_MASK upstream, even if it was not requested so far
+        if VolumeType.GT_MASK not in batch_spec.with_volumes:
+            batch_spec.with_volumes.append(VolumeType.GT_MASK)
 
         have_good_batch = False
         while not have_good_batch:
 
             batch = self.get_upstream_provider().request_batch(copy.copy(batch_spec))
-            mask_ratio = batch.gt_mask.mean()
+            mask_ratio = batch.volumes[VolumeType.GT_MASK].data.mean()
             have_good_batch = mask_ratio>=self.min_masked
 
             if not have_good_batch:
