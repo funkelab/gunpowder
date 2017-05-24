@@ -1,6 +1,7 @@
 from batch_filter import BatchFilter
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
+from gunpowder.volume import VolumeType
 import copy
 import numpy as np
 
@@ -68,11 +69,11 @@ class Padding(BatchFilter):
     def process(self, batch):
 
         # restore requested batch size
-        batch.raw = self.__expand(batch.raw, batch.spec.input_roi, self.request_batch_spec.input_roi, self.outside_raw_value)
-        if batch.gt is not None:
-            batch.gt = self.__expand(batch.gt, batch.spec.output_roi, self.request_batch_spec.output_roi, 0)
-        if batch.gt_mask is not None:
-            batch.gt_mask = self.__expand(batch.gt_mask, batch.spec.output_roi, self.request_batch_spec.output_roi, 0)
+        for (volume_type, volume) in batch.volumes:
+            if volume_type == VolumeType.RAW:
+                volume.data = self.__expand(volume.data, batch.spec.input_roi, self.request_batch_spec.input_roi, self.outside_raw_value)
+            else:
+                volume.data = self.__expand(batch.gt, batch.spec.output_roi, self.request_batch_spec.output_roi, 0)
 
         batch.spec = self.request_batch_spec
 

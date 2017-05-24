@@ -48,18 +48,11 @@ class SimpleAugment(BatchFilter):
                 for m in self.mirror
         )
 
-        batch.raw = batch.raw[mirror]
-        if batch.gt is not None:
-            batch.gt = batch.gt[mirror]
-        if batch.gt_mask is not None:
-            batch.gt_mask = batch.gt_mask[mirror]
+        for (volume_type, volume) in batch.volumes:
 
-        if self.transpose != (0,1,2):
-            batch.raw = batch.raw.transpose(self.transpose)
-            if batch.gt is not None:
-                batch.gt = batch.gt.transpose(self.transpose)
-            if batch.gt_mask is not None:
-                batch.gt_mask = batch.gt_mask.transpose(self.transpose)
+            volume.data = volume.data[mirror]
+            if self.transpose != (0,1,2):
+                volume.data = volume.data.transpose(self.transpose)
 
         logger.debug("upstream batch shape = " + str(batch.spec.input_roi.get_shape()))
         self.__mirror_spec(batch.spec, self.mirror)

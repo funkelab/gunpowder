@@ -1,4 +1,5 @@
 from batch_filter import BatchFilter
+from gunpowder.volume import VolumeType
 
 class ZeroOutConstSections(BatchFilter):
     '''Every z-section that has constant values only will be set to 0.
@@ -15,6 +16,8 @@ class ZeroOutConstSections(BatchFilter):
 
         assert batch.spec.input_roi.dims() == 3, "This filter only works on 3D data."
 
+        raw = batch.volumes[VolumeType.RAW]
+
         for z in range(batch.spec.input_roi.get_shape()[0]):
-            if batch.raw[z].min() == batch.raw[z].max():
-                batch.raw[z] = 0
+            if raw.data[z].min() == raw.data[z].max():
+                raw.data[z] = 0

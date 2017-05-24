@@ -9,10 +9,7 @@ class Batch(Freezable):
 
         self.spec = batch_spec
         self.profiling_stats = ProfilingStats()
-        self.raw = None
-        self.gt = None
-        self.gt_mask = None
-        self.gt_affinities = None
+        self.volumes = {}
         self.gt_offset = None
         self.affinity_neighborhood = None
         self.prediction = None

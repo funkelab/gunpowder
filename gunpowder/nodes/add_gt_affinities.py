@@ -5,6 +5,7 @@ from gunpowder.ext import malis
 import numpy as np
 
 from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class AddGtAffinities(BatchFilter):
     def prepare(self, batch_spec):
 
         # do nothing if no gt affinities were requested
-        if not batch_spec.with_gt_affinities:
+        if not VolumeType.GT_AFFINITIES in batch_spec.with_volumes:
             return
 
         # remember requested output shape
@@ -52,7 +53,7 @@ class AddGtAffinities(BatchFilter):
     def process(self, batch):
 
         # do nothing if no gt affinities were requested
-        if not batch.spec.with_gt_affinities:
+        if not VolumeType.GT_AFFINITIES in batch_spec.with_volumes:
             return
 
         # do nothing if gt affinities are already present

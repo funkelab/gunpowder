@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from batch_filter import BatchFilter
+from gunpowder.volume import VolumeType
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,6 +22,8 @@ class DefectAugment(BatchFilter):
         prob_missing_threshold = self.prob_missing
         prob_low_contrast_threshold = prob_missing_threshold + self.prob_low_contrast
 
+        raw = batch.volumes[VolumeType.RAW]
+
         for c in range(batch.spec.input_roi.get_shape()[self.axis]):
 
             r = random.random()
@@ -33,16 +36,16 @@ class DefectAugment(BatchFilter):
             if r < prob_missing_threshold:
 
                 logger.debug("Zero-out " + str(section_selector))
-                batch.raw[section_selector] = 0
+                raw.data[section_selector] = 0
 
             elif r < prob_low_contrast_threshold:
 
                 logger.debug("Lower contrast " + str(section_selector))
-                section = batch.raw[section_selector].astype(np.float32)
+                section = raw.data[section_selector].astype(np.float32)
 
                 mean = section.mean()
                 section -= mean
                 section *= self.contrast_scale
                 section += mean
 
-                batch.raw[section_selector] = section
+                raw.data[section_selector] = section

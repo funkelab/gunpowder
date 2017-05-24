@@ -7,6 +7,7 @@ from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
+from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +82,10 @@ class DvidSource(BatchProvider):
 
         spec = self.get_spec()
 
-        if batch_spec.with_gt and not spec.has_gt:
+        if VolumeType.GT_LABELS in batch_spec.with_volumes and not spec.has_gt:
             raise RuntimeError("Asked for GT in a non-GT source.")
 
-        if batch_spec.with_gt_mask and not spec.has_gt_mask:
+        if VolumeType.GT_MASK in batch_spec.with_volumes and not spec.has_gt_mask:
             raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
 
         input_roi = batch_spec.input_roi
@@ -102,12 +103,12 @@ class DvidSource(BatchProvider):
         batch.spec.resolution = self.resolution
 
         logger.debug("Reading raw...")
-        batch.raw = self.__read_raw(batch_spec.input_roi)
-        if batch.spec.with_gt:
+        batch.volumes[VolumeType.RAW] = Volume(self.__read_raw(batch_spec.input_roi), interpolate=True)
+        if VolumeType.GT_LABELS in batch.spec.with_volumes:
             logger.debug("Reading gt...")
-            batch.gt = self.__read_gt(batch_spec.output_roi)
-        if batch.spec.with_gt_mask:
-            batch.gt_mask = self.__read_gt_mask(batch_spec.output_roi)
+            batch.volumes[VolumeType.GT_LABELS] = Volume(self.__read_gt(batch_spec.output_roi), interpolate=False)
+        if VolumeType.GT_MASK in batch.spec.with_volumes:
+            batch.volumes[VolumeType.GT_MASK] = Volume(self.__read_gt_mask(batch_spec.output_roi), interpolate=False)
         logger.debug("done")
 
         timing.stop()

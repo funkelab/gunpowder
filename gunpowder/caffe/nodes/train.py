@@ -45,8 +45,8 @@ class Train(BatchFilter):
         except WorkersDied:
             raise TrainProcessDied()
 
-        batch.prediction = out.prediction
-        batch.gradient = out.gradient
+        batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
+        batch.volumes[VolumeType.LOSS_GRADIENT] = out.volumes[VolumeType.LOSS_GRADIENT]
         batch.loss = out.loss
 
     def __train(self, use_gpu):
@@ -77,8 +77,8 @@ class Train(BatchFilter):
         batch = self.batch_in.get()
 
         data = {
-            'data': batch.raw[np.newaxis,np.newaxis,:],
-            'aff_label': batch.gt_affinities[np.newaxis,:],
+            'data': batch.volumes[VolumeType.RAW].data[np.newaxis,np.newaxis,:],
+            'aff_label': batch.volumes[VolumeType.GT_AFFINITIES].data[np.newaxis,:],
         }
 
         if self.solver_parameters.train_state.get_stage(0) == 'euclid':
@@ -92,14 +92,14 @@ class Train(BatchFilter):
 
         if self.dry_run:
             logger.warning("Train process: DRY RUN, LOSS WILL BE 0")
-            batch.prediction = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
-            batch.gradient = np.zeros((3,) + batch.spec.shape, dtype=np.float32)
+            batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(np.zeros((3,) + batch.spec.shape, dtype=np.float32), interpolate=True)
+            batch.volumes[VolumeType.LOSS_GRADIENT] = Volume(np.zeros((3,) + batch.spec.shape, dtype=np.float32), interpolate=True)
             batch.loss = 0
         else:
             loss = self.solver.step(1)
             # self.__consistency_check()
             output = self.net_io.get_outputs()
-            batch.prediction = output['aff_pred']
+            batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'], interpolate=True)
             batch.loss = loss
             # TODO: add gradient
 
@@ -110,10 +110,11 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        frac_pos = np.clip(batch.gt_affinities.mean(), 0.05, 0.95)
+        gt_affinities = batch.volumes[VolumeType.GT_AFFINITIES]
+        frac_pos = np.clip(gt_affinities.data, 0.05, 0.95)
         w_pos = 1.0 / (2.0 * frac_pos)
         w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
-        error_scale = self.__scale_errors(batch.gt_affinities, w_neg, w_pos)
+        error_scale = self.__scale_errors(gt_affinities.data, w_neg, w_pos)
         data['scale'] = error_scale[np.newaxis,:]
 
     def __scale_errors(self, data, factor_low, factor_high):
@@ -122,11 +123,12 @@ class Train(BatchFilter):
 
     def __prepare_malis(self, batch, data):
 
-        next_id = batch.gt.max() + 1
+        gt_labels = batch.volumes[VolumeType.GT_LABELS]
+        next_id = gt_labels.data.max() + 1
 
-        gt_pos_pass = batch.gt
-        gt_neg_pass = np.array(batch.gt)
-        gt_neg_pass[batch.gt_mask==0] = next_id
+        gt_pos_pass = gt_labels.data
+        gt_neg_pass = np.array(gt_labels.data)
+        gt_neg_pass[batch.volumes[VolumeType.GT_MASK].data==0] = next_id
 
         data['comp_label'] = np.array([[gt_neg_pass, gt_pos_pass]])
         data['nhood'] = batch.affinity_neighborhood[np.newaxis,np.newaxis,:]

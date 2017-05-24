@@ -29,10 +29,7 @@ class BatchSpec(Freezable):
             input_offset=None,
             output_offset=None,
             resolution=None,
-            with_gt=False,
-            with_gt_mask=False,
-            with_gt_affinities=False,
-            with_prediction=False):
+            with_volumes=[]):
 
         input_shape = Coordinate(input_shape)
         output_shape = Coordinate(output_shape)
@@ -54,10 +51,7 @@ class BatchSpec(Freezable):
         self.input_roi = Roi(input_offset, input_shape)
         self.output_roi = Roi(output_offset, output_shape)
         self.resolution = resolution
-        self.with_gt = with_gt
-        self.with_gt_mask = with_gt_mask
-        self.with_gt_affinities = with_gt_affinities
-        self.with_prediction = with_prediction
+        self.with_volumes = with_volumes
         self.id = BatchSpec.get_next_id()
 
         self.freeze()
@@ -69,9 +63,7 @@ class BatchSpec(Freezable):
         r  = "input ROI   : " + str(self.input_roi) + "\n"
         r += "output ROI  : " + str(self.output_roi) + "\n"
         r += "resolution  : " + str(self.resolution) + "\n"
-        r += "with GT     : " + str(self.with_gt) + "\n"
-        r += "with GT mask: " + str(self.with_gt_mask) + "\n"
-        r += "with predict: " + str(self.with_prediction) + "\n"
+        r += "with volumes: " + str(self.with_volumes) + "\n"
         r += "ID          : " + str(self.id)
 
         return r

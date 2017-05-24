@@ -1,5 +1,6 @@
 from batch_filter import BatchFilter
 from gunpowder.ext import h5py
+from gunpowder.volume import VolumeType
 import os
 
 import logging
@@ -43,19 +44,25 @@ class Snapshot(BatchFilter):
             snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8)))
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
+
                 input_offset = batch.spec.input_roi.get_offset()
                 output_offset = batch.spec.output_roi.get_offset()
-                for array_key, array_data, array_offset in [
-                    ('volumes/raw', batch.raw, input_offset),
-                    ('volumes/labels/neuron_ids', batch.gt, output_offset),
-                    ('volumes/labels/mask', batch.gt_mask, output_offset),
-                    ('volumes/gt_affs', batch.gt_affinities, output_offset),
-                    ('volumes/predicted_affs', batch.prediction, output_offset),
-                    ('volumes/gradient', batch.gradient, output_offset),
-                ]:
-                    if array_data is not None:
-                        dataset = f.create_dataset(name=array_key, data=array_data)
-                        dataset.attrs['offset'] = array_offset
-                        dataset.attrs['resolution'] = batch.spec.resolution
+
+                for (volume_type, volume) in batch.volumes.iteritems():
+
+                    ds_name = {
+                            VolumeType.RAW: 'volumes/raw',
+                            VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
+                            VolumeType.GT_AFFINITIES: 'volumes/labels/affs',
+                            VolumeType.GT_MASK: 'volumes/labels/mask',
+                            VolumeType.GT_IGNORE: 'volumes/labels/ignore',
+                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs'
+                    }[volume_type]
+
+                    offset = input_offset if volume_type == VolumeType.RAW else output_offset
+                    dataset = f.create_dataset(name=ds_name, data=volume.data)
+                    dataset.attrs['offset'] = offset
+                    dataset.attrs['resolution'] = batch.spec.resolution
+
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss

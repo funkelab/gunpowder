@@ -4,6 +4,7 @@ import random
 import copy
 from batch_filter import BatchFilter
 from gunpowder.roi import Roi
+from gunpowder.volume import VolumeType
 
 import logging
 logger = logging.getLogger(__name__)
@@ -52,11 +53,11 @@ class ElasticAugmentation(BatchFilter):
 
     def process(self, batch):
 
-        batch.raw = augment.apply_transformation(batch.raw, self.input_transformation, interpolate=True)
-        if batch.gt is not None:
-            batch.gt = augment.apply_transformation(batch.gt, self.output_transformation, interpolate=False)
-        if batch.gt_mask is not None:
-            batch.gt_mask = augment.apply_transformation(batch.gt_mask, self.output_transformation, interpolate=False)
+        for (volume_type, volume) in batch.volumes.iteritems():
+            volume.data = augment.apply_transformation(
+                    volume.data,
+                    self.input_transformation,
+                    interpolate=volume.interpolate)
 
         batch.spec.input_roi = self.request_input_roi
         batch.spec.output_roi = self.request_output_roi
