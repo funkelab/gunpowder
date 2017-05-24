@@ -28,10 +28,13 @@ class AddGtAffinities(BatchFilter):
         logger.debug("padding neg: " + str(self.padding_neg))
         logger.debug("padding pos: " + str(self.padding_pos))
 
+        self.skip_next = False
+
     def prepare(self, batch_spec):
 
         # do nothing if no gt affinities were requested
         if not VolumeType.GT_AFFINITIES in batch_spec.with_volumes:
+            self.skip_next = True
             return
 
         # remember requested output shape
@@ -53,18 +56,23 @@ class AddGtAffinities(BatchFilter):
     def process(self, batch):
 
         # do nothing if no gt affinities were requested
-        if not VolumeType.GT_AFFINITIES in batch_spec.with_volumes:
+        if self.skip_next:
+            self.skip_next = False
             return
 
         # do nothing if gt affinities are already present
-        if batch.gt_affinities is not None:
+        if VolumeType.GT_AFFINITIES in batch.volumes:
             logger.warning("batch already contains affinities, skipping")
             return
 
         logger.debug("computing ground-truth affinities from labels")
-        batch.gt_affinities = malis.seg_to_affgraph(
-                batch.gt.astype(np.int32),
-                self.affinity_neighborhood).astype(np.float32)
+        gt_affinities = Volume(
+                malis.seg_to_affgraph(
+                        batch.volumes[VolumeType.GT_LABELS].data.astype(np.int32),
+                        self.affinity_neighborhood
+                ).astype(np.float32),
+                interpolate=False)
+        batch.volumes[VolumeType.GT_AFFINITIES] = gt_affinities
 
         # crop to original output ROI
         offset = self.request_output_roi.get_offset()
@@ -74,10 +82,11 @@ class AddGtAffinities(BatchFilter):
 
         logger.debug("cropping with " + str(crop))
 
-        batch.gt_affinities = batch.gt_affinities[(slice(None),)+crop]
-        batch.gt = batch.gt[crop]
-        if batch.gt_mask is not None:
-            batch.gt_mask = batch.gt_mask[crop]
+        gt_affinities.data = gt_affinities.data[(slice(None),)+crop]
+        for volume_type in [VolumeType.GT_LABELS, VolumeType.GT_MASK, VolumeType.GT_IGNORE]:
+            if volume_type in batch.volumes:
+                volume = batch.volumes[volume_type]
+                volume.data = volume.data[crop]
         batch.spec.output_roi = batch.spec.output_roi.shift(crop_roi.get_offset())
         batch.spec.output_roi.set_shape(crop_roi.get_shape())
 

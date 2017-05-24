@@ -15,7 +15,9 @@ class GrowBoundary(BatchFilter):
         self.only_xy = only_xy
 
     def process(self, batch):
-        self.__grow(batch.gt, batch.gt_mask, self.only_xy)
+        gt = batch.volumes[VolumeType.GT_LABELS].data
+        gt_mask = None if VolumeType.GT_MASK not in batch.volumes else batch.volumes[VolumeType.GT_MASK].data
+        self.__grow(gt, gt_mask, self.only_xy)
 
     def __grow(self, gt, gt_mask=None, only_xy=False):
         if gt_mask is not None:
