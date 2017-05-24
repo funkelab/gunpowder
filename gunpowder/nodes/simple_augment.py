@@ -49,7 +49,7 @@ class SimpleAugment(BatchFilter):
                 for m in self.mirror
         )
 
-        for (volume_type, volume) in batch.volumes:
+        for (volume_type, volume) in batch.volumes.items():
 
             volume.data = volume.data[mirror]
             if self.transpose != (0,1,2):

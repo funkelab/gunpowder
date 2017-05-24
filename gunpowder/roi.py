@@ -43,7 +43,7 @@ class Roi(Freezable):
             return None
 
         return tuple(
-                slice(self.__offset[d], self.__shape[d] + self.__offset[d])
+                slice(int(self.__offset[d]), int(self.__shape[d] + self.__offset[d]))
                 for d in range(self.dims())
         )
 

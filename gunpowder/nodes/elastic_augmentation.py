@@ -54,7 +54,7 @@ class ElasticAugmentation(BatchFilter):
 
     def process(self, batch):
 
-        for (volume_type, volume) in batch.volumes.iteritems():
+        for (volume_type, volume) in batch.volumes.items():
             volume.data = augment.apply_transformation(
                     volume.data,
                     self.input_transformation,

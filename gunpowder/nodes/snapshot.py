@@ -49,7 +49,7 @@ class Snapshot(BatchFilter):
                 input_offset = batch.spec.input_roi.get_offset()
                 output_offset = batch.spec.output_roi.get_offset()
 
-                for (volume_type, volume) in batch.volumes.iteritems():
+                for (volume_type, volume) in batch.volumes.items():
 
                     ds_name = {
                             VolumeType.RAW: 'volumes/raw',

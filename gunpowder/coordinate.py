@@ -2,8 +2,8 @@ import numbers
 
 class Coordinate(tuple):
 
-    def __init__(self, array_like):
-        super(Coordinate, self).__init__(array_like)
+    def __new__(cls, array_like):
+        return super(Coordinate, cls).__new__(cls, array_like)
 
     def dims(self):
         return len(self)
@@ -46,10 +46,34 @@ class Coordinate(tuple):
 
         if isinstance(other, tuple):
 
-            assert self.dims() == len(other), "can only multiply Coordinate of equal dimensions"
+            assert self.dims() == len(other), "can only divide Coordinate of equal dimensions"
 
             return Coordinate(a/b for a,b in zip(self, other))
 
         if isinstance(other, numbers.Number):
 
             return Coordinate(a/other for a in self)
+
+    def __truediv__(self, other):
+
+        if isinstance(other, tuple):
+
+            assert self.dims() == len(other), "can only divide Coordinate of equal dimensions"
+
+            return Coordinate(a/b for a,b in zip(self, other))
+
+        if isinstance(other, numbers.Number):
+
+            return Coordinate(a/other for a in self)
+
+    def __floordiv__(self, other):
+
+        if isinstance(other, tuple):
+
+            assert self.dims() == len(other), "can only divide Coordinate of equal dimensions"
+
+            return Coordinate(a//b for a,b in zip(self, other))
+
+        if isinstance(other, numbers.Number):
+
+            return Coordinate(a//other for a in self)
