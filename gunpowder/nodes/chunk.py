@@ -70,13 +70,19 @@ class Chunk(BatchFilter):
     def __setup_batch(self, batch_spec, reference):
 
         batch = Batch(batch_spec)
-        batch.raw = np.zeros(batch_spec.input_roi.get_shape(), reference.raw.dtype)
-        if reference.gt is not None:
-            batch.gt = np.zeros(batch.spec.output_roi.get_shape(), reference.gt.dtype)
-        if reference.gt_mask is not None:
-            batch.gt_mask = np.zeros(batch.spec.output_roi.get_shape(), reference.gt_mask.dtype)
-        if reference.prediction is not None:
-            batch.prediction = np.zeros((3,) + batch.spec.output_roi.get_shape(), reference.prediction.dtype)
+
+        for (volume_type, volume) in reference.volumes.items():
+
+            interpolate = False
+            if volume_type == VolumeType.RAW:
+                shape = batch_spec.input_roi.get_shape()
+                interpolate = True
+            elif volume_type == VolumeType.GT_AFFINITIES or volume_type == VolumeType.PRED_AFFINITIES:
+                shape = (3,) + batch_spec.output_roi.get_shape()
+            else:
+                shape = batch_spec.output_roi.get_shape()
+
+            batch.volumes[volume_type] = Volume(np.zeros(shape, volume.data.dtype), interpolate)
 
         return batch
 
