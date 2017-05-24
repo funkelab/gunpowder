@@ -1,5 +1,5 @@
-from freezable import Freezable
-from coordinate import Coordinate
+from .coordinate import Coordinate
+from .freezable import Freezable
 
 class Roi(Freezable):
     '''A rectengular region of interest, defined by an offset and a shape.

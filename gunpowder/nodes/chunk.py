@@ -1,11 +1,10 @@
 import copy
 import logging
-
 import numpy as np
 
+from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
+import logging
 import numpy as np
 
-import logging
 logger = logging.getLogger(__name__)
 
 def get_net_input_specs(net):

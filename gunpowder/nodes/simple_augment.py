@@ -1,7 +1,8 @@
-import random
-from batch_filter import BatchFilter
-
 import logging
+import random
+
+from .batch_filter import BatchFilter
+
 logger = logging.getLogger(__name__)
 
 class SimpleAugment(BatchFilter):

@@ -1,17 +1,15 @@
 import logging
-
 import numpy as np
 
+from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.ext import h5py
-from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import VolumeType
+from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
-
 
 class Hdf5Source(BatchProvider):
 

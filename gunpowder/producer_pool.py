@@ -1,11 +1,14 @@
-import time
+try:
+    import Queue
+except:
+    import queue as Queue
+import logging
 import multiprocessing
-import Queue
 import os
 import sys
+import time
 import traceback
 
-import logging
 logger = logging.getLogger(__name__)
 
 class NoResult(Exception):

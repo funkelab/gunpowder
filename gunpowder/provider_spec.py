@@ -1,5 +1,5 @@
-from freezable import Freezable
-from roi import Roi
+from .freezable import Freezable
+from .roi import Roi
 
 class ProviderSpec(Freezable):
     '''A possibly partial specification of a provider.

@@ -1,4 +1,4 @@
-from gunpowder.nodes.batch_provider import BatchProvider
+from .batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 
 class BatchFilter(BatchProvider):

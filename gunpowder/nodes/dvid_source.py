@@ -1,16 +1,15 @@
 import logging
 
+from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
-
 
 class DvidSourceReadException(Exception):
     pass

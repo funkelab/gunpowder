@@ -1,4 +1,4 @@
-from batch_filter import BatchFilter
+from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeType
 
 class IntensityScaleShift(BatchFilter):

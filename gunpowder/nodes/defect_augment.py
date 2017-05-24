@@ -1,9 +1,10 @@
-import random
+import logging
 import numpy as np
-from batch_filter import BatchFilter
+import random
+
+from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeType
 
-import logging
 logger = logging.getLogger(__name__)
 
 class DefectAugment(BatchFilter):

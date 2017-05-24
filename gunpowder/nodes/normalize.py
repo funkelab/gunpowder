@@ -1,8 +1,9 @@
+import logging
 import numpy as np
-from batch_filter import BatchFilter
+
+from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeType
 
-import logging
 logger = logging.getLogger(__name__)
 
 class Normalize(BatchFilter):

@@ -1,6 +1,8 @@
-from scipy import ndimage
 import numpy as np
-from batch_filter import BatchFilter
+from scipy import ndimage
+
+from .batch_filter import BatchFilter
+from gunpowder.volume import Volume, VolumeType
 
 class GrowBoundary(BatchFilter):
     '''Grow a boundary between regions. Does not grow at the border of the batch 

@@ -1,12 +1,13 @@
-from gunpowder.ext import augment
+import copy
+import logging
 import numpy as np
 import random
-import copy
-from batch_filter import BatchFilter
+
+from .batch_filter import BatchFilter
+from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.volume import VolumeType
 
-import logging
 logger = logging.getLogger(__name__)
 
 class ElasticAugmentation(BatchFilter):

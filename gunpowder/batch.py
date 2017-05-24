@@ -1,5 +1,5 @@
-from freezable import Freezable
-from profiling import ProfilingStats
+from .freezable import Freezable
+from .profiling import ProfilingStats
 
 class Batch(Freezable):
     '''Contains the requested batch.

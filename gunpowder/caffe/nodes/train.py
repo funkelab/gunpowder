@@ -1,8 +1,7 @@
 import logging
 import multiprocessing
-import time
-
 import numpy as np
+import time
 
 from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe

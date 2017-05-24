@@ -1,5 +1,6 @@
 import numpy as np
-from batch_filter import BatchFilter
+
+from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeType
 
 class IntensityAugment(BatchFilter):

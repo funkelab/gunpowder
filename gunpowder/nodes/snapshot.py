@@ -1,9 +1,10 @@
-from batch_filter import BatchFilter
-from gunpowder.ext import h5py
-from gunpowder.volume import VolumeType
+import logging
 import os
 
-import logging
+from .batch_filter import BatchFilter
+from gunpowder.ext import h5py
+from gunpowder.volume import VolumeType
+
 logger = logging.getLogger(__name__)
 
 class Snapshot(BatchFilter):

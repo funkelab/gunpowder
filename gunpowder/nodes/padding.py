@@ -1,11 +1,12 @@
-from batch_filter import BatchFilter
+import copy
+import logging
+import numpy as np
+
+from .batch_filter import BatchFilter
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
 from gunpowder.volume import VolumeType
-import copy
-import numpy as np
 
-import logging
 logger = logging.getLogger(__name__)
 
 class Padding(BatchFilter):

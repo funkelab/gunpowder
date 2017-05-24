@@ -1,7 +1,5 @@
+from .batch_filter import BatchFilter
 from gunpowder.ext import malis
-
-from batch_filter import BatchFilter
-
 
 class SplitAndRenumberSegmentationLabels(BatchFilter):
 

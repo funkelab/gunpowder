@@ -1,8 +1,9 @@
 import copy
-from batch_filter import BatchFilter
+import logging
+
+from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
 
-import logging
 logger = logging.getLogger(__name__)
 
 class Reject(BatchFilter):

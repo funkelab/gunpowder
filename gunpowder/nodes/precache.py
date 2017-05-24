@@ -1,9 +1,10 @@
+import logging
 import multiprocessing
-from batch_filter import BatchFilter
+
+from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
 from gunpowder.producer_pool import ProducerPool
 
-import logging
 logger = logging.getLogger(__name__)
 
 class WorkersDiedException(Exception):

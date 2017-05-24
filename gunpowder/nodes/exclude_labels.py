@@ -1,8 +1,10 @@
+import logging
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
-from batch_filter import BatchFilter
 
-import logging
+from .batch_filter import BatchFilter
+from gunpowder.volume import Volume, VolumeType
+
 logger = logging.getLogger(__name__)
 
 class ExcludeLabels(BatchFilter):

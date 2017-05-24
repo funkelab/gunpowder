@@ -1,5 +1,6 @@
-from freezable import Freezable
 from enum import Enum
+
+from .freezable import Freezable
 
 class VolumeType(Enum):
     RAW = 1

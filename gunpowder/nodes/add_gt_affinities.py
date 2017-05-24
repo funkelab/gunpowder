@@ -1,17 +1,17 @@
 import copy
 import logging
-
-from gunpowder.ext import malis
 import numpy as np
 
-from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.volume import VolumeType
+from .batch_filter import BatchFilter
+from gunpowder.ext import malis
+from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
 
 class AddGtAffinities(BatchFilter):
 
     def __init__(self, affinity_neighborhood):
+
         self.affinity_neighborhood = affinity_neighborhood
 
         dims = self.affinity_neighborhood.shape[1]

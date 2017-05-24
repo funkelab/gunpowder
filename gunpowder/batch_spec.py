@@ -1,9 +1,10 @@
-import multiprocessing
-from freezable import Freezable
-from roi import Roi
-from coordinate import Coordinate
-
 import logging
+import multiprocessing
+
+from .coordinate import Coordinate
+from .freezable import Freezable
+from .roi import Roi
+
 logger = logging.getLogger(__name__)
 
 class BatchSpec(Freezable):

@@ -1,8 +1,9 @@
-from batch_filter import BatchFilter
+import logging
 from random import randint
+
+from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 
-import logging
 logger = logging.getLogger(__name__)
 
 class RandomLocation(BatchFilter):
