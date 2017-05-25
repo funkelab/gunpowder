@@ -55,4 +55,7 @@ class RandomLocation(BatchFilter):
             assert self.roi.contains(roi)
 
     def process(self, batch, request):
-        pass
+
+        # reset ROIs to request
+        for (volume_type,roi) in request.volumes.items():
+            batch.volumes[volume_type].roi = roi
