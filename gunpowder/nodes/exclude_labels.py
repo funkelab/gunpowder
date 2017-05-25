@@ -56,4 +56,11 @@ class ExcludeLabels(BatchFilter):
         # 1 marks included regions, plus a context area around them
         include_mask = distance_to_include<self.ignore_mask_erode
 
-        batch.volumes[VolumeType.GT_IGNORE] = Volume(include_mask, gt.roi, gt.resolution, interpolate=False)
+        # include mask was computed on GT_LABELS ROI, we need to crop to 
+        # requested GT_IGNORE ROI
+        gt_ignore_roi = request.volumes[VolumeType.GT_IGNORE]
+        crop_roi = gt.roi.intersect(gt_ignore_roi)
+        crop_roi_in_gt = (crop_roi - gt.roi.get_offset()).get_bounding_box()
+        include_mask = include_mask[crop_roi_in_gt]
+
+        batch.volumes[VolumeType.GT_IGNORE] = Volume(include_mask, gt_ignore_roi, gt.resolution, interpolate=False)
