@@ -72,8 +72,8 @@ class Hdf5Source(BatchProvider):
                 if volume_type not in spec.volumes:
                     raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
 
-                if not self.spec.volumes[volume_type].contains(roi):
-                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,self.spec.volumes[volume_type]))
+                if not spec.volumes[volume_type].contains(roi):
+                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
                 dataset, interpolate = {
                     VolumeType.RAW: (self.raw_dataset, True),
