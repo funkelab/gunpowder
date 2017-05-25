@@ -74,40 +74,38 @@ class DvidSource(BatchProvider):
                            "This might not be what you want.".format(fib25_resolution))
             return fib25_resolution
 
-    def provide(self, batch_spec):
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
         spec = self.get_spec()
 
-        if VolumeType.GT_LABELS in batch_spec.with_volumes and not spec.has_gt:
-            raise RuntimeError("Asked for GT in a non-GT source.")
+        batch = Batch()
+        logger.debug("providing batch with resolution of {}".format(self.resolution))
 
-        if VolumeType.GT_MASK in batch_spec.with_volumes and not spec.has_gt_mask:
-            raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
+        for (volume_type, roi) in request.volumes.items():
 
-        input_roi = batch_spec.input_roi
-        output_roi = batch_spec.output_roi
-        if not self.spec.roi.contains(input_roi):
-            raise RuntimeError("Input ROI of batch {} outside of my ROI {}".format(input_roi, self.spec.roi))
-        if not self.spec.roi.contains(output_roi):
-            raise RuntimeError("Output ROI of batch {} outside of my ROI {}".format(output_roi, self.spec.roi))
+            if volume_type not in spec.volumes:
+                raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
 
-        logger.debug("Filling batch request for input {} and output {}".format(input_roi, output_roi))
+            if not spec.volumes[volume_type].contains(roi):
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-        batch = Batch(batch_spec)
+            read, interpolate = {
+                VolumeType.RAW: (self.__read_raw, True),
+                VolumeType.GT_LABELS: (self.__read_gt, False),
+                VolumeType.GT_MASK: (self.__read_gt_mask, False),
+            }[volume_type]
 
-        # TODO: get resolution from repository
-        batch.spec.resolution = self.resolution
+            logger.debug("Reading %s in %s..."%(volume_type,roi))
+            batch.volumes[volume_type] = Volume(
+                    read(roi),
+                    roi=roi,
+                    # TODO: get resolution from repository
+                    resolution=self.resolution,
+                    interpolate=interpolate)
 
-        logger.debug("Reading raw...")
-        batch.volumes[VolumeType.RAW] = Volume(self.__read_raw(batch_spec.input_roi), interpolate=True)
-        if VolumeType.GT_LABELS in batch.spec.with_volumes:
-            logger.debug("Reading gt...")
-            batch.volumes[VolumeType.GT_LABELS] = Volume(self.__read_gt(batch_spec.output_roi), interpolate=False)
-        if VolumeType.GT_MASK in batch.spec.with_volumes:
-            batch.volumes[VolumeType.GT_MASK] = Volume(self.__read_gt_mask(batch_spec.output_roi), interpolate=False)
         logger.debug("done")
 
         timing.stop()
