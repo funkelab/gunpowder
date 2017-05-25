@@ -7,7 +7,7 @@ import random
 from gunpowder import *
 
 class DummyTrain(BatchFilter):
-    def process(self, batch):
+    def process(self, batch, request):
         pass
 
 def train():
@@ -54,7 +54,7 @@ def train():
         RandomProvider() +
         ExcludeLabels([8094], ignore_mask_erode=12) +
         Snapshot(every=1, output_filename='01.hdf') +
-        # ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         Snapshot(every=1, output_filename='02.hdf') +
         SimpleAugment(transpose_only_xy=True) +
         Snapshot(every=1, output_filename='03.hdf') +
