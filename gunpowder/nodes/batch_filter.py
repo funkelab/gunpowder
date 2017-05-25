@@ -1,10 +1,7 @@
 import copy
-import logging
 
 from .batch_provider import BatchProvider
 from gunpowder.profiling import Timing
-
-logger = logging.getLogger(__name__)
 
 class BatchFilter(BatchProvider):
     '''Convenience wrapper for BatchProviders with exactly one input provider.
@@ -40,10 +37,10 @@ class BatchFilter(BatchProvider):
     def get_spec(self):
         return self.get_upstream_provider().get_spec()
 
-    def request_batch(self, request):
+    def provide(self, request):
 
-        logger.debug("%s got request %s"%(type(self).__name__,request))
-
+        # operate on a copy of the request, to provide the original request to 
+        # 'process' for convenience
         upstream_request = copy.deepcopy(request)
 
         timing = Timing(self)
@@ -59,8 +56,6 @@ class BatchFilter(BatchProvider):
         timing.stop()
 
         batch.profiling_stats.add(timing)
-
-        logger.debug("%s provides %s"%(type(self).__name__,batch))
 
         return batch
 
