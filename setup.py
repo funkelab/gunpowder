@@ -8,5 +8,13 @@ setup(
         author='Jan Funke',
         author_email='jfunke@iri.upc.edu',
         license='MIT',
-        packages=['gunpowder', 'gunpowder.nodes', 'gunpowder.caffe', 'gunpowder.caffe.nodes', 'gunpowder.ext'],
+        packages=[
+            'gunpowder',
+            'gunpowder.nodes',
+            'gunpowder.caffe',
+            'gunpowder.caffe.nodes',
+            'gunpowder.ext',
+            'gunpowder.tests',
+            'gunpowder.tests.cases',
+        ],
 )
