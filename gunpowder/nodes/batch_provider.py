@@ -33,7 +33,7 @@ class BatchProvider(object):
     def get_spec(self):
         '''To be implemented in subclasses.
         '''
-        raise NotImplementedError("Class %s does not implement 'get_spec'"%self.__class__)
+        raise NotImplementedError("Class %s does not implement 'get_spec'"%type(self).__name__)
 
     def request_batch(self, request):
 
@@ -41,6 +41,25 @@ class BatchProvider(object):
 
         upstream_request = copy.deepcopy(request)
         batch = self.provide(upstream_request)
+
+        for (volume_type,roi) in request.volumes.items():
+            assert volume_type in batch.volumes, "%s requested, but %s did not provide it."%(volume_type,type(self).__name__)
+            volume = batch.volumes[volume_type]
+            assert volume.roi == roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                    volume_type,
+                    roi,
+                    volume.roi,
+                    type(self).__name__
+            )
+            # ensure that the spatial dimensions are the same (other dimensions 
+            # on top are okay, e.g., for affinities)
+            dims = len(roi.get_shape())
+            assert volume.data.shape[-dims:] == roi.get_shape(), "%s ROI %s requested, but shape of volume is %s provided by %s."%(
+                    volume_type,
+                    roi,
+                    volume.data.shape,
+                    type(self).__name__
+            )
 
         logger.debug("%s provides %s"%(type(self).__name__,batch))
 
@@ -51,10 +70,10 @@ class BatchProvider(object):
 
         Called with a batch request. Should return the requested batch.
         '''
-        raise NotImplementedError("Class %s does not implement 'provide'"%self.__class__)
+        raise NotImplementedError("Class %s does not implement 'provide'"%type(self).__name__)
 
     @property
     def resolution(self):
         '''To be implemented in subclasses.
         '''
-        raise NotImplementedError("Class %s does not implement 'resolution'" % self.__class__)
+        raise NotImplementedError("Class %s does not implement 'resolution'" % type(self).__name__)

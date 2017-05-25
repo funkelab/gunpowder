@@ -165,5 +165,17 @@ class Roi(Freezable):
         assert isinstance(other, Coordinate), "can only subtract Coordinate from Roi"
         return self.shift(-other)
 
+    def __eq__(self, other):
+
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+
+    def __ne__(self, other):
+
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
     def __repr__(self):
         return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
