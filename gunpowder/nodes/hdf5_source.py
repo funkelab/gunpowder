@@ -55,7 +55,7 @@ class Hdf5Source(BatchProvider):
     def get_spec(self):
         return self.spec
 
-    def request_batch(self, request):
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()

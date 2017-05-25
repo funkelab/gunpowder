@@ -15,7 +15,7 @@ class Reject(BatchFilter):
     def setup(self):
         assert VolumeType.GT_MASK in self.get_spec().volumes, "Reject can only be used if GT masks are provided"
 
-    def request_batch(self, request):
+    def provide(self, request):
 
         report_next_timeout = 10
         num_rejected = 0

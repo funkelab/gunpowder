@@ -26,7 +26,7 @@ class BatchFilter(BatchProvider):
         prepare
 
             Prepare for a batch request. Always called before each 
-            'request_batch'. Use it to modify a batch spec to be passed 
+            'process'. Use it to modify a batch spec to be passed 
             upstream.
     '''
 

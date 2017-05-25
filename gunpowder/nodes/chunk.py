@@ -20,7 +20,7 @@ class Chunk(BatchFilter):
 
         assert chunk_spec.input_roi.get_offset() == (0,)*self.dims, "The chunk spec should not have an input offset, only input/output shape and optionally output offset (relative to input)."
 
-    def request_batch(self, batch_spec):
+    def provide(self, batch_spec):
 
         logger.info("batch with spec " + str(batch_spec) + " requested")
 

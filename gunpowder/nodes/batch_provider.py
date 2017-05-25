@@ -1,3 +1,8 @@
+import copy
+import logging
+
+logger = logging.getLogger(__name__)
+
 class BatchProvider(object):
 
     def add_upstream_provider(self, provider):
@@ -30,10 +35,19 @@ class BatchProvider(object):
         '''
         raise NotImplementedError("Class %s does not implement 'get_spec'"%self.__class__)
 
-    def request_batch(self, batch_spec):
+    def request_batch(self, request):
+
+        logger.debug("%s got request %s"%(self.__class__,request))
+
+        upstream_request = copy.deepcopy(request)
+        return self.provide(upstream_request)
+
+    def provide(self, request):
         '''To be implemented in subclasses.
+
+        Called with a batch request. Should return the requested batch.
         '''
-        raise NotImplementedError("Class %s does not implement 'request_batch'"%self.__class__)
+        raise NotImplementedError("Class %s does not implement 'provide'"%self.__class__)
 
     @property
     def resolution(self):

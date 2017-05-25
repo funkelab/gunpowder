@@ -20,5 +20,5 @@ class RandomProvider(BatchProvider):
     def get_spec(self):
         return self.spec
 
-    def request_batch(self, batch_spec):
-        return random.choice(self.get_upstream_providers()).request_batch(batch_spec)
+    def provide(self, request):
+        return random.choice(self.get_upstream_providers()).request_batch(request)

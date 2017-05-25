@@ -37,7 +37,7 @@ class PreCache(BatchFilter):
     def teardown(self):
         self.workers.stop()
 
-    def request_batch(self, request):
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()

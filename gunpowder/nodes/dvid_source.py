@@ -74,7 +74,7 @@ class DvidSource(BatchProvider):
                            "This might not be what you want.".format(fib25_resolution))
             return fib25_resolution
 
-    def request_batch(self, batch_spec):
+    def provide(self, batch_spec):
 
         timing = Timing(self)
         timing.start()

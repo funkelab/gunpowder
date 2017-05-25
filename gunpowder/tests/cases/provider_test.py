@@ -10,7 +10,7 @@ class TestSource(BatchProvider):
         spec.volumes[VolumeType.RAW] = Roi((0,0,0), (100,100,100))
         return spec
 
-    def request_batch(self, request):
+    def provide(self, request):
 
         batch = Batch()
         batch.volumes[VolumeType.RAW] = Volume(
