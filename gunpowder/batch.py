@@ -39,3 +39,10 @@ class Batch(Freezable):
             else:
                 total_roi = total_roi.union(volume.roi)
         return total_roi
+
+    def __repr__(self):
+
+        r = ""
+        for (volume_type, volume) in self.volumes.items():
+            r += "%s: %s\n"%(volume_type,volume.roi)
+        return r

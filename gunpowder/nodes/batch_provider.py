@@ -37,10 +37,14 @@ class BatchProvider(object):
 
     def request_batch(self, request):
 
-        logger.debug("%s got request %s"%(self.__class__,request))
+        logger.debug("%s got request %s"%(type(self).__name__,request))
 
         upstream_request = copy.deepcopy(request)
-        return self.provide(upstream_request)
+        batch = self.provide(upstream_request)
+
+        logger.debug("%s provides %s"%(type(self).__name__,batch))
+
+        return batch
 
     def provide(self, request):
         '''To be implemented in subclasses.
