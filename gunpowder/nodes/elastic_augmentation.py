@@ -44,7 +44,7 @@ class ElasticAugmentation(BatchFilter):
             logger.debug("downstream request roi for %s = %s"%(volume_type,roi))
 
             roi_in_total_roi = roi.shift(-total_roi.get_offset())
-            # TODO: why copy?
+
             transformation = np.copy(
                     self.total_transformation[(slice(None),)+roi_in_total_roi.get_bounding_box()]
             )
