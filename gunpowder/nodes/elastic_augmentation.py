@@ -23,9 +23,6 @@ class ElasticAugmentation(BatchFilter):
 
     def prepare(self, request):
 
-        # remember ROIs to restore them later
-        self.rois = copy.deepcopy(request.volumes)
-
         total_roi = request.get_total_roi()
         dims = len(total_roi.get_shape())
 
@@ -72,7 +69,7 @@ class ElasticAugmentation(BatchFilter):
                     interpolate=volume.interpolate)
 
             # restore original ROIs
-            volume.roi = self.rois[volume_type]
+            volume.roi = request.volumes[volume_type]
 
     def __recompute_roi(self, roi, transformation):
 
