@@ -54,8 +54,12 @@ class SimpleAugment(BatchFilter):
             if self.transpose != (0,1,2):
                 volume.data = volume.data.transpose(self.transpose)
 
+            logger.debug("total ROI: %s"%self.total_roi)
+            logger.debug("upstream %s ROI: %s"%(volume_type,volume.roi))
             self.__mirror_roi(volume.roi, self.total_roi, self.mirror)
+            logger.debug("mirrored %s ROI: %s"%(volume_type,volume.roi))
             self.__transpose_roi(volume.roi, self.transpose)
+            logger.debug("transposed %s ROI: %s"%(volume_type,volume.roi))
 
     def __mirror_request(self, request, mirror):
 
