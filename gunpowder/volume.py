@@ -12,8 +12,10 @@ class VolumeType(Enum):
 
 class Volume(Freezable):
 
-    def __init__(self, data, interpolate):
+    def __init__(self, data, roi, resolution, interpolate):
 
+        self.roi = roi
+        self.resolution = resolution
         self.data = data
         self.interpolate = interpolate
 

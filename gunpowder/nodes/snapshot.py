@@ -33,7 +33,7 @@ class Snapshot(BatchFilter):
 
     def process(self, batch):
 
-        id = batch.spec.id
+        id = batch.id
 
         if id%self.every == 0:
 
@@ -46,9 +46,6 @@ class Snapshot(BatchFilter):
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
-                input_offset = batch.spec.input_roi.get_offset()
-                output_offset = batch.spec.output_roi.get_offset()
-
                 for (volume_type, volume) in batch.volumes.items():
 
                     ds_name = {
@@ -60,11 +57,11 @@ class Snapshot(BatchFilter):
                             VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs'
                     }[volume_type]
 
-                    offset = input_offset if volume_type == VolumeType.RAW else output_offset
-                    offset*= batch.spec.resolution
+                    offset = volume.roi.get_offset()
+                    offset*= volume.resolution
                     dataset = f.create_dataset(name=ds_name, data=volume.data)
                     dataset.attrs['offset'] = offset
-                    dataset.attrs['resolution'] = batch.spec.resolution
+                    dataset.attrs['resolution'] = volume.resolution
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss

@@ -10,73 +10,101 @@ from gunpowder.volume import VolumeType
 logger = logging.getLogger(__name__)
 
 class Padding(BatchFilter):
-    '''Add a constant intensity padding around a batch provider. This is useful 
-    if your requested batches can be larger than what your source provides.
+    '''Add a constant intensity padding around volumes of another batch 
+    provider. This is useful if your requested batches can be larger than what 
+    your source provides.
     '''
 
-    def __init__(self, padding=None, outside_raw_value=0):
-        '''If padding is None (default), implements an infinite padding. In this 
-        case, the reported provider spec is the same as the upstream provider 
-        spec, but access outside the ROI is permitted.
-
-        If padding is a Coordinate, this amount will be added to the upstream 
-        ROI in the positive and negative direction, and the thus grown ROI will 
-        be reported downstream as the new provider spec. Futhermore, access 
-        outside of the grown ROI will result in an exception.
+    def __init__(self, pad_sizes, pad_values={}):
         '''
-        if padding is not None:
-            self.padding = Coordinate(padding)
-        else:
-            self.padding = None
-        self.outside_raw_value = outside_raw_value
+        Args:
+
+            pad_sizes: dict, VolumeType -> [None,Coordinate]
+
+                Specifies the padding to be added to each volume type. If None, 
+                an infinite padding is added. If a Coordinate, this amount will 
+                be added to the ROI in the positive and negative direction.
+
+            pad_values: dict, VolumeType -> value
+
+                The values to report inside the padding. If not given, 0 is 
+                used.
+        '''
+
+        self.pad_sizes = pad_sizes
+        self.pad_values = pad_values
+
+        for volume_type in pad_sizes.keys():
+            if volume_type not in pad_values:
+                self.pad_values[volume_type] = 0
 
     def setup(self):
+
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        assert self.spec.roi.get_bounding_box() is not None, "Padding can only be applied after a source that provides a bounding box."
+        for (volume_type, pad_size) in self.pad_sizes.items():
 
-        if self.padding is not None:
-            self.spec.roi = self.upstream_spec.roi.grow(self.padding, self.padding)
+            assert volume_type in self.spec.volumes, "Asked to pad %s, but is not provided upstream."%volume_type
+            assert self.spec.volumes[volume_type] is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%volume_type
 
-        logger.debug("Upstream roi: " + str(self.upstream_spec.roi))
-        logger.debug("Provided roi:" + str(self.spec.roi))
+            if pad_size is not None:
+                self.spec.volumes[volume_type] = self.upstream_spec.volumes[volume_type].grow(pad_size, pad_size)
+
+        logger.debug("upstream spec: " + str(self.upstream_spec))
+        logger.debug("provided spec:" + str(self.spec))
 
     def get_spec(self):
         return self.spec
 
-    def prepare(self, batch_spec):
+    def prepare(self, request):
 
-        if self.padding is not None:
-            if not self.spec.roi.intersects(batch_spec.input_roi):
-                raise RuntimeError("Input ROI of batch " + str(batch_spec.input_roi) + " lies outside of my ROI " + str(self.spec.roi))
+        logger.debug("request: %s"%request)
+        logger.debug("upstream spec: %s"%self.upstream_spec)
 
-        # remember request batch spec
-        self.request_batch_spec = copy.deepcopy(batch_spec)
+        # remember request
+        self.request = copy.deepcopy(request)
 
-        # change batch spec to fit into upstream spec
-        logger.debug("request: %s"%batch_spec)
-        logger.debug("upstream ROI: %s"%self.upstream_spec.roi)
-        batch_spec.input_roi = batch_spec.input_roi.intersect(self.upstream_spec.roi)
-        batch_spec.output_roi = batch_spec.output_roi.intersect(self.upstream_spec.roi)
+        for volume_type in self.pad_sizes.keys():
 
-        if batch_spec.input_roi is None or batch_spec.output_roi is None:
-            logger.warning("Requested batch lies entirely outside of upstream ROI.")
-            batch_spec.input_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
-            batch_spec.output_roi = Roi(self.upstream_spec.roi.get_offset(), (0,)*self.upstream_spec.roi.dims())
+            if volume_type not in request.volumes:
+                continue
+            roi = request.volumes[volume_type]
 
-        logger.debug("new request: %s"%batch_spec)
+            # check out-of-bounds
+            # TODO: this should be moved to super class, this should hold for any 
+            # batch provider
+            if self.pad_sizes[volume_type] is not None:
+                if not self.spec.volumes[volume_type].intersects(roi):
+                    raise RuntimeError("%s ROI %s lies outside of padded ROI %s"%(volume_type,roi,self.spec.volumes[volume_type]))
+
+            # change request to fit into upstream spec
+            request.volumes[volume_type] = roi.intersect(self.upstream_spec.volumes[volume_type])
+
+            if request.volumes[volume_type] is None:
+
+                logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%volume_type)
+
+                # ensure a valid request by asking for empty ROI
+                request.volumes[volume_type] = Roi(
+                        self.upstream_spec.volumes[volume_type].get_offset(),
+                        (0,)*self.upstream_spec.volumes[volume_type].dims()
+                )
+
+        logger.debug("new request: %s"%request)
 
     def process(self, batch):
 
-        # restore requested batch size
-        for (volume_type, volume) in batch.volumes:
-            if volume_type == VolumeType.RAW:
-                volume.data = self.__expand(volume.data, batch.spec.input_roi, self.request_batch_spec.input_roi, self.outside_raw_value)
-            else:
-                volume.data = self.__expand(batch.gt, batch.spec.output_roi, self.request_batch_spec.output_roi, 0)
+        # restore requested batch size and ROI
+        for (volume_type, volume) in batch.volumes.items():
 
-        batch.spec = self.request_batch_spec
+            volume.data = self.__expand(
+                    volume.data,
+                    volume.roi,
+                    self.request.volumes[volume_type],
+                    self.pad_values[volume_type]
+            )
+            volume.roi = self.request.volumes[volume_type]
 
     def __expand(self, a, from_roi, to_roi, value):
 

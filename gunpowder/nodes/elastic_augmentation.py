@@ -21,47 +21,58 @@ class ElasticAugmentation(BatchFilter):
         self.rotation_start = rotation_interval[0]
         self.rotation_max_amount = rotation_interval[1] - rotation_interval[0]
 
-    def prepare(self, batch_spec):
+    def prepare(self, request):
 
         # remember ROIs to restore them later
-        self.request_input_roi = copy.deepcopy(batch_spec.input_roi)
-        self.request_output_roi = copy.deepcopy(batch_spec.output_roi)
+        self.rois = copy.deepcopy(request.volumes)
 
-        target_shape = batch_spec.input_roi.get_shape()
-        dims = len(target_shape)
+        total_roi = request.get_total_roi()
+        dims = len(total_roi.get_shape())
 
-        # create a transformation for the input ROI
+        # create a transformation for the total ROI
         rotation = random.random()*self.rotation_max_amount + self.rotation_start
-        self.input_transformation = augment.create_identity_transformation(target_shape)
-        self.input_transformation += augment.create_elastic_transformation(
-                target_shape,
+        self.total_transformation = augment.create_identity_transformation(total_roi.get_shape())
+        self.total_transformation += augment.create_elastic_transformation(
+                total_roi.get_shape(),
                 self.control_point_spacing,
                 self.jitter_sigma)
-        self.input_transformation += augment.create_rotation_transformation(
-                target_shape,
+        self.total_transformation += augment.create_rotation_transformation(
+                total_roi.get_shape(),
                 rotation)
 
-        # crop the part corresponding to the output ROI
-        shift = tuple(-x for x in batch_spec.input_roi.get_offset())
-        output_in_input_roi = batch_spec.output_roi.shift(shift)
-        self.output_transformation = np.copy(self.input_transformation[(slice(None),)+output_in_input_roi.get_bounding_box()])
+        # crop the parts corresponding to the requested volume ROIs
+        self.transformations = {}
+        for (volume_type, roi) in request.volumes.items():
 
-        batch_spec.input_roi = self.__recompute_roi(batch_spec.input_roi, self.input_transformation)
-        batch_spec.output_roi = self.__recompute_roi(batch_spec.output_roi, self.output_transformation)
+            logger.debug("downstream request roi for %s = %s"%(volume_type,roi))
 
-        logger.debug("downstream request shape = " + str(target_shape))
-        logger.debug("upstream request shape = " + str(batch_spec.input_roi.get_shape()))
+            roi_in_total_roi = roi.shift(-total_roi.get_offset())
+            # TODO: why copy?
+            transformation = np.copy(
+                    self.total_transformation[(slice(None),)+roi_in_total_roi.get_bounding_box()]
+            )
+            self.transformations[volume_type] = transformation
+
+            # update request ROI to get all voxels necessary to perfrom 
+            # transformation
+            roi = self.__recompute_roi(roi, transformation)
+            request.volumes[volume_type] = roi
+
+            logger.debug("upstream request roi for %s = %s"%(volume_type,roi))
+
 
     def process(self, batch):
 
         for (volume_type, volume) in batch.volumes.items():
+
+            # apply transformation
             volume.data = augment.apply_transformation(
                     volume.data,
-                    self.input_transformation if volume_type == VolumeType.RAW else self.output_transformation,
+                    self.transformations[volume_type],
                     interpolate=volume.interpolate)
 
-        batch.spec.input_roi = self.request_input_roi
-        batch.spec.output_roi = self.request_output_roi
+            # restore original ROIs
+            volume.roi = self.rois[volume_type]
 
     def __recompute_roi(self, roi, transformation):
 

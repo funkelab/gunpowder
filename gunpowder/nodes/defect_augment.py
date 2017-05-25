@@ -18,20 +18,20 @@ class DefectAugment(BatchFilter):
 
     def process(self, batch):
 
-        assert batch.spec.input_roi.dims()==3, "DefectAugment works on 3D batches only"
+        assert batch.get_total_roi().dims()==3, "DefectAugment works on 3D batches only"
 
         prob_missing_threshold = self.prob_missing
         prob_low_contrast_threshold = prob_missing_threshold + self.prob_low_contrast
 
         raw = batch.volumes[VolumeType.RAW]
 
-        for c in range(batch.spec.input_roi.get_shape()[self.axis]):
+        for c in range(batch.get_total_roi().get_shape()[self.axis]):
 
             r = random.random()
 
             section_selector = tuple(
                     slice(None if d != self.axis else c, None if d != self.axis else c+1)
-                    for d in range(batch.spec.input_roi.dims())
+                    for d in range(batch.get_total_roi().dims())
             )
 
             if r < prob_missing_threshold:

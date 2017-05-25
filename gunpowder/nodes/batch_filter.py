@@ -35,15 +35,15 @@ class BatchFilter(BatchProvider):
     def get_spec(self):
         return self.get_upstream_provider().get_spec()
 
-    def request_batch(self, batch_spec):
+    def request_batch(self, request):
 
         timing = Timing(self)
 
         timing.start()
-        self.prepare(batch_spec)
+        self.prepare(request)
         timing.stop()
 
-        batch = self.get_upstream_provider().request_batch(batch_spec)
+        batch = self.get_upstream_provider().request_batch(request)
 
         timing.start()
         self.process(batch)
@@ -53,10 +53,10 @@ class BatchFilter(BatchProvider):
 
         return batch
 
-    def prepare(self, batch_spec):
+    def prepare(self, request):
         '''To be implemented in subclasses.
 
-        Prepare for a batch request. Change the batch_spec as needed, it will be 
+        Prepare for a batch request. Change the request as needed, it will be 
         passed on upstream.
         '''
         pass

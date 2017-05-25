@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 from gunpowder.ext import malis
 from gunpowder.volume import Volume, VolumeType
 
@@ -15,12 +16,12 @@ class AddGtAffinities(BatchFilter):
         self.affinity_neighborhood = affinity_neighborhood
 
         dims = self.affinity_neighborhood.shape[1]
-        self.padding_neg = tuple(
+        self.padding_neg = Coordinate(
                 min([0] + [a[d] for a in self.affinity_neighborhood])
                 for d in range(dims)
         )
 
-        self.padding_pos = tuple(
+        self.padding_pos = Coordinate(
                 max([0] + [a[d] for a in self.affinity_neighborhood])
                 for d in range(dims)
         )
@@ -30,28 +31,33 @@ class AddGtAffinities(BatchFilter):
 
         self.skip_next = False
 
-    def prepare(self, batch_spec):
+    def prepare(self, request):
 
         # do nothing if no gt affinities were requested
-        if not VolumeType.GT_AFFINITIES in batch_spec.with_volumes:
+        if not VolumeType.GT_AFFINITIES in request.volumes:
+            logger.warn("no GT_AFFINITIES requested, will do nothing")
             self.skip_next = True
             return
 
-        # remember requested output shape
-        self.request_output_roi = copy.deepcopy(batch_spec.output_roi)
+        assert VolumeType.GT_LABELS in request.volumes, "AddGtAffinities can only be used if you request GT_LABELS"
 
-        dims = batch_spec.output_roi.dims()
+        del request.volumes[VolumeType.GT_AFFINITIES]
 
-        logger.debug("downstream output ROI: " + str(self.request_output_roi))
+        gt_labels_roi = request.volumes[VolumeType.GT_LABELS]
+        logger.debug("downstream GT_LABELS request: " + str(gt_labels_roi))
 
-        # shift output ROI by padding_neg
-        batch_spec.output_roi = batch_spec.output_roi.shift(self.padding_neg)
+        # remember requested GT_LABELS ROI
+        self.gt_labels_roi = copy.deepcopy(gt_labels_roi)
+
+        # shift GT_LABELS ROI by padding_neg
+        gt_labels_roi = gt_labels_roi.shift(self.padding_neg)
         # increase shape
-        shape = batch_spec.output_roi.get_shape()
-        shape = tuple(shape[d] - self.padding_neg[d] + self.padding_pos[d] for d in range(dims))
-        batch_spec.output_roi.set_shape(shape)
+        shape = gt_labels_roi.get_shape()
+        shape = shape - self.padding_neg + self.padding_pos
+        gt_labels_roi.set_shape(shape)
+        request.volumes[VolumeType.GT_LABELS] = gt_labels_roi
 
-        logger.debug("upstream output ROI: " + str(batch_spec.output_roi))
+        logger.debug("upstream GT_LABELS request: " + str(gt_labels_roi))
 
     def process(self, batch):
 
@@ -60,36 +66,27 @@ class AddGtAffinities(BatchFilter):
             self.skip_next = False
             return
 
-        # do nothing if gt affinities are already present
-        if VolumeType.GT_AFFINITIES in batch.volumes:
-            logger.warning("batch already contains affinities, skipping")
-            return
-
         logger.debug("computing ground-truth affinities from labels")
-        gt_affinities = Volume(
-                malis.seg_to_affgraph(
-                        batch.volumes[VolumeType.GT_LABELS].data.astype(np.int32),
-                        self.affinity_neighborhood
-                ).astype(np.float32),
-                interpolate=False)
-        batch.volumes[VolumeType.GT_AFFINITIES] = gt_affinities
+        gt_affinities = malis.seg_to_affgraph(
+                batch.volumes[VolumeType.GT_LABELS].data.astype(np.int32),
+                self.affinity_neighborhood
+        ).astype(np.float32)
 
-        # crop to original output ROI
-        offset = self.request_output_roi.get_offset()
-        shift = tuple(-offset[d]-self.padding_neg[d] for d in range(batch.spec.output_roi.dims()))
-        crop_roi = self.request_output_roi.shift(shift)
+        # crop to original GT_LABELS ROI
+        offset = self.gt_labels_roi.get_offset()
+        shift = -offset - self.padding_neg
+        crop_roi = self.gt_labels_roi.shift(shift)
         crop = crop_roi.get_bounding_box()
 
         logger.debug("cropping with " + str(crop))
+        gt_affinities = gt_affinities[(slice(None),)+crop]
 
-        gt_affinities.data = gt_affinities.data[(slice(None),)+crop]
-        for volume_type in [VolumeType.GT_LABELS, VolumeType.GT_MASK, VolumeType.GT_IGNORE]:
-            if volume_type in batch.volumes:
-                volume = batch.volumes[volume_type]
-                volume.data = volume.data[crop]
-        batch.spec.output_roi = batch.spec.output_roi.shift(crop_roi.get_offset())
-        batch.spec.output_roi.set_shape(crop_roi.get_shape())
-
-        logger.debug("reset output ROI to " + str(batch.spec.output_roi))
-
+        logger.debug("reset GT_LABELS ROI to " + str(self.gt_labels_roi))
+        batch.volumes[VolumeType.GT_LABELS].data = batch.volumes[VolumeType.GT_LABELS].data[crop]
+        batch.volumes[VolumeType.GT_LABELS].roi = self.gt_labels_roi
+        batch.volumes[VolumeType.GT_AFFINITIES] = Volume(
+                gt_affinities,
+                self.gt_labels_roi, 
+                batch.volumes[VolumeType.GT_LABELS].resolution,
+                interpolate=False)
         batch.affinity_neighborhood = self.affinity_neighborhood

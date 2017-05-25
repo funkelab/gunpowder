@@ -111,6 +111,21 @@ class Roi(Freezable):
 
         return Roi(offset, shape)
 
+    def union(self, other):
+
+        assert self.dims() == other.dims()
+
+        offset = Coordinate(
+                min(self.__offset[d], other.__offset[d])
+                for d in range(self.dims())
+        )
+        shape = Coordinate(
+                max(self.__offset[d] + self.__shape[d], other.__offset[d] + other.__shape[d]) - offset[d]
+                for d in range(self.dims())
+        )
+
+        return Roi(offset, shape)
+
     def shift(self, by):
 
         return Roi(self.__offset + by, self.__shape)

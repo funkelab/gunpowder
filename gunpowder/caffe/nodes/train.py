@@ -15,17 +15,16 @@ class TrainProcessDied(Exception):
 
 class Train(BatchFilter):
     '''Performs one training iteration for each batch that passes through. 
-    Augments the batch with the predicted affinities.
+    Adds the predicted affinities to the batch.
     '''
 
-    def __init__(self, solver_parameters, use_gpu=None, dry_run=False):
+    def __init__(self, solver_parameters, use_gpu=None):
 
         # start training as a producer pool, so that we can gracefully exit if 
         # anything goes wrong
         self.worker = ProducerPool([lambda gpu=use_gpu: self.__train(gpu)], queue_size=1)
         self.batch_in = multiprocessing.Queue(maxsize=1)
 
-        self.dry_run = dry_run
         self.solver_parameters = solver_parameters
         self.solver_initialized = False
 
@@ -89,18 +88,12 @@ class Train(BatchFilter):
 
         self.net_io.set_inputs(data)
 
-        if self.dry_run:
-            logger.warning("Train process: DRY RUN, LOSS WILL BE 0")
-            batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(np.zeros((3,) + batch.spec.shape, dtype=np.float32), interpolate=True)
-            batch.volumes[VolumeType.LOSS_GRADIENT] = Volume(np.zeros((3,) + batch.spec.shape, dtype=np.float32), interpolate=True)
-            batch.loss = 0
-        else:
-            loss = self.solver.step(1)
-            # self.__consistency_check()
-            output = self.net_io.get_outputs()
-            batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'], interpolate=True)
-            batch.loss = loss
-            # TODO: add gradient
+        loss = self.solver.step(1)
+        # self.__consistency_check()
+        output = self.net_io.get_outputs()
+        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'], interpolate=True)
+        batch.loss = loss
+        # TODO: add gradient
 
         time_of_iteration = time.time() - start
         logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))

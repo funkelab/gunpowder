@@ -50,7 +50,6 @@ class Predict(BatchFilter):
             raise PredictProcessDied()
 
         batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
-        batch.spec.with_prediction = True
 
     def __predict(self, use_gpu):
 
