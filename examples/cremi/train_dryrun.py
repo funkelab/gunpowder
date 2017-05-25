@@ -50,27 +50,28 @@ def train():
 
     batch_provider_tree = (
         data_sources +
-        Snapshot(every=1, output_filename='00.hdf') +
+        Snapshot(every=1, output_filename='{id}_00.hdf') +
         RandomProvider() +
         ExcludeLabels([8094], ignore_mask_erode=12) +
-        Snapshot(every=1, output_filename='01.hdf') +
+        Snapshot(every=1, output_filename='{id}_01.hdf') +
         ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
-        Snapshot(every=1, output_filename='02.hdf') +
+        Snapshot(every=1, output_filename='{id}_02.hdf') +
         SimpleAugment(transpose_only_xy=True) +
-        Snapshot(every=1, output_filename='03.hdf') +
+        Snapshot(every=1, output_filename='{id}_03.hdf') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +
-        Snapshot(every=1, output_filename='04.hdf') +
+        Snapshot(every=1, output_filename='{id}_04.hdf') +
         GrowBoundary(steps=3, only_xy=True) +
-        Snapshot(every=1, output_filename='05.hdf') +
+        Snapshot(every=1, output_filename='{id}_05.hdf') +
         AddGtAffinities(affinity_neighborhood) +
         ZeroOutConstSections() +
-        # PreCache(
-            # request,
-            # cache_size=10,
-            # num_workers=5) +
+        SplitAndRenumberSegmentationLabels() +
+        PreCache(
+            request,
+            cache_size=10,
+            num_workers=5) +
         DummyTrain() +
-        Snapshot(every=1, output_filename='06.hdf')
+        Snapshot(every=1, output_filename='{id}_06.hdf')
     )
 
     n = 10
