@@ -3,7 +3,7 @@ from gunpowder.ext import malis
 
 class SplitAndRenumberSegmentationLabels(BatchFilter):
 
-    def process(self, batch):
+    def process(self, batch, request):
         components = batch.gt.copy()
         shape = batch.gt.shape
         dtype = batch.gt.dtype

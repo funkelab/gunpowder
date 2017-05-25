@@ -93,7 +93,7 @@ class Padding(BatchFilter):
 
         logger.debug("new request: %s"%request)
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         # restore requested batch size and ROI
         for (volume_type, volume) in batch.volumes.items():

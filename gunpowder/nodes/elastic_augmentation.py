@@ -61,7 +61,7 @@ class ElasticAugmentation(BatchFilter):
             logger.debug("upstream request roi for %s = %s"%(volume_type,roi))
 
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         for (volume_type, volume) in batch.volumes.items():
 

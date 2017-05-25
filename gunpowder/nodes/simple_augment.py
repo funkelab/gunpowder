@@ -41,7 +41,7 @@ class SimpleAugment(BatchFilter):
 
         logger.debug("upstream request = " + str(request))
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         mirror = tuple(
                 slice(None, None, -1 if m else 1)

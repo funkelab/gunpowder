@@ -15,7 +15,7 @@ class Normalize(BatchFilter):
         self.factor = factor
         self.dtype = dtype
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         factor = self.factor
 

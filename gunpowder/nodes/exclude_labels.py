@@ -33,7 +33,7 @@ class ExcludeLabels(BatchFilter):
         # we add it, don't request upstream
         del request.volumes[VolumeType.GT_IGNORE]
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         gt = batch.volumes[VolumeType.GT_LABELS]
 

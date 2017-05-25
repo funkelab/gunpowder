@@ -14,7 +14,7 @@ class GrowBoundary(BatchFilter):
         self.background = background
         self.only_xy = only_xy
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         gt = batch.volumes[VolumeType.GT_LABELS]
         gt_mask = None if VolumeType.GT_MASK not in batch.volumes else batch.volumes[VolumeType.GT_MASK]

@@ -12,7 +12,7 @@ class ZeroOutConstSections(BatchFilter):
     intensity manipulations.
     '''
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         assert batch.get_total_roi().dims() == 3, "This filter only works on 3D data."
 

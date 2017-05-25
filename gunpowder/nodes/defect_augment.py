@@ -16,7 +16,7 @@ class DefectAugment(BatchFilter):
         self.contrast_scale = contrast_scale
         self.axis = axis
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         assert batch.get_total_roi().dims()==3, "DefectAugment works on 3D batches only"
 

@@ -59,7 +59,7 @@ class AddGtAffinities(BatchFilter):
 
         logger.debug("upstream GT_LABELS request: " + str(gt_labels_roi))
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         # do nothing if no gt affinities were requested
         if self.skip_next:

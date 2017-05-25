@@ -12,7 +12,7 @@ class IntensityAugment(BatchFilter):
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         raw = batch.volumes[VolumeType.RAW]
 

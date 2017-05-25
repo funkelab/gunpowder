@@ -12,7 +12,7 @@ class IntensityScaleShift(BatchFilter):
         self.scale = scale
         self.shift = shift
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         raw = batch.volumes[VolumeType.RAW]
         raw.data = raw.data*self.scale + self.shift

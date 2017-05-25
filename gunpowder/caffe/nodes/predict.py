@@ -40,7 +40,7 @@ class Predict(BatchFilter):
     def teardown(self):
         self.worker.stop()
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         self.batch_in.put(batch)
 

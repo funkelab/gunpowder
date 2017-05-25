@@ -1,3 +1,5 @@
+import copy
+
 from .batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 
@@ -37,16 +39,18 @@ class BatchFilter(BatchProvider):
 
     def request_batch(self, request):
 
+        upstream_request = copy.deepcopy(request)
+
         timing = Timing(self)
 
         timing.start()
-        self.prepare(request)
+        self.prepare(upstream_request)
         timing.stop()
 
-        batch = self.get_upstream_provider().request_batch(request)
+        batch = self.get_upstream_provider().request_batch(upstream_request)
 
         timing.start()
-        self.process(batch)
+        self.process(batch, request)
         timing.stop()
 
         batch.profiling_stats.add(timing)
@@ -61,10 +65,11 @@ class BatchFilter(BatchProvider):
         '''
         pass
 
-    def process(self, batch):
+    def process(self, batch, request):
         '''To be implemented in subclasses.
 
-        Filter a batch, will be called after 'prepare'. Change batch and its 
-        spec as needed, it will be passed downstream.
+        Filter a batch, will be called after 'prepare'. Change batch as needed, 
+        it will be passed downstream. 'request' is the same as passed to 
+        'prepare', provided for convenience.
         '''
         raise RuntimeError("Class %s does not implement 'process'"%self.__class__)

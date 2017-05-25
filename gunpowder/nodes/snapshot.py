@@ -31,7 +31,7 @@ class Snapshot(BatchFilter):
         self.output_filename = output_filename
         self.every = max(1,every)
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         id = batch.id
 
