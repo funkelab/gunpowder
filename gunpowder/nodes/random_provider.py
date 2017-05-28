@@ -8,14 +8,19 @@ class RandomProvider(BatchProvider):
     '''
 
     def setup(self):
+
         self.spec = None
         assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the RandomProvider"
+
+        # advertise volume_types only if all upstream providers have them
         for provider in self.get_upstream_providers():
             if self.spec is None:
                 self.spec = copy.deepcopy(provider.get_spec())
             else:
-                self.spec.has_gt &= provider.get_spec().has_gt
-                self.spec.has_gt_mask &= provider.get_spec().has_gt_mask
+                my_volume_types = list(self.spec.volumes.keys())
+                for volume_type in my_volume_types:
+                    if volume_type not in provider.get_spec().volumes:
+                        del self.spec.volumes[volume_type]
 
     def get_spec(self):
         return self.spec

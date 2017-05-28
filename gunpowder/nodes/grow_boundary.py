@@ -33,7 +33,7 @@ class GrowBoundary(BatchFilter):
 
         else:
 
-            self.__grow(gt, only_xy=self.only_xy)
+            self.__grow(gt.data, only_xy=self.only_xy)
 
     def __grow(self, gt, gt_mask=None, only_xy=False):
         if gt_mask is not None:
