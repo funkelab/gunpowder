@@ -17,4 +17,9 @@ setup(
             'gunpowder.tests',
             'gunpowder.tests.cases',
         ],
+        install_requires = [
+            "numpy",
+            "scipy",
+            "h5py",
+        ],
 )
