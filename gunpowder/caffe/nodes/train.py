@@ -45,7 +45,8 @@ class Train(BatchFilter):
             raise TrainProcessDied()
 
         batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
-        batch.volumes[VolumeType.LOSS_GRADIENT] = out.volumes[VolumeType.LOSS_GRADIENT]
+        if VolumeType.LOSS_GRADIENT in request.volumes:
+            batch.volumes[VolumeType.LOSS_GRADIENT] = out.volumes[VolumeType.LOSS_GRADIENT]
         batch.loss = out.loss
 
     def __train(self, use_gpu):
