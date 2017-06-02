@@ -22,7 +22,8 @@ ENV PYTHONPATH /src/dvision:$PYTHONPATH
 # install gunpowder
 
 WORKDIR /src/gunpowder
-RUN git clone -b master https://github.com/TuragaLab/gunpowder .
+RUN git clone -b v0.2 https://github.com/TuragaLab/gunpowder . && \
+    pip install -r requirements.txt
 ENV PYTHONPATH /src/gunpowder:$PYTHONPATH
 
 # test the container

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
         name='gunpowder',
-        version='0.1',
+        version='0.2',
         description='Data loading DAG for Greentea.',
         url='https://github.com/funkey/gunpowder',
         author='Jan Funke',
