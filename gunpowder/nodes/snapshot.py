@@ -50,11 +50,12 @@ class Snapshot(BatchFilter):
 
                     ds_name = {
                             VolumeType.RAW: 'volumes/raw',
+                            VolumeType.ALPHA_MASK: 'volumes/alpha_mask',
                             VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
                             VolumeType.GT_AFFINITIES: 'volumes/labels/affs',
                             VolumeType.GT_MASK: 'volumes/labels/mask',
                             VolumeType.GT_IGNORE: 'volumes/labels/ignore',
-                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs'
+                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs',
                     }[volume_type]
 
                     offset = volume.roi.get_offset()
