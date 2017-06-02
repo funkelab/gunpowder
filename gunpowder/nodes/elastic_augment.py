@@ -11,7 +11,7 @@ from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
-class ElasticAugmentation(BatchFilter):
+class ElasticAugment(BatchFilter):
     '''Elasticly deform a batch. Requests larger batches upstream to avoid data 
     loss due to rotation and jitter.'''
 

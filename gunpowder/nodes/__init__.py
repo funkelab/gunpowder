@@ -3,14 +3,14 @@ from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
 from .defect_augment import DefectAugment
-from .elastic_augmentation import ElasticAugmentation
+from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
 from .grow_boundary import GrowBoundary
 from .hdf5_source import Hdf5Source
 from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .normalize import Normalize
-from .padding import Padding
+from .pad import Pad
 from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation

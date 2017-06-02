@@ -17,7 +17,7 @@ def predict():
                     'sample_A_20160501.hdf',
                     raw_dataset='volumes/raw') +
             Normalize() +
-            Padding() +
+            Pad() +
             IntensityScaleShift(2, -1) +
             ZeroOutConstSections() +
             Predict(prototxt, weights, use_gpu=0) +

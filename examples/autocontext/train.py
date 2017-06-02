@@ -68,7 +68,7 @@ def train():
     batch_provider_tree = (
         data_sources +
         RandomProvider() +
-        ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         SimpleAugment(transpose_only_xy=True) +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(prob_missing=0.1, prob_low_contrast=0.1, contrast_scale=0.1) +

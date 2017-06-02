@@ -47,7 +47,7 @@ def train():
         Snapshot(every=1, output_filename='defect_{id}.hdf') +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
-        ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         SimpleAugment(transpose_only_xy=True)
     )
 
@@ -55,7 +55,7 @@ def train():
         data_sources +
         RandomProvider() +
         ExcludeLabels([8094], ignore_mask_erode=12) +
-        ElasticAugmentation([4,40,40], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         SimpleAugment(transpose_only_xy=True) +
         GrowBoundary(steps=3, only_xy=True) +
         AddGtAffinities(affinity_neighborhood) +

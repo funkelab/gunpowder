@@ -9,7 +9,7 @@ from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
-class Padding(BatchFilter):
+class Pad(BatchFilter):
     '''Add a constant intensity padding around volumes of another batch 
     provider. This is useful if your requested batches can be larger than what 
     your source provides.
