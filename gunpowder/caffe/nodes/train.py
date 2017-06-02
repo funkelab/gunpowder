@@ -7,6 +7,7 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
+from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
