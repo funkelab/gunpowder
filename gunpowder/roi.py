@@ -113,7 +113,7 @@ class Roi(Freezable):
 
     def union(self, other):
 
-        assert self.dims() == other.dims()
+        assert self.dims() == other.dims(), "Can not compute union of ROI with dim %d and %d"%(self.dims(), other.dims())
 
         offset = Coordinate(
                 min(self.__offset[d], other.__offset[d])
