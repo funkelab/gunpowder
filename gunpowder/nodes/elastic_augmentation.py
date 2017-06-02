@@ -1,5 +1,6 @@
 import copy
 import logging
+import math
 import numpy as np
 import random
 
@@ -75,10 +76,9 @@ class ElasticAugmentation(BatchFilter):
 
         dims = roi.dims()
 
-        # get bounding box of needed data for transformation (plus save padding 
-        # of 1)
-        bb_min = tuple(int(transformation[d].min()) - 1 for d in range(dims))
-        bb_max = tuple(int(transformation[d].max()) + 2 for d in range(dims))
+        # get bounding box of needed data for transformation
+        bb_min = tuple(int(math.floor(transformation[d].min())) for d in range(dims))
+        bb_max = tuple(int(math.ceil(transformation[d].max())) + 1 for d in range(dims))
 
         # create roi sufficiently large to feed transformation
         source_shape = tuple(bb_max[d] - bb_min[d] for d in range(dims))
