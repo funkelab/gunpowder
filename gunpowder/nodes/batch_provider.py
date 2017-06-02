@@ -71,9 +71,3 @@ class BatchProvider(object):
         Called with a batch request. Should return the requested batch.
         '''
         raise NotImplementedError("Class %s does not implement 'provide'"%type(self).__name__)
-
-    @property
-    def resolution(self):
-        '''To be implemented in subclasses.
-        '''
-        raise NotImplementedError("Class %s does not implement 'resolution'" % type(self).__name__)
