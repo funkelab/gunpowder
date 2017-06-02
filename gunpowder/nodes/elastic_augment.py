@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.volume import VolumeType
@@ -40,9 +41,10 @@ class ElasticAugment(BatchFilter):
 
         # crop the parts corresponding to the requested volume ROIs
         self.transformations = {}
+        logger.debug("total ROI is %s"%total_roi)
         for (volume_type, roi) in request.volumes.items():
 
-            logger.debug("downstream request roi for %s = %s"%(volume_type,roi))
+            logger.debug("downstream request ROI for %s is %s"%(volume_type,roi))
 
             roi_in_total_roi = roi.shift(-total_roi.get_offset())
 
@@ -77,23 +79,14 @@ class ElasticAugment(BatchFilter):
         dims = roi.dims()
 
         # get bounding box of needed data for transformation
-        bb_min = tuple(int(math.floor(transformation[d].min())) for d in range(dims))
-        bb_max = tuple(int(math.ceil(transformation[d].max())) + 1 for d in range(dims))
+        bb_min = Coordinate(int(math.floor(transformation[d].min())) for d in range(dims))
+        bb_max = Coordinate(int(math.ceil(transformation[d].max())) + 1 for d in range(dims))
 
         # create roi sufficiently large to feed transformation
-        source_shape = tuple(bb_max[d] - bb_min[d] for d in range(dims))
         source_roi = Roi(
-                roi.get_offset(),
-                source_shape
+                bb_min,
+                bb_max - bb_min
         )
-
-        # if the offset of roi was set, we need to shift it
-        if roi.get_offset() is not None:
-            shift = tuple(
-                    (transformation.shape[d+1] - source_shape[d])/2
-                    for d in range(dims)
-            )
-            source_roi = source_roi.shift(shift)
 
         # shift transformation, such that it can be applied on indices of source 
         # batch
