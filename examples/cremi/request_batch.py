@@ -32,9 +32,6 @@ def train():
         for sample in ['sample_A_20160501.hdf','sample_B_20160501.hdf','sample_C_20160501.hdf']
     )
 
-    artifact_batch_request = BatchRequest()
-    artifact_batch_request.add_volume_request(VolumeType.RAW, (1,268,268))
-    artifact_batch_request.add_volume_request(VolumeType.ALPHA_MASK, (1,268,268))
     artifact_source = (
         Hdf5Source(
             'sample_ABC_padded_20160501.defects.hdf',
@@ -72,7 +69,7 @@ def train():
             # request,
             # cache_size=10,
             # num_workers=5) +
-        Snapshot(every=1, output_filename='final_{id}.hdf')
+        Snapshot(every=1, output_filename='final_it={iteration}_id={id}.hdf')
     )
 
     n = 1
