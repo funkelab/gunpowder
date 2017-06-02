@@ -1,108 +1,108 @@
 import logging
-
-from gunpowder.ext import h5py
 import numpy as np
 
+from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
-from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.coordinate import Coordinate
+from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
+from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
 
 class Hdf5Source(BatchProvider):
 
-    def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None):
+    def __init__(
+            self,
+            filename,
+            datasets,
+            resolution=None):
+        '''Create a new Hdf5Source
+
+        Args
+
+            filename: The HDF5 file.
+
+            datasets: Dictionary of VolumeType -> dataset names that this source offers.
+
+            resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.
+        '''
 
         self.filename = filename
-        self.raw_dataset = raw_dataset
-        self.gt_dataset = gt_dataset
-        self.gt_mask_dataset = gt_mask_dataset
+        self.datasets = datasets
+        self.specified_resolution = resolution
+        self.resolutions = {}
 
     def setup(self):
 
         f = h5py.File(self.filename, 'r')
 
-        self.dims = None
-        for ds in [self.raw_dataset, self.gt_mask_dataset, self.gt_mask_dataset]:
-
-            if ds is None:
-                continue
+        self.spec = ProviderSpec()
+        self.ndims = None
+        for (volume_type, ds) in self.datasets.items():
 
             if ds not in f:
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
 
-            if self.dims is None:
-                self.dims = f[ds].shape
-            else:
-                dims = f[ds].shape
-                assert(len(dims) == len(self.dims))
-                self.dims = tuple(min(self.dims[d], dims[d]) for d in range(len(dims)))
+            dims = f[ds].shape
+            self.spec.volumes[volume_type] = Roi((0,)*len(dims), dims)
 
-        if 'resolution' not in f[self.raw_dataset].attrs:
-            logger.warning("WARNING: your source does not contain resolution information (no attribute 'resolution' in raw dataset). I will assume (1,1,1). This might not be what you want.")
+            if self.ndims is None:
+                self.ndims = len(dims)
+            else:
+                assert self.ndims == len(dims)
+
+            if self.specified_resolution is None:
+                if 'resolution' in f[ds].attrs:
+                    self.resolutions[volume_type] = tuple(f[ds].attrs['resolution'])
+                else:
+                    default_resolution = (1,)*self.ndims
+                    logger.warning("WARNING: your source does not contain resolution information"
+                                   " (no attribute 'resolution' in {} dataset). I will assume {}. "
+                                   "This might not be what you want.".format(ds,default_resolution))
+                    self.resolutions[volume_type] = default_resolution
+            else:
+                self.resolutions[volume_type] = self.specified_resolution
 
         f.close()
-
-        self.spec = ProviderSpec()
-        self.spec.roi = Roi(
-                (0,)*len(self.dims),
-                self.dims
-        )
-
-        if self.gt_mask_dataset is not None:
-            with h5py.File(self.filename, 'r') as f:
-                mask = np.array(f[self.gt_mask_dataset])
-                good = np.where(mask > 0)
-                min_good = tuple(np.min(good[d])     for d in range(len(self.dims)))
-                max_good = tuple(np.max(good[d]) + 1 for d in range(len(self.dims)))
-                self.spec.gt_roi = Roi(min_good, tuple(max_good[d] - min_good[d] for d in range(len(self.dims))))
-                logger.info("GT ROI for source " + str(self) + ": " + str(self.spec.gt_roi))
-
-        self.spec.has_gt = self.gt_dataset is not None
-        self.spec.has_gt_mask = self.gt_mask_dataset is not None
 
     def get_spec(self):
         return self.spec
 
-    def request_batch(self, batch_spec):
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
         spec = self.get_spec()
 
-        if batch_spec.with_gt and not spec.has_gt:
-            raise RuntimeError("Asked for GT in a non-GT source.")
+        batch = Batch()
 
-        if batch_spec.with_gt_mask and not spec.has_gt_mask:
-            raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
-
-        input_roi = batch_spec.input_roi
-        output_roi = batch_spec.output_roi
-        if not self.spec.roi.contains(input_roi):
-            raise RuntimeError("Input ROI of batch %s outside of my ROI %s"%(input_roi,self.spec.roi))
-        if not self.spec.roi.contains(output_roi):
-            raise RuntimeError("Output ROI of batch %s outside of my ROI %s"%(output_roi,self.spec.roi))
-
-        logger.debug("Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
-
-        batch = Batch(batch_spec)
         with h5py.File(self.filename, 'r') as f:
-            if 'resolution' in f[self.raw_dataset].attrs:
-                batch.spec.resolution = tuple(f[self.raw_dataset].attrs['resolution'])
-                logger.debug("providing batch with resolution of " + str(batch.spec.resolution))
-            else:
-                batch.spec.resolution = (1,) * len(self.dims)
-            logger.debug("Reading raw...")
-            batch.raw = self.__read(f, self.raw_dataset, input_roi)
-            if batch.spec.with_gt:
-                logger.debug("Reading gt...")
-                batch.gt = self.__read(f, self.gt_dataset, output_roi)
-            if batch.spec.with_gt_mask:
-                logger.debug("Reading gt mask...")
-                batch.gt_mask = self.__read(f, self.gt_mask_dataset, output_roi)
+
+            for (volume_type, roi) in request.volumes.items():
+
+                if volume_type not in spec.volumes:
+                    raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
+
+                if not spec.volumes[volume_type].contains(roi):
+                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
+
+                interpolate = {
+                    VolumeType.RAW: True,
+                    VolumeType.GT_LABELS: False,
+                    VolumeType.GT_MASK: False,
+                    VolumeType.ALPHA_MASK: True,
+                }[volume_type]
+
+                logger.debug("Reading %s in %s..."%(volume_type,roi))
+                batch.volumes[volume_type] = Volume(
+                        self.__read(f, self.datasets[volume_type], roi),
+                        roi=roi,
+                        resolution=self.resolutions[volume_type],
+                        interpolate=interpolate)
 
         logger.debug("done")
 

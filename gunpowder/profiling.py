@@ -1,5 +1,6 @@
-from freezable import Freezable
 import time
+
+from .freezable import Freezable
 
 class Timing(Freezable):
 

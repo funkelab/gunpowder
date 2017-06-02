@@ -1,9 +1,11 @@
+import copy
+import logging
 import multiprocessing
-from batch_filter import BatchFilter
+
+from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
 from gunpowder.producer_pool import ProducerPool
 
-import logging
 logger = logging.getLogger(__name__)
 
 class WorkersDiedException(Exception):
@@ -11,12 +13,11 @@ class WorkersDiedException(Exception):
 
 class PreCache(BatchFilter):
 
-    def __init__(self, batch_spec_generator, cache_size=50, num_workers=20):
+    def __init__(self, request, cache_size=50, num_workers=20):
         '''
-            batch_spec_generator:
+            request:
 
-                Callable that returns partial batch specs, to be passed 
-                upstream.
+                A BatchRequest used to pre-cache batches.
 
             cache_size: int
 
@@ -26,7 +27,7 @@ class PreCache(BatchFilter):
 
                 How many processes to spawn to fill the cache.
         '''
-        self.batch_spec_generator = batch_spec_generator
+        self.request = copy.deepcopy(request)
         self.batches = multiprocessing.Queue(maxsize=cache_size)
         self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(num_workers) ], queue_size=cache_size)
 
@@ -36,7 +37,7 @@ class PreCache(BatchFilter):
     def teardown(self):
         self.workers.stop()
 
-    def request_batch(self, batch_spec):
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()
@@ -51,5 +52,5 @@ class PreCache(BatchFilter):
 
     def __run_worker(self, i):
 
-        batch_spec = self.batch_spec_generator()
-        return self.get_upstream_provider().request_batch(batch_spec)
+        request = copy.deepcopy(self.request)
+        return self.get_upstream_provider().request_batch(request)

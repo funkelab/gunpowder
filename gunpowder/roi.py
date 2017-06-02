@@ -1,5 +1,5 @@
-from freezable import Freezable
-from coordinate import Coordinate
+from .coordinate import Coordinate
+from .freezable import Freezable
 
 class Roi(Freezable):
     '''A rectengular region of interest, defined by an offset and a shape.
@@ -43,7 +43,7 @@ class Roi(Freezable):
             return None
 
         return tuple(
-                slice(self.__offset[d], self.__shape[d] + self.__offset[d])
+                slice(int(self.__offset[d]), int(self.__shape[d] + self.__offset[d]))
                 for d in range(self.dims())
         )
 
@@ -111,6 +111,21 @@ class Roi(Freezable):
 
         return Roi(offset, shape)
 
+    def union(self, other):
+
+        assert self.dims() == other.dims(), "Can not compute union of ROI with dim %d and %d"%(self.dims(), other.dims())
+
+        offset = Coordinate(
+                min(self.__offset[d], other.__offset[d])
+                for d in range(self.dims())
+        )
+        shape = Coordinate(
+                max(self.__offset[d] + self.__shape[d], other.__offset[d] + other.__shape[d]) - offset[d]
+                for d in range(self.dims())
+        )
+
+        return Roi(offset, shape)
+
     def shift(self, by):
 
         return Roi(self.__offset + by, self.__shape)
@@ -149,6 +164,18 @@ class Roi(Freezable):
 
         assert isinstance(other, Coordinate), "can only subtract Coordinate from Roi"
         return self.shift(-other)
+
+    def __eq__(self, other):
+
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+
+    def __ne__(self, other):
+
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
 
     def __repr__(self):
         return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"

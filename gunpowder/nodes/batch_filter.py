@@ -1,4 +1,6 @@
-from gunpowder.nodes.batch_provider import BatchProvider
+import copy
+
+from .batch_provider import BatchProvider
 from gunpowder.profiling import Timing
 
 class BatchFilter(BatchProvider):
@@ -24,7 +26,7 @@ class BatchFilter(BatchProvider):
         prepare
 
             Prepare for a batch request. Always called before each 
-            'request_batch'. Use it to modify a batch spec to be passed 
+            'process'. Use it to modify a batch spec to be passed 
             upstream.
     '''
 
@@ -35,36 +37,41 @@ class BatchFilter(BatchProvider):
     def get_spec(self):
         return self.get_upstream_provider().get_spec()
 
-    def request_batch(self, batch_spec):
+    def provide(self, request):
+
+        # operate on a copy of the request, to provide the original request to 
+        # 'process' for convenience
+        upstream_request = copy.deepcopy(request)
 
         timing = Timing(self)
 
         timing.start()
-        self.prepare(batch_spec)
+        self.prepare(upstream_request)
         timing.stop()
 
-        batch = self.get_upstream_provider().request_batch(batch_spec)
+        batch = self.get_upstream_provider().request_batch(upstream_request)
 
         timing.start()
-        self.process(batch)
+        self.process(batch, request)
         timing.stop()
 
         batch.profiling_stats.add(timing)
 
         return batch
 
-    def prepare(self, batch_spec):
+    def prepare(self, request):
         '''To be implemented in subclasses.
 
-        Prepare for a batch request. Change the batch_spec as needed, it will be 
+        Prepare for a batch request. Change the request as needed, it will be 
         passed on upstream.
         '''
         pass
 
-    def process(self, batch):
+    def process(self, batch, request):
         '''To be implemented in subclasses.
 
-        Filter a batch, will be called after 'prepare'. Change batch and its 
-        spec as needed, it will be passed downstream.
+        Filter a batch, will be called after 'prepare'. Change batch as needed, 
+        it will be passed downstream. 'request' is the same as passed to 
+        'prepare', provided for convenience.
         '''
         raise RuntimeError("Class %s does not implement 'process'"%self.__class__)

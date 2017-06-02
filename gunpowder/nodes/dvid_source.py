@@ -1,30 +1,41 @@
 import logging
 
-from gunpowder.ext import dvision
-
-from gunpowder.nodes.batch_provider import BatchProvider
+from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
+from gunpowder.ext import dvision
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
+from gunpowder.volume import Volume, VolumeType
 
 logger = logging.getLogger(__name__)
 
+class DvidSourceReadException(Exception):
+    pass
 
-class ReadFailed(Exception):
+class MaskNotProvidedException(Exception):
     pass
 
 
 class DvidSource(BatchProvider):
 
-    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None):
+    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None, gt_mask_roi_name=None, resolution=None):
         """
-        :param hostname: str of hostname for DVID server
-        :param port: int of port for DVID server
-        :param uuid: str of UUID of node on DVID server
-        :param raw_array_name: str of data instance for image data
-        :param gt_array_name: str of data instance for segmentation label data
+        :param hostname: hostname for DVID server
+        :type hostname: str
+        :param port: port for DVID server
+        :type port: int
+        :param uuid: UUID of node on DVID server
+        :type uuid: str
+        :param raw_array_name: DVID data instance for image data
+        :type raw_array_name: str
+        :param gt_array_name: DVID data instance for segmentation label data
+        :type gt_array_name: str
+        :param gt_mask_roi_name: DVID region of interest for masking the segmentation
+        :type gt_mask_roi_name: str
+        :param resolution: resolution of source voxels in nanometers
+        :type resolution: tuple
         """
         self.hostname = hostname
         self.port = port
@@ -32,6 +43,8 @@ class DvidSource(BatchProvider):
         self.uuid = uuid
         self.raw_array_name = raw_array_name
         self.gt_array_name = gt_array_name
+        self.gt_mask_roi_name = gt_mask_roi_name
+        self.specified_resolution = resolution
         self.node_service = None
         self.dims = 0
         self.spec = ProviderSpec()
@@ -43,46 +56,56 @@ class DvidSource(BatchProvider):
             self.spec.has_gt = True
         else:
             self.spec.has_gt = False
-        self.spec.has_gt_mask = False
+        self.spec.has_gt_mask = self.gt_mask_roi_name is not None
 
-        logger.info("DVID source spec:\n" + str(self.spec))
+        logger.info("DvidSource.spec:\n{}".format(self.spec))
 
     def get_spec(self):
         return self.spec
 
-    def request_batch(self, batch_spec):
+    @property
+    def resolution(self):
+        if self.specified_resolution is not None:
+            return self.specified_resolution
+        else:
+            fib25_resolution = (8, 8, 8)
+            logger.warning("WARNING: your source does not contain resolution information. "
+                           "I will assume {}. "
+                           "This might not be what you want.".format(fib25_resolution))
+            return fib25_resolution
+
+    def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
         spec = self.get_spec()
 
-        if batch_spec.with_gt and not spec.has_gt:
-            raise RuntimeError("Asked for GT in a non-GT source.")
+        batch = Batch()
+        logger.debug("providing batch with resolution of {}".format(self.resolution))
 
-        if batch_spec.with_gt_mask and not spec.has_gt_mask:
-            raise RuntimeError("Asked for GT mask in a source that doesn't have one.")
+        for (volume_type, roi) in request.volumes.items():
 
-        input_roi = batch_spec.input_roi
-        output_roi = batch_spec.output_roi
-        if not self.spec.roi.contains(input_roi):
-            raise RuntimeError("Input ROI of batch %s outside of my ROI %s"%(input_roi,self.spec.roi))
-        if not self.spec.roi.contains(output_roi):
-            raise RuntimeError("Output ROI of batch %s outside of my ROI %s"%(output_roi,self.spec.roi))
+            if volume_type not in spec.volumes:
+                raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
 
-        logger.debug("Filling batch request for input %s and output %s"%(str(input_roi),str(output_roi)))
+            if not spec.volumes[volume_type].contains(roi):
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-        batch = Batch(batch_spec)
+            read, interpolate = {
+                VolumeType.RAW: (self.__read_raw, True),
+                VolumeType.GT_LABELS: (self.__read_gt, False),
+                VolumeType.GT_MASK: (self.__read_gt_mask, False),
+            }[volume_type]
 
-        # TODO: get resolution from repository
-        batch.spec.resolution = (1,)*self.dims
-        logger.warning("setting resolution to " + str(batch.spec.resolution))
+            logger.debug("Reading %s in %s..."%(volume_type,roi))
+            batch.volumes[volume_type] = Volume(
+                    read(roi),
+                    roi=roi,
+                    # TODO: get resolution from repository
+                    resolution=self.resolution,
+                    interpolate=interpolate)
 
-        logger.debug("Reading raw...")
-        batch.raw = self.__read_raw(batch_spec.input_roi)
-        if batch.spec.with_gt:
-            logger.debug("Reading gt...")
-            batch.gt = self.__read_gt(batch_spec.output_roi)
         logger.debug("done")
 
         timing.stop()
@@ -110,7 +133,7 @@ class DvidSource(BatchProvider):
         except Exception as e:
             print(e)
             msg = "Failure reading raw at slices {} with {}".format(slices, repr(self))
-            raise ReadFailed(msg)
+            raise DvidSourceReadException(msg)
 
     def __read_gt(self, roi):
         slices = roi.get_bounding_box()
@@ -120,7 +143,23 @@ class DvidSource(BatchProvider):
         except Exception as e:
             print(e)
             msg = "Failure reading GT at slices {} with {}".format(slices, repr(self))
-            raise ReadFailed(msg)
+            raise DvidSourceReadException(msg)
+
+    def __read_gt_mask(self, roi):
+        """
+        :param roi: gunpowder.Roi
+        :return: uint8 np.ndarray with roi shape
+        """
+        if self.gt_mask_roi_name is None:
+            raise MaskNotProvidedException
+        slices = roi.get_bounding_box()
+        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.gt_mask_roi_name)
+        try:
+            return dvid_roi[slices]
+        except Exception as e:
+            print(e)
+            msg = "Failure reading GT mask at slices {} with {}".format(slices, repr(self))
+            raise DvidSourceReadException(msg)
 
     def __repr__(self):
         return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(

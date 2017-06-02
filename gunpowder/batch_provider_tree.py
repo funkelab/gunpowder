@@ -36,12 +36,12 @@ class BatchProviderTree(BatchProvider):
     def get_spec(self):
         return self.output.get_spec()
 
-    def request_batch(self, batch_spec):
+    def provide(self, request):
 
         if not self.initialized:
             raise RuntimeError("You are requesting a batch from an uninitialized provider ('setup()' has not been called). Avoid this by using the 'gunpowder.build' context manager, which also takes care of tearing the provider down if it is not used anymore.")
 
-        return self.output.request_batch(batch_spec)
+        return self.output.request_batch(request)
 
     def __add__(self, batch_provider):
 

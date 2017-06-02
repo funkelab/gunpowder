@@ -1,6 +1,8 @@
-from scipy import ndimage
 import numpy as np
-from batch_filter import BatchFilter
+from scipy import ndimage
+
+from .batch_filter import BatchFilter
+from gunpowder.volume import Volume, VolumeType
 
 class GrowBoundary(BatchFilter):
     '''Grow a boundary between regions. Does not grow at the border of the batch 
@@ -12,12 +14,30 @@ class GrowBoundary(BatchFilter):
         self.background = background
         self.only_xy = only_xy
 
-    def process(self, batch):
-        self.__grow(batch.gt, batch.gt_mask, self.only_xy)
+    def process(self, batch, request):
+
+        gt = batch.volumes[VolumeType.GT_LABELS]
+        gt_mask = None if VolumeType.GT_MASK not in batch.volumes else batch.volumes[VolumeType.GT_MASK]
+
+        if gt_mask is not None:
+
+            # grow only in area where mask and gt are defined
+            crop = gt_mask.roi.intersect(gt.roi)
+
+            if crop is None:
+                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.roi,gt_mask.roi))
+            crop_in_gt = crop.shift(-gt.roi.get_offset()).get_bounding_box()
+            crop_in_gt_mask = crop.shift(-gt_mask.roi.get_offset()).get_bounding_box()
+
+            self.__grow(gt.data[crop_in_gt], gt_mask.data[crop_in_gt_mask], self.only_xy)
+
+        else:
+
+            self.__grow(gt.data, only_xy=self.only_xy)
 
     def __grow(self, gt, gt_mask=None, only_xy=False):
         if gt_mask is not None:
-            assert gt.shape == gt_mask.shape
+            assert gt.shape == gt_mask.shape, "GT_LABELS and GT_MASK do not have the same size."
 
         if only_xy:
             assert len(gt.shape) == 3

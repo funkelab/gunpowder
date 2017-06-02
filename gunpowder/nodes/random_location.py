@@ -1,98 +1,141 @@
-from batch_filter import BatchFilter
 from random import randint
-from gunpowder.coordinate import Coordinate
-
+from skimage.transform import integral_image, integrate
 import logging
+import numpy as np
+
+from .batch_filter import BatchFilter
+from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+from gunpowder.volume import VolumeType
+
 logger = logging.getLogger(__name__)
 
 class RandomLocation(BatchFilter):
     '''Choses a batch at a random location in the bounding box of the upstream 
     provider.
 
-    The random location is chosen such that the batch specs input roi lies 
-    entirely inside the provder's roi.
-
-    If the provider has a ground-truth ROI, the location is chosen such that the 
-    center of the batch spec's output ROI is inside the provider's ground-truth 
-    ROI.
+    The random location is chosen such that the batch request roi lies entirely 
+    inside the provder's roi.
     '''
+
+    def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK):
+        '''Create a random location sampler.
+
+        If `min_masked` (and optionally `mask_volume_type`) are set, only 
+        batches are returned that have at least the given ratio of masked-in 
+        voxels. This is in general faster than using the ``Reject`` node, at the 
+        expense of storing an integral volume of the complete mask.
+
+        Args:
+
+            min_masked: If non-zero, require that the random sample contains at 
+            least that ratio of masked-in voxels.
+
+            mask_volume_type: The volume type to use for mask checks.
+        '''
+        self.min_masked = min_masked
+        self.mask_volume_type = mask_volume_type
+
 
     def setup(self):
 
-        provider_spec = self.get_upstream_provider().get_spec()
-        if provider_spec.roi.get_bounding_box() is None:
+        self.roi = self.get_spec().get_total_roi()
+        if self.roi is None:
             raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")
 
-        self.roi = provider_spec.roi
-        self.gt_roi = provider_spec.gt_roi
+        if self.min_masked > 0:
 
-    def prepare(self, batch_spec):
+            assert self.mask_volume_type in self.get_spec().volumes, "Upstream provider does not have %s"%self.mask_volume_type
+            self.mask_roi = self.get_spec().volumes[self.mask_volume_type]
 
-        logger.debug("requested input ROI: %s"%batch_spec.input_roi)
-        logger.debug("requested output ROI: %s"%batch_spec.output_roi)
+            logger.info("requesting complete mask...")
 
-        shape = batch_spec.input_roi.get_shape()
+            mask_request = BatchRequest({self.mask_volume_type: self.mask_roi})
+            mask_batch = self.get_upstream_provider().request_batch(mask_request)
+
+            logger.info("allocating mask integral volume...")
+
+            mask_data = mask_batch.volumes[self.mask_volume_type].data
+            mask_integral_dtype = np.uint64
+            logger.debug("mask size is " + str(mask_data.size))
+            if mask_data.size < 2**32:
+                mask_integral_dtype = np.uint32
+            if mask_data.size < 2**16:
+                mask_integral_dtype = np.uint16
+            logger.debug("chose %s as integral volume dtype"%mask_integral_dtype)
+
+            self.mask_integral = np.array(mask_data>0, dtype=mask_integral_dtype)
+            self.mask_integral = integral_image(self.mask_integral)
+
+    def prepare(self, request):
+
+        request_roi = request.get_total_roi()
+        logger.debug("total requested ROI: %s"%request_roi)
+
+        shape = request_roi.get_shape()
         for d in range(self.roi.dims()):
             assert self.roi.get_shape()[d] >= shape[d], "Requested shape %s does not fit into provided ROI %s."%(shape,self.roi)
 
         target_roi = self.roi
-        logger.debug("valid target ROI to fit input request: " + str(target_roi))
-
-        # ensure that output center is inside GT ROI, if we know it
-        if self.gt_roi is not None:
-
-            logger.debug("GT ROI is set, I will ensure that center of output is inside GT ROI")
-
-            # get output center
-            output_center = batch_spec.output_roi.get_center()
-
-            # from input_roi min to center
-            # = amount to grow GT ROI in negative direction
-            grow_neg = output_center - batch_spec.input_roi.get_begin()
-
-            # from center to input_roi max
-            # = amount to grow GT ROI in positive direction
-            grow_pos = batch_spec.input_roi.get_end() - output_center
-
-            logger.debug("center of output request is at " + str(output_center))
-            logger.debug("growing GT roi by " + str(grow_neg) + " and " + str(grow_pos))
-
-            # grow the GT ROI
-            expanded_gt_roi = self.gt_roi.grow(grow_neg, grow_pos)
-
-            logger.debug("original GT ROI: " + str(self.gt_roi))
-            logger.debug("expanded GT ROI: " + str(expanded_gt_roi))
-
-            target_roi = expanded_gt_roi.intersect(target_roi)
-
-            logger.debug("intersection of valid ROIs: " + str(target_roi))
+        logger.debug("valid target ROI to fit total request ROI: " + str(target_roi))
 
         # shrink target ROI, such that it contains only valid offset positions 
-        # for input ROI
-        target_roi = target_roi.grow(None, -batch_spec.input_roi.get_shape())
+        # for request ROI
+        target_roi = target_roi.grow(None, -request_roi.get_shape())
 
-        logger.debug("valid starting points for input request in " + str(target_roi))
+        logger.debug("valid starting points for request in " + str(target_roi))
 
-        # select a random point inside ROI
-        random_offset = Coordinate(
-                randint(begin, end-1)
-                for begin, end in zip(target_roi.get_begin(), target_roi.get_end())
-        )
+        good_location_found = False
+        while not good_location_found:
 
-        logger.debug("random starting point: " + str(random_offset))
+            # select a random point inside ROI
+            random_offset = Coordinate(
+                    randint(begin, end-1)
+                    for begin, end in zip(target_roi.get_begin(), target_roi.get_end())
+            )
 
-        # shift input and output ROI
-        diff = random_offset - batch_spec.input_roi.get_offset()
-        batch_spec.input_roi = batch_spec.input_roi.shift(diff)
-        batch_spec.output_roi = batch_spec.output_roi.shift(diff)
+            logger.debug("random starting point: " + str(random_offset))
 
-        logger.debug("new input ROI: %s"%batch_spec.input_roi)
-        logger.debug("new output ROI: %s"%batch_spec.output_roi)
-        logger.debug("center of output ROI: " + str(batch_spec.output_roi.get_center()))
+            if self.min_masked > 0:
 
-        assert self.roi.contains(batch_spec.input_roi)
-        if self.gt_roi is not None:
-            assert self.gt_roi.contains(batch_spec.output_roi.get_center())
+                # get randomly chosen mask ROI
+                request_mask_roi = request.volumes[self.mask_volume_type]
+                diff = random_offset - request_mask_roi.get_offset()
+                request_mask_roi = request_mask_roi.shift(diff)
 
-    def process(self, batch):
-        pass
+                # get coordinates inside mask volume
+                request_mask_roi_in_volume = request_mask_roi.shift(-self.mask_roi.get_offset())
+
+                # get number of masked-in voxels
+                num_masked_in = integrate(
+                        self.mask_integral,
+                        [request_mask_roi_in_volume.get_begin()],
+                        [request_mask_roi_in_volume.get_end()-(1,)*self.mask_integral.ndim]
+                )[0]
+
+                mask_ratio = float(num_masked_in)/request_mask_roi.size()
+                logger.debug("mask ratio is %f"%mask_ratio)
+
+                if mask_ratio >= self.min_masked:
+                    logger.debug("good batch found")
+                    good_location_found = True
+                else:
+                    logger.debug("bad batch found")
+
+            else:
+
+                good_location_found = True
+
+        # shift request ROIs
+        diff = random_offset - request_roi.get_offset()
+        for (volume_type, roi) in request.volumes.items():
+            roi = roi.shift(diff)
+            logger.debug("new %s ROI: %s"%(volume_type,roi))
+            request.volumes[volume_type] = roi
+            assert self.roi.contains(roi)
+
+    def process(self, batch, request):
+
+        # reset ROIs to request
+        for (volume_type,roi) in request.volumes.items():
+            batch.volumes[volume_type].roi = roi

@@ -5,32 +5,17 @@ import numpy as np
 import random
 
 from gunpowder import *
-from gunpowder.caffe import *
-from gunpowder.ext import malis
 
 def train():
 
-    affinity_neighborhood = malis.mknhood3d()
-    solver_parameters = SolverParameters()
-    solver_parameters.train_net = 'net.prototxt'
-    solver_parameters.base_lr = 1e-4
-    solver_parameters.momentum = 0.95
-    solver_parameters.momentum2 = 0.999
-    solver_parameters.delta = 1e-8
-    solver_parameters.weight_decay = 0.000005
-    solver_parameters.lr_policy = 'inv'
-    solver_parameters.gamma = 0.0001
-    solver_parameters.power = 0.75
-    solver_parameters.snapshot = 2000
-    solver_parameters.snapshot_prefix = 'net'
-    solver_parameters.type = 'Adam'
-    solver_parameters.resume_from = None
-    solver_parameters.train_state.add_stage('euclid')
+    random.seed(42)
+    set_verbose()
+
+    affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
 
     request = BatchRequest()
     request.add_volume_request(VolumeType.RAW, (84,268,268))
     request.add_volume_request(VolumeType.GT_LABELS, (56,56,56))
-    request.add_volume_request(VolumeType.GT_MASK, (56,56,56))
     request.add_volume_request(VolumeType.GT_IGNORE, (56,56,56))
     request.add_volume_request(VolumeType.GT_AFFINITIES, (56,56,56))
 
@@ -39,8 +24,7 @@ def train():
             sample,
             datasets = {
                 VolumeType.RAW: 'volumes/raw',
-                VolumeType.GT_LABELS: 'volumes/labels/neuron_ids_notransparency',
-                VolumeType.GT_MASK: 'volumes/labels/mask',
+                VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
             }
         ) +
         Normalize() +
@@ -57,6 +41,7 @@ def train():
             }
         ) +
         RandomLocation(min_masked=0.05, mask_volume_type=VolumeType.ALPHA_MASK) +
+        Snapshot(every=1, output_filename='defect_{id}.hdf') +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
@@ -80,23 +65,22 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
-        IntensityScaleShift(2,-1) +
-        PreCache(
-            request,
-            cache_size=10,
-            num_workers=5) +
-        Train(solver_parameters, use_gpu=0) +
-        Snapshot(every=10, output_filename='batch_{id}.hdf')
+        # PreCache(
+            # request,
+            # cache_size=10,
+            # num_workers=5) +
+        Snapshot(every=1, output_filename='final_it={iteration}_id={id}.hdf')
     )
 
-    n = 10
-    print("Training for", n, "iterations")
+    n = 1
+    print("Requesting", n, "batches")
 
     with build(batch_provider_tree) as minibatch_maker:
         for i in range(n):
             minibatch_maker.request_batch(request)
 
     print("Finished")
+
 
 if __name__ == "__main__":
     train()

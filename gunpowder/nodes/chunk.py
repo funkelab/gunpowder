@@ -1,11 +1,11 @@
 import copy
 import logging
-
 import numpy as np
 
+from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class Chunk(BatchFilter):
 
         assert chunk_spec.input_roi.get_offset() == (0,)*self.dims, "The chunk spec should not have an input offset, only input/output shape and optionally output offset (relative to input)."
 
-    def request_batch(self, batch_spec):
+    def provide(self, batch_spec):
 
         logger.info("batch with spec " + str(batch_spec) + " requested")
 
@@ -48,13 +48,13 @@ class Chunk(BatchFilter):
             if batch is None:
                 batch = self.__setup_batch(batch_spec, chunk)
 
-            self.__fill(batch.raw, chunk.raw, batch_spec.input_roi, chunk.spec.input_roi)
-            if chunk.gt is not None:
-                self.__fill(batch.gt, chunk.gt, batch_spec.output_roi, chunk.spec.output_roi)
-            if chunk.gt_mask is not None:
-                self.__fill(batch.gt_mask, chunk.gt_mask, batch_spec.output_roi, chunk.spec.output_roi)
-            if chunk.prediction is not None:
-                self.__fill(batch.prediction, chunk.prediction, batch_spec.output_roi, chunk.spec.output_roi, affs=True)
+            for (volume_type, volume) in chunk.volumes:
+
+                # input roi for RAW, output roi for others
+                if volume_type == VolumeType.RAW:
+                    self.__fill(batch[volume_type].data, volume.data, batch_spec.input_roi, chunk.spec.input_roi)
+                else:
+                    self.__fill(batch[volume_type].data, volume.data, batch_spec.output_roi, chunk.spec.output_roi)
 
             for d in range(self.dims):
                 offset[d] += stride[d]
@@ -70,13 +70,19 @@ class Chunk(BatchFilter):
     def __setup_batch(self, batch_spec, reference):
 
         batch = Batch(batch_spec)
-        batch.raw = np.zeros(batch_spec.input_roi.get_shape(), reference.raw.dtype)
-        if reference.gt is not None:
-            batch.gt = np.zeros(batch.spec.output_roi.get_shape(), reference.gt.dtype)
-        if reference.gt_mask is not None:
-            batch.gt_mask = np.zeros(batch.spec.output_roi.get_shape(), reference.gt_mask.dtype)
-        if reference.prediction is not None:
-            batch.prediction = np.zeros((3,) + batch.spec.output_roi.get_shape(), reference.prediction.dtype)
+
+        for (volume_type, volume) in reference.volumes.items():
+
+            interpolate = False
+            if volume_type == VolumeType.RAW:
+                shape = batch_spec.input_roi.get_shape()
+                interpolate = True
+            elif volume_type == VolumeType.GT_AFFINITIES or volume_type == VolumeType.PRED_AFFINITIES:
+                shape = (3,) + batch_spec.output_roi.get_shape()
+            else:
+                shape = batch_spec.output_roi.get_shape()
+
+            batch.volumes[volume_type] = Volume(np.zeros(shape, volume.data.dtype), interpolate)
 
         return batch
 
@@ -91,7 +97,11 @@ class Chunk(BatchFilter):
         common_in_a_roi = common_roi - roi_a.get_offset()
         common_in_b_roi = common_roi - roi_b.get_offset()
 
-        if affs:
-            a[(slice(None),) + common_in_a_roi.get_bounding_box()] = b[(slice(None),) + common_in_b_roi.get_bounding_box()]
-        else:
-            a[common_in_a_roi.get_bounding_box()] = b[common_in_b_roi.get_bounding_box()]
+        slices_a = common_in_a_roi.get_bounding_box()
+        slices_b = common_in_b_roi.get_bounding_box()
+
+        if len(a.data.shape) > len(slices_a):
+            slices_a = (slice(None),)*(len(a.data.shape) - len(slices_a)) + slices_a
+            slices_b = (slice(None),)*(len(b.data.shape) - len(slices_b)) + slices_b
+
+        a[slices_a] = b[slices_b]

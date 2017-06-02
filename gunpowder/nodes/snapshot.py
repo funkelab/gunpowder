@@ -1,8 +1,10 @@
-from batch_filter import BatchFilter
-from gunpowder.ext import h5py
+import logging
 import os
 
-import logging
+from .batch_filter import BatchFilter
+from gunpowder.ext import h5py
+from gunpowder.volume import VolumeType
+
 logger = logging.getLogger(__name__)
 
 class Snapshot(BatchFilter):
@@ -17,7 +19,8 @@ class Snapshot(BatchFilter):
         output_filename: string
 
             Template for output filenames. '{id}' in the string will be replaced 
-            with the ID of the batch.
+            with the ID of the batch. '{iteration}' with the training iteration 
+            (if training was performed on this batch).
 
         every:
 
@@ -29,9 +32,9 @@ class Snapshot(BatchFilter):
         self.output_filename = output_filename
         self.every = max(1,every)
 
-    def process(self, batch):
+    def process(self, batch, request):
 
-        id = batch.spec.id
+        id = batch.id
 
         if id%self.every == 0:
 
@@ -40,25 +43,27 @@ class Snapshot(BatchFilter):
             except:
                 pass
 
-            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8)))
+            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8),iteration=batch.iteration))
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
-                f['volumes/raw'] = batch.raw
-                f['volumes/raw'].attrs['offset'] = batch.spec.input_roi.get_offset()
-                if batch.gt is not None:
-                    f['volumes/labels/neuron_ids'] = batch.gt
-                    f['volumes/labels/neuron_ids'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gt_mask is not None:
-                    f['volumes/labels/mask'] = batch.gt_mask
-                    f['volumes/labels/mask'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gt_affinities is not None:
-                    f['volumes/gt_affs'] = batch.gt_affinities
-                    f['volumes/gt_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.prediction is not None:
-                    f['volumes/predicted_affs'] = batch.prediction
-                    f['volumes/predicted_affs'].attrs['offset'] = batch.spec.output_roi.get_offset()
-                if batch.gradient is not None:
-                    f['volumes/gradient'] = batch.gradient
-                    f['volumes/gradient'].attrs['offset'] = batch.spec.output_roi.get_offset()
+
+                for (volume_type, volume) in batch.volumes.items():
+
+                    ds_name = {
+                            VolumeType.RAW: 'volumes/raw',
+                            VolumeType.ALPHA_MASK: 'volumes/alpha_mask',
+                            VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
+                            VolumeType.GT_AFFINITIES: 'volumes/labels/affs',
+                            VolumeType.GT_MASK: 'volumes/labels/mask',
+                            VolumeType.GT_IGNORE: 'volumes/labels/ignore',
+                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs',
+                    }[volume_type]
+
+                    offset = volume.roi.get_offset()
+                    offset*= volume.resolution
+                    dataset = f.create_dataset(name=ds_name, data=volume.data)
+                    dataset.attrs['offset'] = offset
+                    dataset.attrs['resolution'] = volume.resolution
+
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss

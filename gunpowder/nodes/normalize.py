@@ -1,7 +1,9 @@
-import numpy as np
-from batch_filter import BatchFilter
-
 import logging
+import numpy as np
+
+from .batch_filter import BatchFilter
+from gunpowder.volume import VolumeType
+
 logger = logging.getLogger(__name__)
 
 class Normalize(BatchFilter):
@@ -13,21 +15,22 @@ class Normalize(BatchFilter):
         self.factor = factor
         self.dtype = dtype
 
-    def process(self, batch):
+    def process(self, batch, request):
 
         factor = self.factor
 
         if factor is None:
 
-            logger.debug("automatically normalizing raw data with dtype=" + str(batch.raw.dtype))
+            raw = batch.volumes[VolumeType.RAW]
+            logger.debug("automatically normalizing raw data with dtype=" + str(raw.data.dtype))
 
-            if batch.raw.dtype == np.uint8:
+            if raw.data.dtype == np.uint8:
                 factor = 1.0/255
-            elif batch.raw.dtype == np.float32:
-                assert batch.raw.min() >= 0 and batch.raw.max() <= 1, "Raw values are float but not in [0,1], I don't know how to normalize. Please provide a factor."
+            elif raw.data.dtype == np.float32:
+                assert raw.data.min() >= 0 and raw.data.max() <= 1, "Raw values are float but not in [0,1], I don't know how to normalize. Please provide a factor."
                 factor = 1.0
             else:
-                raise RuntimeError("Automatic normalization for " + str(batch.raw.dtype) + " not implemented, please provide a factor.")
+                raise RuntimeError("Automatic normalization for " + str(raw.data.dtype) + " not implemented, please provide a factor.")
 
         logger.debug("scaling raw data with " + str(factor))
-        batch.raw = batch.raw.astype(self.dtype)*factor
+        raw.data = raw.data.astype(self.dtype)*factor
