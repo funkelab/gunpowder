@@ -11,7 +11,8 @@ ENV PYTHONPATH /src/malis:$PYTHONPATH
 
 WORKDIR /src/augment
 RUN git clone https://github.com/funkey/augment . && \
-    git checkout 49c601e2d4f633ee510fc7b10e3d962bd9386363
+    git checkout 4a42b01ccad7607b47a1096e904220729dbcb80a && \
+    pip install -r requirements.txt
 ENV PYTHONPATH /src/augment:$PYTHONPATH
 
 WORKDIR /src/dvision
@@ -22,7 +23,8 @@ ENV PYTHONPATH /src/dvision:$PYTHONPATH
 # install gunpowder
 
 WORKDIR /src/gunpowder
-RUN git clone -b v0.2 https://github.com/TuragaLab/gunpowder . && \
+RUN git clone https://github.com/TuragaLab/gunpowder . && \
+    git checkout 158ed2d500a7656786f79e01c49bc62d44c1cf46 && \
     pip install -r requirements.txt
 ENV PYTHONPATH /src/gunpowder:$PYTHONPATH
 
