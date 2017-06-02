@@ -92,7 +92,12 @@ class Train(BatchFilter):
         loss = self.solver.step(1)
         # self.__consistency_check()
         output = self.net_io.get_outputs()
-        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'], interpolate=True)
+        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(
+                output['aff_pred'],
+                batch.volumes[VolumeType.GT_AFFINITIES].roi,
+                batch.volumes[VolumeType.GT_AFFINITIES].resolution,
+                interpolate=True
+        )
         batch.loss = loss
         batch.iteration = self.solver.iter
         # TODO: add gradient
