@@ -49,6 +49,16 @@ class DefectAugment(BatchFilter):
         self.artifact_source = artifact_source
         self.axis = axis
 
+    def setup(self):
+
+        if self.artifact_source is not None:
+            self.artifact_source.setup()
+
+    def teardown(self):
+
+        if self.artifact_source is not None:
+            self.artifact_source.teardown()
+
     def process(self, batch, request):
 
         assert batch.get_total_roi().dims()==3, "DefectAugment works on 3D batches only"
