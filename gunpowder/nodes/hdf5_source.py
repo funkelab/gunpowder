@@ -14,13 +14,26 @@ logger = logging.getLogger(__name__)
 
 class Hdf5Source(BatchProvider):
 
-    def __init__(self, filename, raw_dataset, gt_dataset=None, gt_mask_dataset=None, resolution=None):
+    def __init__(
+            self,
+            filename,
+            datasets,
+            resolution=None):
+        '''Create a new Hdf5Source
+
+        Args
+
+            filename: The HDF5 file.
+
+            datasets: Dictionary of VolumeType -> dataset names that this source offers.
+
+            resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.
+        '''
 
         self.filename = filename
-        self.raw_dataset = raw_dataset
-        self.gt_dataset = gt_dataset
-        self.gt_mask_dataset = gt_mask_dataset
+        self.datasets = datasets
         self.specified_resolution = resolution
+        self.resolutions = {}
 
     def setup(self):
 
@@ -28,16 +41,7 @@ class Hdf5Source(BatchProvider):
 
         self.spec = ProviderSpec()
         self.ndims = None
-        for volume_type in [VolumeType.RAW, VolumeType.GT_LABELS, VolumeType.GT_MASK]:
-
-            ds = {
-                    VolumeType.RAW: self.raw_dataset,
-                    VolumeType.GT_LABELS: self.gt_dataset,
-                    VolumeType.GT_MASK: self.gt_mask_dataset,
-            }[volume_type]
-
-            if ds is None:
-                continue
+        for (volume_type, ds) in self.datasets.items():
 
             if ds not in f:
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
@@ -49,6 +53,18 @@ class Hdf5Source(BatchProvider):
                 self.ndims = len(dims)
             else:
                 assert self.ndims == len(dims)
+
+            if self.specified_resolution is None:
+                if 'resolution' in f[ds].attrs:
+                    self.resolutions[volume_type] = tuple(f[ds].attrs['resolution'])
+                else:
+                    default_resolution = (1,)*self.ndims
+                    logger.warning("WARNING: your source does not contain resolution information"
+                                   " (no attribute 'resolution' in {} dataset). I will assume {}. "
+                                   "This might not be what you want.".format(ds,default_resolution))
+                    self.resolutions[volume_type] = default_resolution
+            else:
+                self.resolutions[volume_type] = self.specified_resolution
 
         f.close()
 
@@ -63,7 +79,6 @@ class Hdf5Source(BatchProvider):
         spec = self.get_spec()
 
         batch = Batch()
-        logger.debug("providing batch with resolution of {}".format(self.resolution))
 
         with h5py.File(self.filename, 'r') as f:
 
@@ -75,17 +90,18 @@ class Hdf5Source(BatchProvider):
                 if not spec.volumes[volume_type].contains(roi):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-                dataset, interpolate = {
-                    VolumeType.RAW: (self.raw_dataset, True),
-                    VolumeType.GT_LABELS: (self.gt_dataset, False),
-                    VolumeType.GT_MASK: (self.gt_mask_dataset, False),
+                interpolate = {
+                    VolumeType.RAW: True,
+                    VolumeType.GT_LABELS: False,
+                    VolumeType.GT_MASK: False,
+                    VolumeType.ALPHA_MASK: True,
                 }[volume_type]
 
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
                 batch.volumes[volume_type] = Volume(
-                        self.__read(f, dataset, roi),
+                        self.__read(f, self.datasets[volume_type], roi),
                         roi=roi,
-                        resolution=self.resolution,
+                        resolution=self.resolutions[volume_type],
                         interpolate=interpolate)
 
         logger.debug("done")
@@ -102,18 +118,3 @@ class Hdf5Source(BatchProvider):
     def __repr__(self):
 
         return self.filename
-
-    @property
-    def resolution(self):
-        if self.specified_resolution is not None:
-            return self.specified_resolution
-        else:
-            try:
-                with h5py.File(self.filename, 'r') as f:
-                    return tuple(f[self.raw_dataset].attrs['resolution'])
-            except KeyError:
-                default_resolution = (1,) * self.ndims
-                logger.warning("WARNING: your source does not contain resolution information"
-                               " (no attribute 'resolution' in raw dataset). I will assume {}. "
-                               "This might not be what you want.".format(default_resolution))
-                return default_resolution
