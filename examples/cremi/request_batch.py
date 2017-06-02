@@ -43,7 +43,7 @@ def train():
                 VolumeType.ALPHA_MASK: 'defect_sections/mask',
             }
         ) +
-        RandomLocation(min_masked=0.3, mask_volume_type=VolumeType.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_volume_type=VolumeType.ALPHA_MASK) +
         Snapshot(every=1, output_filename='defect_{id}.hdf') +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
@@ -55,7 +55,7 @@ def train():
         data_sources +
         RandomProvider() +
         ExcludeLabels([8094], ignore_mask_erode=12) +
-        ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
+        ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0], prob_slip=0.05,prob_shift=0.05,max_misalign=25) +
         SimpleAugment(transpose_only_xy=True) +
         GrowBoundary(steps=3, only_xy=True) +
         AddGtAffinities(affinity_neighborhood) +
@@ -68,14 +68,14 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
-        PreCache(
-            request,
-            cache_size=10,
-            num_workers=5) +
+        # PreCache(
+            # request,
+            # cache_size=10,
+            # num_workers=5) +
         Snapshot(every=1, output_filename='final_{id}.hdf')
     )
 
-    n = 10
+    n = 1
     print("Requesting", n, "batches")
 
     with build(batch_provider_tree) as minibatch_maker:
