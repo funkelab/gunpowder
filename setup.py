@@ -21,5 +21,6 @@ setup(
             "numpy",
             "scipy",
             "h5py",
+            "scikit-image",
         ],
 )
