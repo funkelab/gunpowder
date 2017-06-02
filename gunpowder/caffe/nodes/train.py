@@ -93,6 +93,7 @@ class Train(BatchFilter):
         output = self.net_io.get_outputs()
         batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'], interpolate=True)
         batch.loss = loss
+        batch.iteration = self.solver.iter
         # TODO: add gradient
 
         time_of_iteration = time.time() - start

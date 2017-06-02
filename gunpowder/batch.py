@@ -26,6 +26,7 @@ class Batch(Freezable):
         self.volumes = {}
         self.affinity_neighborhood = None
         self.loss = None
+        self.iteration = None
 
         self.freeze()
 

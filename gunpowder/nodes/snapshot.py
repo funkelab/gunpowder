@@ -19,7 +19,8 @@ class Snapshot(BatchFilter):
         output_filename: string
 
             Template for output filenames. '{id}' in the string will be replaced 
-            with the ID of the batch.
+            with the ID of the batch. '{iteration}' with the training iteration 
+            (if training was performed on this batch).
 
         every:
 
@@ -42,7 +43,7 @@ class Snapshot(BatchFilter):
             except:
                 pass
 
-            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8)))
+            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8),iteration=batch.iteration))
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
