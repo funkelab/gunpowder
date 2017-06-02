@@ -3,9 +3,12 @@ from .roi import Roi
 
 class BatchRequest(Freezable):
 
-    def __init__(self, volumes={}):
+    def __init__(self, initial_volumes=None):
 
-        self.volumes = volumes
+        if initial_volumes is None:
+            self.volumes = {}
+        else:
+            self.volumes = initial_volumes
 
         self.freeze()
 

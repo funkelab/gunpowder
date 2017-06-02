@@ -15,7 +15,7 @@ class Padding(BatchFilter):
     your source provides.
     '''
 
-    def __init__(self, pad_sizes, pad_values={}):
+    def __init__(self, pad_sizes, pad_values=None):
         '''
         Args:
 
@@ -25,14 +25,17 @@ class Padding(BatchFilter):
                 an infinite padding is added. If a Coordinate, this amount will 
                 be added to the ROI in the positive and negative direction.
 
-            pad_values: dict, VolumeType -> value
+            pad_values: dict, VolumeType -> value or None
 
                 The values to report inside the padding. If not given, 0 is 
                 used.
         '''
 
         self.pad_sizes = pad_sizes
-        self.pad_values = pad_values
+        if pad_values is None:
+            self.pad_values = {}
+        else:
+            self.pad_values = pad_values
 
         for volume_type in pad_sizes.keys():
             if volume_type not in pad_values:
