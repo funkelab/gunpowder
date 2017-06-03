@@ -48,6 +48,7 @@ class Train(BatchFilter):
         if VolumeType.LOSS_GRADIENT in request.volumes:
             batch.volumes[VolumeType.LOSS_GRADIENT] = out.volumes[VolumeType.LOSS_GRADIENT]
         batch.loss = out.loss
+        batch.iteration = out.iteration
 
     def __train(self, use_gpu):
 
