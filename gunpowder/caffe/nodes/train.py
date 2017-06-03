@@ -128,8 +128,15 @@ class Train(BatchFilter):
         next_id = gt_labels.data.max() + 1
 
         gt_pos_pass = gt_labels.data
-        gt_neg_pass = np.array(gt_labels.data)
-        gt_neg_pass[batch.volumes[VolumeType.GT_MASK].data==0] = next_id
+
+        if VolumeType.GT_IGNORE in batch.volumes:
+
+            gt_neg_pass = np.array(gt_labels.data)
+            gt_neg_pass[batch.volumes[VolumeType.GT_IGNORE].data==0] = next_id
+
+        else:
+
+            gt_neg_pass = gt_pos_pass
 
         data['comp_label'] = np.array([[gt_neg_pass, gt_pos_pass]])
         data['nhood'] = batch.affinity_neighborhood[np.newaxis,np.newaxis,:]
