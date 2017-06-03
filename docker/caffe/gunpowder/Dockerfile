@@ -24,7 +24,7 @@ ENV PYTHONPATH /src/dvision:$PYTHONPATH
 
 WORKDIR /src/gunpowder
 RUN git clone https://github.com/TuragaLab/gunpowder . && \
-    git checkout 158ed2d500a7656786f79e01c49bc62d44c1cf46 && \
+    git checkout d2dec21fded1a444a1b6e04a67d3e5060fd62b13 && \
     pip install -r requirements.txt
 ENV PYTHONPATH /src/gunpowder:$PYTHONPATH
 
