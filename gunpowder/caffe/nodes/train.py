@@ -118,9 +118,9 @@ class Train(BatchFilter):
         error_scale = self.__scale_errors(gt_affinities.data, w_neg, w_pos)
 
         if VolumeType.GT_MASK in batch.volumes:
-            error_scale[bath.volumes[VolumeType.GT_MASK==0]] = 0
+            error_scale[batch.volumes[VolumeType.GT_MASK]==0] = 0
         if VolumeType.GT_IGNORE in batch.volumes:
-            error_scale[bath.volumes[VolumeType.GT_IGNORE==0]] = 0
+            error_scale[batch.volumes[VolumeType.GT_IGNORE]==0] = 0
 
         data['scale'] = error_scale[np.newaxis,:]
 
