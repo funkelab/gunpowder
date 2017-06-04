@@ -31,19 +31,18 @@ class Snapshot(BatchFilter):
         self.output_dir = output_dir
         self.output_filename = output_filename
         self.every = max(1,every)
+        self.n = 0
 
     def process(self, batch, request):
 
-        id = batch.id
-
-        if id%self.every == 0:
+        if self.n%self.every == 0:
 
             try:
                 os.makedirs(self.output_dir)
             except:
                 pass
 
-            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(id).zfill(8),iteration=batch.iteration))
+            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(batch.id).zfill(8),iteration=batch.iteration))
             logger.info("saving to " + snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
@@ -67,3 +66,4 @@ class Snapshot(BatchFilter):
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
+        self.n += 1
