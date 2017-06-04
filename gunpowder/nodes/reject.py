@@ -13,7 +13,7 @@ class Reject(BatchProvider):
         self.mask_volume_type = mask_volume_type
 
     def setup(self):
-        assert self.mask_volume_type in self.get_spec().volumes, "Reject can only be used if %s is provided"%mask_volume_type
+        assert self.mask_volume_type in self.get_spec().volumes, "Reject can only be used if %s is provided"%self.mask_volume_type
         assert len(self.get_upstream_providers()) == 1, "Reject can only be used with exactly one upstream provider."
         self.upstream_provider = self.get_upstream_providers()[0]
 
