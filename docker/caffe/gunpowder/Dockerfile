@@ -22,10 +22,12 @@ ENV PYTHONPATH /src/dvision:$PYTHONPATH
 
 # install gunpowder
 
+# assumes that gunpowder package directory and requirements.txt are in build
+# context (the complementary Makefile ensures that)
+ADD gunpowder /src/gunpowder/gunpowder
+ADD requirements.txt /src/gunpowder/requirements.txt
 WORKDIR /src/gunpowder
-RUN git clone https://github.com/TuragaLab/gunpowder . && \
-    git checkout 80845de0def268917d40593f97c866333b7c1a4c && \
-    pip install -r requirements.txt
+RUN pip install -r requirements.txt
 ENV PYTHONPATH /src/gunpowder:$PYTHONPATH
 
 # test the container
