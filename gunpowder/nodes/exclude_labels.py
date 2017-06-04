@@ -1,3 +1,4 @@
+import copy
 import logging
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
@@ -25,6 +26,18 @@ class ExcludeLabels(BatchFilter):
         self.labels = set(labels)
         self.ignore_mask_erode = ignore_mask_erode
         self.background_value = background_value
+
+    def setup(self):
+
+        upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(upstream_spec)
+
+        assert VolumeType.GT_LABELS in self.spec.volumes, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+
+        self.spec.volumes[VolumeType.GT_IGNORE] = spec.volumes[VolumeType.GT_LABELS]
+
+    def get_spec(self):
+        return self.spec
 
     def prepare(self, request):
 
