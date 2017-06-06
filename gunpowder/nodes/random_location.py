@@ -15,7 +15,7 @@ class RandomLocation(BatchFilter):
     provider.
 
     The random location is chosen such that the batch request roi lies entirely 
-    inside the provder's roi.
+    inside the provider's roi.
     '''
 
     def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK):
@@ -40,6 +40,7 @@ class RandomLocation(BatchFilter):
     def setup(self):
 
         self.roi = self.get_spec().get_total_roi()
+
         if self.roi is None:
             raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")
 
@@ -67,6 +68,7 @@ class RandomLocation(BatchFilter):
             self.mask_integral = np.array(mask_data>0, dtype=mask_integral_dtype)
             self.mask_integral = integral_image(self.mask_integral)
 
+
     def prepare(self, request):
 
         request_roi = request.get_total_roi()
@@ -77,6 +79,7 @@ class RandomLocation(BatchFilter):
             assert self.roi.get_shape()[d] >= shape[d], "Requested shape %s does not fit into provided ROI %s."%(shape,self.roi)
 
         target_roi = self.roi
+
         logger.debug("valid target ROI to fit total request ROI: " + str(target_roi))
 
         # shrink target ROI, such that it contains only valid offset positions 
@@ -92,12 +95,10 @@ class RandomLocation(BatchFilter):
             random_offset = Coordinate(
                     randint(begin, end-1)
                     for begin, end in zip(target_roi.get_begin(), target_roi.get_end())
-            )
-
+                    )
             logger.debug("random starting point: " + str(random_offset))
 
             if self.min_masked > 0:
-
                 # get randomly chosen mask ROI
                 request_mask_roi = request.volumes[self.mask_volume_type]
                 diff = random_offset - request_mask_roi.get_offset()
@@ -123,19 +124,28 @@ class RandomLocation(BatchFilter):
                     logger.debug("bad batch found")
 
             else:
-
                 good_location_found = True
 
         # shift request ROIs
         diff = random_offset - request_roi.get_offset()
         for (volume_type, roi) in request.volumes.items():
             roi = roi.shift(diff)
-            logger.debug("new %s ROI: %s"%(volume_type,roi))
+            logger.debug("new %s ROI: %s"%(volume_type, roi))
             request.volumes[volume_type] = roi
             assert self.roi.contains(roi)
+
+        for (points_type, roi) in request.points.items():
+            roi = roi.shift(diff)
+            logger.debug("new %s ROI: %s"%(points_type, roi))
+            request.points[points_type] = roi
+            assert self.roi.contains(roi)
+
 
     def process(self, batch, request):
 
         # reset ROIs to request
         for (volume_type,roi) in request.volumes.items():
             batch.volumes[volume_type].roi = roi
+        for (points_type, roi) in request.points.items():
+            batch.points[points_type].roi = roi
+

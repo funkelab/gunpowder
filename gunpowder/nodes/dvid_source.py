@@ -1,9 +1,13 @@
+import distutils.util
+import numpy as np
 import logging
+import requests
 
 from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
+from gunpowder.points import PointsType, PointsOfType, SynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
@@ -20,7 +24,8 @@ class MaskNotProvidedException(Exception):
 
 class DvidSource(BatchProvider):
 
-    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None, gt_mask_roi_name=None, resolution=None):
+    def __init__(self, hostname, port, uuid, volume_array_names, raw_array_name=None, gt_array_name=None, gt_mask_roi_name=None,
+                 points_roi_shape=None, points_roi_offset=None, points_array_names=None, resolution=None):
         """
         :param hostname: hostname for DVID server
         :type hostname: str
@@ -28,12 +33,13 @@ class DvidSource(BatchProvider):
         :type port: int
         :param uuid: UUID of node on DVID server
         :type uuid: str
-        :param raw_array_name: DVID data instance for image data
-        :type raw_array_name: str
-        :param gt_array_name: DVID data instance for segmentation label data
-        :type gt_array_name: str
-        :param gt_mask_roi_name: DVID region of interest for masking the segmentation
-        :type gt_mask_roi_name: str
+        :param volume_array_names: dict {VolumeType:  DVID data instance}
+        # :param raw_array_name: DVID data instance for image data
+        # :type raw_array_name: str
+        # :param gt_array_name: DVID data instance for segmentation label data
+        # :type gt_array_name: str
+        # :param gt_mask_roi_name: DVID region of interest for masking the segmentation
+        # :type gt_mask_roi_name: str
         :param resolution: resolution of source voxels in nanometers
         :type resolution: tuple
         """
@@ -41,23 +47,28 @@ class DvidSource(BatchProvider):
         self.port = port
         self.url = "http://{}:{}".format(self.hostname, self.port)
         self.uuid = uuid
-        self.raw_array_name = raw_array_name
-        self.gt_array_name = gt_array_name
-        self.gt_mask_roi_name = gt_mask_roi_name
+
+        self.volume_array_names = volume_array_names
+        # self.raw_array_name   = raw_array_name
+        # self.gt_array_name    = gt_array_name
+        # self.gt_mask_roi_name = gt_mask_roi_name
+
+        self.points_roi_shape   = points_roi_shape
+        self.points_roi_offset  = points_roi_offset
+        self.points_array_names = points_array_names
+
         self.specified_resolution = resolution
         self.node_service = None
         self.dims = 0
         self.spec = ProviderSpec()
 
     def setup(self):
-        self.spec.roi = self.__get_roi(self.raw_array_name)
-        if self.gt_array_name is not None:
-            self.spec.gt_roi = self.__get_roi(self.gt_array_name)
-            self.spec.has_gt = True
-        else:
-            self.spec.has_gt = False
-        self.spec.has_gt_mask = self.gt_mask_roi_name is not None
+        for volume_type, volume_name in self.volume_array_names.items():
+            self.spec.volumes[volume_type] = self.__get_roi(volume_name)
 
+        for points_type, points_name in self.points_array_names.items():
+            self.spec.points[points_type] = Roi(offset=self.points_roi_offset,
+                                                shape=self.points_roi_shape)
         logger.info("DvidSource.spec:\n{}".format(self.spec))
 
     def get_spec(self):
@@ -84,13 +95,14 @@ class DvidSource(BatchProvider):
         batch = Batch()
         logger.debug("providing batch with resolution of {}".format(self.resolution))
 
+
         for (volume_type, roi) in request.volumes.items():
 
             if volume_type not in spec.volumes:
                 raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
 
             if not spec.volumes[volume_type].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type, roi, spec.volumes[volume_type]))
 
             read, interpolate = {
                 VolumeType.RAW: (self.__read_raw, True),
@@ -98,13 +110,32 @@ class DvidSource(BatchProvider):
                 VolumeType.GT_MASK: (self.__read_gt_mask, False),
             }[volume_type]
 
-            logger.debug("Reading %s in %s..."%(volume_type,roi))
+            logger.debug("Reading %s in %s..."%(volume_type, roi))
             batch.volumes[volume_type] = Volume(
-                    read(roi),
-                    roi=roi,
-                    # TODO: get resolution from repository
-                    resolution=self.resolution,
-                    interpolate=interpolate)
+                                                data=read(roi),
+                                                roi=roi,
+                                                # TODO: get resolution from repository
+                                                resolution=self.resolution,
+                                                interpolate=interpolate)
+
+
+        # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
+        # together s.t. ids are unique and allow to find partner locations
+        if PointsType.PRESYN in request.points or PointsType.POSTSYN in request.points:
+            assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
+            presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.PRESYN])
+
+        for (points_type, roi) in request.points.items():
+            if points_type not in spec.points:
+                raise RuntimeError("Asked for %s which this source does not provide"%points_type)
+            if not spec.points[points_type].contains(roi):
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
+
+            logger.debug("Reading %s in %s..."%(points_type, roi))
+            id_to_point = {PointsType.PRESYN: presyn_points,
+                           PointsType.POSTSYN: postsyn_points}[points_type]
+            batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolution)
+
 
         logger.debug("done")
 
@@ -127,7 +158,7 @@ class DvidSource(BatchProvider):
 
     def __read_raw(self, roi):
         slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.raw_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.RAW])  # self.raw_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -137,7 +168,7 @@ class DvidSource(BatchProvider):
 
     def __read_gt(self, roi):
         slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.gt_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.GT_LABELS])  # self.gt_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -153,7 +184,7 @@ class DvidSource(BatchProvider):
         if self.gt_mask_roi_name is None:
             raise MaskNotProvidedException
         slices = roi.get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.gt_mask_roi_name)
+        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.GT_MASK])  # self.gt_mask_roi_name)
         try:
             return dvid_roi[slices]
         except Exception as e:
@@ -161,7 +192,77 @@ class DvidSource(BatchProvider):
             msg = "Failure reading GT mask at slices {} with {}".format(slices, repr(self))
             raise DvidSourceReadException(msg)
 
+    def __load_json_annotations(self, volume_shape, volume_offset, array_name):
+        url = "http://" + str(self.hostname) + ":" + str(self.port)+"/api/node/" + str(self.uuid) + '/' + \
+              str(array_name) + "/elements/{}_{}_{}/{}_{}_{}".format(volume_shape[0], volume_shape[1], volume_shape[2],
+                                                   volume_offset[0], volume_offset[1], volume_offset[2])
+        annotations_file = requests.get(url)
+        json_annotations = annotations_file.json()
+        if json_annotations is None:
+            json_annotations = []  # create empty_dummy_json_annotations
+            Warning('No synapses found in region defined by volume_offset and volume_shape')
+        return json_annotations
+
+    def __read_syn_points(self, roi):
+        """ read json file from dvid source, in json format to craete a SynPoint for every location given """
+        syn_file_json = self.__load_json_annotations(volume_shape=roi.get_shape(),  volume_offset=roi.get_offset(),
+                                                     array_name= self.points_array_names[PointsType.PRESYN])
+
+        presyn_points_dict, postsyn_points_dict = {}, {}
+        location_to_location_id_dict, location_id_to_partner_locations = {}, {}
+        for node_nr, node in enumerate(syn_file_json):
+            # collect information
+            kind        = str(node['kind'])
+            location    = np.asarray((node['Pos'][2], node['Pos'][1], node['Pos'][0]))
+            location_id = int(node_nr)
+            syn_id      = int(node['Tags'][0][3:])
+            location_to_location_id_dict[str(location)] = location_id
+
+            partner_locations = []
+            for relation in node['Rels']:
+                partner_locations.append(np.asarray([relation['To'][2], relation['To'][1], relation['To'][0]]))
+            location_id_to_partner_locations[int(node_nr)] = partner_locations
+
+            props = {'conf':   float(node['Prop']['conf']), 'agent':  str(node['Prop']['agent'])}
+            # check if property given, not always given
+            if 'flagged' in node['Prop']:
+                str_value_flagged = str(node['Prop']['flagged'])
+                props['flagged']  = bool(distutils.util.strtobool(str_value_flagged))
+            if 'multi' in node['Prop']:
+                str_value_multi = str(node['Prop']['multi'])
+                props['multi']  = bool(distutils.util.strtobool(str_value_multi))
+
+            # create synPoint with information collected so far (partner_ids not completed yet)
+            syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
+                                    synapse_id=syn_id, partner_ids=[], props=props)
+            if kind == 'PreSyn':
+                presyn_points_dict[int(node_nr)] = syn_point.get_copy()
+            elif kind == 'PostSyn':
+                postsyn_points_dict[int(node_nr)] = syn_point.get_copy()
+
+        # add partner ids
+        last_node_nr = len(syn_file_json)-1
+        for current_syn_point_id in location_id_to_partner_locations.keys():
+            all_partner_ids = []
+            for partner_loc in location_id_to_partner_locations[current_syn_point_id]:
+                if location_to_location_id_dict.has_key(str(partner_loc)):
+                    all_partner_ids.append(int(location_to_location_id_dict[str(partner_loc)]))
+                else:
+                    last_node_nr = last_node_nr + 1
+                    assert not location_to_location_id_dict.has_key(str(partner_loc))
+                    all_partner_ids.append(int(last_node_nr))
+
+            if current_syn_point_id in presyn_points_dict:
+                presyn_points_dict[current_syn_point_id].partner_ids = all_partner_ids
+            elif current_syn_point_id in postsyn_points_dict:
+                postsyn_points_dict[current_syn_point_id].partner_ids = all_partner_ids
+            else:
+                raise Exception("current syn point id not found in any dict")
+
+        return presyn_points_dict, postsyn_points_dict
+
+
     def __repr__(self):
         return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.raw_array_name, self.gt_array_name
-        )
+            self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.RAW],
+            self.volume_array_names[VolumeType.GT_LABELS])

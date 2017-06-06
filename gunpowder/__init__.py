@@ -6,6 +6,7 @@ from .batch_request import BatchRequest
 from .build import build
 from .coordinate import Coordinate
 from .nodes import *
+from .points import PointsType, PointsOfType, SynPoint
 from .producer_pool import ProducerPool
 from .roi import Roi
 from .volume import VolumeType, Volume

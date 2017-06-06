@@ -3,12 +3,17 @@ from .roi import Roi
 
 class BatchRequest(Freezable):
 
-    def __init__(self, initial_volumes=None):
+    def __init__(self, initial_volumes=None, initial_points=None):
 
         if initial_volumes is None:
             self.volumes = {}
         else:
             self.volumes = initial_volumes
+
+        if initial_points is None:
+            self.points = {}
+        else:
+            self.points = initial_points
 
         self.freeze()
 
@@ -20,15 +25,25 @@ class BatchRequest(Freezable):
 
         self.__center_rois()
 
+    def add_point_request(self, points_type, shape):
+
+        self.points[points_type] = Roi((0,)*len(shape), shape)
+
+        self.__center_rois()
+
+
     def get_total_roi(self):
         '''Get the union of all the requested volume ROIs.'''
 
         total_roi = None
-        for (volume_type, roi) in self.volumes.items():
-            if total_roi is None:
-                total_roi = roi
-            else:
-                total_roi = total_roi.union(roi)
+
+        for collection_type in [self.volumes, self.points]:
+            for (type, roi) in collection_type.items():
+                if total_roi is None:
+                    total_roi = roi
+                else:
+                    total_roi = total_roi.union(roi)
+
         return total_roi
 
     def __center_rois(self):
@@ -40,14 +55,15 @@ class BatchRequest(Freezable):
 
         center = total_roi.get_center()
 
-        for volume_type in self.volumes:
-
-            roi = self.volumes[volume_type]
-            self.volumes[volume_type] = roi.shift(center - roi.get_center())
+        for collection_type in [self.volumes, self.points]:
+            for type in collection_type:
+                roi = collection_type[type]
+                collection_type[type] = roi.shift(center - roi.get_center())
 
     def __repr__(self):
 
         r = ""
-        for (volume_type, roi) in self.volumes.items():
-            r += "%s: %s\n"%(volume_type, roi)
+        for collection_type in [self.volumes, self.points]:
+            for (type, roi) in collection_type.items():
+                r += "%s: %s\n"%(type, roi)
         return r

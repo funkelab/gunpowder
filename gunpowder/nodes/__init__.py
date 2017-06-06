@@ -3,6 +3,7 @@ from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
 from .defect_augment import DefectAugment
+from .dvid_source import DvidSource
 from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
 from .grow_boundary import GrowBoundary
@@ -11,6 +12,7 @@ from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .normalize import Normalize
 from .pad import Pad
+from gunpowder.points import PointsType, PointsOfType, SynPoint
 from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
