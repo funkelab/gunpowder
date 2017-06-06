@@ -71,38 +71,39 @@ class RandomLocation(BatchFilter):
 
     def prepare(self, request):
 
-        request_roi = request.get_total_roi()
-        logger.debug("total requested ROI: %s"%request_roi)
+        shift_roi = None
 
-        shape = request_roi.get_shape()
-        for d in range(self.roi.dims()):
-            assert self.roi.get_shape()[d] >= shape[d], "Requested shape %s does not fit into provided ROI %s."%(shape,self.roi)
+        for volume_type, request_roi in request.volumes.items():
 
-        target_roi = self.roi
+            assert volume_type in self.get_spec().volumes, "Requested %s, but source does not provide it."%volume_type
+            provided_roi = self.get_spec().volumes[volume_type]
 
-        logger.debug("valid target ROI to fit total request ROI: " + str(target_roi))
+            volume_shift_roi = provided_roi.shift(-request_roi.begin()).grow((0,0,0), -request_roi.get_shape())
 
-        # shrink target ROI, such that it contains only valid offset positions 
-        # for request ROI
-        target_roi = target_roi.grow(None, -request_roi.get_shape())
+            if shift_roi is None:
+                shift_roi = volume_shift_roi
+            else:
+                shift_roi = shift_roi.intersect(volume_shift_roi)
 
-        logger.debug("valid starting points for request in " + str(target_roi))
+        logger.debug("valid shifts for request in " + str(shift_roi))
+
+        assert shift_roi.size() > 0, "Can not satisfy batch request, no location covers all requested ROIs."
 
         good_location_found = False
         while not good_location_found:
 
             # select a random point inside ROI
-            random_offset = Coordinate(
+            random_shift = Coordinate(
                     randint(begin, end-1)
-                    for begin, end in zip(target_roi.get_begin(), target_roi.get_end())
-                    )
-            logger.debug("random starting point: " + str(random_offset))
+                    for begin, end in zip(shift_roi.get_begin(), shift_roi.get_end())
+            )
+
+            logger.debug("random shift: " + str(random_shift))
 
             if self.min_masked > 0:
                 # get randomly chosen mask ROI
                 request_mask_roi = request.volumes[self.mask_volume_type]
-                diff = random_offset - request_mask_roi.get_offset()
-                request_mask_roi = request_mask_roi.shift(diff)
+                request_mask_roi = request_mask_roi.shift(random_shift)
 
                 # get coordinates inside mask volume
                 request_mask_roi_in_volume = request_mask_roi.shift(-self.mask_roi.get_offset())
@@ -127,10 +128,9 @@ class RandomLocation(BatchFilter):
                 good_location_found = True
 
         # shift request ROIs
-        diff = random_offset - request_roi.get_offset()
         for (volume_type, roi) in request.volumes.items():
-            roi = roi.shift(diff)
-            logger.debug("new %s ROI: %s"%(volume_type, roi))
+            roi = roi.shift(random_shift)
+            logger.debug("new %s ROI: %s"%(volume_type,roi))
             request.volumes[volume_type] = roi
             assert self.roi.contains(roi)
 
