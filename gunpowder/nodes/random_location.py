@@ -76,7 +76,7 @@ class RandomLocation(BatchFilter):
             assert volume_type in self.get_spec().volumes, "Requested %s, but source does not provide it."%volume_type
             provided_roi = self.get_spec().volumes[volume_type]
 
-            volume_shift_roi = provided_roi.shift(-request_roi.begin()).grow((0,0,0), -request_roi.get_shape())
+            volume_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0), -request_roi.get_shape())
 
             if shift_roi is None:
                 shift_roi = volume_shift_roi
