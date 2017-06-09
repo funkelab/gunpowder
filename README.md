@@ -31,7 +31,7 @@ As an example, this scheme allows the modelling of on-the-fly data augmentation
 as a batch provider:
 ```python
 augment =
-    ElasticAugmentation(
+    ElasticAugment(
         control_point_spacing=[4,40,40],
         jitter_sigma=[0,2,2],
         rotation_interval=[0,math.pi/2.0])
@@ -106,4 +106,4 @@ for convenience).
 
 For an example of a batch filter changing both the spec going upstream and the
 batch going downstream, see
-[ElasticAugmentation](gunpowder/elastic_augmentation.py).
+[ElasticAugment](gunpowder/elastic_augmentation.py).
