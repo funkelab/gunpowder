@@ -106,4 +106,4 @@ for convenience).
 
 For an example of a batch filter changing both the spec going upstream and the
 batch going downstream, see
-[ElasticAugment](gunpowder/elastic_augment.py).
+[ElasticAugment](gunpowder/nodes/elastic_augment.py).
