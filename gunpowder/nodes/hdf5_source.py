@@ -75,9 +75,9 @@ class Hdf5Source(BatchProvider):
                     self.resolutions[volume_type] = default_resolution
             else:
                 self.resolutions[volume_type] = self.specified_resolution
-
-        for points_type in self.points_types:
-            self.spec.points[points_type] = Roi(offset=self.points_roi_offset, shape=self.points_roi_shape)
+        if self.points_types is not None:
+            for points_type in self.points_types:
+                self.spec.points[points_type] = Roi(offset=self.points_roi_offset, shape=self.points_roi_shape)
 
         f.close()
 
@@ -165,16 +165,18 @@ class Hdf5Source(BatchProvider):
 
     def __get_syn_points(self, roi, syn_file):
         bb_shape, bb_offset  = roi.get_shape(), roi.get_offset()
-
         presyn_points_dict, postsyn_points_dict = {}, {}
-
         presyn_node_ids  = syn_file['annotations/presynaptic_site/partners'][:, 0].tolist()
         postsyn_node_ids = syn_file['annotations/presynaptic_site/partners'][:, 1].tolist()
+
         for node_nr, node_id in enumerate(syn_file['annotations/ids']):
 
             location     = syn_file['annotations/locations'][node_nr]
-            if self.__is_inside_bb(location=location, bb_shape=bb_shape, bb_offset=bb_offset, margin=0):
+            location /= self.resolutions[VolumeType.RAW]
 
+            # cremi synapse locations are in physical space
+            if self.__is_inside_bb(location=location, bb_shape=bb_shape, bb_offset=bb_offset, margin=0):
+                location -= bb_offset
                 if node_id in presyn_node_ids:
                     kind = 'PreSyn'
                     assert syn_file['annotations/types'][node_nr] == 'presynaptic_site'
@@ -197,7 +199,7 @@ class Hdf5Source(BatchProvider):
 
                 # create synpaseLocation & add to dict
                 syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
-                                     syn_id=syn_id, partners_ids=partners_ids, props=props)
+                                     synapse_id=syn_id, partner_ids=partners_ids, props=props)
                 if kind == 'PreSyn':
                     presyn_points_dict[int(node_id)] = syn_point.get_copy()
                 elif kind == 'PostSyn':

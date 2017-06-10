@@ -78,7 +78,7 @@ class RandomLocation(BatchFilter):
             assert volume_type in self.get_spec().volumes, "Requested %s, but source does not provide it."%volume_type
             provided_roi = self.get_spec().volumes[volume_type]
 
-            volume_shift_roi = provided_roi.shift(-request_roi.begin()).grow((0,0,0), -request_roi.get_shape())
+            volume_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0), -request_roi.get_shape())
 
             if shift_roi is None:
                 shift_roi = volume_shift_roi
@@ -135,7 +135,8 @@ class RandomLocation(BatchFilter):
             assert self.roi.contains(roi)
 
         for (points_type, roi) in request.points.items():
-            roi = roi.shift(diff)
+            # roi = roi.shift(diff)
+            roi = roi.shift(random_shift)
             logger.debug("new %s ROI: %s"%(points_type, roi))
             request.points[points_type] = roi
             assert self.roi.contains(roi)
