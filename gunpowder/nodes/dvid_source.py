@@ -24,8 +24,9 @@ class MaskNotProvidedException(Exception):
 
 class DvidSource(BatchProvider):
 
-    def __init__(self, hostname, port, uuid, volume_array_names, raw_array_name=None, gt_array_name=None, gt_mask_roi_name=None,
-                 points_roi_shape=None, points_roi_offset=None, points_array_names=None, resolution=None):
+    def __init__(self, hostname, port, uuid, volume_array_names,
+                 points_array_names=None, points_rois=None,
+                 resolution=None):
         """
         :param hostname: hostname for DVID server
         :type hostname: str
@@ -33,13 +34,7 @@ class DvidSource(BatchProvider):
         :type port: int
         :param uuid: UUID of node on DVID server
         :type uuid: str
-        :param volume_array_names: dict {VolumeType:  DVID data instance}
-        # :param raw_array_name: DVID data instance for image data
-        # :type raw_array_name: str
-        # :param gt_array_name: DVID data instance for segmentation label data
-        # :type gt_array_name: str
-        # :param gt_mask_roi_name: DVID region of interest for masking the segmentation
-        # :type gt_mask_roi_name: str
+        :param volume_array_names: dict {VolumeType:  DVID data instance for data in VolumeType}
         :param resolution: resolution of source voxels in nanometers
         :type resolution: tuple
         """
@@ -49,13 +44,9 @@ class DvidSource(BatchProvider):
         self.uuid = uuid
 
         self.volume_array_names = volume_array_names
-        # self.raw_array_name   = raw_array_name
-        # self.gt_array_name    = gt_array_name
-        # self.gt_mask_roi_name = gt_mask_roi_name
 
-        self.points_roi_shape   = points_roi_shape
-        self.points_roi_offset  = points_roi_offset
         self.points_array_names = points_array_names
+        self.points_rois        = points_rois
 
         self.specified_resolution = resolution
         self.node_service = None
@@ -67,8 +58,8 @@ class DvidSource(BatchProvider):
             self.spec.volumes[volume_type] = self.__get_roi(volume_name)
 
         for points_type, points_name in self.points_array_names.items():
-            self.spec.points[points_type] = Roi(offset=self.points_roi_offset,
-                                                shape=self.points_roi_shape)
+            self.spec.points[points_type] = self.points_rois[points_type]
+
         logger.info("DvidSource.spec:\n{}".format(self.spec))
 
     def get_spec(self):
@@ -95,12 +86,11 @@ class DvidSource(BatchProvider):
         batch = Batch()
         logger.debug("providing batch with resolution of {}".format(self.resolution))
 
-
         for (volume_type, roi) in request.volumes.items():
-
+            # check if requested volumetype can be provided
             if volume_type not in spec.volumes:
                 raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
-
+            # check if request roi lies within provided roi
             if not spec.volumes[volume_type].contains(roi):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type, roi, spec.volumes[volume_type]))
 
@@ -118,16 +108,20 @@ class DvidSource(BatchProvider):
                                                 resolution=self.resolution,
                                                 interpolate=interpolate)
 
-
-        # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
-        # together s.t. ids are unique and allow to find partner locations
+        # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
+        # together s.t. the ids are unique and allow to find partner locations
         if PointsType.PRESYN in request.points or PointsType.POSTSYN in request.points:
-            assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
+            try:  # either both have the same roi, or only one of them is requested
+                assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
+            except:
+                assert PointsType.PRESYN not in request.points or PointsType.POSTSYN not in request.points
             presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.PRESYN])
 
         for (points_type, roi) in request.points.items():
+            # check if requested pointstype can be provided
             if points_type not in spec.points:
                 raise RuntimeError("Asked for %s which this source does not provide"%points_type)
+            # check if request roi lies within provided roi
             if not spec.points[points_type].contains(roi):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
 
@@ -135,7 +129,6 @@ class DvidSource(BatchProvider):
             id_to_point = {PointsType.PRESYN: presyn_points,
                            PointsType.POSTSYN: postsyn_points}[points_type]
             batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolution)
-
 
         logger.debug("done")
 
@@ -194,13 +187,13 @@ class DvidSource(BatchProvider):
 
     def __load_json_annotations(self, volume_shape, volume_offset, array_name):
         url = "http://" + str(self.hostname) + ":" + str(self.port)+"/api/node/" + str(self.uuid) + '/' + \
-              str(array_name) + "/elements/{}_{}_{}/{}_{}_{}".format(volume_shape[0], volume_shape[1], volume_shape[2],
-                                                   volume_offset[0], volume_offset[1], volume_offset[2])
+              str(array_name) + "/elements/{}_{}_{}/{}_{}_{}".format(volume_shape[2], volume_shape[1], volume_shape[0],
+                                                   volume_offset[2], volume_offset[1], volume_offset[0])
         annotations_file = requests.get(url)
         json_annotations = annotations_file.json()
         if json_annotations is None:
             json_annotations = []  # create empty_dummy_json_annotations
-            Warning('No synapses found in region defined by volume_offset and volume_shape')
+            # raise Exception ('No synapses found in region defined by volume_offset {} and volume_shape {}'.format(volume_offset, volume_shape))
         return json_annotations
 
     def __read_syn_points(self, roi):
@@ -212,7 +205,7 @@ class DvidSource(BatchProvider):
         location_to_location_id_dict, location_id_to_partner_locations = {}, {}
         for node_nr, node in enumerate(syn_file_json):
             # collect information
-            kind        = str(node['kind'])
+            kind        = str(node['Kind'])
             location    = np.asarray((node['Pos'][2], node['Pos'][1], node['Pos'][0]))
             location_id = int(node_nr)
             syn_id      = int(node['Tags'][0][3:])
@@ -257,7 +250,7 @@ class DvidSource(BatchProvider):
             elif current_syn_point_id in postsyn_points_dict:
                 postsyn_points_dict[current_syn_point_id].partner_ids = all_partner_ids
             else:
-                raise Exception("current syn point id not found in any dict")
+                raise Exception("current syn_point id not found in any dictionary")
 
         return presyn_points_dict, postsyn_points_dict
 
