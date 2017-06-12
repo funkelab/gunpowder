@@ -45,6 +45,7 @@ class Snapshot(BatchFilter):
                 pass
 
             snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(batch.id).zfill(8),iteration=batch.iteration))
+            logging.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
                 for (volume_type, volume) in batch.volumes.items():
@@ -78,7 +79,9 @@ class Snapshot(BatchFilter):
                     }[points_type]
 
                     bin_mask = points.get_binary_mask(bb_shape=bb_shape, bb_offset=offset, marker='gaussian')
-                    f.create_dataset(name=ds_name, data=bin_mask)
+                    logging.info('number of elements in bin mask: %i' %len(np.unique(bin_mask)))
+                    dataset = f.create_dataset(name=ds_name, data=bin_mask)
+                    dataset.attrs['offset'] = offset
 
 
         self.n += 1
