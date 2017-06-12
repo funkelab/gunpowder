@@ -102,7 +102,7 @@ class Train(BatchFilter):
         # self.__consistency_check()
         output = self.net_io.get_outputs()
         batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(
-                output['aff_pred'],
+                output['aff_pred'][0],
                 batch.volumes[VolumeType.GT_AFFINITIES].roi,
                 batch.volumes[VolumeType.GT_AFFINITIES].resolution,
                 interpolate=True
@@ -112,7 +112,7 @@ class Train(BatchFilter):
         if VolumeType.LOSS_GRADIENT in request.volumes:
             diffs = self.net_io.get_output_diffs()
             batch.volumes[VolumeType.LOSS_GRADIENT] = Volume(
-                    diffs['aff_pred'],
+                    diffs['aff_pred'][0],
                     batch.volumes[VolumeType.GT_AFFINITIES].roi,
                     batch.volumes[VolumeType.GT_AFFINITIES].resolution,
                     interpolate=True
