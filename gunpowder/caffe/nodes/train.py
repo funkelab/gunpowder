@@ -44,7 +44,7 @@ class Train(BatchFilter):
 
     def process(self, batch, request):
 
-        self.batch_in.put(batch)
+        self.batch_in.put((batch,request))
 
         try:
             out = self.worker.get()
@@ -82,7 +82,7 @@ class Train(BatchFilter):
 
             self.solver_initialized = True
 
-        batch = self.batch_in.get()
+        batch, request = self.batch_in.get()
 
         data = {
             'data': batch.volumes[VolumeType.RAW].data[np.newaxis,np.newaxis,:],
@@ -109,7 +109,14 @@ class Train(BatchFilter):
         )
         batch.loss = loss
         batch.iteration = self.solver.iter
-        # TODO: add gradient
+        if VolumeType.LOSS_GRADIENT in request.volumes:
+            diffs = self.net_io.get_output_diffs()
+            batch.volumes[VolumeType.LOSS_GRADIENT] = Volume(
+                    diffs['aff_pred'],
+                    batch.volumes[VolumeType.GT_AFFINITIES].roi,
+                    batch.volumes[VolumeType.GT_AFFINITIES].resolution,
+                    interpolate=True
+            )
 
         time_of_iteration = time.time() - start
         logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))
