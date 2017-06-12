@@ -58,6 +58,10 @@ class Snapshot(BatchFilter):
                             VolumeType.GT_MASK: 'volumes/labels/mask',
                             VolumeType.GT_IGNORE: 'volumes/labels/ignore',
                             VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs',
+                            VolumeType.GT_BM_PRESYN: 'volumes/labels/gt_bm_presyn',
+                            VolumeType.GT_BM_POSTSYN: 'volumes/labels/gt_bm_postsyn',
+                            VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: 'volumes/labels/gt_mask_exclusivezone_presyn',
+                            VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: 'volumes/labels/gt_mask_exclusivezone_postsyn',
                     }[volume_type]
 
                     offset = volume.roi.get_offset()

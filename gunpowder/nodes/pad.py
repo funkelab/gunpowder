@@ -37,10 +37,6 @@ class Pad(BatchFilter):
         else:
             self.pad_values = pad_values
 
-        for volume_type in pad_sizes.keys():
-            if volume_type not in pad_values:
-                self.pad_values[volume_type] = 0
-
     def setup(self):
 
         self.upstream_spec = self.get_upstream_provider().get_spec()
@@ -105,7 +101,7 @@ class Pad(BatchFilter):
                     volume.data,
                     volume.roi,
                     self.request.volumes[volume_type],
-                    self.pad_values[volume_type]
+                    self.pad_values[volume_type] if volume_type in self.pad_values else 0
             )
             volume.roi = self.request.volumes[volume_type]
 

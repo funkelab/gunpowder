@@ -1,4 +1,6 @@
 from .add_gt_affinities import AddGtAffinities
+from .add_gt_binary_map_points import AddGtBinaryMapOfPoints
+from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
@@ -12,7 +14,6 @@ from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .normalize import Normalize
 from .pad import Pad
-from gunpowder.points import PointsType, PointsOfType, SynPoint
 from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation

@@ -11,6 +11,11 @@ class VolumeType(Enum):
     GT_IGNORE = 6
     PRED_AFFINITIES = 7
     LOSS_GRADIENT = 8
+    GT_BM_PRESYN = 9
+    GT_BM_POSTSYN = 10
+    GT_MASK_EXCLUSIVEZONE_PRESYN = 11
+    GT_MASK_EXCLUSIVEZONE_POSTSYN = 12
+
 
 class Volume(Freezable):
 

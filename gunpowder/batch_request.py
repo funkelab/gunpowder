@@ -25,7 +25,7 @@ class BatchRequest(Freezable):
 
         self.__center_rois()
 
-    def add_point_request(self, points_type, shape):
+    def add_points_request(self, points_type, shape):
 
         self.points[points_type] = Roi((0,)*len(shape), shape)
 

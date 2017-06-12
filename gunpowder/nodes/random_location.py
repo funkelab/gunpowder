@@ -13,24 +13,19 @@ logger = logging.getLogger(__name__)
 class RandomLocation(BatchFilter):
     '''Choses a batch at a random location in the bounding box of the upstream 
     provider.
-
     The random location is chosen such that the batch request roi lies entirely 
     inside the provider's roi.
     '''
 
     def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK):
         '''Create a random location sampler.
-
         If `min_masked` (and optionally `mask_volume_type`) are set, only 
         batches are returned that have at least the given ratio of masked-in 
         voxels. This is in general faster than using the ``Reject`` node, at the 
         expense of storing an integral volume of the complete mask.
-
         Args:
-
             min_masked: If non-zero, require that the random sample contains at 
             least that ratio of masked-in voxels.
-
             mask_volume_type: The volume type to use for mask checks.
         '''
         self.min_masked = min_masked
@@ -149,4 +144,3 @@ class RandomLocation(BatchFilter):
             batch.volumes[volume_type].roi = roi
         for (points_type, roi) in request.points.items():
             batch.points[points_type].roi = roi
-
