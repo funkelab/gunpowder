@@ -9,5 +9,5 @@ NV_GPU=0 nvidia-docker run --rm \
     -v $(pwd):/workspace \
     -w /workspace \
     --name $NAME \
-    funkey/gunpowder:latest \
+    funkey/gunpowder:v0.2-prerelease \
     python -u train.py
