@@ -78,8 +78,8 @@ class Snapshot(BatchFilter):
                         PointsType.POSTSYN: 'volumes/postsyn'
                     }[points_type]
 
-                    bin_mask = points.get_binary_mask(bb_shape=bb_shape, bb_offset=offset, marker='gaussian')
-                    logging.info('number of elements in bin mask: %i' %len(np.unique(bin_mask)))
+                    bin_mask = points.get_binary_mask(bb_shape=bb_shape, marker='gaussian')
+                    # logging.info('number of elements in bin mask: %i' %len(np.unique(bin_mask)))
                     dataset = f.create_dataset(name=ds_name, data=bin_mask)
                     dataset.attrs['offset'] = offset
 
