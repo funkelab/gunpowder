@@ -1,5 +1,6 @@
 from .add_gt_affinities import AddGtAffinities
 from .add_gt_binary_map_points import AddGtBinaryMapOfPoints
+from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
