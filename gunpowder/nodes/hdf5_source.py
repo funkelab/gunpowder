@@ -57,6 +57,7 @@ class Hdf5Source(BatchProvider):
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
 
             dims = f[ds].shape
+            # TODO: different volumes can have different offsets, needs to be added.
             self.spec.volumes[volume_type] = Roi((0,)*len(dims), dims)
 
             if self.ndims is None:
@@ -75,6 +76,8 @@ class Hdf5Source(BatchProvider):
                     self.resolutions[volume_type] = default_resolution
             else:
                 self.resolutions[volume_type] = self.specified_resolution
+
+
         if self.points_types is not None:
             for points_type in self.points_types:
                 self.spec.points[points_type] = Roi(offset=self.points_roi_offset, shape=self.points_roi_shape)
@@ -121,7 +124,8 @@ class Hdf5Source(BatchProvider):
             # together s.t. ids are unique and allow to find partner locations
             if PointsType.PRESYN in request.points or PointsType.POSTSYN in request.points:
                 assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
-                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsType.PRESYN], syn_file=f)
+                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsType.PRESYN],
+                                                                      syn_file=f)
 
             for (points_type, roi) in request.points.items():
 
@@ -173,6 +177,7 @@ class Hdf5Source(BatchProvider):
 
             location     = syn_file['annotations/locations'][node_nr]
             location /= self.resolutions[VolumeType.RAW]
+            location += self.points_roi_offset
 
             # cremi synapse locations are in physical space
             if self.__is_inside_bb(location=location, bb_shape=bb_shape, bb_offset=bb_offset, margin=0):
