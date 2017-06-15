@@ -96,7 +96,7 @@ class Snapshot(BatchFilter):
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
-<<<<<<< HEAD
+
 
                 for (points_type, roi) in batch.points.items():
                     points = batch.points[points_type]
@@ -114,5 +114,4 @@ class Snapshot(BatchFilter):
 
 
         self.n += 1
-=======
->>>>>>> 20c5c2d9a789252309daa261416f8e97d22aaf1f
+
