@@ -36,7 +36,7 @@ def train():
 
     data_sources = tuple(
         Hdf5Source(
-            sample,
+            'sample_'+s+'_padded_20160501.aligned.filled.cropped.hdf',
             datasets = {
                 VolumeType.RAW: 'volumes/raw',
                 VolumeType.GT_LABELS: 'volumes/labels/neuron_ids_notransparency',
@@ -45,7 +45,7 @@ def train():
         ) +
         Normalize() +
         RandomLocation()
-        for sample in ['sample_A_20160501.hdf','sample_B_20160501.hdf','sample_C_20160501.hdf']
+        for s in ['A', 'B', 'C']
     )
 
     artifact_source = (
@@ -62,6 +62,9 @@ def train():
         ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
         SimpleAugment(transpose_only_xy=True)
     )
+
+    snapshot_request = BatchRequest()
+    snapshot_request.add_volume_request(VolumeType.LOSS_GRADIENT, (56,56,56))
 
     batch_provider_tree = (
         data_sources +
@@ -86,7 +89,7 @@ def train():
             cache_size=10,
             num_workers=5) +
         Train(solver_parameters, use_gpu=0) +
-        Snapshot(every=10, output_filename='batch_{id}.hdf')
+        Snapshot(every=10, output_filename='batch_{id}.hdf', additional_request=snapshot_request)
     )
 
     n = 10

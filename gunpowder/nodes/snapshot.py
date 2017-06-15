@@ -3,6 +3,7 @@ import os
 import numpy as np
 
 from .batch_filter import BatchFilter
+from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
 from gunpowder.volume import VolumeType
 from gunpowder.points import PointsType, PointsOfType, SynPoint
@@ -12,7 +13,12 @@ logger = logging.getLogger(__name__)
 class Snapshot(BatchFilter):
     '''Save a passing batch in an HDF file.'''
 
-    def __init__(self, output_dir='snapshots', output_filename='{id}.hdf', every=1):
+    def __init__(
+            self,
+            output_dir='snapshots',
+            output_filename='{id}.hdf',
+            every=1,
+            additional_request=None):
         '''
         output_dir: string
 
@@ -29,15 +35,32 @@ class Snapshot(BatchFilter):
             How often to save a batch. 'every=1' indicates that every batch will 
             be stored, 'every=2' every second and so on. By default, every batch 
             will be stored.
+
+        additional_request:
+
+            An additional batch request to merge with the passing request, if a 
+            snapshot is to be made. If not given, only the volumes that are in 
+            the batch anyway are recorded.
         '''
         self.output_dir = output_dir
         self.output_filename = output_filename
         self.every = max(1,every)
+        self.additional_request = BatchRequest() if additional_request is None else additional_request
         self.n = 0
+
+    def prepare(self, request):
+
+        self.record_snapshot = self.n%self.every == 0
+        self.n += 1
+
+        # append additional volume requests, don't overwrite existing ones
+        for volume_type, roi in self.additional_request.volumes.items():
+            if volume_type not in request.volumes:
+                request.volumes[volume_type] = roi
 
     def process(self, batch, request):
 
-        if self.n%self.every == 0:
+        if self.record_snapshot:
 
             try:
                 os.makedirs(self.output_dir)
@@ -62,6 +85,7 @@ class Snapshot(BatchFilter):
                             VolumeType.GT_BM_POSTSYN: 'volumes/labels/gt_bm_postsyn',
                             VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: 'volumes/labels/gt_mask_exclusivezone_presyn',
                             VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: 'volumes/labels/gt_mask_exclusivezone_postsyn',
+
                     }[volume_type]
 
                     offset = volume.roi.get_offset()
@@ -72,6 +96,7 @@ class Snapshot(BatchFilter):
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
+<<<<<<< HEAD
 
                 for (points_type, roi) in batch.points.items():
                     points = batch.points[points_type]
@@ -89,3 +114,5 @@ class Snapshot(BatchFilter):
 
 
         self.n += 1
+=======
+>>>>>>> 20c5c2d9a789252309daa261416f8e97d22aaf1f
