@@ -1,3 +1,4 @@
+import copy
 from random import randint
 from skimage.transform import integral_image, integrate
 import logging
@@ -11,20 +12,20 @@ from gunpowder.volume import VolumeType
 logger = logging.getLogger(__name__)
 
 class RandomLocation(BatchFilter):
-    '''Choses a batch at a random location in the bounding box of the upstream 
+    '''Choses a batch at a random location in the bounding box of the upstream
     provider.
-    The random location is chosen such that the batch request roi lies entirely 
+    The random location is chosen such that the batch request roi lies entirely
     inside the provider's roi.
     '''
 
     def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK):
         '''Create a random location sampler.
-        If `min_masked` (and optionally `mask_volume_type`) are set, only 
-        batches are returned that have at least the given ratio of masked-in 
-        voxels. This is in general faster than using the ``Reject`` node, at the 
+        If `min_masked` (and optionally `mask_volume_type`) are set, only
+        batches are returned that have at least the given ratio of masked-in
+        voxels. This is in general faster than using the ``Reject`` node, at the
         expense of storing an integral volume of the complete mask.
         Args:
-            min_masked: If non-zero, require that the random sample contains at 
+            min_masked: If non-zero, require that the random sample contains at
             least that ratio of masked-in voxels.
             mask_volume_type: The volume type to use for mask checks.
         '''
@@ -68,17 +69,20 @@ class RandomLocation(BatchFilter):
 
         shift_roi = None
 
-        for volume_type, request_roi in request.volumes.items():
+        for collection_type in [request.volumes, request.points]:
+            for type, request_roi in collection_type.items():
+                if type in self.get_spec().volumes:
+                    provided_roi = self.get_spec().volumes[type]
+                elif type in self.get_spec().points:
+                    provided_roi = self.get_spec().points[type]
+                else:
+                    raise Exception("Requested %s, but source does not provide it."%type)
+                type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
 
-            assert volume_type in self.get_spec().volumes, "Requested %s, but source does not provide it."%volume_type
-            provided_roi = self.get_spec().volumes[volume_type]
-
-            volume_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0), -request_roi.get_shape())
-
-            if shift_roi is None:
-                shift_roi = volume_shift_roi
-            else:
-                shift_roi = shift_roi.intersect(volume_shift_roi)
+                if shift_roi is None:
+                    shift_roi = type_shift_roi
+                else:
+                    shift_roi = shift_roi.intersect(type_shift_roi)
 
         logger.debug("valid shifts for request in " + str(shift_roi))
 
@@ -91,7 +95,7 @@ class RandomLocation(BatchFilter):
             random_shift = Coordinate(
                     randint(begin, end-1)
                     for begin, end in zip(shift_roi.get_begin(), shift_roi.get_end())
-            )
+                                        )
 
             logger.debug("random shift: " + str(random_shift))
 
@@ -123,24 +127,23 @@ class RandomLocation(BatchFilter):
                 good_location_found = True
 
         # shift request ROIs
-        for (volume_type, roi) in request.volumes.items():
-            roi = roi.shift(random_shift)
-            logger.debug("new %s ROI: %s"%(volume_type,roi))
-            request.volumes[volume_type] = roi
-            assert self.roi.contains(roi)
-
-        for (points_type, roi) in request.points.items():
-            # roi = roi.shift(diff)
-            roi = roi.shift(random_shift)
-            logger.debug("new %s ROI: %s"%(points_type, roi))
-            request.points[points_type] = roi
-            assert self.roi.contains(roi)
+        self.random_shift = random_shift
+        for collection_type in [request.volumes, request.points]:
+            for (type, roi) in collection_type.items():
+                roi = roi.shift(random_shift)
+                logger.debug("new %s ROI: %s"%(type, roi))
+                collection_type[type] = roi
+                assert self.roi.contains(roi)
 
 
     def process(self, batch, request):
-
         # reset ROIs to request
-        for (volume_type,roi) in request.volumes.items():
+        for (volume_type, roi) in request.volumes.items():
             batch.volumes[volume_type].roi = roi
         for (points_type, roi) in request.points.items():
             batch.points[points_type].roi = roi
+
+        # change shift point locations to lie within roi
+        for (points_type, roi) in request.points.items():
+            for point_id, point in batch.points[points_type].data.items():
+                batch.points[points_type].data[point_id].location -= self.random_shift
