@@ -10,8 +10,13 @@ from gunpowder.points import PointsType
 logger = logging.getLogger(__name__)
 
 class AddGtMaskExclusiveZone(BatchFilter):
+    ''' Create ExclusizeZone mask for a binary map in batch and add it as volume to batch.
+    An ExclusiveZone mask is a bianry mask [0,1] where locations which lie within a given distance to the ON (=1) 
+    regions (surrounding the ON regions) of the given binary map are set to 0, whereas all the others are set to 1.
+    '''
 
     def __init__(self):
+        ''' Add ExclusiveZone mask for given binary map as volume to batch '''
         self.skip_next = False
 
 
@@ -40,10 +45,10 @@ class AddGtMaskExclusiveZone(BatchFilter):
             if EZ_mask_type in request.volumes:
                 # assert that binary mask for which EZ mask is created for is requested
                 assert binary_map_type in request.volumes, \
-                    "ExclusiveZone Mask for {}, can only be created if {} also requestd.".format(mask_volume_type, binary_mask_volume_type)
+                    "ExclusiveZone Mask for {}, can only be created if {} also requested.".format(EZ_mask_type, binary_map_type)
                 # assert that ROI of EZ lies within ROI of binary mask
                 assert request.volumes[binary_map_type].contains(request.volumes[EZ_mask_type]),\
-                    "EZ mask for {} requested for ROI outside of source's ({}) ROI.".format(EZ_mask_type,binary_mask_type)
+                    "EZ mask for {} requested for ROI outside of source's ({}) ROI.".format(EZ_mask_type,binary_map_type)
 
                 self.EZ_masks_to_create.append(EZ_mask_type)
                 del request.volumes[EZ_mask_type]
@@ -67,6 +72,7 @@ class AddGtMaskExclusiveZone(BatchFilter):
             interpolate = {VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: True,
                            VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: True}[EZ_mask_type]
             EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=np.asarray(request.volumes[EZ_mask_type].get_shape()), gaussian_sigma_for_zone=2)
+
             batch.volumes[EZ_mask_type] = Volume(data= EZ_mask,
                                                  roi=request.volumes[EZ_mask_type],
                                                  resolution=batch.volumes[binary_map_type].resolution,
