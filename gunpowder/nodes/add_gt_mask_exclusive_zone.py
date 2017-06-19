@@ -15,8 +15,9 @@ class AddGtMaskExclusiveZone(BatchFilter):
     regions (surrounding the ON regions) of the given binary map are set to 0, whereas all the others are set to 1.
     '''
 
-    def __init__(self):
+    def __init__(self, gaussian_sigma_for_zone=1):
         ''' Add ExclusiveZone mask for given binary map as volume to batch '''
+        self.gaussian_sigma_for_zone = gaussian_sigma_for_zone
         self.skip_next = False
 
 
@@ -71,7 +72,7 @@ class AddGtMaskExclusiveZone(BatchFilter):
 
             interpolate = {VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: True,
                            VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: True}[EZ_mask_type]
-            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=np.asarray(request.volumes[EZ_mask_type].get_shape()), gaussian_sigma_for_zone=2)
+            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape())
 
             batch.volumes[EZ_mask_type] = Volume(data= EZ_mask,
                                                  roi=request.volumes[EZ_mask_type],
@@ -79,16 +80,16 @@ class AddGtMaskExclusiveZone(BatchFilter):
                                                  interpolate=interpolate)
 
 
-    def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask, gaussian_sigma_for_zone=2):
-        ''' Exclusive zone surround every synapse. Created by subtracting two binary masks with different gaussian
-        blur strengths (sigmas)'''
+    def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask):
+        ''' Exclusive zone surrounds every synapse. Created by enlarging the ON regions of given binary map
+        with different gaussian filter, make it binary and subtract the original binary map from it '''
 
-        shape_diff = binary_map.shape - shape_EZ_mask
-        relevant_binary_map = binary_map[(shape_diff[0] // 2) : (binary_map.shape[0] - shape_diff[0]//2),
-                                         (shape_diff[1] // 2) : (binary_map.shape[1] - shape_diff[1]//2),
-                                         (shape_diff[2] // 2) : (binary_map.shape[2] - shape_diff[2]//2)]
+        shape_diff = np.asarray(binary_map.shape - np.asarray(shape_EZ_mask))
+        slices = [slice(diff, shape - diff) for diff, shape in zip(shape_diff, binary_map.shape)]
+        relevant_binary_map = binary_map[slices]
 
-        BM_enlarged_cont = ndimage.filters.gaussian_filter(relevant_binary_map, sigma=gaussian_sigma_for_zone)
+        BM_enlarged_cont = ndimage.filters.gaussian_filter(relevant_binary_map.astype('float32'),
+                                                           sigma=self.gaussian_sigma_for_zone)
         BM_enlarged_binary = np.zeros_like(relevant_binary_map)
         BM_enlarged_binary[np.nonzero(BM_enlarged_cont)] = 1
 
