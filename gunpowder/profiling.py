@@ -30,7 +30,7 @@ class Timing(Freezable):
         return self.__name
 
     def __repr__(self):
-        return self.__name + ": " + str(self.__time)
+        return self.__name[:20].ljust(20) + ": " + str(self.__time)
 
 class ProfilingStats(Freezable):
 
