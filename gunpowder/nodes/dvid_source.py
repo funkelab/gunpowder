@@ -226,8 +226,12 @@ class DvidSource(BatchProvider):
                 partner_locations = []
             location_id_to_partner_locations[int(node_nr)] = partner_locations
 
-            props = {'conf':   float(node['Prop']['conf']), 'agent':  str(node['Prop']['agent'])}
             # check if property given, not always given
+            props = {}
+            if 'conf' in node['Prop']:
+                props['conf'] = float(node['Prop']['conf'])
+            if 'agent' in node['Prop']:
+                props['agent']  = str(node['Prop']['agent'])
             if 'flagged' in node['Prop']:
                 str_value_flagged = str(node['Prop']['flagged'])
                 props['flagged']  = bool(distutils.util.strtobool(str_value_flagged))
