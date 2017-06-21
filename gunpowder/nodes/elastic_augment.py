@@ -23,7 +23,8 @@ class ElasticAugment(BatchFilter):
             rotation_interval,
             prob_slip=0,
             prob_shift=0,
-            max_misalign=0):
+            max_misalign=0,
+            subsample=1):
         '''Create an elastic deformation augmentation.
 
         Args:
@@ -44,6 +45,14 @@ class ElasticAugment(BatchFilter):
 
             max_misalign: Maximal voxels to shift in x and y. Samples will be 
             drawn uniformly.
+
+            subsample: Instead of creating an elastic transformation on the full 
+            resolution, create one subsampled by the given factor, and linearly 
+            interpolate to obtain the full resolution transformation. This can 
+            significantly speed up this node, at the expense of having visible 
+            piecewise linear deformations for large factors. Usually, a factor 
+            of 4 can savely by used without noticable changes. However, the 
+            default is 1 (i.e., no subsampling).
         '''
 
         self.control_point_spacing = control_point_spacing
@@ -53,6 +62,7 @@ class ElasticAugment(BatchFilter):
         self.prob_slip = prob_slip
         self.prob_shift = prob_shift
         self.max_misalign = max_misalign
+        self.subsample = subsample
 
     def prepare(self, request):
 
@@ -62,14 +72,24 @@ class ElasticAugment(BatchFilter):
 
         # create a transformation for the total ROI
         rotation = random.random()*self.rotation_max_amount + self.rotation_start
-        self.total_transformation = augment.create_identity_transformation(total_roi.get_shape())
+        self.total_transformation = augment.create_identity_transformation(
+                total_roi.get_shape(),
+                subsample=self.subsample)
         self.total_transformation += augment.create_elastic_transformation(
                 total_roi.get_shape(),
                 self.control_point_spacing,
-                self.jitter_sigma)
+                self.jitter_sigma,
+                subsample=self.subsample)
         self.total_transformation += augment.create_rotation_transformation(
                 total_roi.get_shape(),
-                rotation)
+                rotation,
+                subsample=self.subsample)
+
+        if self.subsample > 1:
+            self.total_transformation = augment.upscale_transformation(
+                    self.total_transformation,
+                    total_roi.get_shape())
+
         if self.prob_slip + self.prob_shift > 0:
             self.__misalign()
 
