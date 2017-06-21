@@ -115,7 +115,10 @@ class DvidSource(BatchProvider):
                 assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
             except:
                 assert PointsType.PRESYN not in request.points or PointsType.POSTSYN not in request.points
-            presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.PRESYN])
+            if PointsType.PRESYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.PRESYN])
+            elif PointsType.POSTSYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.POSTSYN])
 
         for (points_type, roi) in request.points.items():
             # check if requested pointstype can be provided
