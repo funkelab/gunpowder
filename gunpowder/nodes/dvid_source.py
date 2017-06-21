@@ -211,7 +211,11 @@ class DvidSource(BatchProvider):
             kind        = str(node['Kind'])
             location    = np.asarray((node['Pos'][2], node['Pos'][1], node['Pos'][0]))
             location_id = int(node_nr)
-            syn_id      = int(node['Tags'][0][3:])
+            # some synapses are wrongly annotated in dvid source, have 'Tag': null ???, they are skipped
+            try:
+                syn_id = int(node['Tags'][0][3:])
+            except:
+                continue
             location_to_location_id_dict[str(location)] = location_id
 
             partner_locations = []
