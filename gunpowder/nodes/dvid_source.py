@@ -219,8 +219,11 @@ class DvidSource(BatchProvider):
             location_to_location_id_dict[str(location)] = location_id
 
             partner_locations = []
-            for relation in node['Rels']:
-                partner_locations.append(np.asarray([relation['To'][2], relation['To'][1], relation['To'][0]]))
+            try:
+                for relation in node['Rels']:
+                    partner_locations.append(np.asarray([relation['To'][2], relation['To'][1], relation['To'][0]]))
+            except:
+                partner_locations = []
             location_id_to_partner_locations[int(node_nr)] = partner_locations
 
             props = {'conf':   float(node['Prop']['conf']), 'agent':  str(node['Prop']['agent'])}
