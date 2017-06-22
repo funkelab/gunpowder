@@ -1,6 +1,5 @@
 from enum import Enum
 import numpy as np
-from scipy import ndimage
 
 from .freezable import Freezable
 
@@ -20,28 +19,6 @@ class PointsOfType(Freezable):
         self.resolution = resolution
 
         self.freeze()
-
-    def get_binary_mask(self, bb_shape, marker='point'):
-        # marker = 'point' or 'gaussian'
-        binary_mask = np.zeros(bb_shape, dtype='uint8')
-
-        for syn_point in self.data.values():
-            # check for location kind
-            shifted_current_loc = syn_point.location
-            binary_mask[shifted_current_loc[0], shifted_current_loc[1], shifted_current_loc[2]] = 1
-
-        # return mask where location is marked as a single point
-        if marker == 'point':
-            return binary_mask
-
-        # return mask where location is marked as a gaussian 'blob'
-        elif marker == 'gaussian':
-            binary_mask_gaussian = np.zeros_like(binary_mask, dtype='uint8')
-            mask_gaussian        = ndimage.filters.gaussian_filter(binary_mask.astype(np.float32), sigma=5)
-            unique_gauss_values = np.unique(mask_gaussian)
-            binary_mask_gaussian[mask_gaussian > unique_gauss_values[len(unique_gauss_values)//2]] = 1
-            return binary_mask_gaussian
-
 
 
 class BasePoint(Freezable):
@@ -94,4 +71,5 @@ class SynPoint(BasePoint):
             if location[dim] >= size - margin[dim]:
                 inside_bb = False
         return inside_bb
+
 
