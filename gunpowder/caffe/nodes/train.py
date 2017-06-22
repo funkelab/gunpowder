@@ -153,7 +153,7 @@ class Train(BatchFilter):
         data['scale'] = error_scale[np.newaxis,:]
 
     def __mask_error_scale(self, error_scale, mask):
-        for d in range(len(error_scale.shape[0])):
+        for d in range(error_scale.shape[0]):
             error_scale[d] *= mask
 
     def __prepare_malis(self, batch, data):
