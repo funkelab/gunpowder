@@ -4,6 +4,7 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 from gunpowder.volume import Volume, VolumeType
 from gunpowder.points import PointsType
 
@@ -78,22 +79,6 @@ class AddGtBinaryMapOfPoints(BatchFilter):
                                                 interpolate=interpolate)
 
 
-    def __is_inside(self, location, shape, offset, margin=0):
-        try:
-            assert len(margin) == len(shape)
-        except:
-            margin = (margin,) * len(shape)
-
-        inside_bb = True
-        location = np.asarray(location) - np.asarray(offset)
-        for dim, size in enumerate(shape):
-            if location[dim] < margin[dim]:
-                inside_bb = False
-            if location[dim] >= size - margin[dim]:
-                inside_bb = False
-        return inside_bb
-
-
     def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
         """ requires given point locations to be relative to current bounding box already, because offset of batch is wrong"""
 
@@ -103,7 +88,7 @@ class AddGtBinaryMapOfPoints(BatchFilter):
 
         for loc_id in pointsoftype.data.keys():
             # check if location lies inside bounding box
-            if self.__is_inside(location=batch.points[points_type].data[loc_id].location, shape=shape_bm_volume, offset=offset_bm_volume):
+            if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                 shifted_current_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
                 marker_size = 2
                 binary_map[shifted_current_loc[0]-marker_size:shifted_current_loc[0]+marker_size,
