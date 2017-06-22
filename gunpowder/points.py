@@ -1,5 +1,4 @@
 from enum import Enum
-import numpy as np
 
 from .freezable import Freezable
 
@@ -57,19 +56,5 @@ class SynPoint(BasePoint):
                                 partner_ids=self.partner_ids,
                                 props=self.props)
 
-    def is_inside_bb(self, bb_shape, bb_offset, margin=0):
-        try:
-            assert len(margin) == 3
-        except:
-            margin = [margin, margin, margin]
-
-        inside_bb = True
-        location  = np.asarray(self.location) - np.asarray(bb_offset)
-        for dim, size in enumerate(bb_shape):
-            if location[dim] < margin[dim]:
-                inside_bb = False
-            if location[dim] >= size - margin[dim]:
-                inside_bb = False
-        return inside_bb
 
 
