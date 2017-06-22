@@ -126,7 +126,7 @@ class Train(BatchFilter):
     def __prepare_euclidean(self, batch, data):
 
         gt_affinities = batch.volumes[VolumeType.GT_AFFINITIES]
-        frac_pos = np.clip(gt_affinities.data, 0.05, 0.95)
+        frac_pos = np.clip(gt_affinities.data.mean(), 0.05, 0.95)
         w_pos = 1.0 / (2.0 * frac_pos)
         w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
         error_scale = self.__scale_errors(gt_affinities.data, w_neg, w_pos)
