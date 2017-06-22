@@ -98,20 +98,5 @@ class Snapshot(BatchFilter):
                     f['/'].attrs['loss'] = batch.loss
 
 
-                for (points_type, roi) in batch.points.items():
-                    points = batch.points[points_type]
-                    offset = points.roi.get_offset()
-                    bb_shape = points.roi.get_shape()
-                    ds_name = {
-                        PointsType.PRESYN: 'volumes/presyn',
-                        PointsType.POSTSYN: 'volumes/postsyn'
-                    }[points_type]
-
-                    bin_mask = points.get_binary_mask(bb_shape=bb_shape, marker='gaussian')
-                    # logging.info('number of elements in bin mask: %i' %len(np.unique(bin_mask)))
-                    dataset = f.create_dataset(name=ds_name, data=bin_mask)
-                    dataset.attrs['offset'] = offset
-
-
         self.n += 1
 
