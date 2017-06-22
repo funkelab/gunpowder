@@ -88,11 +88,18 @@ class AddGtBinaryMapOfPoints(BatchFilter):
         for loc_id in pointsoftype.data.keys():
             # check if location lies inside bounding box
             if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
-                shifted_current_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
-                marker_size = 2
-                binary_map[shifted_current_loc[0]-marker_size:shifted_current_loc[0]+marker_size,
-                            shifted_current_loc[1]-marker_size:shifted_current_loc[1]+marker_size,
-                            shifted_current_loc[2]-marker_size:shifted_current_loc[2]+marker_size] = 255
+                shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
+                if marker == 'points':
+                    binary_map[[[loc] for loc in shifted_loc]] = 1
+                elif marker == 'gaussian':
+                    marker_size = 1
+                    marker_locs = tuple( slice( max(0, shifted_loc[dim] - marker_size),
+                                                min(shape_bm_volume[dim], shifted_loc[dim] + marker_size))
+                                                for dim in range(len(shape_bm_volume)))
+                    # set to 255 to keep binary map as uint8. That is beneficial to get 'roundish' blob around locations
+                    # as smallest values which are produced by gaussian filtering are then set to zero instead of a very small float
+                    # resulting in a binary map which is OFF at those locations instead of ON.
+                    binary_map[marker_locs] = 255
 
 
         # return mask where location is marked as a single point
