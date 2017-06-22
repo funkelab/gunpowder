@@ -16,7 +16,10 @@ class AddGtMaskExclusiveZone(BatchFilter):
     '''
 
     def __init__(self, gaussian_sigma_for_zone=1):
-        ''' Add ExclusiveZone mask for given binary map as volume to batch '''
+        ''' Add ExclusiveZone mask for given binary map as volume to batch
+            Args:
+                gaussian_sigma_for_zone: float, defines extend of exclusive zone around ON region in binary map
+         '''
         self.gaussian_sigma_for_zone = gaussian_sigma_for_zone
         self.skip_next = False
 
