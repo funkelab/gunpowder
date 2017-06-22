@@ -78,9 +78,8 @@ class AddGtBinaryMapOfPoints(BatchFilter):
                                                 resolution = batch.volumes[VolumeType.RAW].resolution,
                                                 interpolate=interpolate)
 
-
     def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
-        """ requires given point locations to be relative to current bounding box already, because offset of batch is wrong"""
+        """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
 
         shape_bm_volume  = request.volumes[volume_type].get_shape()
         offset_bm_volume = request.volumes[volume_type].get_offset()
@@ -95,6 +94,7 @@ class AddGtBinaryMapOfPoints(BatchFilter):
                             shifted_current_loc[1]-marker_size:shifted_current_loc[1]+marker_size,
                             shifted_current_loc[2]-marker_size:shifted_current_loc[2]+marker_size] = 255
 
+
         # return mask where location is marked as a single point
         if marker == 'point':
             return binary_map
@@ -103,7 +103,7 @@ class AddGtBinaryMapOfPoints(BatchFilter):
         elif marker == 'gaussian':
             binary_map = ndimage.filters.gaussian_filter(binary_map, sigma=1.)
             binary_map_gaussian = np.zeros_like(binary_map, dtype='uint8')
-            binary_map_gaussian[np.nonzero(binary_map)] = 255
+            binary_map_gaussian[np.nonzero(binary_map)] = 1
 
             # from scipy import ndimage
             # binary_map_gaussian = (ndimage.morphology.binary_dilation(binary_map, iterations=5)*255.).astype('uint8')
