@@ -7,13 +7,19 @@ from .batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeType
 from gunpowder.points import PointsType
 
+
 logger = logging.getLogger(__name__)
 
 class AddGtBinaryMapOfPoints(BatchFilter):
-
+    ''' Create binary map for points of given PointsType in batch and add it as volume to batch '''
     def __init__(self, pointstype_to_volumetypes):
+        ''' Add binary map of given PointsType as volume to batch.
+        Args:
+           pointstype_to_volumetypes: dict, e.g. {PointsType.PRESYN: VolumeType.GT_BM_PRESYN} creates a binary map
+                                      of points in PointsType.PRESYN and adds the created binary map
+                                      as a volume of type VolumeType.GT_BM_PRESYN to the batch if requested. 
+        '''
         self.pointstype_to_volumetypes = pointstype_to_volumetypes
-
         self.skip_next = False
 
 
@@ -118,3 +124,4 @@ class AddGtBinaryMapOfPoints(BatchFilter):
             # binary_map_gaussian = (ndimage.morphology.binary_dilation(binary_map, iterations=5)*255.).astype('uint8')
 
             return binary_map_gaussian
+
