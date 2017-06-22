@@ -126,25 +126,35 @@ class Train(BatchFilter):
     def __prepare_euclidean(self, batch, data):
 
         gt_affinities = batch.volumes[VolumeType.GT_AFFINITIES]
-        frac_pos = np.clip(gt_affinities.data.mean(), 0.05, 0.95)
-        w_pos = 1.0 / (2.0 * frac_pos)
-        w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
-        error_scale = self.__scale_errors(gt_affinities.data, w_neg, w_pos)
 
+        # initialize error scale with 1s
+        error_scale = np.ones(gt_affinities.data.shape, dtype=np.float)
+
+        # set error_scale to 0 in masked-out areas
         if VolumeType.GT_MASK in batch.volumes:
-            self.__mask_errors(batch, error_scale, batch.volumes[VolumeType.GT_MASK].data)
+            self.__mask_error_scale(error_scale, batch.volumes[VolumeType.GT_MASK].data)
         if VolumeType.GT_IGNORE in batch.volumes:
-            self.__mask_errors(batch, error_scale, batch.volumes[VolumeType.GT_IGNORE].data)
+            self.__mask_error_scale(error_scale, batch.volumes[VolumeType.GT_IGNORE].data)
+
+        # in the masked-in area, compute the fraction of positive samples
+        masked_in = error_scale.sum()
+        num_pos = (gt_affinities.data*error_scale).sum()
+        frac_pos = float(num_pos)/masked_in if masked_in > 0 else 0
+        frac_pos = np.clip(frac_pos, 0.05, 0.95)
+        frac_neg = 1.0 - frac_pos
+
+        # compute the class weights for positive and negative samples
+        w_pos = 1.0/(2.0*frac_pos)
+        w_neg = 1.0/(2.0*frac_neg)
+
+        # scale the masked-in error_scale with the class weights
+        error_scale *= (data >= 0.5)*w_pos + (data < 0.5)*w_neg
 
         data['scale'] = error_scale[np.newaxis,:]
 
-    def __scale_errors(self, data, factor_low, factor_high):
-        scaled_data = np.add((data >= 0.5) * factor_high, (data < 0.5) * factor_low)
-        return scaled_data
-
-    def __mask_errors(self, batch, error_scale, mask):
-        for d in range(len(batch.affinity_neighborhood)):
-            error_scale[d] = np.multiply(error_scale[d], mask)
+    def __mask_error_scale(self, error_scale, mask):
+        for d in range(len(error_scale.shape[0])):
+            error_scale[d] *= mask
 
     def __prepare_malis(self, batch, data):
 
