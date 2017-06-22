@@ -15,6 +15,8 @@ class VolumeType(Enum):
     GT_BM_POSTSYN = 10
     GT_MASK_EXCLUSIVEZONE_PRESYN = 11
     GT_MASK_EXCLUSIVEZONE_POSTSYN = 12
+    PRED_BM_PRESYN = 13
+    PRED_BM_POSTSYN = 14
 
 
 class Volume(Freezable):
