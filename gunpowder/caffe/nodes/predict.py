@@ -8,7 +8,8 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.volume import VolumeType
+from gunpowder.roi import Roi
+from gunpowder.volume import VolumeType, Volume
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class Predict(BatchFilter):
             if not os.path.isfile(f):
                 raise RuntimeError("%s does not exist"%f)
 
-        # start prediction as a producer pool, so that we can gracefully exit if 
+        # start prediction as a producer pool, so that we can gracefully exit if
         # anything goes wrong
         self.worker = ProducerPool([lambda gpu=use_gpu: self.__predict(gpu)], queue_size=1)
         self.batch_in = multiprocessing.Queue(maxsize=1)
@@ -80,6 +81,9 @@ class Predict(BatchFilter):
         loss = self.net.forward()
         output = self.net_io.get_outputs()
         assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
-        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'][0], interpolate=True)
-
+        output_shape = output['aff_pred'][0][0].shape
+        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(data=output['aff_pred'][0],
+                                                           roi=Roi((0,)*len(output_shape), output_shape),
+                                                           resolution=batch.volumes[VolumeType.RAW].resolution,
+                                                           interpolate=True)
         return batch
