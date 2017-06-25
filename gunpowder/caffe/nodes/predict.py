@@ -1,3 +1,4 @@
+import copy
 import logging
 import multiprocessing
 import numpy as np
@@ -36,7 +37,16 @@ class Predict(BatchFilter):
         self.net_initialized = False
 
     def setup(self):
+
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(self.upstream_spec)
+
+        self.spec.volumes[VolumeType.PRED_AFFINITIES] = self.spec.volumes[VolumeType.RAW]
+
         self.worker.start()
+
+    def get_spec(self):
+        return self.spec
 
     def teardown(self):
         self.worker.stop()
