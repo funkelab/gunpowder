@@ -53,6 +53,8 @@ class Predict(BatchFilter):
 
     def prepare(self, request):
 
+        self.stored_request = copy.deepcopy(request)
+
         # remove request parts that node will provide
         for volume_type in [VolumeType.PRED_AFFINITIES]:
             if volume_type in request.volumes:
@@ -67,7 +69,8 @@ class Predict(BatchFilter):
         except WorkersDied:
             raise PredictProcessDied()
 
-        batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
+        batch.volumes[VolumeType.PRED_AFFINITIES]     = out.volumes[VolumeType.PRED_AFFINITIES]
+        batch.volumes[VolumeType.PRED_AFFINITIES].roi = self.stored_request.volumes[VolumeType.PRED_AFFINITIES]
 
 
     def __predict(self, use_gpu):
