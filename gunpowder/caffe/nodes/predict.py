@@ -51,6 +51,13 @@ class Predict(BatchFilter):
     def teardown(self):
         self.worker.stop()
 
+    def prepare(self, request):
+
+        # remove request parts that node will provide
+        for volume_type in [VolumeType.PRED_AFFINITIES]:
+            if volume_type in request.volumes:
+                del request.volumes[volume_type]
+
     def process(self, batch, request):
 
         self.batch_in.put(batch)
@@ -61,6 +68,7 @@ class Predict(BatchFilter):
             raise PredictProcessDied()
 
         batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
+
 
     def __predict(self, use_gpu):
 
