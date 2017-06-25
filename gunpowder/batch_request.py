@@ -31,7 +31,6 @@ class BatchRequest(Freezable):
 
         self.__center_rois()
 
-
     def get_total_roi(self):
         '''Get the union of all the requested volume ROIs.'''
 
@@ -45,6 +44,20 @@ class BatchRequest(Freezable):
                     total_roi = total_roi.union(roi)
 
         return total_roi
+
+    def get_common_roi(self):
+        ''' Get the intersection of all the requested ROIs.'''
+
+        common_roi = None
+
+        for (volume_type, roi) in self.volumes.items():
+            if common_roi is None:
+                common_roi = roi
+            else:
+                common_roi = common_roi.intersect(roi)
+
+        return common_roi
+
 
     def __center_rois(self):
         '''Ensure that all ROIs are centered around the same location.'''
