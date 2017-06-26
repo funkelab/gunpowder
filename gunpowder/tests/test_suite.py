@@ -1,6 +1,6 @@
 import unittest
 
-from gunpowder.tests.cases import *
+from cases import *
 
 if __name__ == "__main__":
     unittest.main()
