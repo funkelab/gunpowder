@@ -1,3 +1,4 @@
+import numpy as np
 import time
 
 from .freezable import Freezable
@@ -29,20 +30,53 @@ class Timing(Freezable):
     def get_name(self):
         return self.__name
 
-    def __repr__(self):
-        return self.__name[:20].ljust(20) + ": " + str(self.__time)
-
 class ProfilingStats(Freezable):
 
     def __init__(self):
-        self.__timings = []
+        self.__timings = {}
         self.freeze()
 
     def add(self, timing):
-        self.__timings.append(timing)
+        '''Add a Timing instance. Timings are grouped by their name'''
+
+        name = timing.get_name()
+
+        if name not in self.__timings:
+            self.__timings[name] = []
+        self.__timings[name].append(timing)
+
+    def merge_with(self, other):
+        '''Combine all Timings of two ProfilingStats.'''
+
+        for name, timings in other.__timings.items():
+            for timing in timings:
+                self.add(timing)
 
     def __repr__(self):
+
         rep = ""
-        for t in self.__timings:
-            rep += str(t) + "\n"
+
+        header = ""
+        header += "NODE".ljust(20)
+        header += "COUNTS".ljust(10)
+        header += "MIN".ljust(10)
+        header += "MAX".ljust(10)
+        header += "MEAN".ljust(10)
+        header += "MEDIAN".ljust(10)
+        header += "\n"
+        rep += header
+
+        for name, timings in self.__timings.items():
+
+            times = np.array([ t.elapsed() for t in timings ])
+            row = ""
+            row += name[:19].ljust(20)
+            row += ("%d"%len(times))[:9].ljust(10)
+            row += ("%.2f"%np.min(times))[:9].ljust(10)
+            row += ("%.2f"%np.max(times))[:9].ljust(10)
+            row += ("%.2f"%np.mean(times))[:9].ljust(10)
+            row += ("%.2f"%np.median(times))[:9].ljust(10)
+            row += "\n"
+            rep += row
+
         return rep
