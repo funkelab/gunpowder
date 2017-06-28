@@ -7,6 +7,8 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
+from gunpowder.profiling import Timing
 from gunpowder.volume import VolumeType
 
 logger = logging.getLogger(__name__)
@@ -14,23 +16,39 @@ logger = logging.getLogger(__name__)
 class RandomLocation(BatchFilter):
     '''Choses a batch at a random location in the bounding box of the upstream
     provider.
+
     The random location is chosen such that the batch request roi lies entirely
     inside the provider's roi.
     '''
 
-    def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK):
+    def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK, focus_points_type=None):
         '''Create a random location sampler.
+
         If `min_masked` (and optionally `mask_volume_type`) are set, only
         batches are returned that have at least the given ratio of masked-in
         voxels. This is in general faster than using the ``Reject`` node, at the
         expense of storing an integral volume of the complete mask.
+
+        If 'focus_points_type' is set, only batches are returned that have at least
+        one point of focus_points_type within the roi of PointsType.focus_points_type. 
+        
+        Remark
+        ------
+        focus_point_type does only work if there are only deterministic nodes upstream
+
         Args:
+
             min_masked: If non-zero, require that the random sample contains at
             least that ratio of masked-in voxels.
+
             mask_volume_type: The volume type to use for mask checks.
+            
+            focus_points_type: gunpowder.PointsType, PointsType considered when looking for good location of batch
+                                    s.t. at least one point of this PointsType is contained in batch
         '''
         self.min_masked = min_masked
         self.mask_volume_type = mask_volume_type
+        self.focus_points_type = focus_points_type
 
 
     def setup(self):
@@ -88,16 +106,57 @@ class RandomLocation(BatchFilter):
 
         assert shift_roi.size() > 0, "Can not satisfy batch request, no location covers all requested ROIs."
 
-        good_location_found = False
-        while not good_location_found:
-
+        good_location_found_for_mask, good_location_found_for_points = False, False
+        while not good_location_found_for_mask or not good_location_found_for_points:
             # select a random point inside ROI
             random_shift = Coordinate(
                     randint(begin, end-1)
                     for begin, end in zip(shift_roi.get_begin(), shift_roi.get_end())
                                         )
-
+            initial_random_shift = copy.deepcopy(random_shift)
             logger.debug("random shift: " + str(random_shift))
+
+            good_location_found_for_mask, good_location_found_for_points = False, False
+            if self.focus_points_type is not None:
+                focused_points_offset = request.points[self.focus_points_type].get_offset()
+                focused_points_shape  = request.points[self.focus_points_type].get_shape()
+
+                # prefetch points in roi of focus_points_type
+                request_for_focused_pointstype = BatchRequest()
+                request_for_focused_pointstype.points[self.focus_points_type] = request.points[self.focus_points_type].shift(random_shift)
+                batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_pointstype)
+                point_ids_in_batch = batch_of_points.points[self.focus_points_type].data.keys()
+
+                if len(point_ids_in_batch) > 0:
+                    chosen_point_id       = np.random.choice(point_ids_in_batch, size=1)[0]
+                    chosen_point_location = Coordinate(batch_of_points.points[self.focus_points_type].data[chosen_point_id].location)
+                    distance_focused_roi_to_chosen_point = chosen_point_location - (initial_random_shift + focused_points_offset)
+                    local_shift_roi = Roi(offset=(distance_focused_roi_to_chosen_point - (focused_points_shape - Coordinate((2,2,2)))),
+                                          shape=(focused_points_shape-Coordinate((2,2,2))))
+
+                    # set max trials to prevent endless loop and search for suitable local shift in impossible cases
+                    trial_nr, max_trials, good_local_shift = 0, 100000, False
+                    while not good_local_shift:
+                        trial_nr += 1
+                        local_shift = Coordinate(
+                                    randint(begin, end)
+                                    for begin, end in zip(local_shift_roi.get_begin(), local_shift_roi.get_end()))
+                        # make sure that new shift matches ROIs of all requested volumes
+                        if shift_roi.contains(initial_random_shift + local_shift):
+                            random_shift = initial_random_shift + local_shift
+                            assert Roi(offset=random_shift + focused_points_offset,
+                                        shape=focused_points_shape).contains(chosen_point_location)
+                            good_local_shift, good_location_found_for_points = True, True
+
+                        if trial_nr == max_trials:
+                            good_location_found_for_points = False
+                            break
+
+                else:
+                    good_location_found_for_points = False
+
+            else:
+                good_location_found_for_points = True
 
             if self.min_masked > 0:
                 # get randomly chosen mask ROI
@@ -119,12 +178,12 @@ class RandomLocation(BatchFilter):
 
                 if mask_ratio >= self.min_masked:
                     logger.debug("good batch found")
-                    good_location_found = True
+                    good_location_found_for_mask = True
                 else:
                     logger.debug("bad batch found")
 
             else:
-                good_location_found = True
+                good_location_found_for_mask = True
 
         # shift request ROIs
         self.random_shift = random_shift
@@ -147,3 +206,4 @@ class RandomLocation(BatchFilter):
         for (points_type, roi) in request.points.items():
             for point_id, point in batch.points[points_type].data.items():
                 batch.points[points_type].data[point_id].location -= self.random_shift
+
