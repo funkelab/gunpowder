@@ -18,10 +18,10 @@ class Normalize(BatchFilter):
     def process(self, batch, request):
 
         factor = self.factor
+        raw = batch.volumes[VolumeType.RAW]
 
         if factor is None:
 
-            raw = batch.volumes[VolumeType.RAW]
             logger.debug("automatically normalizing raw data with dtype=" + str(raw.data.dtype))
 
             if raw.data.dtype == np.uint8:
