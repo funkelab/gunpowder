@@ -5,9 +5,11 @@ Welcome to Gunpowder's Documentation!
 =====================================
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 3
 
+  first_steps
   nodes
+  custom_providers
 
 Indices and tables
 ==================

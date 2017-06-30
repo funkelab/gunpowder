@@ -1,0 +1,122 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Writing Custom Batch Providers &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="writing-custom-batch-providers">
+<span id="sec-custom-providers"></span><h1>Writing Custom Batch Providers<a class="headerlink" href="#writing-custom-batch-providers" title="Permalink to this headline">¶</a></h1>
+<p>The simplest batch provider is a <code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code>,
+which has exactly one upstream provider. To create a new one, subclass it and
+override <code class="xref py py-meth docutils literal"><span class="pre">prepare</span></code> and/or
+<code class="xref py py-meth docutils literal"><span class="pre">process</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleFilter</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+
+  <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">prepare</span></code> and <code class="docutils literal"><span class="pre">process</span></code> will be called in an alternating fashion.
+<code class="docutils literal"><span class="pre">prepare</span></code> is called first, when a <code class="docutils literal"><span class="pre">BatchRequest</span></code> is passed upstream through
+the filter. Your filter is free to change the request in any way it needs to,
+for example, by increasing the requested sizes. After <code class="docutils literal"><span class="pre">prepare</span></code>, <code class="docutils literal"><span class="pre">process</span></code>
+will be called with a batch going downstream, which is the upstream’s response
+to the request you modified in <code class="docutils literal"><span class="pre">prepare</span></code>. In <code class="docutils literal"><span class="pre">process</span></code>, your filter should
+make all necessary changes to the batch and ensure it meets the original
+downstream request earlier communicated to <code class="docutils literal"><span class="pre">prepare</span></code> (given as <code class="docutils literal"><span class="pre">request</span></code>
+parameter in <code class="docutils literal"><span class="pre">process</span></code> for convenience).</p>
+<p>For an example of a batch filter changing both the spec going upstream and the
+batch going downstream, see <a class="reference internal" href="nodes.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal"><span class="pre">ElasticAugment</span></code></a>.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/custom_providers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
