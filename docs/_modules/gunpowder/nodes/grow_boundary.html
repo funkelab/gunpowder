@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gunpowder.nodes.grow_boundary &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.nodes.grow_boundary</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
+
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeType</span>
+
+<div class="viewcode-block" id="GrowBoundary"><a class="viewcode-back" href="../../../nodes.html#gunpowder.GrowBoundary">[docs]</a><span class="k">class</span> <span class="nc">GrowBoundary</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Grow a boundary between regions. Does not grow at the border of the batch </span>
+<span class="sd">    or the mask (if provided).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">only_xy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="n">steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">only_xy</span> <span class="o">=</span> <span class="n">only_xy</span>
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="n">gt</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
+        <span class="n">gt_mask</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span> <span class="k">else</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">gt_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="c1"># grow only in area where mask and gt are defined</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="n">gt_mask</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">crop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;GT_LABELS </span><span class="si">%s</span><span class="s2"> and GT_MASK </span><span class="si">%s</span><span class="s2"> ROIs don&#39;t intersect.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span><span class="n">gt_mask</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
+            <span class="n">crop_in_gt</span> <span class="o">=</span> <span class="n">crop</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+            <span class="n">crop_in_gt_mask</span> <span class="o">=</span> <span class="n">crop</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">gt_mask</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__grow</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">crop_in_gt</span><span class="p">],</span> <span class="n">gt_mask</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">crop_in_gt_mask</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_xy</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__grow</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">only_xy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">only_xy</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__grow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="n">gt_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">only_xy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">gt_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">gt</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">gt_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;GT_LABELS and GT_MASK do not have the same size.&quot;</span>
+
+        <span class="k">if</span> <span class="n">only_xy</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__grow</span><span class="p">(</span><span class="n">gt</span><span class="p">[</span><span class="n">z</span><span class="p">],</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">gt_mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">gt_mask</span><span class="p">[</span><span class="n">z</span><span class="p">])</span>
+            <span class="k">return</span>
+
+        <span class="c1"># get all foreground voxels by erosion of each component</span>
+        <span class="n">foreground</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">gt</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">masked</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">gt_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">masked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">gt_mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">gt</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">label_mask</span> <span class="o">=</span> <span class="n">gt</span><span class="o">==</span><span class="n">label</span>
+            <span class="c1"># Assume that masked out values are the same as the label we are</span>
+            <span class="c1"># eroding in this iteration. This ensures that at the boundary to</span>
+            <span class="c1"># a masked region the value blob is not shrinking.</span>
+            <span class="k">if</span> <span class="n">masked</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">label_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">label_mask</span><span class="p">,</span> <span class="n">masked</span><span class="p">)</span>
+            <span class="n">eroded_label_mask</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span><span class="n">label_mask</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">border_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">foreground</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">eroded_label_mask</span><span class="p">,</span> <span class="n">foreground</span><span class="p">)</span>
+
+        <span class="c1"># label new background</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">foreground</span><span class="p">)</span>
+        <span class="n">gt</span><span class="p">[</span><span class="n">background</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

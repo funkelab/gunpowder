@@ -1,0 +1,236 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>List of All Gunpowder Nodes &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Gunpowder’s Documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-gunpowder">
+<span id="list-of-all-gunpowder-nodes"></span><span id="sec-nodes"></span><h1>List of All Gunpowder Nodes<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gunpowder.AddGtAffinities">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">AddGtAffinities</code><span class="sig-paren">(</span><em>affinity_neighborhood</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/add_gt_affinities.html#AddGtAffinities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.AddGtAffinities" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Chunk">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Chunk</code><span class="sig-paren">(</span><em>chunk_spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/chunk.html#Chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble a large batch by requesting smaller chunks upstream.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.DefectAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">DefectAugment</code><span class="sig-paren">(</span><em>prob_missing=0.05</em>, <em>prob_low_contrast=0.05</em>, <em>prob_artifact=0.0</em>, <em>contrast_scale=0.1</em>, <em>artifact_source=None</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/defect_augment.html#DefectAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.DefectAugment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.ElasticAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ElasticAugment</code><span class="sig-paren">(</span><em>control_point_spacing</em>, <em>jitter_sigma</em>, <em>rotation_interval</em>, <em>prob_slip=0</em>, <em>prob_shift=0</em>, <em>max_misalign=0</em>, <em>subsample=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/elastic_augment.html#ElasticAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ElasticAugment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Elasticly deform a batch. Requests larger batches upstream to avoid data
+loss due to rotation and jitter.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.ExcludeLabels">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ExcludeLabels</code><span class="sig-paren">(</span><em>labels</em>, <em>ignore_mask_erode</em>, <em>background_value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/exclude_labels.html#ExcludeLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ExcludeLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Excludes several labels from the ground-truth.</p>
+<p>The labels will be replaced by background_value. The GT_IGNORE mask will be
+set to 0 for the excluded locations that are further than ignore_mask_erode
+away from not excluded locations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.GrowBoundary">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">GrowBoundary</code><span class="sig-paren">(</span><em>steps=1</em>, <em>background=0</em>, <em>only_xy=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/grow_boundary.html#GrowBoundary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.GrowBoundary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grow a boundary between regions. Does not grow at the border of the batch
+or the mask (if provided).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Hdf5Source">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_source.html#Hdf5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.IntensityAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">IntensityAugment</code><span class="sig-paren">(</span><em>scale_min</em>, <em>scale_max</em>, <em>shift_min</em>, <em>shift_max</em>, <em>z_section_wise=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/intensity_augment.html#IntensityAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.IntensityAugment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.IntensityScaleShift">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">IntensityScaleShift</code><span class="sig-paren">(</span><em>scale</em>, <em>shift</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/intensity_scale_shift.html#IntensityScaleShift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.IntensityScaleShift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales the intensities of a batch by ‘scale’, then adds ‘shift’.</p>
+<p>This is useful to transform your intensities into the interval [-1,1], as is
+needed before passing them to the CNN.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Normalize">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Normalize</code><span class="sig-paren">(</span><em>factor=None</em>, <em>dtype=&lt;type ‘numpy.float32’&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/normalize.html#Normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize the raw volume to values between 0 and 1.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Pad">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Pad</code><span class="sig-paren">(</span><em>pad_sizes</em>, <em>pad_values=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/pad.html#Pad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a constant intensity padding around volumes of another batch
+provider. This is useful if your requested batches can be larger than what
+your source provides.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.PreCache">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PreCache</code><span class="sig-paren">(</span><em>request</em>, <em>cache_size=50</em>, <em>num_workers=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/precache.html#PreCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PreCache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.PrintProfilingStats">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PrintProfilingStats</code><span class="sig-paren">(</span><em>every=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/print_profiling_stats.html#PrintProfilingStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PrintProfilingStats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.RandomLocation">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask_volume_type=&lt;VolumeType.GT_MASK: 5&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choses a batch at a random location in the bounding box of the upstream
+provider.</p>
+<p>The random location is chosen such that the batch request roi lies entirely
+inside the provider’s roi.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.RandomProvider">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomProvider</code><a class="reference internal" href="_modules/gunpowder/nodes/random_provider.html#RandomProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly selects one of the upstream providers.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Reject">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Reject</code><span class="sig-paren">(</span><em>min_masked=0.5</em>, <em>mask_volume_type=&lt;VolumeType.GT_MASK: 5&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/reject.html#Reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Reject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.SimpleAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">SimpleAugment</code><span class="sig-paren">(</span><em>transpose_only_xy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/simple_augment.html#SimpleAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.SimpleAugment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.Snapshot">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>output_dir=’snapshots’</em>, <em>output_filename=’{id}.hdf’</em>, <em>every=1</em>, <em>additional_request=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a passing batch in an HDF file.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.SplitAndRenumberSegmentationLabels">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">SplitAndRenumberSegmentationLabels</code><a class="reference internal" href="_modules/gunpowder/nodes/split_and_renumber_segmentation_labels.html#SplitAndRenumberSegmentationLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.SplitAndRenumberSegmentationLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.ZeroOutConstSections">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ZeroOutConstSections</code><a class="reference internal" href="_modules/gunpowder/nodes/zero_out_const_sections.html#ZeroOutConstSections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ZeroOutConstSections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Every z-section that has constant values only will be set to 0.</p>
+<p>This is to handle blank (missing) sections in a less invasive way: Instead
+of leaving them at -1 (which is “black”, the lowest possible input to the
+CNN), 0 (“gray”) might be easier to ignore.</p>
+<p>For that you should call this filter after you are done with all other
+intensity manipulations.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Gunpowder’s Documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/nodes.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

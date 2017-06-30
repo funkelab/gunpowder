@@ -1,0 +1,216 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gunpowder.nodes.pad &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.nodes.pad</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeType</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pad"><a class="viewcode-back" href="../../../nodes.html#gunpowder.Pad">[docs]</a><span class="k">class</span> <span class="nc">Pad</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Add a constant intensity padding around volumes of another batch </span>
+<span class="sd">    provider. This is useful if your requested batches can be larger than what </span>
+<span class="sd">    your source provides.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pad_sizes</span><span class="p">,</span> <span class="n">pad_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            pad_sizes: dict, VolumeType -&gt; [None,Coordinate]</span>
+
+<span class="sd">                Specifies the padding to be added to each volume type. If None, </span>
+<span class="sd">                an infinite padding is added. If a Coordinate, this amount will </span>
+<span class="sd">                be added to the ROI in the positive and negative direction.</span>
+
+<span class="sd">            pad_values: dict, VolumeType -&gt; value or None</span>
+
+<span class="sd">                The values to report inside the padding. If not given, 0 is </span>
+<span class="sd">                used.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_sizes</span> <span class="o">=</span> <span class="n">pad_sizes</span>
+        <span class="k">if</span> <span class="n">pad_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad_values</span> <span class="o">=</span> <span class="n">pad_values</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_sizes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">assert</span> <span class="n">volume_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;Asked to pad </span><span class="si">%s</span><span class="s2">, but is not provided upstream.&quot;</span><span class="o">%</span><span class="n">volume_type</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Asked to pad </span><span class="si">%s</span><span class="s2">, but upstream provider doesn&#39;t have a ROI for it.&quot;</span><span class="o">%</span><span class="n">volume_type</span>
+
+            <span class="k">if</span> <span class="n">pad_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span><span class="n">pad_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream spec: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;provided spec:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;request: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">request</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream spec: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">)</span>
+
+        <span class="c1"># remember request</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">volume_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_sizes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">volume_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
+
+            <span class="c1"># check out-of-bounds</span>
+            <span class="c1"># TODO: this should be moved to super class, this should hold for any </span>
+            <span class="c1"># batch provider</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_sizes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">roi</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> lies outside of padded ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]))</span>
+
+            <span class="c1"># change request to fit into upstream spec</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Requested </span><span class="si">%s</span><span class="s2"> ROI lies entirely outside of upstream ROI.&quot;</span><span class="o">%</span><span class="n">volume_type</span><span class="p">)</span>
+
+                <span class="c1"># ensure a valid request by asking for empty ROI</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">get_offset</span><span class="p">(),</span>
+                        <span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
+                <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;new request: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">request</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="c1"># restore requested batch size and ROI</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">volume</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">volume</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expand</span><span class="p">(</span>
+                    <span class="n">volume</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="n">volume</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pad_values</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="k">if</span> <span class="n">volume_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_values</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="p">)</span>
+            <span class="n">volume</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">from_roi</span><span class="p">,</span> <span class="n">to_roi</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;expanding array of shape </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">from_roi</span><span class="p">,</span> <span class="n">to_roi</span><span class="p">))</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">to_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">b</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">shift</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">to_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;shifting &#39;from&#39; by &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shift</span><span class="p">))</span>
+        <span class="n">a_in_b</span> <span class="o">=</span> <span class="n">from_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;target shape is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;target slice is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">a_in_b</span><span class="p">))</span>
+
+        <span class="n">b</span><span class="p">[</span><span class="n">a_in_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+
+        <span class="k">return</span> <span class="n">b</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

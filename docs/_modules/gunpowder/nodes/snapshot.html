@@ -1,0 +1,183 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gunpowder.nodes.snapshot &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.nodes.snapshot</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="k">import</span> <span class="n">BatchRequest</span>
+<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">h5py</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeType</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Snapshot"><a class="viewcode-back" href="../../../nodes.html#gunpowder.Snapshot">[docs]</a><span class="k">class</span> <span class="nc">Snapshot</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Save a passing batch in an HDF file.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;snapshots&#39;</span><span class="p">,</span>
+            <span class="n">output_filename</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{id}</span><span class="s1">.hdf&#39;</span><span class="p">,</span>
+            <span class="n">every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">additional_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        output_dir: string</span>
+
+<span class="sd">            The directory to save the snapshots. Will be created, if it does not exist.</span>
+
+<span class="sd">        output_filename: string</span>
+
+<span class="sd">            Template for output filenames. &#39;{id}&#39; in the string will be replaced </span>
+<span class="sd">            with the ID of the batch. &#39;{iteration}&#39; with the training iteration </span>
+<span class="sd">            (if training was performed on this batch).</span>
+
+<span class="sd">        every:</span>
+
+<span class="sd">            How often to save a batch. &#39;every=1&#39; indicates that every batch will </span>
+<span class="sd">            be stored, &#39;every=2&#39; every second and so on. By default, every batch </span>
+<span class="sd">            will be stored.</span>
+
+<span class="sd">        additional_request:</span>
+
+<span class="sd">            An additional batch request to merge with the passing request, if a </span>
+<span class="sd">            snapshot is to be made. If not given, only the volumes that are in </span>
+<span class="sd">            the batch anyway are recorded.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_filename</span> <span class="o">=</span> <span class="n">output_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">every</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">every</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">additional_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span> <span class="k">if</span> <span class="n">additional_request</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">additional_request</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">every</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># append additional volume requests, don&#39;t overwrite existing ones</span>
+        <span class="k">for</span> <span class="n">volume_type</span><span class="p">,</span> <span class="n">roi</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_request</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">volume_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">roi</span>
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_snapshot</span><span class="p">:</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="n">snapshot_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span><span class="n">iteration</span><span class="o">=</span><span class="n">batch</span><span class="o">.</span><span class="n">iteration</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving to &quot;</span> <span class="o">+</span> <span class="n">snapshot_name</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">snapshot_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">volume</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                    <span class="n">ds_name</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span> <span class="s1">&#39;volumes/raw&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">ALPHA_MASK</span><span class="p">:</span> <span class="s1">&#39;volumes/alpha_mask&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/neuron_ids&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/affs&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/mask&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/ignore&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">PRED_AFFINITIES</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_affs&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeType</span><span class="o">.</span><span class="n">LOSS_GRADIENT</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_affs_loss_gradient&#39;</span><span class="p">,</span>
+                    <span class="p">}[</span><span class="n">volume_type</span><span class="p">]</span>
+
+                    <span class="n">offset</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+                    <span class="n">offset</span><span class="o">*=</span> <span class="n">volume</span><span class="o">.</span><span class="n">resolution</span>
+                    <span class="n">dataset</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">ds_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">volume</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">resolution</span>
+
+                <span class="k">if</span> <span class="n">batch</span><span class="o">.</span><span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">loss</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

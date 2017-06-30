@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gunpowder.nodes.exclude_labels &#8212; gunpowder 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.nodes.exclude_labels</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.morphology</span> <span class="k">import</span> <span class="n">distance_transform_edt</span>
+
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeType</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExcludeLabels"><a class="viewcode-back" href="../../../nodes.html#gunpowder.ExcludeLabels">[docs]</a><span class="k">class</span> <span class="nc">ExcludeLabels</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Excludes several labels from the ground-truth.</span>
+
+<span class="sd">    The labels will be replaced by background_value. The GT_IGNORE mask will be </span>
+<span class="sd">    set to 0 for the excluded locations that are further than ignore_mask_erode </span>
+<span class="sd">    away from not excluded locations.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ignore_mask_erode</span><span class="p">,</span> <span class="n">background_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            labels: List of IDs to exclude from the ground-truth.</span>
+<span class="sd">            ignore_mask_erode: By how much (in world units) to erode the ignore mask.</span>
+<span class="sd">            background_value: Value to replace excluded IDs.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask_erode</span> <span class="o">=</span> <span class="n">ignore_mask_erode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background_value</span> <span class="o">=</span> <span class="n">background_value</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">upstream_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">upstream_spec</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;ExcludeLabels can only be used if GT_LABELS is provided upstream.&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">assert</span> <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;If you use ExcludeLabels, you need to request VolumeType.GT_IGNORE.&quot;</span>
+
+        <span class="c1"># we add it, don&#39;t request upstream</span>
+        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="n">gt</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
+
+        <span class="c1"># 0 marks included regions (to be used directly with distance transform </span>
+        <span class="c1"># later)</span>
+        <span class="n">include_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">gt_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;batch contains GT labels: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">gt_labels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;excluding label &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+                <span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">include_mask</span><span class="p">[</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">distance_to_include</span> <span class="o">=</span> <span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">include_mask</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="n">gt</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;max distance to foreground is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">distance_to_include</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+
+        <span class="c1"># 1 marks included regions, plus a context area around them</span>
+        <span class="n">include_mask</span> <span class="o">=</span> <span class="n">distance_to_include</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask_erode</span>
+
+        <span class="c1"># include mask was computed on GT_LABELS ROI, we need to copy it to the </span>
+        <span class="c1"># requested GT_IGNORE ROI</span>
+        <span class="n">gt_ignore_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span>
+
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">gt_ignore_roi</span><span class="p">)</span>
+        <span class="n">intersection_in_gt</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span> <span class="o">-</span> <span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+        <span class="n">intersection_in_gt_ignore</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span> <span class="o">-</span> <span class="n">gt_ignore_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+        <span class="n">gt_ignore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">gt_ignore_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">gt_ignore</span><span class="p">[</span><span class="n">intersection_in_gt_ignore</span><span class="p">]</span> <span class="o">=</span> <span class="n">include_mask</span><span class="p">[</span><span class="n">intersection_in_gt</span><span class="p">]</span>
+
+        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span><span class="n">gt_ignore</span><span class="p">,</span> <span class="n">gt_ignore_roi</span><span class="p">,</span> <span class="n">gt</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
