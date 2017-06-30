@@ -50,7 +50,7 @@ class TestChunk(ProviderTest):
         full_request.add_volume_request(VolumeType.RAW, (100, 100, 100))
         full_request.add_volume_request(VolumeType.GT_LABELS, (80, 80, 80))
 
-        pipeline = ChunkTestSource() + Chunk(chunk_request)
+        pipeline = ChunkTestSource() + Chunk(full_request, chunk_request, cache_size=20, num_workers=15)
 
         with build(pipeline):
             batch = pipeline.request_batch(full_request)
@@ -66,6 +66,3 @@ class TestChunk(ProviderTest):
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             self.assertTrue((volume.data == data).all())
-
-
-
