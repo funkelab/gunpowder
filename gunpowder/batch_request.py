@@ -49,12 +49,12 @@ class BatchRequest(Freezable):
         ''' Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-
-        for (volume_type, roi) in self.volumes.items():
-            if common_roi is None:
-                common_roi = roi
-            else:
-                common_roi = common_roi.intersect(roi)
+        for collection_type in [self.volumes, self.points]:
+            for (type, roi) in collection_type.items():
+                if common_roi is None:
+                    common_roi = roi
+                else:
+                    common_roi = common_roi.intersect(roi)
 
         return common_roi
 
