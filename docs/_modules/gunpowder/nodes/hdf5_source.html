@@ -61,22 +61,30 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Hdf5Source"><a class="viewcode-back" href="../../../nodes.html#gunpowder.Hdf5Source">[docs]</a><span class="k">class</span> <span class="nc">Hdf5Source</span><span class="p">(</span><span class="n">BatchProvider</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;An HDF5 data source.</span>
+
+<span class="sd">    Provides volumes from HDF5 datasets for each volume type given. If the </span>
+<span class="sd">    attribute ``resolution`` is set in an HDF5 dataset, it will be used for the </span>
+<span class="sd">    resolution of the volume. If the attribute ``offset`` is set in an HDF5 </span>
+<span class="sd">    dataset, it will be used as the offset of the :class:`ROI` provided by this </span>
+<span class="sd">    node. It is assumed that the offset is given in world units. Since </span>
+<span class="sd">    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided </span>
+<span class="sd">    by the ``resolution``.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        filename (string): The HDF5 file.</span>
+
+<span class="sd">        datasets (dict): Dictionary of VolumeType -&gt; dataset names that this source offers.</span>
+
+<span class="sd">        resolution (tuple): Overwrite the resolution stored in the HDF5 datasets.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">filename</span><span class="p">,</span>
             <span class="n">datasets</span><span class="p">,</span>
             <span class="n">resolution</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Create a new Hdf5Source</span>
-
-<span class="sd">        Args</span>
-
-<span class="sd">            filename: The HDF5 file.</span>
-
-<span class="sd">            datasets: Dictionary of VolumeTypes -&gt; dataset names that this source offers.</span>
-
-<span class="sd">            resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
@@ -95,7 +103,6 @@
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
 
             <span class="n">dims</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">),</span> <span class="n">dims</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
@@ -104,15 +111,23 @@
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">specified_resolution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">default_resolution</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ndims</span>
+                    <span class="n">default_resolution</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ndims</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARNING: your source does not contain resolution information&quot;</span>
                                    <span class="s2">&quot; (no attribute &#39;resolution&#39; in </span><span class="si">{}</span><span class="s2"> dataset). I will assume </span><span class="si">{}</span><span class="s2">. &quot;</span>
                                    <span class="s2">&quot;This might not be what you want.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="n">default_resolution</span><span class="p">))</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_resolution</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specified_resolution</span>
+
+            <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">])</span>
+                <span class="n">offset</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ndims</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span>
 
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -138,19 +153,15 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&#39;s ROI </span><span class="si">%s</span><span class="s2"> outside of my ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">,</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]))</span>
 
-                <span class="n">interpolate</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">ALPHA_MASK</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="p">}[</span><span class="n">volume_type</span><span class="p">]</span>
-
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">))</span>
+
+                <span class="c1"># shift request roi into dataset</span>
+                <span class="n">dataset_roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
+
                 <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">__read</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">volume_type</span><span class="p">],</span> <span class="n">roi</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__read</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">volume_type</span><span class="p">],</span> <span class="n">dataset_roi</span><span class="p">),</span>
                         <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
-                        <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">],</span>
-                        <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">)</span>
+                        <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">])</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">)</span>
 

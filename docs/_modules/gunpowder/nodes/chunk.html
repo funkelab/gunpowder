@@ -148,18 +148,9 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">shape</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
 
-            <span class="n">interpolate</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">PRED_AFFINITIES</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="p">}[</span><span class="n">volume_type</span><span class="p">]</span>
-
             <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span>
                                                 <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
-                                                <span class="n">resolution</span><span class="o">=</span><span class="n">chunk_batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
-                                                <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">)</span>
+                                                <span class="n">resolution</span><span class="o">=</span><span class="n">chunk_batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">batch</span>
 
 

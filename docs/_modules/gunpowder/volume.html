@@ -100,6 +100,8 @@
 <span class="sd">                             Assumes that transition between 0 and 1 lies on an </span>
 <span class="sd">                             object boundary.</span>
 <span class="sd">        ``PRED_AFFINITIES``  Predicted affinities.</span>
+<span class="sd">        ``LOSS_SCALE``       Used for element-wise multiplication with loss for</span>
+<span class="sd">                             training.</span>
 <span class="sd">        ``LOSS_GRADIENT``    Gradient of the training loss.</span>
 <span class="sd">        ===================  ====================================================</span>
 
@@ -123,21 +125,21 @@
 
 <span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;RAW&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;ALPHA_MASK&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_LABELS&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_AFFINITIES&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_MASK&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_IGNORE&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;PRED_AFFINITIES&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;LOSS_GRADIENT&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_LABELS&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_AFFINITIES&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_MASK&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_IGNORE&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;PRED_AFFINITIES&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;LOSS_SCALE&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;LOSS_GRADIENT&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 
 <span class="k">class</span> <span class="nc">Volume</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">interpolate</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="n">resolution</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">interpolate</span> <span class="o">=</span> <span class="n">interpolate</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
 </pre></div>
