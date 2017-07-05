@@ -5,12 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>gunpowder.nodes.add_gt_affinities &#8212; gunpowder 0.2 documentation</title>
-    
     <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
@@ -56,9 +53,9 @@
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">malis</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeType</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeTypes</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="AddGtAffinities"><a class="viewcode-back" href="../../../nodes.html#gunpowder.AddGtAffinities">[docs]</a><span class="k">class</span> <span class="nc">AddGtAffinities</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
 
@@ -85,16 +82,16 @@
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
         <span class="c1"># do nothing if no gt affinities were requested</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_AFFINITIES</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;no GT_AFFINITIES requested, will do nothing&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">skip_next</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">return</span>
 
-        <span class="k">assert</span> <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;AddGtAffinities can only be used if you request GT_LABELS&quot;</span>
+        <span class="k">assert</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;AddGtAffinities can only be used if you request GT_LABELS&quot;</span>
 
-        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span>
 
-        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
+        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;downstream GT_LABELS request: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
 
         <span class="c1"># remember requested GT_LABELS ROI</span>
@@ -106,7 +103,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span>
         <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_labels_roi</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_labels_roi</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream GT_LABELS request: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
 
@@ -119,7 +116,7 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;computing ground-truth affinities from labels&quot;</span><span class="p">)</span>
         <span class="n">gt_affinities</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span>
         <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
@@ -133,12 +130,12 @@
         <span class="n">gt_affinities</span> <span class="o">=</span> <span class="n">gt_affinities</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reset GT_LABELS ROI to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="p">))</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">crop</span><span class="p">]</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">crop</span><span class="p">]</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span>
                 <span class="n">gt_affinities</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="p">,</span> 
-                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
                 <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">batch</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span></div>
 </pre></div>
@@ -177,7 +174,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jan Funke.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>

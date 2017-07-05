@@ -5,12 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>List of All Gunpowder Nodes &#8212; gunpowder 0.2 documentation</title>
-    
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,10 +21,11 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Welcome to Gunpowder’s Documentation!" href="index.html" /> 
+    <link rel="next" title="Writing Custom Batch Providers" href="custom_providers.html" />
+    <link rel="prev" title="First steps" href="first_steps.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -40,7 +38,10 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
+          <a href="custom_providers.html" title="Writing Custom Batch Providers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
       </ul>
@@ -112,7 +113,7 @@ needed before passing them to the CNN.</p>
 
 <dl class="class">
 <dt id="gunpowder.Normalize">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Normalize</code><span class="sig-paren">(</span><em>factor=None</em>, <em>dtype=&lt;type ‘numpy.float32’&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/normalize.html#Normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Normalize" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Normalize</code><span class="sig-paren">(</span><em>factor=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/normalize.html#Normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Normalize the raw volume to values between 0 and 1.</p>
 </dd></dl>
 
@@ -136,7 +137,7 @@ your source provides.</p>
 
 <dl class="class">
 <dt id="gunpowder.RandomLocation">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask_volume_type=&lt;VolumeType.GT_MASK: 5&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask_volume_type=GT_MASK</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Choses a batch at a random location in the bounding box of the upstream
 provider.</p>
 <p>The random location is chosen such that the batch request roi lies entirely
@@ -151,7 +152,7 @@ inside the provider’s roi.</p>
 
 <dl class="class">
 <dt id="gunpowder.Reject">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Reject</code><span class="sig-paren">(</span><em>min_masked=0.5</em>, <em>mask_volume_type=&lt;VolumeType.GT_MASK: 5&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/reject.html#Reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Reject" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Reject</code><span class="sig-paren">(</span><em>min_masked=0.5</em>, <em>mask_volume_type=GT_MASK</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/reject.html#Reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Reject" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
@@ -161,7 +162,7 @@ inside the provider’s roi.</p>
 
 <dl class="class">
 <dt id="gunpowder.Snapshot">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>output_dir=’snapshots’</em>, <em>output_filename=’{id}.hdf’</em>, <em>every=1</em>, <em>additional_request=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>output_dir='snapshots'</em>, <em>output_filename='{id}.hdf'</em>, <em>every=1</em>, <em>additional_request=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a passing batch in an HDF file.</p>
 </dd></dl>
 
@@ -190,8 +191,11 @@ intensity manipulations.</p>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to Gunpowder’s Documentation!</a></p>
+  <p class="topless"><a href="first_steps.html"
+                        title="previous chapter">First steps</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="custom_providers.html"
+                        title="next chapter">Writing Custom Batch Providers</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -223,14 +227,17 @@ intensity manipulations.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
+          <a href="custom_providers.html" title="Writing Custom Batch Providers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jan Funke.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>

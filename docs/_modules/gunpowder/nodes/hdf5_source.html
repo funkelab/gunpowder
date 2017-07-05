@@ -5,12 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>gunpowder.nodes.hdf5_source &#8212; gunpowder 0.2 documentation</title>
-    
     <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
@@ -59,9 +56,9 @@
 <span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span>
 <span class="kn">from</span> <span class="nn">gunpowder.provider_spec</span> <span class="k">import</span> <span class="n">ProviderSpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeType</span>
+<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeTypes</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Hdf5Source"><a class="viewcode-back" href="../../../nodes.html#gunpowder.Hdf5Source">[docs]</a><span class="k">class</span> <span class="nc">Hdf5Source</span><span class="p">(</span><span class="n">BatchProvider</span><span class="p">):</span>
 
@@ -76,7 +73,7 @@
 
 <span class="sd">            filename: The HDF5 file.</span>
 
-<span class="sd">            datasets: Dictionary of VolumeType -&gt; dataset names that this source offers.</span>
+<span class="sd">            datasets: Dictionary of VolumeTypes -&gt; dataset names that this source offers.</span>
 
 <span class="sd">            resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -142,10 +139,10 @@
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&#39;s ROI </span><span class="si">%s</span><span class="s2"> outside of my ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">,</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]))</span>
 
                 <span class="n">interpolate</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">VolumeType</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                    <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">VolumeType</span><span class="o">.</span><span class="n">ALPHA_MASK</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">ALPHA_MASK</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="p">}[</span><span class="n">volume_type</span><span class="p">]</span>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">))</span>
@@ -205,7 +202,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jan Funke.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>
