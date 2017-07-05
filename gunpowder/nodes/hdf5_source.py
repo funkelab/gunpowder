@@ -13,22 +13,30 @@ from gunpowder.volume import Volume, VolumeTypes
 logger = logging.getLogger(__name__)
 
 class Hdf5Source(BatchProvider):
+    '''An HDF5 data source.
+
+    Provides volumes from HDF5 datasets for each volume type given. If the 
+    attribute ``resolution`` is set in an HDF5 dataset, it will be used for the 
+    resolution of the volume. If the attribute ``offset`` is set in an HDF5 
+    dataset, it will be used as the offset of the :class:`Roi` provided by this 
+    node. It is assumed that the offset is given in world units. Since 
+    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided 
+    by the ``resolution``.
+
+    Args:
+
+        filename (string): The HDF5 file.
+
+        datasets (dict): Dictionary of VolumeType -> dataset names that this source offers.
+
+        resolution (tuple): Overwrite the resolution stored in the HDF5 datasets.
+    '''
 
     def __init__(
             self,
             filename,
             datasets,
             resolution=None):
-        '''Create a new Hdf5Source
-
-        Args
-
-            filename: The HDF5 file.
-
-            datasets: Dictionary of VolumeTypes -> dataset names that this source offers.
-
-            resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.
-        '''
 
         self.filename = filename
         self.datasets = datasets
@@ -47,7 +55,6 @@ class Hdf5Source(BatchProvider):
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
 
             dims = f[ds].shape
-            self.spec.volumes[volume_type] = Roi((0,)*len(dims), dims)
 
             if self.ndims is None:
                 self.ndims = len(dims)
@@ -56,15 +63,23 @@ class Hdf5Source(BatchProvider):
 
             if self.specified_resolution is None:
                 if 'resolution' in f[ds].attrs:
-                    self.resolutions[volume_type] = tuple(f[ds].attrs['resolution'])
+                    self.resolutions[volume_type] = Coordinate(f[ds].attrs['resolution'])
                 else:
-                    default_resolution = (1,)*self.ndims
+                    default_resolution = Coordinate((1,)*self.ndims)
                     logger.warning("WARNING: your source does not contain resolution information"
                                    " (no attribute 'resolution' in {} dataset). I will assume {}. "
                                    "This might not be what you want.".format(ds,default_resolution))
                     self.resolutions[volume_type] = default_resolution
             else:
                 self.resolutions[volume_type] = self.specified_resolution
+
+            if 'offset' in f[ds].attrs:
+                offset = Coordinate(f[ds].attrs['offset'])
+                offset /= self.resolutions[volume_type]
+            else:
+                offset = Coordinate((0,)*self.ndims)
+
+            self.spec.volumes[volume_type] = Roi(offset, dims)
 
         f.close()
 
@@ -91,8 +106,12 @@ class Hdf5Source(BatchProvider):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
+
+                # shift request roi into dataset
+                dataset_roi = roi.shift(-spec.volumes[volume_type].get_offset())
+
                 batch.volumes[volume_type] = Volume(
-                        self.__read(f, self.datasets[volume_type], roi),
+                        self.__read(f, self.datasets[volume_type], dataset_roi),
                         roi=roi,
                         resolution=self.resolutions[volume_type])
 
