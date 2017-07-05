@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV CAFFE_ROOT=/src/caffe
 ENV CAFFE_REPOSITORY=https://github.com/naibaf7/caffe.git
-ENV CAFFE_REVISION=02310e1e73b5724b94784f4020bb8f118020d4f1
+ENV CAFFE_REVISION=483c58f5f46b5959dc0a978882843713daae18f6
 
 WORKDIR $CAFFE_ROOT
 RUN git clone ${CAFFE_REPOSITORY} . && \
