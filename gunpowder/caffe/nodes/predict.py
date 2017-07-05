@@ -8,7 +8,8 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.volume import VolumeTypes
+from gunpowder.roi import Roi
+from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,12 @@ class Predict(BatchFilter):
     def teardown(self):
         self.worker.stop()
 
+    def prepare(self, request):
+
+        # remove request parts that we provide
+        if VolumeTypes.PRED_AFFINITIES in request.volumes:
+            del request.volumes[VolumeTypes.PRED_AFFINITIES]
+
     def process(self, batch, request):
 
         self.batch_in.put(batch)
@@ -49,11 +56,13 @@ class Predict(BatchFilter):
         except WorkersDied:
             raise PredictProcessDied()
 
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = out.volumes[VolumeTypes.PRED_AFFINITIES]
+        affs = out.volumes[VolumeTypes.PRED_AFFINITIES]
+        affs.roi = request.volumes[VolumeTypes.PRED_AFFINITIES]
+        affs.resolution = batch.volumes[VolumeTypes.RAW].resolution
+
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = affs
 
     def __predict(self, use_gpu):
-
-        start = time.time()
 
         if not self.net_initialized:
 
@@ -71,15 +80,23 @@ class Predict(BatchFilter):
             self.net_io = NetIoWrapper(self.net)
             self.net_initialized = True
 
+        start = time.time()
+
         batch = self.batch_in.get()
+
+        fetch_time = time.time() - start
 
         self.net_io.set_inputs({
                 'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
         })
-
-        loss = self.net.forward()
+        self.net.forward()
         output = self.net_io.get_outputs()
+
+        predict_time = time.time() - start
+
+        logger.info("Predict process: time=%f (including %f waiting for batch)"%(predict_time, fetch_time))
+
         assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(output['aff_pred'][0])
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(output['aff_pred'][0], Roi(), (1,1,1))
 
         return batch
