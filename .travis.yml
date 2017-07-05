@@ -20,4 +20,4 @@ install:
   - python setup.py install
 
 script:
-  - python gunpowder/tests/test_suite.py
+  - python tests/test_suite.py
