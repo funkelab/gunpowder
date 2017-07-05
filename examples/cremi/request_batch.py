@@ -18,6 +18,7 @@ def train():
     request.add_volume_request(VolumeTypes.GT_LABELS, (56,56,56))
     request.add_volume_request(VolumeTypes.GT_IGNORE, (56,56,56))
     request.add_volume_request(VolumeTypes.GT_AFFINITIES, (56,56,56))
+    request.add_volume_request(VolumeTypes.LOSS_SCALE, (56,56,56))
 
     data_sources = tuple(
         Hdf5Source(
@@ -76,6 +77,7 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
+        BalanceAffinityLabels() +
         PreCache(
             request,
             cache_size=10,

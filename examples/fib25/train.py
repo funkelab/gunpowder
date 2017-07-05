@@ -46,6 +46,7 @@ def train():
         Normalize() +
         RandomLocation() +
         AddGtAffinities(affinity_neighborhood) + 
+        BalanceAffinityLabels() +
         PreCache(
             lambda: batch_spec,
             cache_size=3,

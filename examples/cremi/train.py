@@ -84,6 +84,7 @@ def train():
             contrast_scale=0.1) +
         ZeroOutConstSections() +
         IntensityScaleShift(2,-1) +
+        BalanceAffinityLabels() +
         PreCache(
             request,
             cache_size=10,
