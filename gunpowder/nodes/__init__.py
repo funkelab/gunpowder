@@ -1,4 +1,5 @@
 from .add_gt_affinities import AddGtAffinities
+from .balance_affinity_labels import BalanceAffinityLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
