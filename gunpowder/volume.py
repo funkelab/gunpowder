@@ -55,6 +55,12 @@ class VolumeTypes:
         ``LOSS_SCALE``       Used for element-wise multiplication with loss for
                              training.
         ``LOSS_GRADIENT``    Gradient of the training loss.
+        ``GT_BM_PRESYN``     Ground truth of binary map for presynaptic locations
+        ``GT_BM_PRESYN``     Ground truth of binary map for postsynaptic locations
+        ``GT_MASK_EXCLUSIVEZONE_PRESYN``    ExculsiveZone binary mask (1-use, 0-don't use) around presyn locations
+        ``GT_MASK_EXCLUSIVEZONE_POSTSYN``   ExculsiveZone binary mask (1-use, 0-don't use) around postsyn locations
+        ``PRED_BM_PRESYN``   Predicted presynaptic locations
+        ``PRED_BM_POSTSYN``  Predicted postsynaptic locations
         ===================  ====================================================
 
     New volume types can be added with :func:`register_volume_type`.
