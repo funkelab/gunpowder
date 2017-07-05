@@ -7,20 +7,19 @@ class TestSource(BatchProvider):
     def get_spec(self):
 
         spec = ProviderSpec()
-        spec.volumes[VolumeType.RAW] = Roi((0,0,0), (100,100,100))
+        spec.volumes[VolumeTypes.RAW] = Roi((0,0,0), (100,100,100))
         return spec
 
     def provide(self, request):
 
         batch = Batch()
-        batch.volumes[VolumeType.RAW] = Volume(
+        batch.volumes[VolumeTypes.RAW] = Volume(
                 np.zeros(
-                        request.volumes[VolumeType.RAW].get_shape(),
+                        request.volumes[VolumeTypes.RAW].get_shape(),
                         dtype=np.uint8
                 ),
-                request.volumes[VolumeType.RAW],
-                (1,1,1),
-                True
+                request.volumes[VolumeTypes.RAW],
+                (1,1,1)
         )
         return batch
 
@@ -31,4 +30,4 @@ class ProviderTest(unittest.TestCase):
 
         self.test_source = TestSource()
         self.test_request = BatchRequest()
-        self.test_request.volumes[VolumeType.RAW] = Roi((20,20,20),(10,10,10))
+        self.test_request.volumes[VolumeTypes.RAW] = Roi((20,20,20),(10,10,10))

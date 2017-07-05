@@ -2,7 +2,7 @@ import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class Normalize(BatchFilter):
     def process(self, batch, request):
 
         factor = self.factor
-        raw = batch.volumes[VolumeType.RAW]
+        raw = batch.volumes[VolumeTypes.RAW]
 
         if factor is None:
 

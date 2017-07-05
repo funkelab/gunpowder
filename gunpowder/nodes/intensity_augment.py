@@ -1,7 +1,7 @@
 import numpy as np
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 class IntensityAugment(BatchFilter):
 
@@ -14,7 +14,7 @@ class IntensityAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        raw = batch.volumes[VolumeType.RAW]
+        raw = batch.volumes[VolumeTypes.RAW]
 
         assert not self.z_section_wise or raw.roi.dims() == 3, "If you specify 'z_section_wise', I expect 3D data."
         assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw volume (not " + str(raw.data.dtype) + "). Consider using Normalize before."

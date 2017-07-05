@@ -4,7 +4,7 @@ import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -32,23 +32,23 @@ class ExcludeLabels(BatchFilter):
         upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(upstream_spec)
 
-        assert VolumeType.GT_LABELS in self.spec.volumes, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+        assert VolumeTypes.GT_LABELS in self.spec.volumes, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
 
-        self.spec.volumes[VolumeType.GT_IGNORE] = self.spec.volumes[VolumeType.GT_LABELS]
+        self.spec.volumes[VolumeTypes.GT_IGNORE] = self.spec.volumes[VolumeTypes.GT_LABELS]
 
     def get_spec(self):
         return self.spec
 
     def prepare(self, request):
 
-        assert VolumeType.GT_IGNORE in request.volumes, "If you use ExcludeLabels, you need to request VolumeType.GT_IGNORE."
+        assert VolumeTypes.GT_IGNORE in request.volumes, "If you use ExcludeLabels, you need to request VolumeTypes.GT_IGNORE."
 
         # we add it, don't request upstream
-        del request.volumes[VolumeType.GT_IGNORE]
+        del request.volumes[VolumeTypes.GT_IGNORE]
 
     def process(self, batch, request):
 
-        gt = batch.volumes[VolumeType.GT_LABELS]
+        gt = batch.volumes[VolumeTypes.GT_LABELS]
 
         # 0 marks included regions (to be used directly with distance transform 
         # later)
@@ -71,7 +71,7 @@ class ExcludeLabels(BatchFilter):
 
         # include mask was computed on GT_LABELS ROI, we need to copy it to the 
         # requested GT_IGNORE ROI
-        gt_ignore_roi = request.volumes[VolumeType.GT_IGNORE]
+        gt_ignore_roi = request.volumes[VolumeTypes.GT_IGNORE]
 
         intersection = gt.roi.intersect(gt_ignore_roi)
         intersection_in_gt = (intersection - gt.roi.get_offset()).get_bounding_box()
@@ -80,4 +80,4 @@ class ExcludeLabels(BatchFilter):
         gt_ignore = np.zeros(gt_ignore_roi.get_shape(), dtype=np.uint8)
         gt_ignore[intersection_in_gt_ignore] = include_mask[intersection_in_gt]
 
-        batch.volumes[VolumeType.GT_IGNORE] = Volume(gt_ignore, gt_ignore_roi, gt.resolution, interpolate=False)
+        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, gt_ignore_roi, gt.resolution)

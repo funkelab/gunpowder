@@ -7,7 +7,7 @@ from gunpowder.ext import dvision
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +92,10 @@ class DvidSource(BatchProvider):
             if not spec.volumes[volume_type].contains(roi):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-            read, interpolate = {
-                VolumeType.RAW: (self.__read_raw, True),
-                VolumeType.GT_LABELS: (self.__read_gt, False),
-                VolumeType.GT_MASK: (self.__read_gt_mask, False),
+            read = {
+                VolumeTypes.RAW: self.__read_raw,
+                VolumeTypes.GT_LABELS: self.__read_gt,
+                VolumeTypes.GT_MASK: self.__read_gt_mask,
             }[volume_type]
 
             logger.debug("Reading %s in %s..."%(volume_type,roi))
@@ -103,8 +103,7 @@ class DvidSource(BatchProvider):
                     read(roi),
                     roi=roi,
                     # TODO: get resolution from repository
-                    resolution=self.resolution,
-                    interpolate=interpolate)
+                    resolution=self.resolution)
 
         logger.debug("done")
 

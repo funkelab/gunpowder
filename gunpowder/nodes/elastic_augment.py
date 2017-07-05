@@ -8,7 +8,7 @@ from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class ElasticAugment(BatchFilter):
             volume.data = augment.apply_transformation(
                     volume.data,
                     self.transformations[volume_type],
-                    interpolate=volume.interpolate)
+                    interpolate=volume_type.interpolate)
 
             # restore original ROIs
             volume.roi = request.volumes[volume_type]

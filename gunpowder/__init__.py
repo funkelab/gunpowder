@@ -8,7 +8,7 @@ from .coordinate import Coordinate
 from .nodes import *
 from .producer_pool import ProducerPool
 from .roi import Roi
-from .volume import VolumeType, Volume
+from .volume import register_volume_type, VolumeType, VolumeTypes, Volume
 import gunpowder.caffe
 import gunpowder.tests
 

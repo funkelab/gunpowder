@@ -8,7 +8,7 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class Predict(BatchFilter):
         except WorkersDied:
             raise PredictProcessDied()
 
-        batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = out.volumes[VolumeTypes.PRED_AFFINITIES]
 
     def __predict(self, use_gpu):
 
@@ -74,12 +74,12 @@ class Predict(BatchFilter):
         batch = self.batch_in.get()
 
         self.net_io.set_inputs({
-                'data': batch.volumes[VolumeType.RAW].data[np.newaxis,np.newaxis,:],
+                'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
         })
 
         loss = self.net.forward()
         output = self.net_io.get_outputs()
         assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
-        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(output['aff_pred'][0], interpolate=True)
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(output['aff_pred'][0])
 
         return batch

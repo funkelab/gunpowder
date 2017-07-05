@@ -4,7 +4,7 @@ import os
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +72,14 @@ class Snapshot(BatchFilter):
                 for (volume_type, volume) in batch.volumes.items():
 
                     ds_name = {
-                            VolumeType.RAW: 'volumes/raw',
-                            VolumeType.ALPHA_MASK: 'volumes/alpha_mask',
-                            VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
-                            VolumeType.GT_AFFINITIES: 'volumes/labels/affs',
-                            VolumeType.GT_MASK: 'volumes/labels/mask',
-                            VolumeType.GT_IGNORE: 'volumes/labels/ignore',
-                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs',
-                            VolumeType.LOSS_GRADIENT: 'volumes/predicted_affs_loss_gradient',
+                            VolumeTypes.RAW: 'volumes/raw',
+                            VolumeTypes.ALPHA_MASK: 'volumes/alpha_mask',
+                            VolumeTypes.GT_LABELS: 'volumes/labels/neuron_ids',
+                            VolumeTypes.GT_AFFINITIES: 'volumes/labels/affs',
+                            VolumeTypes.GT_MASK: 'volumes/labels/mask',
+                            VolumeTypes.GT_IGNORE: 'volumes/labels/ignore',
+                            VolumeTypes.PRED_AFFINITIES: 'volumes/predicted_affs',
+                            VolumeTypes.LOSS_GRADIENT: 'volumes/predicted_affs_loss_gradient',
                     }[volume_type]
 
                     offset = volume.roi.get_offset()

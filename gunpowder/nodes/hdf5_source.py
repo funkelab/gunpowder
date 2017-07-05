@@ -8,7 +8,7 @@ from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class Hdf5Source(BatchProvider):
 
             filename: The HDF5 file.
 
-            datasets: Dictionary of VolumeType -> dataset names that this source offers.
+            datasets: Dictionary of VolumeTypes -> dataset names that this source offers.
 
             resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.
         '''
@@ -90,19 +90,11 @@ class Hdf5Source(BatchProvider):
                 if not spec.volumes[volume_type].contains(roi):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-                interpolate = {
-                    VolumeType.RAW: True,
-                    VolumeType.GT_LABELS: False,
-                    VolumeType.GT_MASK: False,
-                    VolumeType.ALPHA_MASK: True,
-                }[volume_type]
-
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
                 batch.volumes[volume_type] = Volume(
                         self.__read(f, self.datasets[volume_type], roi),
                         roi=roi,
-                        resolution=self.resolutions[volume_type],
-                        interpolate=interpolate)
+                        resolution=self.resolutions[volume_type])
 
         logger.debug("done")
 

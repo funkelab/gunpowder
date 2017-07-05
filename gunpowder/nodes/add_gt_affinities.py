@@ -5,7 +5,7 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import malis
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +34,16 @@ class AddGtAffinities(BatchFilter):
     def prepare(self, request):
 
         # do nothing if no gt affinities were requested
-        if not VolumeType.GT_AFFINITIES in request.volumes:
+        if not VolumeTypes.GT_AFFINITIES in request.volumes:
             logger.warn("no GT_AFFINITIES requested, will do nothing")
             self.skip_next = True
             return
 
-        assert VolumeType.GT_LABELS in request.volumes, "AddGtAffinities can only be used if you request GT_LABELS"
+        assert VolumeTypes.GT_LABELS in request.volumes, "AddGtAffinities can only be used if you request GT_LABELS"
 
-        del request.volumes[VolumeType.GT_AFFINITIES]
+        del request.volumes[VolumeTypes.GT_AFFINITIES]
 
-        gt_labels_roi = request.volumes[VolumeType.GT_LABELS]
+        gt_labels_roi = request.volumes[VolumeTypes.GT_LABELS]
         logger.debug("downstream GT_LABELS request: " + str(gt_labels_roi))
 
         # remember requested GT_LABELS ROI
@@ -55,7 +55,7 @@ class AddGtAffinities(BatchFilter):
         shape = gt_labels_roi.get_shape()
         shape = shape - self.padding_neg + self.padding_pos
         gt_labels_roi.set_shape(shape)
-        request.volumes[VolumeType.GT_LABELS] = gt_labels_roi
+        request.volumes[VolumeTypes.GT_LABELS] = gt_labels_roi
 
         logger.debug("upstream GT_LABELS request: " + str(gt_labels_roi))
 
@@ -68,7 +68,7 @@ class AddGtAffinities(BatchFilter):
 
         logger.debug("computing ground-truth affinities from labels")
         gt_affinities = malis.seg_to_affgraph(
-                batch.volumes[VolumeType.GT_LABELS].data.astype(np.int32),
+                batch.volumes[VolumeTypes.GT_LABELS].data.astype(np.int32),
                 self.affinity_neighborhood
         ).astype(np.float32)
 
@@ -82,11 +82,10 @@ class AddGtAffinities(BatchFilter):
         gt_affinities = gt_affinities[(slice(None),)+crop]
 
         logger.debug("reset GT_LABELS ROI to " + str(self.gt_labels_roi))
-        batch.volumes[VolumeType.GT_LABELS].data = batch.volumes[VolumeType.GT_LABELS].data[crop]
-        batch.volumes[VolumeType.GT_LABELS].roi = self.gt_labels_roi
-        batch.volumes[VolumeType.GT_AFFINITIES] = Volume(
+        batch.volumes[VolumeTypes.GT_LABELS].data = batch.volumes[VolumeTypes.GT_LABELS].data[crop]
+        batch.volumes[VolumeTypes.GT_LABELS].roi = self.gt_labels_roi
+        batch.volumes[VolumeTypes.GT_AFFINITIES] = Volume(
                 gt_affinities,
                 self.gt_labels_roi, 
-                batch.volumes[VolumeType.GT_LABELS].resolution,
-                interpolate=False)
+                batch.volumes[VolumeTypes.GT_LABELS].resolution)
         batch.affinity_neighborhood = self.affinity_neighborhood
