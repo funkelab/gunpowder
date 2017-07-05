@@ -2,13 +2,13 @@ import logging
 
 from .batch_provider import BatchProvider
 from gunpowder.profiling import Timing
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
 class Reject(BatchProvider):
 
-    def __init__(self, min_masked=0.5, mask_volume_type=VolumeType.GT_MASK):
+    def __init__(self, min_masked=0.5, mask_volume_type=VolumeTypes.GT_MASK):
         self.min_masked = min_masked
         self.mask_volume_type = mask_volume_type
 

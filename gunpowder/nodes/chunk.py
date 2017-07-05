@@ -7,7 +7,7 @@ from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
-from gunpowder.volume import VolumeType, Volume
+from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)
 
@@ -64,23 +64,14 @@ class Chunk(BatchFilter):
 
         batch = Batch()
         for (volume_type, roi) in request.volumes.items():
-            if volume_type == VolumeType.PRED_AFFINITIES or volume_type == VolumeType.GT_AFFINITIES:
+            if volume_type == VolumeTypes.PRED_AFFINITIES or volume_type == VolumeTypes.GT_AFFINITIES:
                 shape = (3,)+ roi.get_shape()
             else:
                 shape = roi.get_shape()
 
-            interpolate = {
-                VolumeType.RAW: True,
-                VolumeType.GT_LABELS: False,
-                VolumeType.GT_AFFINITIES: False,
-                VolumeType.GT_MASK: False,
-                VolumeType.PRED_AFFINITIES: False,
-            }[volume_type]
-
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
                                                 roi=roi,
-                                                resolution=chunk_batch.volumes[VolumeType.RAW].resolution,
-                                                interpolate=interpolate)
+                                                resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
         return batch
 
     def __fill(self, a, b, roi_a, roi_b):

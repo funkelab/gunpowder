@@ -5,7 +5,7 @@ import random
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.build import build
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +35,8 @@ class DefectAugment(BatchFilter):
 
             artifact_source:
 
-                A gunpowder batch provider that delivers VolumeType.RAW and 
-                VolumeType.ALPHA_MASK, used if prob_artifact > 0.
+                A gunpowder batch provider that delivers VolumeTypes.RAW and 
+                VolumeTypes.ALPHA_MASK, used if prob_artifact > 0.
 
             axis:
 
@@ -67,7 +67,7 @@ class DefectAugment(BatchFilter):
         prob_low_contrast_threshold = prob_missing_threshold + self.prob_low_contrast
         prob_artifact_threshold = prob_low_contrast_threshold + self.prob_artifact
 
-        raw = batch.volumes[VolumeType.RAW]
+        raw = batch.volumes[VolumeTypes.RAW]
 
         for c in range(batch.get_total_roi().get_shape()[self.axis]):
 
@@ -101,13 +101,13 @@ class DefectAugment(BatchFilter):
                 section = raw.data[section_selector]
 
                 artifact_request = BatchRequest()
-                artifact_request.add_volume_request(VolumeType.RAW, section.shape)
-                artifact_request.add_volume_request(VolumeType.ALPHA_MASK, section.shape)
+                artifact_request.add_volume_request(VolumeTypes.RAW, section.shape)
+                artifact_request.add_volume_request(VolumeTypes.ALPHA_MASK, section.shape)
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
-                artifact_alpha = artifact_batch.volumes[VolumeType.ALPHA_MASK].data
-                artifact_raw   = artifact_batch.volumes[VolumeType.RAW].data
+                artifact_alpha = artifact_batch.volumes[VolumeTypes.ALPHA_MASK].data
+                artifact_raw   = artifact_batch.volumes[VolumeTypes.RAW].data
 
                 assert artifact_raw.dtype == section.dtype
                 assert artifact_alpha.dtype == np.float32

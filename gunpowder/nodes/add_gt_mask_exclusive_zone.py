@@ -4,7 +4,7 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 from gunpowder.points import PointsType
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ class AddGtMaskExclusiveZone(BatchFilter):
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        self.EZ_masks_to_binary_map = {VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: VolumeType.GT_BM_PRESYN,
-                                       VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: VolumeType.GT_BM_POSTSYN}
+        self.EZ_masks_to_binary_map = {VolumeTypes.GT_MASK_EXCLUSIVEZONE_PRESYN: VolumeTypes.GT_BM_PRESYN,
+                                       VolumeTypes.GT_MASK_EXCLUSIVEZONE_POSTSYN: VolumeTypes.GT_BM_POSTSYN}
 
         for EZ_mask_type, binary_map_type in self.EZ_masks_to_binary_map.items():
             if binary_map_type in self.upstream_spec.volumes:
@@ -73,15 +73,11 @@ class AddGtMaskExclusiveZone(BatchFilter):
             binary_map_type = self.EZ_masks_to_binary_map[EZ_mask_type]
             binary_map = batch.volumes[binary_map_type].data
 
-            interpolate = {VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: True,
-                           VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: True}[EZ_mask_type]
             EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape())
 
             batch.volumes[EZ_mask_type] = Volume(data= EZ_mask,
                                                  roi=request.volumes[EZ_mask_type],
-                                                 resolution=batch.volumes[binary_map_type].resolution,
-                                                 interpolate=interpolate)
-
+                                                 resolution=batch.volumes[binary_map_type].resolution)
 
     def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask):
         ''' Exclusive zone surrounds every synapse. Created by enlarging the ON regions of given binary map

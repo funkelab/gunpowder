@@ -7,13 +7,13 @@ class ChunkTestSource(BatchProvider):
     def get_spec(self):
 
         spec = ProviderSpec()
-        spec.volumes[VolumeType.RAW] = Roi((0,0,0), (100,100,100))
-        spec.volumes[VolumeType.GT_LABELS] = Roi((10,10,10), (90,90,90))
+        spec.volumes[VolumeTypes.RAW] = Roi((0,0,0), (100,100,100))
+        spec.volumes[VolumeTypes.GT_LABELS] = Roi((10,10,10), (90,90,90))
         return spec
 
     def provide(self, request):
 
-        print("ChunkTestSource: Got request " + str(request))
+        # print("ChunkTestSource: Got request " + str(request))
 
         batch = Batch()
 
@@ -34,8 +34,7 @@ class ChunkTestSource(BatchProvider):
             batch.volumes[volume_type] = Volume(
                     data,
                     roi,
-                    (1,1,1),
-                    False)
+                    (1,1,1))
         return batch
 
 class TestChunk(ProviderTest):
@@ -43,12 +42,12 @@ class TestChunk(ProviderTest):
     def test_output(self):
 
         chunk_request = BatchRequest()
-        chunk_request.add_volume_request(VolumeType.RAW, (20,15,17))
-        chunk_request.add_volume_request(VolumeType.GT_LABELS, (10,5,7))
+        chunk_request.add_volume_request(VolumeTypes.RAW, (20,15,17))
+        chunk_request.add_volume_request(VolumeTypes.GT_LABELS, (10,5,7))
 
         full_request = BatchRequest()
-        full_request.add_volume_request(VolumeType.RAW, (100, 100, 100))
-        full_request.add_volume_request(VolumeType.GT_LABELS, (80, 80, 80))
+        full_request.add_volume_request(VolumeTypes.RAW, (100, 100, 100))
+        full_request.add_volume_request(VolumeTypes.GT_LABELS, (80, 80, 80))
 
         pipeline = ChunkTestSource() + Chunk(full_request, chunk_request, cache_size=20, num_workers=15)
 

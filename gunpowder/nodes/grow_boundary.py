@@ -2,7 +2,7 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 class GrowBoundary(BatchFilter):
     '''Grow a boundary between regions. Does not grow at the border of the batch 
@@ -16,8 +16,8 @@ class GrowBoundary(BatchFilter):
 
     def process(self, batch, request):
 
-        gt = batch.volumes[VolumeType.GT_LABELS]
-        gt_mask = None if VolumeType.GT_MASK not in batch.volumes else batch.volumes[VolumeType.GT_MASK]
+        gt = batch.volumes[VolumeTypes.GT_LABELS]
+        gt_mask = None if VolumeTypes.GT_MASK not in batch.volumes else batch.volumes[VolumeTypes.GT_MASK]
 
         if gt_mask is not None:
 

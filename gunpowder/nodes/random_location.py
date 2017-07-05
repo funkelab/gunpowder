@@ -9,7 +9,7 @@ from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 from gunpowder.profiling import Timing
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class RandomLocation(BatchFilter):
     inside the provider's roi.
     '''
 
-    def __init__(self, min_masked=0, mask_volume_type=VolumeType.GT_MASK, focus_points_type=None):
+    def __init__(self, min_masked=0, mask_volume_type=VolumeTypes.GT_MASK, focus_points_type=None):
         '''Create a random location sampler.
 
         If `min_masked` (and optionally `mask_volume_type`) are set, only

@@ -7,7 +7,7 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.volume import VolumeType, Volume
+from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Train(BatchFilter):
     def prepare(self, request):
 
         # remove request parts that we provide
-        for volume_type in [VolumeType.LOSS_GRADIENT, VolumeType.PRED_AFFINITIES]:
+        for volume_type in [VolumeTypes.LOSS_GRADIENT, VolumeTypes.PRED_AFFINITIES]:
             if volume_type in request.volumes:
                 del request.volumes[volume_type]
 
@@ -51,9 +51,9 @@ class Train(BatchFilter):
         except WorkersDied:
             raise TrainProcessDied()
 
-        batch.volumes[VolumeType.PRED_AFFINITIES] = out.volumes[VolumeType.PRED_AFFINITIES]
-        if VolumeType.LOSS_GRADIENT in request.volumes:
-            batch.volumes[VolumeType.LOSS_GRADIENT] = out.volumes[VolumeType.LOSS_GRADIENT]
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = out.volumes[VolumeTypes.PRED_AFFINITIES]
+        if VolumeTypes.LOSS_GRADIENT in request.volumes:
+            batch.volumes[VolumeTypes.LOSS_GRADIENT] = out.volumes[VolumeTypes.LOSS_GRADIENT]
         batch.loss = out.loss
         batch.iteration = out.iteration
 
@@ -85,8 +85,8 @@ class Train(BatchFilter):
         batch, request = self.batch_in.get()
 
         data = {
-            'data': batch.volumes[VolumeType.RAW].data[np.newaxis,np.newaxis,:],
-            'aff_label': batch.volumes[VolumeType.GT_AFFINITIES].data[np.newaxis,:],
+            'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
+            'aff_label': batch.volumes[VolumeTypes.GT_AFFINITIES].data[np.newaxis,:],
         }
 
         if self.solver_parameters.train_state.get_stage(0) == 'euclid':
@@ -101,22 +101,18 @@ class Train(BatchFilter):
         loss = self.solver.step(1)
         # self.__consistency_check()
         output = self.net_io.get_outputs()
-        batch.volumes[VolumeType.PRED_AFFINITIES] = Volume(
+        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(
                 output['aff_pred'][0],
-                batch.volumes[VolumeType.GT_AFFINITIES].roi,
-                batch.volumes[VolumeType.GT_AFFINITIES].resolution,
-                interpolate=True
-        )
+                batch.volumes[VolumeTypes.GT_AFFINITIES].roi,
+                batch.volumes[VolumeTypes.GT_AFFINITIES].resolution)
         batch.loss = loss
         batch.iteration = self.solver.iter
-        if VolumeType.LOSS_GRADIENT in request.volumes:
+        if VolumeTypes.LOSS_GRADIENT in request.volumes:
             diffs = self.net_io.get_output_diffs()
-            batch.volumes[VolumeType.LOSS_GRADIENT] = Volume(
+            batch.volumes[VolumeTypes.LOSS_GRADIENT] = Volume(
                     diffs['aff_pred'][0],
-                    batch.volumes[VolumeType.GT_AFFINITIES].roi,
-                    batch.volumes[VolumeType.GT_AFFINITIES].resolution,
-                    interpolate=True
-            )
+                    batch.volumes[VolumeTypes.GT_AFFINITIES].roi,
+                    batch.volumes[VolumeTypes.GT_AFFINITIES].resolution)
 
         time_of_iteration = time.time() - start
         logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))
@@ -125,16 +121,16 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        gt_affinities = batch.volumes[VolumeType.GT_AFFINITIES]
+        gt_affinities = batch.volumes[VolumeTypes.GT_AFFINITIES]
         frac_pos = np.clip(gt_affinities.data, 0.05, 0.95)
         w_pos = 1.0 / (2.0 * frac_pos)
         w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
         error_scale = self.__scale_errors(gt_affinities.data, w_neg, w_pos)
 
-        if VolumeType.GT_MASK in batch.volumes:
-            self.__mask_errors(batch, error_scale, batch.volumes[VolumeType.GT_MASK].data)
-        if VolumeType.GT_IGNORE in batch.volumes:
-            self.__mask_errors(batch, error_scale, batch.volumes[VolumeType.GT_IGNORE].data)
+        if VolumeTypes.GT_MASK in batch.volumes:
+            self.__mask_errors(batch, error_scale, batch.volumes[VolumeTypes.GT_MASK].data)
+        if VolumeTypes.GT_IGNORE in batch.volumes:
+            self.__mask_errors(batch, error_scale, batch.volumes[VolumeTypes.GT_IGNORE].data)
 
         data['scale'] = error_scale[np.newaxis,:]
 
@@ -148,15 +144,15 @@ class Train(BatchFilter):
 
     def __prepare_malis(self, batch, data):
 
-        gt_labels = batch.volumes[VolumeType.GT_LABELS]
+        gt_labels = batch.volumes[VolumeTypes.GT_LABELS]
         next_id = gt_labels.data.max() + 1
 
         gt_pos_pass = gt_labels.data
 
-        if VolumeType.GT_IGNORE in batch.volumes:
+        if VolumeTypes.GT_IGNORE in batch.volumes:
 
             gt_neg_pass = np.array(gt_labels.data)
-            gt_neg_pass[batch.volumes[VolumeType.GT_IGNORE].data==0] = next_id
+            gt_neg_pass[batch.volumes[VolumeTypes.GT_IGNORE].data==0] = next_id
 
         else:
 

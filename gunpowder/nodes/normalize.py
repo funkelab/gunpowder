@@ -2,7 +2,7 @@ import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class Normalize(BatchFilter):
 
         if factor is None:
 
-            raw = batch.volumes[VolumeType.RAW]
+            raw = batch.volumes[VolumeTypes.RAW]
             logger.debug("automatically normalizing raw data with dtype=" + str(raw.data.dtype))
 
             if raw.data.dtype == np.uint8:

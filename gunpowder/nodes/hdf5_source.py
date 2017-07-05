@@ -9,7 +9,7 @@ from gunpowder.profiling import Timing
 from gunpowder.points import PointsType, PointsOfType, SynPoint
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class Hdf5Source(BatchProvider):
 
             filename: The HDF5 file.
 
-            datasets: Dictionary of VolumeType -> dataset names that this source offers.
+            datasets: Dictionary of VolumeTypes -> dataset names that this source offers.
 
             resolution: tuple, to overwrite the resolution stored in the HDF5 datasets.
         '''
@@ -103,19 +103,11 @@ class Hdf5Source(BatchProvider):
                 if not spec.volumes[volume_type].contains(roi):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
-                interpolate = {
-                    VolumeType.RAW: True,
-                    VolumeType.GT_LABELS: False,
-                    VolumeType.GT_MASK: False,
-                    VolumeType.ALPHA_MASK: True,
-                }[volume_type]
-
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
                 batch.volumes[volume_type] = Volume(
                         self.__read(f, self.datasets[volume_type], roi),
                         roi=roi,
-                        resolution=self.resolutions[volume_type],
-                        interpolate=interpolate)
+                        resolution=self.resolutions[volume_type])
 
             # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
             # together s.t. ids are unique and allow to find partner locations
@@ -139,7 +131,7 @@ class Hdf5Source(BatchProvider):
                 logger.debug("Reading %s in %s..." % (points_type, roi))
                 id_to_point = {PointsType.PRESYN: presyn_points, PointsType.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
-                batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeType.RAW])
+                batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
 
         logger.debug("done")
 
@@ -176,7 +168,7 @@ class Hdf5Source(BatchProvider):
 
         for node_nr, node_id in enumerate(syn_file['annotations/ids']):
             location     = syn_file['annotations/locations'][node_nr]
-            location /= self.resolutions[VolumeType.RAW]
+            location /= self.resolutions[VolumeTypes.RAW]
             if dataset_offset is not None:
                 logging.debug('adding global offset to points %i %i %i' %(dataset_offset[0],
                                                                           dataset_offset[1], dataset_offset[2]))

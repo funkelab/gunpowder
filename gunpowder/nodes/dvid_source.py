@@ -11,7 +11,7 @@ from gunpowder.points import PointsType, PointsOfType, SynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class DvidSource(BatchProvider):
         :type port: int
         :param uuid: UUID of node on DVID server
         :type uuid: str
-        :param volume_array_names: dict {VolumeType:  DVID data instance for data in VolumeType}
+        :param volume_array_names: dict {VolumeTypes:  DVID data instance for data in VolumeTypes}
         :param resolution: resolution of source voxels in nanometers
         :type resolution: tuple
         """
@@ -94,10 +94,10 @@ class DvidSource(BatchProvider):
             if not spec.volumes[volume_type].contains(roi):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type, roi, spec.volumes[volume_type]))
 
-            read, interpolate = {
-                VolumeType.RAW: (self.__read_raw, True),
-                VolumeType.GT_LABELS: (self.__read_gt, False),
-                VolumeType.GT_MASK: (self.__read_gt_mask, False),
+            read = {
+                VolumeTypes.RAW: self.__read_raw,
+                VolumeTypes.GT_LABELS: self.__read_gt,
+                VolumeTypes.GT_MASK: self.__read_gt_mask,
             }[volume_type]
 
             logger.debug("Reading %s in %s..."%(volume_type, roi))
@@ -105,8 +105,7 @@ class DvidSource(BatchProvider):
                                                 data=read(roi),
                                                 roi=roi,
                                                 # TODO: get resolution from repository
-                                                resolution=self.resolution,
-                                                interpolate=interpolate)
+                                                resolution=self.resolution)
 
         # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
         # together s.t. the ids are unique and allow to find partner locations
@@ -154,7 +153,7 @@ class DvidSource(BatchProvider):
 
     def __read_raw(self, roi):
         slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.RAW])  # self.raw_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.RAW])  # self.raw_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -164,7 +163,7 @@ class DvidSource(BatchProvider):
 
     def __read_gt(self, roi):
         slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.GT_LABELS])  # self.gt_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_LABELS])  # self.gt_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -180,7 +179,7 @@ class DvidSource(BatchProvider):
         if self.gt_mask_roi_name is None:
             raise MaskNotProvidedException
         slices = roi.get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.GT_MASK])  # self.gt_mask_roi_name)
+        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_MASK])  # self.gt_mask_roi_name)
         try:
             return dvid_roi[slices]
         except Exception as e:
@@ -271,5 +270,5 @@ class DvidSource(BatchProvider):
 
     def __repr__(self):
         return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.volume_array_names[VolumeType.RAW],
-            self.volume_array_names[VolumeType.GT_LABELS])
+            self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.RAW],
+            self.volume_array_names[VolumeTypes.GT_LABELS])

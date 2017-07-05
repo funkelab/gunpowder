@@ -5,7 +5,7 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import Volume, VolumeType
+from gunpowder.volume import Volume, VolumeTypes
 from gunpowder.points import PointsType
 
 
@@ -16,9 +16,9 @@ class AddGtBinaryMapOfPoints(BatchFilter):
     def __init__(self, pointstype_to_volumetypes):
         ''' Add binary map of given PointsType as volume to batch.
         Args:
-           pointstype_to_volumetypes: dict, e.g. {PointsType.PRESYN: VolumeType.GT_BM_PRESYN} creates a binary map
+           pointstype_to_volumetypes: dict, e.g. {PointsType.PRESYN: VolumeTypes.GT_BM_PRESYN} creates a binary map
                                       of points in PointsType.PRESYN and adds the created binary map
-                                      as a volume of type VolumeType.GT_BM_PRESYN to the batch if requested. 
+                                      as a volume of type VolumeTypes.GT_BM_PRESYN to the batch if requested. 
         '''
         self.pointstype_to_volumetypes = pointstype_to_volumetypes
         self.skip_next = False
@@ -70,13 +70,11 @@ class AddGtBinaryMapOfPoints(BatchFilter):
             return
 
         for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes.items()):
-            interpolate = {VolumeType.GT_BM_PRESYN: True, VolumeType.GT_BM_POSTSYN: True}[volume_type]
             binary_map = self.__get_binary_map(batch, request, points_type, volume_type, pointsoftype=batch.points[points_type],
                                                marker='gaussian')
             batch.volumes[volume_type] = Volume(data=binary_map,
                                                 roi = request.volumes[volume_type],
-                                                resolution = batch.volumes[VolumeType.RAW].resolution,
-                                                interpolate=interpolate)
+                                                resolution = batch.volumes[VolumeTypes.RAW].resolution)
 
     def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""

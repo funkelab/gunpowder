@@ -5,7 +5,7 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 from gunpowder.points import PointsType, PointsOfType, SynPoint
 
 logger = logging.getLogger(__name__)
@@ -83,19 +83,19 @@ class Snapshot(BatchFilter):
                 for (volume_type, volume) in batch.volumes.items():
 
                     ds_name = {
-                            VolumeType.RAW: 'volumes/raw',
-                            VolumeType.ALPHA_MASK: 'volumes/alpha_mask',
-                            VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
-                            VolumeType.GT_AFFINITIES: 'volumes/labels/affs',
-                            VolumeType.GT_MASK: 'volumes/labels/mask',
-                            VolumeType.GT_IGNORE: 'volumes/labels/ignore',
-                            VolumeType.PRED_AFFINITIES: 'volumes/predicted_affs',
-                            VolumeType.GT_BM_PRESYN: 'volumes/labels/gt_bm_presyn',
-                            VolumeType.GT_BM_POSTSYN: 'volumes/labels/gt_bm_postsyn',
-                            VolumeType.GT_MASK_EXCLUSIVEZONE_PRESYN: 'volumes/labels/gt_mask_exclusivezone_presyn',
-                            VolumeType.GT_MASK_EXCLUSIVEZONE_POSTSYN: 'volumes/labels/gt_mask_exclusivezone_postsyn',
-                            VolumeType.PRED_BM_PRESYN: 'volumes/predicted_bm_presyn',
-                            VolumeType.PRED_BM_POSTSYN: 'volumes/predicted_bm_postsyn',
+                            VolumeTypes.RAW: 'volumes/raw',
+                            VolumeTypes.ALPHA_MASK: 'volumes/alpha_mask',
+                            VolumeTypes.GT_LABELS: 'volumes/labels/neuron_ids',
+                            VolumeTypes.GT_AFFINITIES: 'volumes/labels/affs',
+                            VolumeTypes.GT_MASK: 'volumes/labels/mask',
+                            VolumeTypes.GT_IGNORE: 'volumes/labels/ignore',
+                            VolumeTypes.PRED_AFFINITIES: 'volumes/predicted_affs',
+                            VolumeTypes.GT_BM_PRESYN: 'volumes/labels/gt_bm_presyn',
+                            VolumeTypes.GT_BM_POSTSYN: 'volumes/labels/gt_bm_postsyn',
+                            VolumeTypes.GT_MASK_EXCLUSIVEZONE_PRESYN: 'volumes/labels/gt_mask_exclusivezone_presyn',
+                            VolumeTypes.GT_MASK_EXCLUSIVEZONE_POSTSYN: 'volumes/labels/gt_mask_exclusivezone_postsyn',
+                            VolumeTypes.PRED_BM_PRESYN: 'volumes/predicted_bm_presyn',
+                            VolumeTypes.PRED_BM_POSTSYN: 'volumes/predicted_bm_postsyn',
                     }[volume_type]
 
                     offset = volume.roi.get_offset()

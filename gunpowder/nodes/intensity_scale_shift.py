@@ -1,5 +1,5 @@
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeType
+from gunpowder.volume import VolumeTypes
 
 class IntensityScaleShift(BatchFilter):
     '''Scales the intensities of a batch by 'scale', then adds 'shift'.
@@ -14,5 +14,5 @@ class IntensityScaleShift(BatchFilter):
 
     def process(self, batch, request):
 
-        raw = batch.volumes[VolumeType.RAW]
+        raw = batch.volumes[VolumeTypes.RAW]
         raw.data = raw.data*self.scale + self.shift

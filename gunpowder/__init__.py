@@ -9,7 +9,7 @@ from .nodes import *
 from .points import PointsType, PointsOfType, SynPoint
 from .producer_pool import ProducerPool
 from .roi import Roi
-from .volume import VolumeType, Volume
+from .volume import VolumeTypes, Volume
 import gunpowder.caffe
 import gunpowder.tests
 
