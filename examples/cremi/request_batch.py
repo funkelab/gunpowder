@@ -14,17 +14,17 @@ def train():
     affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
 
     request = BatchRequest()
-    request.add_volume_request(VolumeType.RAW, (84,268,268))
-    request.add_volume_request(VolumeType.GT_LABELS, (56,56,56))
-    request.add_volume_request(VolumeType.GT_IGNORE, (56,56,56))
-    request.add_volume_request(VolumeType.GT_AFFINITIES, (56,56,56))
+    request.add_volume_request(VolumeTypes.RAW, (84,268,268))
+    request.add_volume_request(VolumeTypes.GT_LABELS, (56,56,56))
+    request.add_volume_request(VolumeTypes.GT_IGNORE, (56,56,56))
+    request.add_volume_request(VolumeTypes.GT_AFFINITIES, (56,56,56))
 
     data_sources = tuple(
         Hdf5Source(
             sample,
             datasets = {
-                VolumeType.RAW: 'volumes/raw',
-                VolumeType.GT_LABELS: 'volumes/labels/neuron_ids',
+                VolumeTypes.RAW: 'volumes/raw',
+                VolumeTypes.GT_LABELS: 'volumes/labels/neuron_ids',
             }
         ) +
         Normalize() +
@@ -36,11 +36,11 @@ def train():
         Hdf5Source(
             'sample_ABC_padded_20160501.defects.hdf',
             datasets = {
-                VolumeType.RAW: 'defect_sections/raw',
-                VolumeType.ALPHA_MASK: 'defect_sections/mask',
+                VolumeTypes.RAW: 'defect_sections/raw',
+                VolumeTypes.ALPHA_MASK: 'defect_sections/mask',
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_volume_type=VolumeType.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_volume_type=VolumeTypes.ALPHA_MASK) +
         Snapshot(every=1, output_filename='defect_{id}.hdf') +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
@@ -76,15 +76,15 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
-        # PreCache(
-            # request,
-            # cache_size=10,
-            # num_workers=5) +
+        PreCache(
+            request,
+            cache_size=10,
+            num_workers=5) +
         Snapshot(every=1, output_filename='final_it={iteration}_id={id}.hdf') +
         PrintProfilingStats()
     )
 
-    n = 1
+    n = 35
     print("Requesting", n, "batches")
 
     with build(batch_provider_tree) as minibatch_maker:
