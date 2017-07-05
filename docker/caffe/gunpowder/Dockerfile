@@ -1,4 +1,4 @@
-FROM caffe
+FROM funkey/caffe
 LABEL maintainer jfunke@iri.upc.edu
 
 # install dependencies for gunpowder
