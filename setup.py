@@ -13,9 +13,7 @@ setup(
             'gunpowder.nodes',
             'gunpowder.caffe',
             'gunpowder.caffe.nodes',
-            'gunpowder.ext',
-            'gunpowder.tests',
-            'gunpowder.tests.cases',
+            'gunpowder.ext'
         ],
         install_requires = [
             "numpy",
