@@ -42,6 +42,10 @@ class Train(BatchFilter):
             if volume_type in request.volumes:
                 del request.volumes[volume_type]
 
+        # for Euclidean training, require a loss scale volume
+        if self.solver_parameters.train_state.get_stage(0) == 'euclid':
+            request.volumes[VolumeTypes.LOSS_SCALE] = request.volumes[VolumeTypes.GT_AFFINITIES]
+
     def process(self, batch, request):
 
         self.batch_in.put((batch,request))
@@ -123,36 +127,7 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        gt_affinities = batch.volumes[VolumeTypes.GT_AFFINITIES]
-
-        # initialize error scale with 1s
-        error_scale = np.ones(gt_affinities.data.shape, dtype=np.float)
-
-        # set error_scale to 0 in masked-out areas
-        if VolumeTypes.GT_MASK in batch.volumes:
-            self.__mask_error_scale(error_scale, batch.volumes[VolumeTypes.GT_MASK].data)
-        if VolumeTypes.GT_IGNORE in batch.volumes:
-            self.__mask_error_scale(error_scale, batch.volumes[VolumeTypes.GT_IGNORE].data)
-
-        # in the masked-in area, compute the fraction of positive samples
-        masked_in = error_scale.sum()
-        num_pos = (gt_affinities.data*error_scale).sum()
-        frac_pos = float(num_pos)/masked_in if masked_in > 0 else 0
-        frac_pos = np.clip(frac_pos, 0.05, 0.95)
-        frac_neg = 1.0 - frac_pos
-
-        # compute the class weights for positive and negative samples
-        w_pos = 1.0/(2.0*frac_pos)
-        w_neg = 1.0/(2.0*frac_neg)
-
-        # scale the masked-in error_scale with the class weights
-        error_scale *= (data >= 0.5)*w_pos + (data < 0.5)*w_neg
-
-        data['scale'] = error_scale[np.newaxis,:]
-
-    def __mask_error_scale(self, error_scale, mask):
-        for d in range(error_scale.shape[0]):
-            error_scale[d] *= mask
+        data['scale'] = batch.volumes[VolumeTypes.LOSS_SCALE].data[np.newaxis,:]
 
     def __prepare_malis(self, batch, data):
 
