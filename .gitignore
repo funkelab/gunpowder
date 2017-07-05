@@ -1,7 +1,7 @@
 snapshots
 docker/caffe/gunpowder/gunpowder
 docker/caffe/gunpowder/requirements.txt
-*.sw[pmn]
+*.sw[pmno]
 net_iter*
 *.prototxt
 .idea
