@@ -1,5 +1,6 @@
 gunpowder
 =========
+[![Build Status](https://travis-ci.org/funkey/gunpowder.svg?branch=master)](https://travis-ci.org/funkey/gunpowder)
 
 A data-loading, training, and processing DAG for greentea.
 
