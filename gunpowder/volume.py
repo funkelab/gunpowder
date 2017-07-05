@@ -52,6 +52,8 @@ class VolumeTypes:
                              Assumes that transition between 0 and 1 lies on an 
                              object boundary.
         ``PRED_AFFINITIES``  Predicted affinities.
+        ``LOSS_SCALE``       Used for element-wise multiplication with loss for
+                             training.
         ``LOSS_GRADIENT``    Gradient of the training loss.
         ===================  ====================================================
 
@@ -80,6 +82,7 @@ register_volume_type(VolumeType('GT_AFFINITIES', interpolate=False))
 register_volume_type(VolumeType('GT_MASK', interpolate=False))
 register_volume_type(VolumeType('GT_IGNORE', interpolate=False))
 register_volume_type(VolumeType('PRED_AFFINITIES', interpolate=False))
+register_volume_type(VolumeType('LOSS_SCALE', interpolate=False))
 register_volume_type(VolumeType('LOSS_GRADIENT', interpolate=False))
 
 class Volume(Freezable):

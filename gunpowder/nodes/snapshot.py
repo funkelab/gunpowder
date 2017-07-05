@@ -79,6 +79,7 @@ class Snapshot(BatchFilter):
                             VolumeTypes.GT_MASK: 'volumes/labels/mask',
                             VolumeTypes.GT_IGNORE: 'volumes/labels/ignore',
                             VolumeTypes.PRED_AFFINITIES: 'volumes/predicted_affs',
+                            VolumeTypes.LOSS_SCALE: 'volumes/loss_scale',
                             VolumeTypes.LOSS_GRADIENT: 'volumes/predicted_affs_loss_gradient',
                     }[volume_type]
 
