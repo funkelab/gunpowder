@@ -1,12 +1,10 @@
 import logging
 import os
-import numpy as np
 
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
 from gunpowder.volume import VolumeTypes
-from gunpowder.points import PointsType, PointsOfType, SynPoint
 
 logger = logging.getLogger(__name__)
 
