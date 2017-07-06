@@ -52,6 +52,8 @@ class Predict(BatchFilter):
         self.worker.stop()
 
     def prepare(self, request):
+
+        # required for chunk to provide batch with correct offset
         self.stored_request = copy.deepcopy(request)
 
         # remove request parts that node will provide
