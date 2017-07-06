@@ -40,23 +40,16 @@ class AddGtBinaryMapOfPoints(BatchFilter):
 
     def prepare(self, request):
 
-        all_pointstype_to_volumetypes = self.pointstype_to_volumetypes.copy()
+        self.skip_next = True
+        for points_type, volume_type in self.pointstype_to_volumetypes.items():
+            if volume_type in request.volumes:
+                del request.volumes[volume_type]
+                assert points_type in request.points
+                # if at least one requested volume is in self.pointstype_to_volumes, therefore do not skip process
+                self.skip_next = False
 
-        for bm_nr in range(len(all_pointstype_to_volumetypes)):
-            points_type  = all_pointstype_to_volumetypes.keys()[bm_nr]
-            volume_type = all_pointstype_to_volumetypes[points_type]
-            # do nothing if no binary maps are requested
-            if not volume_type in request.volumes:
-                logger.warn("no {} requested, will do nothing".format(volume_type))
-                del self.pointstype_to_volumetypes[points_type]
-            # do nothing if points to create binary map are not requested
-            if not points_type in request.points:
-                logger.warn("AddGtBinaryMapOfPoints for {} can only be used if you request {}".format(volume_type, points_type))
-                del self.pointstype_to_volumetypes[points_type]
-
-            assert request.points[points_type].contains(request.volumes[volume_type]), "Binary map for {} requested for ROI outside of source's ({}) ROI.".format(volume_type, points_type)
-
-            del request.volumes[volume_type]
+        if self.skip_next:
+            logger.warn("no VolumeTypes of BinaryMask ({}) requested, will do nothing".format(self.pointstype_to_volumetypes.values()))
 
         if len(self.pointstype_to_volumetypes) == 0:
             self.skip_next = True
@@ -70,11 +63,13 @@ class AddGtBinaryMapOfPoints(BatchFilter):
             return
 
         for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes.items()):
-            binary_map = self.__get_binary_map(batch, request, points_type, volume_type, pointsoftype=batch.points[points_type],
-                                               marker='gaussian')
-            batch.volumes[volume_type] = Volume(data=binary_map,
-                                                roi = request.volumes[volume_type],
-                                                resolution = batch.volumes[VolumeTypes.RAW].resolution)
+            if volume_type in request.volumes:
+                binary_map = self.__get_binary_map(batch, request, points_type, volume_type, pointsoftype=batch.points[points_type],
+                                                   marker='gaussian')
+                batch.volumes[volume_type] = Volume(data=binary_map,
+                                                    roi = request.volumes[volume_type],
+                                                    resolution = (8,8,8))
+
 
     def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
@@ -92,13 +87,12 @@ class AddGtBinaryMapOfPoints(BatchFilter):
                 elif marker == 'gaussian':
                     marker_size = 1
                     marker_locs = tuple( slice( max(0, shifted_loc[dim] - marker_size),
-                                                min(shape_bm_volume[dim], shifted_loc[dim] + marker_size))
+                                                min(shape_bm_volume[dim]-1, shifted_loc[dim] + marker_size))
                                                 for dim in range(len(shape_bm_volume)))
                     # set to 255 to keep binary map as uint8. That is beneficial to get 'roundish' blob around locations
                     # as smallest values which are produced by gaussian filtering are then set to zero instead of a very small float
                     # resulting in a binary map which is OFF at those locations instead of ON.
                     binary_map[marker_locs] = 255
-
 
         # return mask where location is marked as a single point
         if marker == 'point':
