@@ -52,7 +52,6 @@ class Predict(BatchFilter):
         self.worker.stop()
 
     def prepare(self, request):
-
         self.stored_request = copy.deepcopy(request)
 
         # remove request parts that node will provide
@@ -75,8 +74,6 @@ class Predict(BatchFilter):
 
     def __predict(self, use_gpu):
 
-        start = time.time()
-
         if not self.net_initialized:
 
             logger.info("Initializing solver...")
@@ -93,14 +90,22 @@ class Predict(BatchFilter):
             self.net_io = NetIoWrapper(self.net)
             self.net_initialized = True
 
+        start = time.time()
+
         batch = self.batch_in.get()
+
+        fetch_time = time.time() - start
 
         self.net_io.set_inputs({
                 'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
         })
-
-        loss = self.net.forward()
+        self.net.forward()
         output = self.net_io.get_outputs()
+
+        predict_time = time.time() - start
+
+        logger.info("Predict process: time=%f (including %f waiting for batch)"%(predict_time, fetch_time))
+
         assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
         output_shape = output['aff_pred'][0][0].shape
         batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(data=output['aff_pred'][0],
