@@ -61,6 +61,15 @@ class BatchProvider(object):
                     type(self).__name__
             )
 
+        for (points_type, roi) in request.points.items():
+            assert points_type in batch.points, "%s requested, but %s did not provide it."%(points_type,type(self).__name__)
+            points = batch.points[points_type]
+            assert points.roi == roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                                            points_type,
+                                            roi,
+                                            points.roi,
+                                            type(self).__name__)
+
         logger.debug("%s provides %s"%(type(self).__name__,batch))
 
         return batch

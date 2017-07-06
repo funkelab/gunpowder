@@ -1,3 +1,4 @@
+import copy
 import logging
 import multiprocessing
 import numpy as np
@@ -26,7 +27,7 @@ class Predict(BatchFilter):
             if not os.path.isfile(f):
                 raise RuntimeError("%s does not exist"%f)
 
-        # start prediction as a producer pool, so that we can gracefully exit if 
+        # start prediction as a producer pool, so that we can gracefully exit if
         # anything goes wrong
         self.worker = ProducerPool([lambda gpu=use_gpu: self.__predict(gpu)], queue_size=1)
         self.batch_in = multiprocessing.Queue(maxsize=1)
@@ -36,16 +37,26 @@ class Predict(BatchFilter):
         self.net_initialized = False
 
     def setup(self):
+
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(self.upstream_spec)
+
+        self.spec.volumes[VolumeTypes.PRED_AFFINITIES] = self.spec.volumes[VolumeTypes.RAW]
+
         self.worker.start()
+
+    def get_spec(self):
+        return self.spec
 
     def teardown(self):
         self.worker.stop()
 
     def prepare(self, request):
 
-        # remove request parts that we provide
-        if VolumeTypes.PRED_AFFINITIES in request.volumes:
-            del request.volumes[VolumeTypes.PRED_AFFINITIES]
+        # remove request parts that node will provide
+        for volume_type in [VolumeTypes.PRED_AFFINITIES]:
+            if volume_type in request.volumes:
+                del request.volumes[volume_type]
 
     def process(self, batch, request):
 

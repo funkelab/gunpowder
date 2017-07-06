@@ -22,6 +22,11 @@ class RandomProvider(BatchProvider):
                     if volume_type not in provider.get_spec().volumes:
                         del self.spec.volumes[volume_type]
 
+                my_points_types = list(self.spec.points.keys())
+                for points_type in my_points_types:
+                    if points_type not in provider.get_spec().points:
+                        del self.spec.points[points_type]
+
     def get_spec(self):
         return self.spec
 

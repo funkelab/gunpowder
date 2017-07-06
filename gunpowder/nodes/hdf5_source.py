@@ -6,6 +6,7 @@ from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
+from gunpowder.points import PointsTypes, PointsOfType, SynPoint
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
@@ -36,10 +37,16 @@ class Hdf5Source(BatchProvider):
             self,
             filename,
             datasets,
+            points_types=None,
+            points_rois=None,
             resolution=None):
 
         self.filename = filename
         self.datasets = datasets
+
+        self.points_types      = points_types
+        self.points_rois = points_rois
+
         self.specified_resolution = resolution
         self.resolutions = {}
 
@@ -81,6 +88,10 @@ class Hdf5Source(BatchProvider):
 
             self.spec.volumes[volume_type] = Roi(offset, dims)
 
+        if self.points_types is not None:
+            for points_type in self.points_types:
+                self.spec.points[points_type] = self.points_rois[points_type]
+
         f.close()
 
     def get_spec(self):
@@ -115,6 +126,30 @@ class Hdf5Source(BatchProvider):
                         roi=roi,
                         resolution=self.resolutions[volume_type])
 
+            # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
+            # together s.t. ids are unique and allow to find partner locations
+            if PointsTypes.PRESYN in request.points or PointsTypes.POSTSYN in request.points:
+                assert request.points[PointsTypes.PRESYN] == request.points[PointsTypes.POSTSYN]
+                # Cremi specific, ROI offset corresponds to offset present in the
+                # synapse location relative to the raw data.
+                dataset_offset = self.get_spec().points[PointsTypes.PRESYN].get_offset()
+                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsTypes.PRESYN],
+                                                                      syn_file=f,
+                                                                      dataset_offset=dataset_offset)
+
+            for (points_type, roi) in request.points.items():
+
+                if points_type not in spec.points:
+                    raise RuntimeError("Asked for %s which this source does not provide"%points_type)
+
+                if not spec.points[points_type].contains(roi):
+                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
+
+                logger.debug("Reading %s in %s..." % (points_type, roi))
+                id_to_point = {PointsTypes.PRESYN: presyn_points, PointsTypes.POSTSYN: postsyn_points}[points_type]
+                # TODO: so far assumed that all points have resolution of raw volume
+                batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
+
         logger.debug("done")
 
         timing.stop()
@@ -123,8 +158,72 @@ class Hdf5Source(BatchProvider):
         return batch
 
     def __read(self, f, ds, roi):
-
         return np.array(f[ds][roi.get_bounding_box()])
+
+
+    def __is_inside_bb(self, location, bb_shape, bb_offset, margin=0):
+        try:
+            assert len(margin) == len(bb_shape)
+        except:
+            margin = (margin,)*len(bb_shape)
+
+        inside_bb = True
+        location  = np.asarray(location) - np.asarray(bb_offset)
+        for dim, size in enumerate(bb_shape):
+            if location[dim] < margin[dim]:
+                inside_bb = False
+            if location[dim] >= size - margin[dim]:
+                inside_bb = False
+        return inside_bb
+
+
+    def __get_syn_points(self, roi, syn_file, dataset_offset=None):
+        bb_shape, bb_offset  = roi.get_shape(), roi.get_offset()
+        presyn_points_dict, postsyn_points_dict = {}, {}
+        presyn_node_ids  = syn_file['annotations/presynaptic_site/partners'][:, 0].tolist()
+        postsyn_node_ids = syn_file['annotations/presynaptic_site/partners'][:, 1].tolist()
+
+        for node_nr, node_id in enumerate(syn_file['annotations/ids']):
+            location     = syn_file['annotations/locations'][node_nr]
+            location /= self.resolutions[VolumeTypes.RAW]
+            if dataset_offset is not None:
+                logging.debug('adding global offset to points %i %i %i' %(dataset_offset[0],
+                                                                          dataset_offset[1], dataset_offset[2]))
+                location += dataset_offset
+
+
+            # cremi synapse locations are in physical space
+            if self.__is_inside_bb(location=location, bb_shape=bb_shape, bb_offset=bb_offset, margin=0):
+                if node_id in presyn_node_ids:
+                    kind = 'PreSyn'
+                    assert syn_file['annotations/types'][node_nr] == 'presynaptic_site'
+                    syn_id = int(np.where(presyn_node_ids == node_id)[0])
+                    partner_node_id = postsyn_node_ids[syn_id]
+                elif node_id in postsyn_node_ids:
+                    kind = 'PostSyn'
+                    assert syn_file['annotations/types'][node_nr] == 'postsynaptic_site'
+                    syn_id = int(np.where(postsyn_node_ids == node_id)[0])
+                    partner_node_id = presyn_node_ids[syn_id]
+                else:
+                    raise Exception('Node id neither pre- no post-synaptic')
+
+                partners_ids = [int(partner_node_id)]
+                location_id  = int(node_id)
+
+                props = {}
+                if node_id in syn_file['annotations/comments/target_ids']:
+                    props = {'unsure': True}
+
+                # create synpaseLocation & add to dict
+                syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
+                                     synapse_id=syn_id, partner_ids=partners_ids, props=props)
+                if kind == 'PreSyn':
+                    presyn_points_dict[int(node_id)] = syn_point.get_copy()
+                elif kind == 'PostSyn':
+                    postsyn_points_dict[int(node_id)] = syn_point.get_copy()
+
+        return presyn_points_dict, postsyn_points_dict
+
 
     def __repr__(self):
 

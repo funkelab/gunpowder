@@ -31,6 +31,17 @@ class AddGtAffinities(BatchFilter):
 
         self.skip_next = False
 
+    def setup(self):
+
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(self.upstream_spec)
+
+        assert VolumeTypes.GT_LABELS in self.spec.volumes, "AddGtAffinities can only be used if you GT_LABELS provided"
+        self.spec.volumes[VolumeTypes.GT_AFFINITIES] = self.spec.volumes[VolumeTypes.GT_LABELS]
+
+    def get_spec(self):
+        return self.spec
+
     def prepare(self, request):
 
         # do nothing if no gt affinities were requested
