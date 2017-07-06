@@ -30,7 +30,7 @@ class RandomLocation(BatchFilter):
         expense of storing an integral volume of the complete mask.
 
         If 'focus_points_type' is set, only batches are returned that have at least
-        one point of focus_points_type within the roi of PointsType.focus_points_type. 
+        one point of focus_points_type within the roi of PointsTypes.focus_points_type. 
         
         Remark
         ------
@@ -43,8 +43,8 @@ class RandomLocation(BatchFilter):
 
             mask_volume_type: The volume type to use for mask checks.
             
-            focus_points_type: gunpowder.PointsType, PointsType considered when looking for good location of batch
-                                    s.t. at least one point of this PointsType is contained in batch
+            focus_points_type: gunpowder.PointsTypes, PointsTypes considered when looking for good location of batch
+                                    s.t. at least one point of this PointsTypes is contained in batch
         '''
         self.min_masked = min_masked
         self.mask_volume_type = mask_volume_type

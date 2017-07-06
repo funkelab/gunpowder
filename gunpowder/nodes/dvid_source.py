@@ -7,7 +7,7 @@ from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.points import PointsType, PointsOfType, SynPoint
+from gunpowder.points import PointsTypes, PointsOfType, SynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
@@ -109,15 +109,15 @@ class DvidSource(BatchProvider):
 
         # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
         # together s.t. the ids are unique and allow to find partner locations
-        if PointsType.PRESYN in request.points or PointsType.POSTSYN in request.points:
+        if PointsTypes.PRESYN in request.points or PointsTypes.POSTSYN in request.points:
             try:  # either both have the same roi, or only one of them is requested
-                assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
+                assert request.points[PointsTypes.PRESYN] == request.points[PointsTypes.POSTSYN]
             except:
-                assert PointsType.PRESYN not in request.points or PointsType.POSTSYN not in request.points
-            if PointsType.PRESYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.PRESYN])
-            elif PointsType.POSTSYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsType.POSTSYN])
+                assert PointsTypes.PRESYN not in request.points or PointsTypes.POSTSYN not in request.points
+            if PointsTypes.PRESYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsTypes.PRESYN])
+            elif PointsTypes.POSTSYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsTypes.POSTSYN])
 
         for (points_type, roi) in request.points.items():
             # check if requested pointstype can be provided
@@ -128,8 +128,8 @@ class DvidSource(BatchProvider):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
 
             logger.debug("Reading %s in %s..."%(points_type, roi))
-            id_to_point = {PointsType.PRESYN: presyn_points,
-                           PointsType.POSTSYN: postsyn_points}[points_type]
+            id_to_point = {PointsTypes.PRESYN: presyn_points,
+                           PointsTypes.POSTSYN: postsyn_points}[points_type]
             batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolution)
 
         logger.debug("done")
@@ -201,7 +201,7 @@ class DvidSource(BatchProvider):
     def __read_syn_points(self, roi):
         """ read json file from dvid source, in json format to craete a SynPoint for every location given """
         syn_file_json = self.__load_json_annotations(volume_shape=roi.get_shape(),  volume_offset=roi.get_offset(),
-                                                     array_name= self.points_array_names[PointsType.PRESYN])
+                                                     array_name= self.points_array_names[PointsTypes.PRESYN])
 
         presyn_points_dict, postsyn_points_dict = {}, {}
         location_to_location_id_dict, location_id_to_partner_locations = {}, {}

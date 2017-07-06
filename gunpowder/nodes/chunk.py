@@ -7,7 +7,7 @@ from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
-from gunpowder.points import PointsType, PointsOfType
+from gunpowder.points import PointsTypes, PointsOfType
 from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)

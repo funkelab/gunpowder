@@ -1,11 +1,62 @@
-from enum import Enum
-
 from .freezable import Freezable
+import logging
 
-class PointsType(Enum):
-    PRESYN  = 1
-    POSTSYN = 2
+logger = logging.getLogger(__name__)
 
+class PointsType:
+    '''Describes general properties of a points type.
+
+    Args:
+
+        identifier (string):
+            A human readable identifier for this points type. Will be used as a 
+            static attribute in :class:`PointsTypes`. Should be upper case (like 
+            ``PRESYN``, ``POSTSYN``).
+
+    '''
+
+    def __init__(self, identifier):
+        self.identifier = identifier
+        self.hash = hash(identifier)
+
+    def __eq__(self, other):
+        return hasattr(other, 'identifier') and self.identifier == other.identifier
+
+    def __hash__(self):
+        return self.hash
+
+    def __repr__(self):
+        return self.identifier
+
+class PointsTypes:
+    '''An expandable collection of points types, which initially contains:
+
+        ===================  ====================================================
+        identifier           purpose
+        ===================  ====================================================
+        ``PRESYN``           Presynaptic locations
+        ``POSTSYN``          Postsynaptic locations
+        ===================  ====================================================
+
+    New points types can be added with :func:`register_points_type`.
+    '''
+    pass
+
+def register_points_type(points_type):
+    '''Register a new points type.
+
+    For example, the following call::
+
+            register_points_type(PointsType('IDENTIFIER'))
+
+    will create a new points type available as ``PointsTypes.IDENTIFIER``. 
+    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries.
+    '''
+    logger.debug("Registering volume type " + str(points_type))
+    setattr(PointsTypes, points_type.identifier, points_type)
+
+register_points_type(PointsType('PRESYN'))
+register_points_type(PointsType('POSTSYN'))
 
 
 class PointsOfType(Freezable):
@@ -57,6 +108,3 @@ class SynPoint(BasePoint):
                                 synapse_id=self.synapse_id,
                                 partner_ids=self.partner_ids,
                                 props=self.props)
-
-
-
