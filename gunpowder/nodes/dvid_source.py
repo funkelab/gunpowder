@@ -25,7 +25,7 @@ class MaskNotProvidedException(Exception):
 class DvidSource(BatchProvider):
 
     def __init__(self, hostname, port, uuid, volume_array_names,
-                 points_array_names=None, points_rois=None,
+                 points_array_names={}, points_rois={},
                  resolution=None):
         """
         :param hostname: hostname for DVID server
