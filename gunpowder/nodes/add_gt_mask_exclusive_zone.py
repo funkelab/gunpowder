@@ -5,7 +5,6 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeTypes
-from gunpowder.points import PointsType
 
 logger = logging.getLogger(__name__)
 
