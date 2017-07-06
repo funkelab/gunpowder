@@ -56,7 +56,7 @@ class TestChunk(ProviderTest):
             }
         )
 
-        pipeline = ChunkTestSource() + Chunk(chunk_request)
+        pipeline = ChunkTestSource() + Chunk(full_request, chunk_request, num_workers=1)
 
         with build(pipeline):
             batch = pipeline.request_batch(full_request)
