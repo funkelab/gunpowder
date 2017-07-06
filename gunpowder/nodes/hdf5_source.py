@@ -6,7 +6,7 @@ from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
-from gunpowder.points import PointsType, PointsOfType, SynPoint
+from gunpowder.points import PointsTypes, PointsOfType, SynPoint
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
@@ -111,12 +111,12 @@ class Hdf5Source(BatchProvider):
 
             # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
             # together s.t. ids are unique and allow to find partner locations
-            if PointsType.PRESYN in request.points or PointsType.POSTSYN in request.points:
-                assert request.points[PointsType.PRESYN] == request.points[PointsType.POSTSYN]
+            if PointsTypes.PRESYN in request.points or PointsTypes.POSTSYN in request.points:
+                assert request.points[PointsTypes.PRESYN] == request.points[PointsTypes.POSTSYN]
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
-                dataset_offset = self.get_spec().points[PointsType.PRESYN].get_offset()
-                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsType.PRESYN],
+                dataset_offset = self.get_spec().points[PointsTypes.PRESYN].get_offset()
+                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsTypes.PRESYN],
                                                                       syn_file=f,
                                                                       dataset_offset=dataset_offset)
 
@@ -129,7 +129,7 @@ class Hdf5Source(BatchProvider):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
 
                 logger.debug("Reading %s in %s..." % (points_type, roi))
-                id_to_point = {PointsType.PRESYN: presyn_points, PointsType.POSTSYN: postsyn_points}[points_type]
+                id_to_point = {PointsTypes.PRESYN: presyn_points, PointsTypes.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
                 batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
 
