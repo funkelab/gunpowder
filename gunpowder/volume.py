@@ -36,32 +36,34 @@ class VolumeType:
 class VolumeTypes:
     '''An expandable collection of volume types, which initially contains:
 
-        ===================  ====================================================
-        identifier           purpose
-        ===================  ====================================================
-        ``RAW``              Raw intensity volumes.
-        ``ALPHA_MASK``       Alpha mask for blending
-                             raw volumes
-                             (used in :class:`DefectAugment`).
-        ``GT_LABELS``        Ground-truth object IDs.
-        ``GT_AFFINITIES``    Ground-truth affinities.
-        ``GT_MASK``          Binary mask (1-use, 0-don't use) on ground-truth. No 
-                             assumptions about masked out area (i.e., end of 
-                             ground-truth).
-        ``GT_IGNORE``        Binary mask (1-use, 0-don't use) on ground-truth. 
-                             Assumes that transition between 0 and 1 lies on an 
-                             object boundary.
-        ``PRED_AFFINITIES``  Predicted affinities.
-        ``LOSS_SCALE``       Used for element-wise multiplication with loss for
-                             training.
-        ``LOSS_GRADIENT``    Gradient of the training loss.
-        ``GT_BM_PRESYN``     Ground truth of binary map for presynaptic locations
-        ``GT_BM_PRESYN``     Ground truth of binary map for postsynaptic locations
-        ``GT_MASK_EXCLUSIVEZONE_PRESYN``    ExculsiveZone binary mask (1-use, 0-don't use) around presyn locations
-        ``GT_MASK_EXCLUSIVEZONE_POSTSYN``   ExculsiveZone binary mask (1-use, 0-don't use) around postsyn locations
-        ``PRED_BM_PRESYN``   Predicted presynaptic locations
-        ``PRED_BM_POSTSYN``  Predicted postsynaptic locations
-        ===================  ====================================================
+        =================================  ====================================================
+        identifier                         purpose
+        =================================  ====================================================
+        ``RAW``                            Raw intensity volumes.
+        ``ALPHA_MASK``                     Alpha mask for blending
+                                           raw volumes
+                                           (used in :class:`DefectAugment`).
+        ``GT_LABELS``                      Ground-truth object IDs.
+        ``GT_AFFINITIES``                  Ground-truth affinities.
+        ``GT_MASK``                        Binary mask (1-use, 0-don't use) on ground-truth. No 
+                                           assumptions about masked out area (i.e., end of 
+                                           ground-truth).
+        ``GT_IGNORE``                      Binary mask (1-use, 0-don't use) on ground-truth. 
+                                           Assumes that transition between 0 and 1 lies on an 
+                                           object boundary.
+        ``PRED_AFFINITIES``                Predicted affinities.
+        ``LOSS_SCALE``                     Used for element-wise multiplication with loss for
+                                           training.
+        ``LOSS_GRADIENT``                  Gradient of the training loss.
+        ``GT_BM_PRESYN``                   Ground truth of binary map for presynaptic locations
+        ``GT_BM_PRESYN``                   Ground truth of binary map for postsynaptic locations
+        ``GT_MASK_EXCLUSIVEZONE_PRESYN``   ExculsiveZone binary mask (1-use, 
+                                           0-don't use) around presyn locations
+        ``GT_MASK_EXCLUSIVEZONE_POSTSYN``  ExculsiveZone binary mask (1-use, 
+                                           0-don't use) around postsyn locations
+        ``PRED_BM_PRESYN``                 Predicted presynaptic locations
+        ``PRED_BM_POSTSYN``                Predicted postsynaptic locations
+        =================================  ====================================================
 
     New volume types can be added with :func:`register_volume_type`.
     '''
