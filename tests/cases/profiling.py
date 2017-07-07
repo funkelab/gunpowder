@@ -33,22 +33,22 @@ class TestProfiling(ProviderTest):
 
         profiling_stats = batch.profiling_stats
 
-        for _, timings in profiling_stats.get_timings().items():
+        for timing in profiling_stats.get_timings('DelayNode', 'prepare'):
 
-            for timing in timings:
+            self.assertTrue('DelayNode' in timing.get_node_name())
+            self.assertTrue('prepare' in timing.get_method_name())
 
-                if 'DelayNode' not in timing.get_node_name():
-                    continue
+            # is the timing for each pass correct?
+            self.assertGreaterEqual(timing.elapsed(), 0.1)
+            self.assertLessEqual(timing.elapsed(), 0.2 + 0.1) # bit of tolerance
 
-                # is the timing for each pass correct?
-                if 'prepare' in timing.get_method_name():
-                    self.assertGreaterEqual(timing.elapsed(), 0.1)
-                    self.assertLessEqual(timing.elapsed(), 0.2 + 0.1) # bit of tolerance
-                elif 'process' in timing.get_method_name():
-                    self.assertGreaterEqual(timing.elapsed(), 0.2)
-                    self.assertLessEqual(timing.elapsed(), 0.3 + 0.1) # bit of tolerance
-                else:
-                    self.assertTrue(False)
+        for timing in profiling_stats.get_timings('DelayNode', 'process'):
+
+            self.assertTrue('DelayNode' in timing.get_node_name())
+            self.assertTrue('process' in timing.get_method_name())
+
+            self.assertGreaterEqual(timing.elapsed(), 0.2)
+            self.assertLessEqual(timing.elapsed(), 0.3 + 0.1) # bit of tolerance
 
         # is the upstream time correct?
         self.assertGreaterEqual(profiling_stats.span_time(), 0.1+0.2+0.2+0.3) # total time spend upstream
