@@ -23,7 +23,7 @@ class TestProfiling(ProviderTest):
         pipeline = (
                 self.test_source +
                 DelayNode(0.1, 0.2) +
-                PrintProfilingStats() +
+                PrintProfilingStats(every=2) +
                 DelayNode(0.2, 0.3)
         )
 
@@ -33,22 +33,16 @@ class TestProfiling(ProviderTest):
 
         profiling_stats = batch.profiling_stats
 
-        for timing in profiling_stats.get_timings('DelayNode', 'prepare'):
+        summary = profiling_stats.get_timing_summary('DelayNode', 'prepare')
 
-            self.assertTrue('DelayNode' in timing.get_node_name())
-            self.assertTrue('prepare' in timing.get_method_name())
+        # is the timing for each pass correct?
+        self.assertGreaterEqual(summary.min(), 0.1)
+        self.assertLessEqual(summary.min(), 0.2 + 0.1) # bit of tolerance
 
-            # is the timing for each pass correct?
-            self.assertGreaterEqual(timing.elapsed(), 0.1)
-            self.assertLessEqual(timing.elapsed(), 0.2 + 0.1) # bit of tolerance
+        summary = profiling_stats.get_timing_summary('DelayNode', 'process')
 
-        for timing in profiling_stats.get_timings('DelayNode', 'process'):
-
-            self.assertTrue('DelayNode' in timing.get_node_name())
-            self.assertTrue('process' in timing.get_method_name())
-
-            self.assertGreaterEqual(timing.elapsed(), 0.2)
-            self.assertLessEqual(timing.elapsed(), 0.3 + 0.1) # bit of tolerance
+        self.assertGreaterEqual(summary.min(), 0.2)
+        self.assertLessEqual(summary.min(), 0.3 + 0.1) # bit of tolerance
 
         # is the upstream time correct?
         self.assertGreaterEqual(profiling_stats.span_time(), 0.1+0.2+0.2+0.3) # total time spend upstream
