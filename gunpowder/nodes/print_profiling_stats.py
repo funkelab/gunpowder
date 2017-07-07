@@ -6,6 +6,18 @@ from gunpowder.profiling import Timing, TimingSummary, ProfilingStats
 logger = logging.getLogger(__name__)
 
 class PrintProfilingStats(BatchFilter):
+    '''Print profiling information about nodes upstream of this node in the DAG.
+
+    The output also includes a ``TOTAL`` section, which shows the wall-time 
+    spent in the upstream and downstream passes. For the downstream pass, this 
+    information is not available in the first iteration, since the request-batch 
+    cycle is not completed, yet.
+
+    Args:
+
+        every (int): Collect statistics about that many batch requests and show 
+            min, max, mean, and median runtimes.
+    '''
 
     def __init__(self, every=1):
 
