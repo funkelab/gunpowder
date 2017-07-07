@@ -66,9 +66,10 @@ class AddGtBinaryMapOfPoints(BatchFilter):
             if volume_type in request.volumes:
                 binary_map = self.__get_binary_map(batch, request, points_type, volume_type, pointsoftype=batch.points[points_type],
                                                    marker='gaussian')
+                resolution = batch.points[points_type].resolution
                 batch.volumes[volume_type] = Volume(data=binary_map,
                                                     roi = request.volumes[volume_type],
-                                                    resolution = (8,8,8))
+                                                    resolution = resolution)
 
 
     def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
