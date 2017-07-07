@@ -109,7 +109,7 @@ class RandomLocation(BatchFilter):
         while not good_location_found_for_mask or not good_location_found_for_points:
             # select a random point inside ROI
             random_shift = Coordinate(
-                    randint(begin, end-1)
+                    randint(int(begin), int(end-1))
                     for begin, end in zip(shift_roi.get_begin(), shift_roi.get_end())
                                         )
             initial_random_shift = copy.deepcopy(random_shift)
@@ -138,7 +138,7 @@ class RandomLocation(BatchFilter):
                     while not good_local_shift:
                         trial_nr += 1
                         local_shift = Coordinate(
-                                    randint(begin, end)
+                                    randint(int(begin), int(end))
                                     for begin, end in zip(local_shift_roi.get_begin(), local_shift_roi.get_end()))
                         # make sure that new shift matches ROIs of all requested volumes
                         if shift_roi.contains(initial_random_shift + local_shift):
