@@ -43,19 +43,22 @@ class BatchFilter(BatchProvider):
         # 'process' for convenience
         upstream_request = copy.deepcopy(request)
 
-        timing = Timing(self)
+        timing_prepare = Timing(self, 'prepare')
 
-        timing.start()
+        timing_prepare.start()
         self.prepare(upstream_request)
-        timing.stop()
+        timing_prepare.stop()
 
         batch = self.get_upstream_provider().request_batch(upstream_request)
 
-        timing.start()
-        self.process(batch, request)
-        timing.stop()
+        timing_process = Timing(self, 'process')
 
-        batch.profiling_stats.add(timing)
+        timing_process.start()
+        self.process(batch, request)
+        timing_process.stop()
+
+        batch.profiling_stats.add(timing_prepare)
+        batch.profiling_stats.add(timing_process)
 
         return batch
 
