@@ -40,7 +40,27 @@ class PrintProfilingStats(BatchFilter):
         stats += "Profiling Stats\n"
         stats += "===============\n"
         stats += "\n"
-        stats += str(self.accumulated_stats)
+        stats += "NODE".ljust(20)
+        stats += "METHOD".ljust(10)
+        stats += "COUNTS".ljust(10)
+        stats += "MIN".ljust(10)
+        stats += "MAX".ljust(10)
+        stats += "MEAN".ljust(10)
+        stats += "MEDIAN".ljust(10)
+        stats += "\n"
+
+        for (node_name, method_name), summary in self.accumulated_stats.get_timing_summaries().items():
+
+            stats += node_name[:19].ljust(20)
+            stats += method_name[:19].ljust(10)
+            stats += ("%d"%summary.counts())[:9].ljust(10)
+            stats += ("%.2f"%summary.min())[:9].ljust(10)
+            stats += ("%.2f"%summary.max())[:9].ljust(10)
+            stats += ("%.2f"%summary.mean())[:9].ljust(10)
+            stats += ("%.2f"%summary.median())[:9].ljust(10)
+            stats += "\n"
+
+        stats += "\n"
         stats += "Time span profiled   : %.2f\n"%self.accumulated_stats.span_time()
         stats += "Time spent upstream  : %.2f\n"%total_upstream_time
         stats += "\n"

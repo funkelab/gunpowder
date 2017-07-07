@@ -133,36 +133,3 @@ class ProfilingStats(Freezable):
 
         start, stop = self.span()
         return stop - start
-
-    def __repr__(self):
-
-        rep = ""
-
-        header = ""
-        header += "NODE".ljust(20)
-        header += "METHOD".ljust(10)
-        header += "COUNTS".ljust(10)
-        header += "MIN".ljust(10)
-        header += "MAX".ljust(10)
-        header += "MEAN".ljust(10)
-        header += "MEDIAN".ljust(10)
-        header += "\n"
-        rep += header
-
-        for (node_name, method_name), timings in self.__timings.items():
-
-            times = np.array([ t.elapsed() for t in timings ])
-            row = ""
-            row += node_name[:19].ljust(20)
-            row += method_name[:19].ljust(10)
-            row += ("%d"%len(times))[:9].ljust(10)
-            row += ("%.2f"%np.min(times))[:9].ljust(10)
-            row += ("%.2f"%np.max(times))[:9].ljust(10)
-            row += ("%.2f"%np.mean(times))[:9].ljust(10)
-            row += ("%.2f"%np.median(times))[:9].ljust(10)
-            row += "\n"
-            rep += row
-
-        rep += "\nTotal time spent in recent span: %.2f\n"%self.span_time()
-
-        return rep
