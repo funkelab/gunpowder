@@ -5,7 +5,7 @@ from .freezable import Freezable
 
 class Timing(Freezable):
 
-    def __init__(self, node, method_name=''):
+    def __init__(self, node, method_name=None):
         self.__name = type(node).__name__
         self.__method_name = method_name
         self.__start = 0
