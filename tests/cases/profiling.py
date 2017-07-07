@@ -28,7 +28,7 @@ class TestProfiling(ProviderTest):
         )
 
         with build(pipeline):
-            for i in range(2):
+            for i in range(5):
                 batch = pipeline.request_batch(self.test_request)
 
         profiling_stats = batch.profiling_stats
