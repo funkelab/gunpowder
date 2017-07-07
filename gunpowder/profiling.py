@@ -9,24 +9,35 @@ class Timing(Freezable):
         self.__name = type(node).__name__
         self.__method_name = method_name
         self.__start = 0
+        self.__first_start = 0
+        self.__last_stop = 0
         self.__time = 0
         self.freeze()
 
     def start(self):
         self.__start = time.time()
+        if self.__first_start == 0:
+            self.__first_start = self.__start
 
     def stop(self):
         if self.__start == 0:
             return
-        self.__time += (time.time() - self.__start)
+        t = time.time()
+        self.__time += (t - self.__start)
         self.__start = 0
+        self.__last_stop = t
 
     def elapsed(self):
+        '''Accumulated time elapsed between calls to start() and stop().'''
 
         if self.__start == 0:
             return self.__time
 
         return self.__time + (time.time() - self.__start)
+
+    def span(self):
+        '''Timestamps of the first call to start() and last call to stop().'''
+        return self.__first_start, self.__last_stop
 
     def get_node_name(self):
         return self.__name
@@ -58,6 +69,23 @@ class ProfilingStats(Freezable):
             for timing in timings:
                 self.add(timing)
 
+    def span(self):
+        '''Timestamps of the first call to start() and last call to stop() over 
+        any timing.'''
+
+        spans = [t.span() for (_, timings) in self.__timings.items() for t in timings ]
+        first_start = min([span[0] for span in spans])
+        last_stop = max([span[1] for span in spans])
+
+        return first_start, last_stop
+
+    def span_time(self):
+        '''Time between the first call to start() and last call to stop() over 
+        any timing.'''
+
+        start, stop = self.span()
+        return stop - start
+
     def __repr__(self):
 
         rep = ""
@@ -86,5 +114,7 @@ class ProfilingStats(Freezable):
             row += ("%.2f"%np.median(times))[:9].ljust(10)
             row += "\n"
             rep += row
+
+        rep += "\nTotal time spent in recent span: %.2f\n"%self.span_time()
 
         return rep
