@@ -16,9 +16,11 @@ class Chunk(BatchFilter):
     '''Assemble a large batch by requesting smaller chunks upstream.
     '''
 
-    def __init__(self, request, chunk_spec, cache_size=50, num_workers=20):
+    def __init__(self, chunk_spec, cache_size=50, num_workers=20):
 
         self.chunk_spec_template = chunk_spec
+        self.cache_size          = cache_size
+        self.num_workers         = num_workers
         self.dims = self.chunk_spec_template.volumes[self.chunk_spec_template.volumes.keys()[0]].dims()
 
         for collection_type in [self.chunk_spec_template.volumes, self.chunk_spec_template.points]:
@@ -26,21 +28,21 @@ class Chunk(BatchFilter):
                 assert self.dims == collection_type[type].dims(),\
                     "Rois of different dimensionalities cannot be handled by chunk"
 
-        self.request = copy.deepcopy(request)
-        self.num_workers = num_workers
-        if num_workers > 1:
-            self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(num_workers) ], queue_size=cache_size)
-
-    def setup(self):
-        self.__prepare_requests()
-        if self.num_workers > 1:
-            self.workers.start()
-
     def teardown(self):
         if self.num_workers > 1:
             self.workers.stop()
 
     def provide(self, request):
+
+        self.request = copy.deepcopy(request)
+
+        # prepare and queue all requests required by chunk
+        self.__prepare_requests()
+
+        # setup several workers if num_workers > 1
+        if self.num_workers > 1:
+            self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(self.num_workers) ], queue_size=self.cache_size)
+            self.workers.start()
 
         batch = None
         for i in range(self.num_requests):
