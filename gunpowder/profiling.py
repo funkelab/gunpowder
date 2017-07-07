@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import time
 
@@ -45,10 +46,43 @@ class Timing(Freezable):
     def get_method_name(self):
         return self.__method_name
 
+class TimingSummary(Freezable):
+    '''Holds repeated Timings of the same node/method to be queried for statistics.'''
+
+    def __init__(self):
+        self.timings = []
+        self.times = []
+        self.freeze()
+
+    def add(self, timing):
+        '''Add a Timing to this summary.'''
+        self.timings.append(timing)
+        self.times.append(timing.elapsed())
+
+    def merge(self, other):
+        '''Merge another summary into this one.'''
+        for timing in other.timings:
+            self.add(timing)
+
+    def counts(self):
+        return len(self.times)
+
+    def min(self):
+        return np.min(self.times)
+
+    def max(self):
+        return np.max(self.times)
+
+    def mean(self):
+        return np.mean(self.times)
+
+    def median(self):
+        return np.median(self.times)
+
 class ProfilingStats(Freezable):
 
     def __init__(self):
-        self.__timings = {}
+        self.__summaries = {}
         self.freeze()
 
     def add(self, timing):
@@ -58,32 +92,36 @@ class ProfilingStats(Freezable):
         method_name = timing.get_method_name()
         id = (node_name, method_name)
 
-        if id not in self.__timings:
-            self.__timings[id] = []
-        self.__timings[id].append(timing)
+        if id not in self.__summaries:
+            self.__summaries[id] = TimingSummary()
+        self.__summaries[id].add(copy.deepcopy(timing))
 
     def merge_with(self, other):
-        '''Combine all Timings of two ProfilingStats.'''
+        '''Combine statitics of two ProfilingStats.'''
 
-        for _, timings in other.__timings.items():
-            for timing in timings:
-                self.add(timing)
+        for id, summary in other.__summaries.items():
+            if id in self.__summaries:
+                self.__summaries[id].merge(copy.deepcopy(summary))
+            else:
+                self.__summaries[id] = copy.deepcopy(summary)
 
-    def get_timings(self, node_name, method_name=None):
-        '''Get a list of :class:`Timing`s for the given node and method name.'''
+    def get_timing_summaries(self):
+        '''Get a dictionary (node_name,method_name) -> TimingSummary.'''
+        return self.__summaries
 
-        timings = []
-        for (n,m), nm_timings in self.__timings.items():
-            if n == node_name and m == method_name:
-                timings += nm_timings
+    def get_timing_summary(self, node_name, method_name=None):
+        '''Get a :class:`TimingSummary` for the given node and method name.'''
 
-        return timings
+        if (node_name, method_name) not in self.__summaries:
+            raise RuntimeError("No timing summary for node %s, method %s"%(node_name,method_name))
+
+        return self.__summaries[(node_name,method_name)]
 
     def span(self):
         '''Timestamps of the first call to start() and last call to stop() over 
-        any timing.'''
+        all Timings added.'''
 
-        spans = [t.span() for (_, timings) in self.__timings.items() for t in timings ]
+        spans = [t.span() for (_, summary) in self.__summaries.items() for t in summary.timings]
         first_start = min([span[0] for span in spans])
         last_stop = max([span[1] for span in spans])
 
