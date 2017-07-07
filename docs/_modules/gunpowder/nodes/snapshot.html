@@ -64,7 +64,8 @@
             <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;snapshots&#39;</span><span class="p">,</span>
             <span class="n">output_filename</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{id}</span><span class="s1">.hdf&#39;</span><span class="p">,</span>
             <span class="n">every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">additional_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">additional_request</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">compression_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        output_dir: string</span>
 
@@ -87,12 +88,20 @@
 <span class="sd">            An additional batch request to merge with the passing request, if a </span>
 <span class="sd">            snapshot is to be made. If not given, only the volumes that are in </span>
 <span class="sd">            the batch anyway are recorded.</span>
+<span class="sd">            </span>
+<span class="sd">        compression_type:</span>
+<span class="sd">            (String or int) Compression strategy.  Legal values are &#39;gzip&#39;,</span>
+<span class="sd">            &#39;szip&#39;, &#39;lzf&#39;.  If an integer in range(10), this indicates gzip</span>
+<span class="sd">            compression level. Otherwise, an integer indicates the number of a</span>
+<span class="sd">            dynamically loaded compression filter. (See h5py.groups.create_dataset())</span>
+<span class="sd">            </span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_filename</span> <span class="o">=</span> <span class="n">output_filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">every</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">every</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">additional_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span> <span class="k">if</span> <span class="n">additional_request</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">additional_request</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compression_type</span> <span class="o">=</span> <span class="n">compression_type</span>
 
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
@@ -114,7 +123,7 @@
                 <span class="k">pass</span>
 
             <span class="n">snapshot_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span><span class="n">iteration</span><span class="o">=</span><span class="n">batch</span><span class="o">.</span><span class="n">iteration</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving to &quot;</span> <span class="o">+</span> <span class="n">snapshot_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">snapshot_name</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">snapshot_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
                 <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">volume</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -129,16 +138,25 @@
                             <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">PRED_AFFINITIES</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_affs&#39;</span><span class="p">,</span>
                             <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">LOSS_SCALE</span><span class="p">:</span> <span class="s1">&#39;volumes/loss_scale&#39;</span><span class="p">,</span>
                             <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">LOSS_GRADIENT</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_affs_loss_gradient&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_BM_PRESYN</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/gt_bm_presyn&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_BM_POSTSYN</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/gt_bm_postsyn&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK_EXCLUSIVEZONE_PRESYN</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/gt_mask_exclusivezone_presyn&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK_EXCLUSIVEZONE_POSTSYN</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/gt_mask_exclusivezone_postsyn&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">PRED_BM_PRESYN</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_bm_presyn&#39;</span><span class="p">,</span>
+                            <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">PRED_BM_POSTSYN</span><span class="p">:</span> <span class="s1">&#39;volumes/predicted_bm_postsyn&#39;</span><span class="p">,</span>
                     <span class="p">}[</span><span class="n">volume_type</span><span class="p">]</span>
 
                     <span class="n">offset</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
                     <span class="n">offset</span><span class="o">*=</span> <span class="n">volume</span><span class="o">.</span><span class="n">resolution</span>
-                    <span class="n">dataset</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">ds_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">volume</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                    <span class="n">dataset</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">ds_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">volume</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compression_type</span><span class="p">)</span>
                     <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span>
                     <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">resolution</span>
 
                 <span class="k">if</span> <span class="n">batch</span><span class="o">.</span><span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">loss</span></div>
+                    <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">loss</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
 </pre></div>
 
           </div>

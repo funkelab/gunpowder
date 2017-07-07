@@ -49,19 +49,52 @@
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
-<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">ProfilingStats</span>
+<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span><span class="p">,</span> <span class="n">TimingSummary</span><span class="p">,</span> <span class="n">ProfilingStats</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PrintProfilingStats"><a class="viewcode-back" href="../../../nodes.html#gunpowder.PrintProfilingStats">[docs]</a><span class="k">class</span> <span class="nc">PrintProfilingStats</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Print profiling information about nodes upstream of this node in the DAG.</span>
+
+<span class="sd">    The output also includes a ``TOTAL`` section, which shows the wall-time </span>
+<span class="sd">    spent in the upstream and downstream passes. For the downstream pass, this </span>
+<span class="sd">    information is not available in the first iteration, since the request-batch </span>
+<span class="sd">    cycle is not completed, yet.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        every (int): Collect statistics about that many batch requests and show </span>
+<span class="sd">            min, max, mean, and median runtimes.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">every</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">every</span> <span class="o">=</span> <span class="n">every</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span> <span class="o">=</span> <span class="n">ProfilingStats</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing_summary</span> <span class="o">=</span> <span class="n">TimingSummary</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing_summary</span> <span class="o">=</span> <span class="n">TimingSummary</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="c1"># skip the first one, where we don&#39;t know how much time we spent </span>
+        <span class="c1"># downstream</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span><span class="o">.</span><span class="n">elapsed</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing_summary</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing_summary</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">print_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">every</span> <span class="o">==</span> <span class="mi">0</span>
@@ -71,15 +104,54 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">print_stats</span><span class="p">:</span>
             <span class="k">return</span>
 
+        <span class="n">span_start</span><span class="p">,</span> <span class="n">span_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span><span class="o">.</span><span class="n">span</span><span class="p">()</span>
+
         <span class="n">stats</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;Profiling Stats</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;===============</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">stats</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;NODE&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;METHOD&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;COUNTS&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;MIN&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;MAX&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;MEAN&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;MEDIAN&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">method_name</span><span class="p">),</span> <span class="n">summary</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span><span class="o">.</span><span class="n">get_timing_summaries</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">stats</span> <span class="o">+=</span> <span class="n">node_name</span><span class="p">[:</span><span class="mi">19</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="n">method_name</span><span class="p">[:</span><span class="mi">19</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">counts</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">min</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">max</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">mean</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">median</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;TOTAL&quot;</span>
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">summary</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s1">&#39;upstream&#39;</span><span class="p">,</span> <span class="s1">&#39;downstream&#39;</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing_summary</span><span class="p">]):</span>
+
+            <span class="n">stats</span> <span class="o">+=</span> <span class="n">phase</span><span class="p">[:</span><span class="mi">19</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">counts</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">min</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">max</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">mean</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">summary</span><span class="o">.</span><span class="n">median</span><span class="p">())[:</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="n">stats</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span> <span class="o">=</span> <span class="n">ProfilingStats</span><span class="p">()</span></div>
+        <span class="c1"># reset summaries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accumulated_stats</span> <span class="o">=</span> <span class="n">ProfilingStats</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__upstream_timing_summary</span> <span class="o">=</span> <span class="n">TimingSummary</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downstream_timing_summary</span> <span class="o">=</span> <span class="n">TimingSummary</span><span class="p">()</span></div>
 </pre></div>
 
           </div>

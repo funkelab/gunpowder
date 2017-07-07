@@ -84,26 +84,34 @@
 <div class="viewcode-block" id="VolumeTypes"><a class="viewcode-back" href="../../volumes.html#gunpowder.VolumeTypes">[docs]</a><span class="k">class</span> <span class="nc">VolumeTypes</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;An expandable collection of volume types, which initially contains:</span>
 
-<span class="sd">        ===================  ====================================================</span>
-<span class="sd">        identifier           purpose</span>
-<span class="sd">        ===================  ====================================================</span>
-<span class="sd">        ``RAW``              Raw intensity volumes.</span>
-<span class="sd">        ``ALPHA_MASK``       Alpha mask for blending</span>
-<span class="sd">                             raw volumes</span>
-<span class="sd">                             (used in :class:`DefectAugment`).</span>
-<span class="sd">        ``GT_LABELS``        Ground-truth object IDs.</span>
-<span class="sd">        ``GT_AFFINITIES``    Ground-truth affinities.</span>
-<span class="sd">        ``GT_MASK``          Binary mask (1-use, 0-don&#39;t use) on ground-truth. No </span>
-<span class="sd">                             assumptions about masked out area (i.e., end of </span>
-<span class="sd">                             ground-truth).</span>
-<span class="sd">        ``GT_IGNORE``        Binary mask (1-use, 0-don&#39;t use) on ground-truth. </span>
-<span class="sd">                             Assumes that transition between 0 and 1 lies on an </span>
-<span class="sd">                             object boundary.</span>
-<span class="sd">        ``PRED_AFFINITIES``  Predicted affinities.</span>
-<span class="sd">        ``LOSS_SCALE``       Used for element-wise multiplication with loss for</span>
-<span class="sd">                             training.</span>
-<span class="sd">        ``LOSS_GRADIENT``    Gradient of the training loss.</span>
-<span class="sd">        ===================  ====================================================</span>
+<span class="sd">        =================================  ====================================================</span>
+<span class="sd">        identifier                         purpose</span>
+<span class="sd">        =================================  ====================================================</span>
+<span class="sd">        ``RAW``                            Raw intensity volumes.</span>
+<span class="sd">        ``ALPHA_MASK``                     Alpha mask for blending</span>
+<span class="sd">                                           raw volumes</span>
+<span class="sd">                                           (used in :class:`DefectAugment`).</span>
+<span class="sd">        ``GT_LABELS``                      Ground-truth object IDs.</span>
+<span class="sd">        ``GT_AFFINITIES``                  Ground-truth affinities.</span>
+<span class="sd">        ``GT_MASK``                        Binary mask (1-use, 0-don&#39;t use) on ground-truth. No </span>
+<span class="sd">                                           assumptions about masked out area (i.e., end of </span>
+<span class="sd">                                           ground-truth).</span>
+<span class="sd">        ``GT_IGNORE``                      Binary mask (1-use, 0-don&#39;t use) on ground-truth. </span>
+<span class="sd">                                           Assumes that transition between 0 and 1 lies on an </span>
+<span class="sd">                                           object boundary.</span>
+<span class="sd">        ``PRED_AFFINITIES``                Predicted affinities.</span>
+<span class="sd">        ``LOSS_SCALE``                     Used for element-wise multiplication with loss for</span>
+<span class="sd">                                           training.</span>
+<span class="sd">        ``LOSS_GRADIENT``                  Gradient of the training loss.</span>
+<span class="sd">        ``GT_BM_PRESYN``                   Ground truth of binary map for presynaptic locations</span>
+<span class="sd">        ``GT_BM_PRESYN``                   Ground truth of binary map for postsynaptic locations</span>
+<span class="sd">        ``GT_MASK_EXCLUSIVEZONE_PRESYN``   ExculsiveZone binary mask (1-use, </span>
+<span class="sd">                                           0-don&#39;t use) around presyn locations</span>
+<span class="sd">        ``GT_MASK_EXCLUSIVEZONE_POSTSYN``  ExculsiveZone binary mask (1-use, </span>
+<span class="sd">                                           0-don&#39;t use) around postsyn locations</span>
+<span class="sd">        ``PRED_BM_PRESYN``                 Predicted presynaptic locations</span>
+<span class="sd">        ``PRED_BM_POSTSYN``                Predicted postsynaptic locations</span>
+<span class="sd">        =================================  ====================================================</span>
 
 <span class="sd">    New volume types can be added with :func:`register_volume_type`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -132,6 +140,13 @@
 <span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;PRED_AFFINITIES&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;LOSS_SCALE&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;LOSS_GRADIENT&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_BM_PRESYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_BM_POSTSYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_MASK_EXCLUSIVEZONE_PRESYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;GT_MASK_EXCLUSIVEZONE_POSTSYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;PRED_BM_PRESYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register_volume_type</span><span class="p">(</span><span class="n">VolumeType</span><span class="p">(</span><span class="s1">&#39;PRED_BM_POSTSYN&#39;</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 
 <span class="k">class</span> <span class="nc">Volume</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
 

@@ -70,6 +70,11 @@
                     <span class="k">if</span> <span class="n">volume_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
                         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
 
+                <span class="n">my_points_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">points_type</span> <span class="ow">in</span> <span class="n">my_points_types</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">points_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span>
+
     <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
 
