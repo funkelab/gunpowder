@@ -5,8 +5,9 @@ from .freezable import Freezable
 
 class Timing(Freezable):
 
-    def __init__(self, instance):
-        self.__name = type(instance).__name__
+    def __init__(self, node, method_name=''):
+        self.__name = type(node).__name__
+        self.__method_name = method_name
         self.__start = 0
         self.__time = 0
         self.freeze()
@@ -27,8 +28,11 @@ class Timing(Freezable):
 
         return self.__time + (time.time() - self.__start)
 
-    def get_name(self):
+    def get_node_name(self):
         return self.__name
+
+    def get_method_name(self):
+        return self.__method_name
 
 class ProfilingStats(Freezable):
 
@@ -37,18 +41,20 @@ class ProfilingStats(Freezable):
         self.freeze()
 
     def add(self, timing):
-        '''Add a Timing instance. Timings are grouped by their name'''
+        '''Add a Timing instance. Timings are grouped by their class and method names.'''
 
-        name = timing.get_name()
+        node_name = timing.get_node_name()
+        method_name = timing.get_method_name()
+        id = (node_name, method_name)
 
-        if name not in self.__timings:
-            self.__timings[name] = []
-        self.__timings[name].append(timing)
+        if id not in self.__timings:
+            self.__timings[id] = []
+        self.__timings[id].append(timing)
 
     def merge_with(self, other):
         '''Combine all Timings of two ProfilingStats.'''
 
-        for name, timings in other.__timings.items():
+        for _, timings in other.__timings.items():
             for timing in timings:
                 self.add(timing)
 
@@ -58,6 +64,7 @@ class ProfilingStats(Freezable):
 
         header = ""
         header += "NODE".ljust(20)
+        header += "METHOD".ljust(10)
         header += "COUNTS".ljust(10)
         header += "MIN".ljust(10)
         header += "MAX".ljust(10)
@@ -66,11 +73,12 @@ class ProfilingStats(Freezable):
         header += "\n"
         rep += header
 
-        for name, timings in self.__timings.items():
+        for (node_name, method_name), timings in self.__timings.items():
 
             times = np.array([ t.elapsed() for t in timings ])
             row = ""
-            row += name[:19].ljust(20)
+            row += node_name[:19].ljust(20)
+            row += method_name[:19].ljust(10)
             row += ("%d"%len(times))[:9].ljust(10)
             row += ("%.2f"%np.min(times))[:9].ljust(10)
             row += ("%.2f"%np.max(times))[:9].ljust(10)
