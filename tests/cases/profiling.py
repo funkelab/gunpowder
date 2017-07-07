@@ -16,16 +16,15 @@ class DelayNode(BatchFilter):
 
 class TestProfiling(ProviderTest):
 
-    set_verbose(False)
-
     def test_profiling(self):
+
+        set_verbose(False)
 
         pipeline = (
                 self.test_source +
                 DelayNode(0.1, 0.2) +
                 DelayNode(0.2, 0.3) +
-                PrintProfilingStats() +
-                DelayNode(0.3, 0.4)
+                PrintProfilingStats()
         )
 
         with build(pipeline):
@@ -34,22 +33,23 @@ class TestProfiling(ProviderTest):
 
         profiling_stats = batch.profiling_stats
 
-        for name, timing in profiling_stats.get_timings():
+        for _, timings in profiling_stats.get_timings().items():
 
-            self.assertTrue(timing.get_name() == name)
+            for timing in timings:
 
-            # is the timing for each pass correct?
-            if 'prepare' in name:
-                self.assertTrue(timing.elapsed() >= 0.1)
-                self.assertTrue(timing.elapsed() <= 0.2 + 0.1) # bit of tolerance
-            elif 'process' in name:
-                self.assertTrue(timing.elapsed() >= 0.2)
-                self.assertTrue(timing.elapsed() <= 0.3 + 0.1) # bit of tolerance
-            else:
-                self.assertTrue(False)
+                if 'DelayNode' not in timing.get_node_name():
+                    continue
+
+                # is the timing for each pass correct?
+                if 'prepare' in timing.get_method_name():
+                    self.assertGreaterEqual(timing.elapsed(), 0.1)
+                    self.assertLessEqual(timing.elapsed(), 0.2 + 0.1) # bit of tolerance
+                elif 'process' in timing.get_method_name():
+                    self.assertGreaterEqual(timing.elapsed(), 0.2)
+                    self.assertLessEqual(timing.elapsed(), 0.3 + 0.1) # bit of tolerance
+                else:
+                    self.assertTrue(False)
 
         # is the upstream time correct?
-        self.assertAlmostEqual(profiling_stats.upstream_total(), 0.1+0.2+0.2+0.3) # total time spend upstream
-
-        # is the downstream time correct?
-        self.assertAlmostEqual(profiling_stats.downstream_total(), 0.3+0.4) # total time spend downstream
+        self.assertGreaterEqual(profiling_stats.span_time(), 0.1+0.2+0.2+0.3) # total time spend upstream
+        self.assertLessEqual(profiling_stats.span_time(), 0.1+0.2+0.2+0.3 + 0.1) # plus bit of tolerance
