@@ -69,6 +69,16 @@ class ProfilingStats(Freezable):
             for timing in timings:
                 self.add(timing)
 
+    def get_timings(self, node_name, method_name=None):
+        '''Get a list of :class:`Timing`s for the given node and method name.'''
+
+        timings = []
+        for (n,m), nm_timings in self.__timings.items():
+            if n == node_name and m == method_name:
+                timings += nm_timings
+
+        return timings
+
     def span(self):
         '''Timestamps of the first call to start() and last call to stop() over 
         any timing.'''
