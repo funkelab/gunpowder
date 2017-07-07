@@ -12,6 +12,7 @@ class PrintProfilingStats(BatchFilter):
         self.every = every
         self.n = 0
         self.accumulated_stats = ProfilingStats()
+        self.__last_span_end = 0
 
     def process(self, batch, request):
 
@@ -23,12 +24,18 @@ class PrintProfilingStats(BatchFilter):
         if not print_stats:
             return
 
+        span_start, span_end = self.accumulated_stats.span()
+
         stats = "\n"
         stats += "Profiling Stats\n"
         stats += "===============\n"
         stats += "\n"
         stats += str(self.accumulated_stats)
+        if self.__last_span_end != 0:
+            time_since_last_span = span_start - self.__last_span_end
+            stats += "Time spend downstream          : %.2f\n"%time_since_last_span
         stats += "\n"
         logger.info(stats)
 
         self.accumulated_stats = ProfilingStats()
+        self.__last_span_end = span_end
