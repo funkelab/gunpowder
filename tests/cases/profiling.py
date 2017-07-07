@@ -23,8 +23,8 @@ class TestProfiling(ProviderTest):
         pipeline = (
                 self.test_source +
                 DelayNode(0.1, 0.2) +
-                DelayNode(0.2, 0.3) +
-                PrintProfilingStats()
+                PrintProfilingStats() +
+                DelayNode(0.2, 0.3)
         )
 
         with build(pipeline):
