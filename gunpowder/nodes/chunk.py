@@ -16,7 +16,7 @@ class Chunk(BatchFilter):
     '''Assemble a large batch by requesting smaller chunks upstream.
     '''
 
-    def __init__(self, chunk_spec, cache_size=50, num_workers=20):
+    def __init__(self, chunk_spec, cache_size=50, num_workers=1):
 
         self.chunk_spec_template = chunk_spec
         self.cache_size          = cache_size
