@@ -73,14 +73,15 @@ class PrintProfilingStats(BatchFilter):
 
         for (node_name, method_name), summary in self.accumulated_stats.get_timing_summaries().items():
 
-            stats += node_name[:19].ljust(20)
-            stats += method_name[:19].ljust(10)
-            stats += ("%d"%summary.counts())[:9].ljust(10)
-            stats += ("%.2f"%summary.min())[:9].ljust(10)
-            stats += ("%.2f"%summary.max())[:9].ljust(10)
-            stats += ("%.2f"%summary.mean())[:9].ljust(10)
-            stats += ("%.2f"%summary.median())[:9].ljust(10)
-            stats += "\n"
+            if summary.counts() > 0:
+                stats += node_name[:19].ljust(20)
+                stats += method_name[:19].ljust(10) if method_name is not None else ' '*10
+                stats += ("%d"%summary.counts())[:9].ljust(10)
+                stats += ("%.2f"%summary.min())[:9].ljust(10)
+                stats += ("%.2f"%summary.max())[:9].ljust(10)
+                stats += ("%.2f"%summary.mean())[:9].ljust(10)
+                stats += ("%.2f"%summary.median())[:9].ljust(10)
+                stats += "\n"
 
         stats += "\n"
         stats += "TOTAL"
@@ -88,13 +89,14 @@ class PrintProfilingStats(BatchFilter):
 
         for phase, summary in zip(['upstream', 'downstream'], [self.__upstream_timing_summary, self.__downstream_timing_summary]):
 
-            stats += phase[:19].ljust(30)
-            stats += ("%d"%summary.counts())[:9].ljust(10)
-            stats += ("%.2f"%summary.min())[:9].ljust(10)
-            stats += ("%.2f"%summary.max())[:9].ljust(10)
-            stats += ("%.2f"%summary.mean())[:9].ljust(10)
-            stats += ("%.2f"%summary.median())[:9].ljust(10)
-            stats += "\n"
+            if summary.counts() > 0:
+                stats += phase[:19].ljust(30)
+                stats += ("%d"%summary.counts())[:9].ljust(10)
+                stats += ("%.2f"%summary.min())[:9].ljust(10)
+                stats += ("%.2f"%summary.max())[:9].ljust(10)
+                stats += ("%.2f"%summary.mean())[:9].ljust(10)
+                stats += ("%.2f"%summary.median())[:9].ljust(10)
+                stats += "\n"
 
         stats += "\n"
 
