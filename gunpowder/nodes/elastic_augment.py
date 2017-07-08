@@ -107,7 +107,7 @@ class ElasticAugment(BatchFilter):
             )
             self.transformations[volume_type] = transformation
 
-            # update request ROI to get all voxels necessary to perfrom 
+            # update request ROI to get all voxels necessary to perfrom
             # transformation
             roi = self.__recompute_roi(roi, transformation)
             request.volumes[volume_type] = roi
@@ -127,6 +127,41 @@ class ElasticAugment(BatchFilter):
 
             # restore original ROIs
             volume.roi = request.volumes[volume_type]
+
+        for (points_type, points) in batch.points.items():
+            # create map/volume from points and apply tranformation to corresponding map, reconvert map back to points
+            # TODO: How to avoid having to allocate a new volume each time (rather reuse, but difficult since shape is alternating)
+            id_map = self.__from_points_to_idmap(points)
+            id_map = augment.apply_transformation(
+                id_map,
+                self.transformations[points_type],
+                interpolate=False)
+            self.__from_idmap_to_points(points, id_map)
+
+            # restore original ROIs
+            points.roi = request.points[points_type]
+
+    def __from_idmap_to_points(self, points, id_map):
+        ids_in_map = list(np.unique(id_map))
+        for point_id in ids_in_map:
+            if point_id == 0:
+                continue
+            locations = zip(*np.where(id_map == point_id))
+            # If there are more than one locations, heuristically grab the first one
+            new_location = locations[0]
+            points.data[point_id].location = new_location
+
+    def __from_points_to_idmap(self, points):
+        # TODO: This is partially a duplicate of add_gt_binary_map_points:get_binary_map, refactor!
+        shape_map = points.roi.get_shape()
+        # TODO: Consider problem of negative or 0 id, maybe relabel point id list.
+        id_map_volume = np.zeros(shape_map, dtype=np.int32)
+        for point_id in points.data.keys():
+            location = points.data[point_id].location
+            if points.roi.contains(Coordinate(location)):
+                # TODO: does not consider problem of having the same location for multiple point ids. Currently, the id is overwritten.
+                id_map_volume[[[loc] for loc in location]] = point_id
+        return id_map_volume
 
     def __recompute_roi(self, roi, transformation):
 
