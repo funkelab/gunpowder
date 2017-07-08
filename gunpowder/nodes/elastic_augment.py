@@ -96,23 +96,23 @@ class ElasticAugment(BatchFilter):
         # crop the parts corresponding to the requested volume ROIs
         self.transformations = {}
         logger.debug("total ROI is %s"%total_roi)
-        for (volume_type, roi) in request.volumes.items():
+        for collection_type in [request.volumes, request.points]:
+            for type, roi in collection_type.items():
+                logger.debug("downstream request ROI for %s is %s" % (type, roi))
 
-            logger.debug("downstream request ROI for %s is %s"%(volume_type,roi))
+                roi_in_total_roi = roi.shift(-total_roi.get_offset())
 
-            roi_in_total_roi = roi.shift(-total_roi.get_offset())
+                transformation = np.copy(
+                    self.total_transformation[(slice(None),) + roi_in_total_roi.get_bounding_box()]
+                )
+                self.transformations[type] = transformation
 
-            transformation = np.copy(
-                    self.total_transformation[(slice(None),)+roi_in_total_roi.get_bounding_box()]
-            )
-            self.transformations[volume_type] = transformation
+                # update request ROI to get all voxels necessary to perfrom
+                # transformation
+                roi = self.__recompute_roi(roi, transformation)
+                collection_type[type] = roi
 
-            # update request ROI to get all voxels necessary to perfrom
-            # transformation
-            roi = self.__recompute_roi(roi, transformation)
-            request.volumes[volume_type] = roi
-
-            logger.debug("upstream request roi for %s = %s"%(volume_type,roi))
+                logger.debug("upstream request roi for %s = %s" % (type, roi))
 
 
     def process(self, batch, request):
