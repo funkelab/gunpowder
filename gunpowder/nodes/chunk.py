@@ -175,7 +175,7 @@ class Chunk(BatchFilter):
                     #   in front and within roi, then max stride shifts chunk roi to begin of request roi
                     #   behind requested roi, ten max stride shifts chunk roi to end of ALL rois in request
                     # finally, clip max_stride s.t. it is not smaller than min_stride
-                    max_stride = np.zeros([3])
+                    max_stride = np.zeros([roi.dims()])
                     for dim in range(roi.dims()):
                         if request_type[type].get_end()[dim] > chunk_request_type[type].get_end()[dim]:
                             max_stride[dim] = request_type[type].get_begin()[dim] - chunk_request_type[type].get_begin()[dim]
