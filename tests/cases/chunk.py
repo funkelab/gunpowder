@@ -8,7 +8,7 @@ class ChunkTestSource(BatchProvider):
 
         spec = ProviderSpec()
         spec.volumes[VolumeTypes.RAW] = Roi((1000,1000,1000), (100,100,100))
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((1010,1010,1010), (90,90,90))
+        spec.volumes[VolumeTypes.GT_LABELS] = Roi((1005,1005,1005), (90,90,90))
         return spec
 
     def provide(self, request):
@@ -44,7 +44,7 @@ class TestChunk(ProviderTest):
         source = ChunkTestSource()
 
         raw_roi = source.get_spec().volumes[VolumeTypes.RAW]
-        labels_roi = source.get_spec().volumes[VolumeTypes.RAW]
+        labels_roi = source.get_spec().volumes[VolumeTypes.GT_LABELS]
 
         chunk_request = BatchRequest()
         chunk_request.add_volume_request(VolumeTypes.RAW, (20,15,17))
