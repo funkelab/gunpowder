@@ -83,6 +83,7 @@ class AddGtBinaryMapOfPoints(BatchFilter):
             # check if location lies inside bounding box
             if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                 shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
+                shifted_loc = shifted_loc.astype(np.int32)
                 if marker == 'point':
                     binary_map[[[loc] for loc in shifted_loc]] = 1
                 elif marker == 'gaussian':
