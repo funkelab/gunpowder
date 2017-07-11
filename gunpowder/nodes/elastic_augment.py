@@ -136,12 +136,14 @@ class ElasticAugment(BatchFilter):
             shape_map = points.roi.get_shape()
             id_map_volume = np.zeros(shape_map, dtype=np.int32)
 
-            # Get all points located in current batch
+            # Get all points located in current batch and shift it based on absolute offset.
             ids_not_mapped = []
+            offset_volume = points.roi.get_offset()
             for point_id, point in points.data.items():
                 location = point.location
                 if points.roi.contains(Coordinate(location)):
                     ids_not_mapped.append(point_id)
+                    points.data[point_id].location = location - np.asarray(offset_volume)
                 else:
                     del points.data[point_id]
 
@@ -188,17 +190,17 @@ class ElasticAugment(BatchFilter):
         relative_voxel_size = 1./(points.resolution/np.min(points.resolution))
         for point_id in ids_to_map:
             location = points.data[point_id].location.astype(np.int32)
-            if points.roi.contains(Coordinate(location)):
-                # TODO: does not consider problem of having the same location for multiple point ids.
-                # Currently, the id is overwritten.
-                if marker_size > 0:
-                    marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
-                                              min(id_map_volume.shape[dim] - 1,
-                                                  location[dim] + int(np.floor(marker_size*relative_voxel_size[dim]))))
-                                        for dim in range(len(location)))
-                else:
-                    marker_locs = [[loc] for loc in location]
-                id_map_volume[marker_locs] = point_id
+
+            # TODO: does not consider problem of having the same location for multiple point ids.
+            # Currently, the id is overwritten.
+            if marker_size > 0:
+                marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
+                                          min(id_map_volume.shape[dim] - 1,
+                                              location[dim] + int(np.floor(marker_size*relative_voxel_size[dim]))))
+                                    for dim in range(len(location)))
+            else:
+                marker_locs = [[loc] for loc in location]
+            id_map_volume[marker_locs] = point_id
         return id_map_volume
 
     def __recompute_roi(self, roi, transformation):
