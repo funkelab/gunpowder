@@ -8,6 +8,7 @@ from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
 from gunpowder.points import PointsTypes, PointsOfType
+from gunpowder.roi import Roi
 from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,13 @@ class Chunk(BatchFilter):
                 assert self.dims == collection_type[type].dims(),\
                     "Rois of different dimensionalities cannot be handled by chunk"
 
+    def setup(self):
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(self.upstream_spec)
+
+    def get_spec(self):
+        return self.spec
+
     def teardown(self):
         if self.num_workers > 1:
             self.workers.stop()
@@ -46,8 +54,6 @@ class Chunk(BatchFilter):
 
         batch = None
         for i in range(self.num_requests):
-            # get a chunk
-            # chunk = self.get_upstream_provider().request_batch(chunk_request)
             if self.num_workers > 1:
                 chunk = self.workers.get()
             else:
@@ -135,66 +141,78 @@ class Chunk(BatchFilter):
         return self.get_upstream_provider().request_batch(chosen_request)
 
     def __prepare_requests(self):
-        # prepare all request which chunk will require and store them in queue
+        ''' prepare all request which chunk will require and store them in queue '''
         self.requests = multiprocessing.Queue(maxsize=0)
 
         logger.info("batch with spec " + str(self.request) + " requested")
 
-        # minimal stride is smallest shape in template volumes because they are all centered
-        min_stride = self.chunk_spec_template.get_common_roi().get_shape()
-
-        # initial shift required per volume to be at beginning of its requested roi
+        # initial offset required per volume to be at beginning of its requested roi
         all_initial_offsets = []
         for chunk_spec_type, request_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
                                                  [self.request.volumes, self.request.points]):
             for (type, roi) in chunk_spec_type.items():
-                all_initial_offsets.append(request_type[type].get_begin() - roi.get_begin())
-        begin = np.min(all_initial_offsets, axis=0)
+                all_initial_offsets.append(request_type[type].get_begin() - roi.get_offset())
+        initial_offset = np.min(all_initial_offsets, axis=0)
 
         # max offsets required per volume to cover their entire requested roi
         all_max_offsets = []
         for chunk_spec_type, request_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
                                                  [self.request.volumes, self.request.points]):
             for (type, roi) in chunk_spec_type.items():
-                all_max_offsets.append(request_type[type].get_end()-chunk_spec_type[type].get_shape())
-        end = np.max(all_max_offsets, axis=0) + min_stride
+                all_max_offsets.append(request_type[type].get_end() - chunk_spec_type[type].get_shape()-chunk_spec_type[type].get_offset())
+        final_offset = np.max(all_max_offsets, axis=0)
 
-        offset = np.array(begin)
-        while (offset < end).all():
-
+        # check for all VolumeTypes and PointsTypes in template if requests of chunk can be provided
+        for chunk_spec_type, provider_spec_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
+                                                        [self.spec.volumes, self.spec.points]):
+            for type, roi in chunk_spec_type.items():
+                complete_chunk_roi = Roi(initial_offset+roi.get_offset(),
+                                         (final_offset - initial_offset) + roi.get_shape())
+                assert provider_spec_type[type].contains(complete_chunk_roi), "Request with current chunk template" \
+                        " request for {} (complete:  {} ) roi which lies outside of its provided roi {} ".format(type,
+                                                                        complete_chunk_roi, provider_spec_type[type])
+        offset = np.array(initial_offset)
+        covered_final_roi = False
+        while not covered_final_roi:
             # create a copy of the requested batch spec
             chunk_request = copy.deepcopy(self.request)
             max_strides = []
             # change size and offset of the batch spec
-            for chunk_spec_type, chunk_request_type, request_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
-                                                                            [chunk_request.volumes, chunk_request.points],
-                                                                            [self.request.volumes, self.request.points]):
+            for chunk_spec_type, chunk_request_type, request_type, provider_spec_type in zip([self.chunk_spec_template.volumes,
+                                                                                              self.chunk_spec_template.points],
+                                                                        [chunk_request.volumes, chunk_request.points],
+                                                                        [self.request.volumes, self.request.points],
+                                                                        [self.spec.volumes, self.spec.points]):
                 for type, roi in chunk_spec_type.items():
                     chunk_request_type[type] = roi + Coordinate(offset)
-                    # adjust stride to be as large as possible. Chunk roi lies either:
-                    #   in front and within roi, then max stride shifts chunk roi to begin of request roi
-                    #   behind requested roi, ten max stride shifts chunk roi to end of ALL rois in request
-                    # finally, clip max_stride s.t. it is not smaller than min_stride
-                    max_stride = np.zeros([3])
+                    max_stride = np.zeros([roi.dims()])
                     for dim in range(roi.dims()):
-                        if request_type[type].get_end()[dim] > chunk_request_type[type].get_end()[dim]:
-                            max_stride[dim] = request_type[type].get_begin()[dim] - chunk_request_type[type].get_begin()[dim]
+                        if chunk_request_type[type].get_end()[dim] <= (request_type[type].get_end()[dim]-chunk_spec_type[type].get_shape()[dim]):
+                            max_stride[dim] = (request_type[type].get_begin()[dim] - chunk_request_type[type].get_begin()[dim]).clip(chunk_spec_type[type].get_shape()[dim])
                         else:
-                            max_stride[dim] = end[dim] - offset[dim]
-                    max_strides.append(max_stride.clip(min_stride))
+                            if chunk_request_type[type].get_end()[dim] < request_type[type].get_end()[dim]:
+                                max_stride[dim] = np.min((chunk_spec_type[type].get_shape()[dim],
+                                                          provider_spec_type[type].get_end()[dim] -
+                                                          chunk_request_type[type].get_end()[dim]))
+                            else:
+                                max_stride[dim] = np.min((final_offset[dim]-offset[dim],
+                                                          provider_spec_type[type].get_end()[dim] - chunk_request_type[type].get_end()[dim]))
+                    max_strides.append(max_stride)
 
             stride = np.min(max_strides, axis=0)
 
             logger.info("requesting chunk " + str(chunk_request))
             self.requests.put(chunk_request)
 
+            if (offset >= final_offset).all():
+                covered_final_roi = True
             for d in range(self.dims):
-                offset[d] += stride[d]
-                if offset[d] >= end[d]:
+                if offset[d] >= final_offset[d]:
                     if d == self.dims - 1:
                         break
-                    offset[d] = begin[d]
+                    offset[d] = initial_offset[d]
                 else:
+                    offset[d] += stride[d]
                     break
 
         self.num_requests = int(self.requests.qsize())
