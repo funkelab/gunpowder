@@ -20,7 +20,6 @@ class PointTestSource3D(BatchProvider):
         return spec
 
     def provide(self, request):
-
         batch = Batch()
         roi_points = request.points[PointsTypes.PRESYN]
         roi_volume = request.volumes[VolumeTypes.GT_LABELS]
@@ -42,7 +41,10 @@ class PointTestSource3D(BatchProvider):
 class TestElasticAugment(unittest.TestCase):
 
     def test_3d_basics(self):
-        # Check correct transformation for 10 random elastic augmentations
+        # Check correct transformation of points for 10 random elastic augmentations. The correct transformation is
+        # tested by also augmenting a volume with a specific object/region labeled. The point to test is placed
+        # within the object. Augmenting the volume with the object together with the point should result in a
+        # transformed volume in which the point is still located within the object.
         for i in range(5):
             object_location = tuple([slice(30, 40), slice(30, 40), slice(30, 40)])
             points_to_test = {}
