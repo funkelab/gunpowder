@@ -21,7 +21,16 @@ class Predict(BatchFilter):
     '''Augments the batch with the predicted affinities.
     '''
 
-    def __init__(self, prototxt, weights, names_net_outputs, use_gpu=None):
+    def __init__(self, prototxt, weights, input_names_to_types, output_names_to_types, use_gpu=None):
+        '''
+        :param prototxt:                network prototxt file
+        :param weights:                 network weights file
+        :param input_names_to_types:    dict, mapping name of input volume(s) to VolumeType of input volume(s)
+                                        (e.g. {'data': VolumeType.RAW}
+        :param output_names_to_types:   dict, mapping name of output volume(s) to VolumeType of output volume(s)
+                                        (e.g. {'aff_pred': VolumeTypes.PRED_AFFINITIES})
+        :param use_gpu:                 int, gpu to use
+        '''
 
         for f in [prototxt, weights]:
             if not os.path.isfile(f):
@@ -35,14 +44,16 @@ class Predict(BatchFilter):
         self.prototxt = prototxt
         self.weights = weights
         self.net_initialized = False
-	self.names_net_outputs = names_net_outputs
+        self.input_names_to_types  = input_names_to_types
+        self.output_names_to_types = output_names_to_types
 
     def setup(self):
 
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        self.spec.volumes[VolumeTypes.PRED_AFFINITIES] = self.spec.volumes[VolumeTypes.RAW]
+        for output_name, output_type in self.output_names_to_types.items():
+            self.spec.volumes[output_type] = self.spec.volumes[VolumeTypes.RAW]
 
         self.worker.start()
 
@@ -53,11 +64,12 @@ class Predict(BatchFilter):
         self.worker.stop()
 
     def prepare(self, request):
+        self.stored_request = copy.deepcopy(request)
 
-        # remove request parts that node will provide
-        for volume_type in [VolumeTypes.PRED_AFFINITIES]:
-            if volume_type in request.volumes:
-                del request.volumes[volume_type]
+        # remove request parts that we provide
+        for output_name, output_type in self.output_names_to_types.items():
+            if output_type in request.volumes:
+                del request.volumes[output_type]
 
     def process(self, batch, request):
 
@@ -68,11 +80,10 @@ class Predict(BatchFilter):
         except WorkersDied:
             raise PredictProcessDied()
 
-        affs = out.volumes[VolumeTypes.PRED_AFFINITIES]
-        affs.roi = request.volumes[VolumeTypes.PRED_AFFINITIES]
-        affs.resolution = batch.volumes[VolumeTypes.RAW].resolution
+        for output_name, output_type in self.output_names_to_types.items():
+            batch.volumes[output_type]     = out.volumes[output_type]
+            batch.volumes[output_type].roi = self.stored_request.volumes[output_type]
 
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = affs
 
     def __predict(self, use_gpu):
 
@@ -89,7 +100,7 @@ class Predict(BatchFilter):
                 caffe.select_device(use_gpu, False)
 
             self.net = caffe.Net(self.prototxt, self.weights, caffe.TEST)
-            self.net_io = NetIoWrapper(self.net,  self.names_net_outputs)
+            self.net_io = NetIoWrapper(self.net,  self.output_names_to_types.keys())
             self.net_initialized = True
 
         start = time.time()
@@ -98,17 +109,21 @@ class Predict(BatchFilter):
 
         fetch_time = time.time() - start
 
-        self.net_io.set_inputs({
-                'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
-        })
+        for input_volume_name, input_volume_type in self.input_names_to_types.items():
+            self.net_io.set_inputs({input_volume_name: batch.volumes[input_volume_type].data[np.newaxis,np.newaxis,:]})
+
         self.net.forward()
         output = self.net_io.get_outputs()
 
         predict_time = time.time() - start
 
-        logger.info("Predict process: time=%f (including %f waiting for batch)"%(predict_time, fetch_time))
+        logger.info("Predict process: time=%f (including %f waiting for batch)" % (predict_time, fetch_time))
 
-        assert len(output['aff_pred'].shape) == 5, "Got affinity prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d"%len(output['aff_pred'].shape)
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(output['aff_pred'][0], Roi(), (1,1,1))
-
+        for output_name, output_type in self.output_names_to_types.items():
+            assert len(output[output_name].shape) == 5, "Got prediction with unexpected number of dimensions, should be 1 (direction) + 3 (spatial) + 1 (batch, not used), but is %d" % len(
+                output[output_name].shape)
+            output_shape = output[output_name][0][0].shape
+            batch.volumes[output_type] = Volume(data=output[output_name][0],
+                                                               roi=Roi((0,) * len(output_shape), output_shape),
+                                                               resolution=batch.volumes[VolumeTypes.RAW].resolution)
         return batch
