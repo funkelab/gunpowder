@@ -71,7 +71,8 @@ class Train(BatchFilter):
 
         # remove request parts that we provide
         for volume_type in self.provides:
-            del request.volumes[volume_type]
+            if volume_type in request.volumes:
+                del request.volumes[volume_type]
 
     def process(self, batch, request):
 
