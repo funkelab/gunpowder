@@ -18,5 +18,5 @@ NV_GPU=1 nvidia-docker run --rm \
     -v ${PWD}:/run \
     -w /run \
     --name ${NAME} \
-    funkey/gunpowder:latest \
-    python -u train.py
+    funkey/gunpowder:v0.2 \
+    python -u train.py 400000 0
