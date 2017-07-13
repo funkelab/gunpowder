@@ -148,7 +148,23 @@ def train_until(max_iteration, gpu):
             num_workers=10) +
 
         # perform one training iteration
-        Train(solver_parameters, use_gpu=gpu) +
+        Train(
+            solver_parameters,
+            inputs={
+                VolumeTypes.RAW: 'data',
+                VolumeTypes.GT_AFFINITIES: 'aff_label',
+            },
+            outputs={
+                VolumeTypes.PRED_AFFINITIES: 'aff_pred'
+            },
+            gradients={
+                VolumeTypes.LOSS_GRADIENT: 'aff_pred'
+            },
+            resolutions={
+                VolumeTypes.PRED_AFFINITIES: Coordinate((8,8,8)),
+                VolumeTypes.LOSS_GRADIENT: Coordinate((8,8,8)),
+            },
+            use_gpu=gpu) +
 
         # save every 100th batch into an HDF5 file for manual inspection
         Snapshot(
