@@ -147,6 +147,7 @@ class ElasticAugment(BatchFilter):
                 else:
                     del points.data[point_id]
 
+
             while not all_points_mapped:
                 marker_size = trial_nr # for each trial, the region of the point in the map is increased to increase
                 # the likelihood that the point still exists after transformation
@@ -171,6 +172,8 @@ class ElasticAugment(BatchFilter):
                     all_points_mapped = True
                 else:
                     id_map_volume.fill(0)
+                    logger.debug("elastic augmentation needs to be repeated for point id %i with "
+                                 "location %s with larger region" %(point_id, location))
 
             # restore original ROIs
             points.roi = request.points[points_type]
