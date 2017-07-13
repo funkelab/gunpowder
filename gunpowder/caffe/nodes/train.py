@@ -14,22 +14,51 @@ logger = logging.getLogger(__name__)
 class TrainProcessDied(Exception):
     pass
 
+class net_input(object):
+    def __init__(self, volume_name, volume_type):
+        self.volume_name = volume_name
+        self.volume_type = volume_type
+
+class net_output(object):
+    def __init__(self, volume_name, volume_type, gt_name, loss_volume_type):
+        self.volume_name      = volume_name
+        self.volume_type      = volume_type
+        self.gt_name          = gt_name
+        self.loss_volume_type = loss_volume_type
+
+class net_gt(object):
+    def __init__(self, volume_name, volume_type, scale_name=None, mask_volume_type=None):
+        self.volume_name      = volume_name
+        self.volume_type      = volume_type
+        self.scale_name       = scale_name
+        self.mask_volume_type = mask_volume_type
+
+
 class Train(BatchFilter):
     '''Performs one training iteration for each batch that passes through. 
     Adds the predicted affinities to the batch.
     '''
 
-    def __init__(self, solver_parameters, names_net_outputs, use_gpu=None):
+    def __init__(self, solver_parameters, net_inputs, net_outputs, net_gts, use_gpu=None):
+        '''
+        :param solver_parameters: solver_parameters
+        :param net_inputs:        list of instances of class net_input
+        :param net_outputs:       list of instances of class net_output
+        :param net_gts:           list of instances of class net_gt
+        :param use_gpu:           int, gpu to use
+        '''
 
-        # start training as a producer pool, so that we can gracefully exit if 
+        # start training as a producer pool, so that we can gracefully exit if
         # anything goes wrong
         self.worker = ProducerPool([lambda gpu=use_gpu: self.__train(gpu)], queue_size=1)
         self.batch_in = multiprocessing.Queue(maxsize=1)
 
         self.solver_parameters = solver_parameters
         self.solver_initialized = False
-	
-	self.names_net_outputs = names_net_outputs
+
+        self.net_inputs  = net_inputs
+        self.net_outputs = net_outputs
+        self.net_gts     = net_gts
 
     def setup(self):
         self.worker.start()
@@ -40,13 +69,12 @@ class Train(BatchFilter):
     def prepare(self, request):
 
         # remove request parts that we provide
-        for volume_type in [VolumeTypes.LOSS_GRADIENT, VolumeTypes.PRED_AFFINITIES]:
-            if volume_type in request.volumes:
-                del request.volumes[volume_type]
+        for netoutput in self.net_outputs:
+            if netoutput.volume_type in request.volumes:
+                del request.volumes[netoutput.volume_type]
+            if netoutput.loss_volume_type in request.volumes:
+                del request.volumes[netoutput.loss_volume_type]
 
-        # for Euclidean training, require a loss scale volume
-        if self.solver_parameters.train_state.get_stage(0) == 'euclid':
-            request.volumes[VolumeTypes.LOSS_SCALE] = request.volumes[VolumeTypes.GT_AFFINITIES]
 
     def process(self, batch, request):
 
@@ -57,9 +85,11 @@ class Train(BatchFilter):
         except WorkersDied:
             raise TrainProcessDied()
 
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = out.volumes[VolumeTypes.PRED_AFFINITIES]
-        if VolumeTypes.LOSS_GRADIENT in request.volumes:
-            batch.volumes[VolumeTypes.LOSS_GRADIENT] = out.volumes[VolumeTypes.LOSS_GRADIENT]
+        for netoutput in self.net_outputs:
+            batch.volumes[netoutput.volume_type] = out.volumes[netoutput.volume_type]
+            if netoutput.loss_volume_type in request.volumes:
+                batch.volumes[netoutput.loss_volume_type] = out.volumes[netoutput.loss_volume_type]
+
         batch.loss = out.loss
         batch.iteration = out.iteration
 
@@ -84,16 +114,20 @@ class Train(BatchFilter):
                 logger.debug("Train process: restoring solver state from " + self.solver_parameters.resume_from)
                 self.solver.restore(self.solver_parameters.resume_from)
 
-            self.net_io = NetIoWrapper(self.solver.net, self.names_net_outputs)
+            names_net_outputs = []
+            for netoutput in self.net_outputs:
+                names_net_outputs.append(netoutput.volume_name)
+            self.net_io = NetIoWrapper(self.solver.net, names_net_outputs)
 
             self.solver_initialized = True
 
         batch, request = self.batch_in.get()
 
-        data = {
-            'data': batch.volumes[VolumeTypes.RAW].data[np.newaxis,np.newaxis,:],
-            'aff_label': batch.volumes[VolumeTypes.GT_AFFINITIES].data[np.newaxis,:],
-        }
+        data = {}
+        for netinput in self.net_inputs:
+            data[netinput.volume_name] = batch.volumes[netinput.volume_type].data[np.newaxis, np.newaxis, :]
+        for netgt in self.net_gts:
+            data[netgt.volume_name] = batch.volumes[netgt.volume_type].data[np.newaxis, :]
 
         if self.solver_parameters.train_state.get_stage(0) == 'euclid':
             logger.debug("Train process: preparing input data for Euclidean training")
@@ -107,20 +141,29 @@ class Train(BatchFilter):
         loss = self.solver.step(1)
         # self.__consistency_check()
         output = self.net_io.get_outputs()
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = Volume(
-                output['aff_pred'][0],
-                batch.volumes[VolumeTypes.GT_AFFINITIES].roi,
-                batch.volumes[VolumeTypes.GT_AFFINITIES].resolution
-        )
+
+
+        for netoutput in self.net_outputs:
+            for netgt in self.net_gts:
+                if netoutput.gt_name == netgt.volume_name:
+                    gt_volume_type = netgt.volume_type
+            batch.volumes[netoutput.volume_type] = Volume(data=output[netoutput.volume_name],
+                                                       roi=batch.volumes[gt_volume_type].roi,
+                                                       resolution=batch.volumes[gt_volume_type].resolution)
+
         batch.loss = loss
         batch.iteration = self.solver.iter
-        if VolumeTypes.LOSS_GRADIENT in request.volumes:
-            diffs = self.net_io.get_output_diffs()
-            batch.volumes[VolumeTypes.LOSS_GRADIENT] = Volume(
-                    diffs['aff_pred'][0],
-                    batch.volumes[VolumeTypes.GT_AFFINITIES].roi,
-                    batch.volumes[VolumeTypes.GT_AFFINITIES].resolution
-            )
+
+        for netoutput in self.net_outputs:
+            if netoutput.loss_volume_type in request.volumes:
+                diffs = self.net_io.get_output_diffs()
+                for netgt in self.net_gts:
+                    if netoutput.gt_name == netgt.volume_name:
+                        gt_volume_type = netgt.volume_type
+                batch.volumes[netoutput.loss_volume_type] = Volume(data=diffs[netoutput.volume_name][0],
+                                                                roi=batch.volumes[gt_volume_type].roi,
+                                                                resolution=batch.volumes[gt_volume_type].resolution
+                                                                )
 
         time_of_iteration = time.time() - start
         logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))
@@ -129,7 +172,27 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        data['scale'] = batch.volumes[VolumeTypes.LOSS_SCALE].data[np.newaxis,:]
+        for netgt in self.net_gts:
+            if netgt.scale_name is not None:
+                batch_data = batch.volumes[netgt.volume_type].data
+                frac_pos = np.clip(batch_data.mean(), 0.05, 0.95)
+                w_pos = 1.0 / (2.0 * frac_pos)
+                w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
+                single_error_scale = self.__scale_errors(batch_data, w_neg, w_pos)
+
+                if netgt.mask_volume_type in batch.volumes:
+                    single_error_scale = np.multiply(single_error_scale, batch.volumes[netgt.mask_volume_type].data)
+
+                data[netgt.scale_name] = single_error_scale[np.newaxis, :]
+
+
+    def __scale_errors(self, data, factor_low, factor_high):
+        scaled_data = np.add((data >= 0.5) * factor_high, (data < 0.5) * factor_low)
+        return scaled_data
+
+    def __mask_errors(self, batch, error_scale, mask):
+        for d in range(len(batch.affinity_neighborhood)):
+            error_scale[d] = np.multiply(error_scale[d], mask)
 
     def __prepare_malis(self, batch, data):
 
@@ -153,19 +216,19 @@ class Train(BatchFilter):
         # Why don't we update gt_affinities in the same way?
         # -> not needed
         #
-        # GT affinities are all 0 in the masked area (because masked area is 
+        # GT affinities are all 0 in the masked area (because masked area is
         # assumed to be set to background in batch.gt).
         #
         # In the negative pass:
         #
-        #   We set all affinities inside GT regions to 1. Affinities in masked 
-        #   area as predicted. Belongs to one forground region (introduced 
-        #   above). But we only count loss on edges connecting different labels 
+        #   We set all affinities inside GT regions to 1. Affinities in masked
+        #   area as predicted. Belongs to one forground region (introduced
+        #   above). But we only count loss on edges connecting different labels
         #   -> loss in masked-out area only from outside regions.
         #
         # In the positive pass:
         #
-        #   We set all affinities outside GT regions to 0 -> no loss in masked 
+        #   We set all affinities outside GT regions to 0 -> no loss in masked
         #   out area.
 
     def __consistency_check(self):
