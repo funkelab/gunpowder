@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-rm snapshots/*
-rm net_iter*
-
 NAME=$(basename "$PWD")
 
 nvidia-docker rm -f $NAME
