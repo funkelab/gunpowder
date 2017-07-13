@@ -41,15 +41,17 @@ class PointTestSource3D(BatchProvider):
 class TestElasticAugment(unittest.TestCase):
 
     def test_3d_basics(self):
-        # Check correct transformation of points for 10 random elastic augmentations. The correct transformation is
+        # Check correct transformation of points for 5 random elastic augmentations. The correct transformation is
         # tested by also augmenting a volume with a specific object/region labeled. The point to test is placed
         # within the object. Augmenting the volume with the object together with the point should result in a
         # transformed volume in which the point is still located within the object.
         for i in range(5):
             object_location = tuple([slice(30, 40), slice(30, 40), slice(30, 40)])
             points_to_test = {}
-            points_to_test[1] = np.array((35, 35, 35))  # point inside object
+            points_to_test[0] = np.array((35, 35, 35))  # point inside object
             points_to_test[2] = np.array((20, 20, 20))  # point outside object
+            points_to_test[5] = np.array((35, 35, 35)) # point with different id but same location
+            points_to_test[10] = np.array((150, 150, 150)) # point should disappear because outside of roi
 
             # Random elastic augmentation hyperparameter
             subsample = randint(1, 8)
@@ -66,9 +68,14 @@ class TestElasticAugment(unittest.TestCase):
                 request.add_points_request((PointsTypes.PRESYN), (50, 50, 50))
                 request.add_volume_request((VolumeTypes.GT_LABELS), (50, 50, 50))
                 batch = pipeline.request_batch(request)
-
-                exp_loc_in_object = batch.points[PointsTypes.PRESYN].data[1].location
+                exp_loc_in_object = batch.points[PointsTypes.PRESYN].data[0].location
                 exp_loc_out_object = batch.points[PointsTypes.PRESYN].data[2].location
                 volume = batch.volumes[VolumeTypes.GT_LABELS].data
-                self.assertTrue(volume[exp_loc_in_object] == 1)
-                self.assertTrue(volume[exp_loc_out_object] == 0)
+                self.assertTrue(volume[tuple(exp_loc_in_object)] == 1)
+                self.assertTrue(volume[tuple(exp_loc_out_object)] == 0)
+                self.assertTrue(5 in batch.points[PointsTypes.PRESYN].data)
+                self.assertFalse(10 in batch.points[PointsTypes.PRESYN].data)
+
+
+if __name__ == "__main__":
+    unittest.main()
