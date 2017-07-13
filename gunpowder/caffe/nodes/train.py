@@ -168,6 +168,6 @@ class Train(BatchFilter):
 
     def __consistency_check(self):
 
-        diffs = self.net_io.get_outputs()
+        diffs = self.net_io.get_output_diffs()
         for k in diffs:
             assert not np.isnan(diffs[k]).any(), "Detected NaN in output diff " + k
