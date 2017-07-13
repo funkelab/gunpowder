@@ -1,2 +1,2 @@
-from .train import Train, net_input, net_output, net_gt
+from .train import Train
 from .predict import Predict
