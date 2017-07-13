@@ -19,7 +19,7 @@ class Train(BatchFilter):
     Adds the predicted affinities to the batch.
     '''
 
-    def __init__(self, solver_parameters, use_gpu=None):
+    def __init__(self, solver_parameters, names_net_outputs, use_gpu=None):
 
         # start training as a producer pool, so that we can gracefully exit if 
         # anything goes wrong
@@ -28,6 +28,8 @@ class Train(BatchFilter):
 
         self.solver_parameters = solver_parameters
         self.solver_initialized = False
+	
+	self.names_net_outputs = names_net_outputs
 
     def setup(self):
         self.worker.start()
@@ -82,7 +84,7 @@ class Train(BatchFilter):
                 logger.debug("Train process: restoring solver state from " + self.solver_parameters.resume_from)
                 self.solver.restore(self.solver_parameters.resume_from)
 
-            self.net_io = NetIoWrapper(self.solver.net)
+            self.net_io = NetIoWrapper(self.solver.net, self.names_net_outputs)
 
             self.solver_initialized = True
 

@@ -21,7 +21,7 @@ class Predict(BatchFilter):
     '''Augments the batch with the predicted affinities.
     '''
 
-    def __init__(self, prototxt, weights, use_gpu=None):
+    def __init__(self, prototxt, weights, names_net_outputs, use_gpu=None):
 
         for f in [prototxt, weights]:
             if not os.path.isfile(f):
@@ -35,6 +35,7 @@ class Predict(BatchFilter):
         self.prototxt = prototxt
         self.weights = weights
         self.net_initialized = False
+	self.names_net_outputs = names_net_outputs
 
     def setup(self):
 
@@ -88,7 +89,7 @@ class Predict(BatchFilter):
                 caffe.select_device(use_gpu, False)
 
             self.net = caffe.Net(self.prototxt, self.weights, caffe.TEST)
-            self.net_io = NetIoWrapper(self.net)
+            self.net_io = NetIoWrapper(self.net,  self.names_net_outputs)
             self.net_initialized = True
 
         start = time.time()
