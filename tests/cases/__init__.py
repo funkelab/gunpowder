@@ -5,3 +5,4 @@ from .points_types import TestPointsTypes
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
 from .volume_types import TestVolumeTypes
+from .elastic_augment_points import TestElasticAugment
