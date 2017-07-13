@@ -42,6 +42,8 @@ class Train(BatchFilter):
         output_resolutions (dict): Dictionary from :class:``VolumeType`` to 
             :class:``Coordinate``. This sets the resolutions of volumes created 
             by this node.
+
+        use_gpu (int): Which GPU to use. Set to ``None`` for CPU mode.
     '''
 
     def __init__(self, solver_parameters, inputs, outputs, gradients, output_resolutions, use_gpu=None):
