@@ -121,7 +121,7 @@ class Predict(BatchFilter):
         fetch_time = time.time() - start
 
         self.net_io.set_inputs({
-            input_name: batch.volumes[volume_type]
+            input_name: batch.volumes[volume_type].data
             for volume_type, input_name in self.inputs.items()
         })
 
@@ -133,7 +133,7 @@ class Predict(BatchFilter):
         logger.info("Predict process: time=%f (including %f waiting for batch)" % (predict_time, fetch_time))
 
         for volume_type, output_name in self.outputs.items():
-            batch.Volumes[volume_type] = Volume(
+            batch.volumes[volume_type] = Volume(
                     data=output[output_name][0], # strip #batch dimension
                     roi=Roi(), # dummy roi, will be corrected in process()
                     resolution=self.output_resolutions[volume_type]
