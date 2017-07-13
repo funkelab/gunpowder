@@ -7,6 +7,7 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
+from gunpowder.roi import Roi
 from gunpowder.volume import VolumeTypes, Volume
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ class Train(BatchFilter):
         for volume_type in self.provides:
             if volume_type in request.volumes:
                 batch.volumes[volume_type] = out.volumes[volume_type]
+                batch.volumes[volume_type].roi = request.volumes[volume_type]
 
         batch.loss = out.loss
         batch.iteration = out.iteration
