@@ -57,6 +57,7 @@ class Train(BatchFilter):
         self.inputs    = inputs
         self.outputs   = outputs
         self.gradients = gradients
+        self.resolutions = resolutions
 
         self.provides = self.outputs.keys() + self.gradients.keys()
 
@@ -138,7 +139,7 @@ class Train(BatchFilter):
             batch.volumes[volume_type] = Volume(
                     data=output[output_name][0], # strip #batch dimension
                     roi=Roi(), # dummy roi, will be corrected in process()
-                    self.resolutions[volume_type])
+                    resolution=self.resolutions[volume_type])
 
         if len(self.gradients) > 0:
 
@@ -148,7 +149,7 @@ class Train(BatchFilter):
                 batch.volumes[volume_type] = Volume(
                         data=diffs[output_name][0], # strip #batch dimension
                         roi=Roi(), # dummy roi, will be corrected in process()
-                        self.resolutions[volume_type])
+                        resolution=self.resolutions[volume_type])
 
         batch.loss = loss
         batch.iteration = self.solver.iter
