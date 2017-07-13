@@ -64,7 +64,6 @@ class Predict(BatchFilter):
         self.worker.stop()
 
     def prepare(self, request):
-        self.stored_request = copy.deepcopy(request)
 
         # remove request parts that we provide
         for output_name, output_type in self.output_names_to_types.items():
@@ -82,7 +81,7 @@ class Predict(BatchFilter):
 
         for output_name, output_type in self.output_names_to_types.items():
             batch.volumes[output_type]     = out.volumes[output_type]
-            batch.volumes[output_type].roi = self.stored_request.volumes[output_type]
+            batch.volumes[output_type].roi = request.volumes[output_type]
 
 
     def __predict(self, use_gpu):
