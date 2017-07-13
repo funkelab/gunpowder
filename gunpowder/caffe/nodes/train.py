@@ -158,27 +158,7 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        for netgt in self.net_gts:
-            if netgt.scale_name is not None:
-                batch_data = batch.volumes[netgt.volume_type].data
-                frac_pos = np.clip(batch_data.mean(), 0.05, 0.95)
-                w_pos = 1.0 / (2.0 * frac_pos)
-                w_neg = 1.0 / (2.0 * (1.0 - frac_pos))
-                single_error_scale = self.__scale_errors(batch_data, w_neg, w_pos)
-
-                if netgt.mask_volume_type in batch.volumes:
-                    single_error_scale = np.multiply(single_error_scale, batch.volumes[netgt.mask_volume_type].data)
-
-                data[netgt.scale_name] = single_error_scale[np.newaxis, :]
-
-
-    def __scale_errors(self, data, factor_low, factor_high):
-        scaled_data = np.add((data >= 0.5) * factor_high, (data < 0.5) * factor_low)
-        return scaled_data
-
-    def __mask_errors(self, batch, error_scale, mask):
-        for d in range(len(batch.affinity_neighborhood)):
-            error_scale[d] = np.multiply(error_scale[d], mask)
+        data['scale'] = batch.volumes[VolumeTypes.LOSS_SCALE].data
 
     def __prepare_malis(self, batch, data):
 
