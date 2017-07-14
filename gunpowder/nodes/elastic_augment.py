@@ -218,7 +218,7 @@ class ElasticAugment(BatchFilter):
             if marker_size > 0:
                 marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
                                           min(id_map_volume.shape[dim] - 1,
-                                              location[dim] + int(np.floor(marker_size*relative_voxel_size[dim]))))
+                                              location[dim] + max(int(np.floor(marker_size*relative_voxel_size[dim])), 1)))
                                     for dim in range(len(location)))
 
             else:
