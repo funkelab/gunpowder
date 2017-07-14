@@ -75,7 +75,3 @@ class TestElasticAugment(unittest.TestCase):
                 self.assertTrue(volume[tuple(exp_loc_out_object)] == 0)
                 self.assertTrue(5 in batch.points[PointsTypes.PRESYN].data)
                 self.assertFalse(10 in batch.points[PointsTypes.PRESYN].data)
-
-
-if __name__ == "__main__":
-    unittest.main()
