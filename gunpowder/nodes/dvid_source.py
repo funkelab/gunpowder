@@ -2,6 +2,7 @@ import distutils.util
 import numpy as np
 import logging
 import requests
+from copy import deepcopy
 
 from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
@@ -242,9 +243,9 @@ class DvidSource(BatchProvider):
             syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
                                     synapse_id=syn_id, partner_ids=[], props=props)
             if kind == 'PreSyn':
-                presyn_points_dict[int(node_nr)] = syn_point.get_copy()
+                presyn_points_dict[int(node_nr)] = deepcopy(syn_point)
             elif kind == 'PostSyn':
-                postsyn_points_dict[int(node_nr)] = syn_point.get_copy()
+                postsyn_points_dict[int(node_nr)] = deepcopy(syn_point)
 
         # add partner ids
         last_node_nr = len(syn_file_json)-1
