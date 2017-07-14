@@ -73,14 +73,14 @@ class Points(Freezable):
         self.freeze()
 
 
-class BasePoint(Freezable):
+class Point(Freezable):
     def __init__(self, location):
         self.location = location
 
         self.freeze()
 
 
-class SynPoint(BasePoint):
+class SynPoint(Point):
     def __init__(self, location, kind, location_id, synapse_id, partner_ids, props=None):
         """
         :param kind:        'PreSyn' or 'PostSyn' 
@@ -90,7 +90,7 @@ class SynPoint(BasePoint):
         :param partner_ids:  list of ints, location ids of synaptic partners
         :param props:        dict, properties
         """
-        BasePoint.__init__(self, location=location)
+        Point.__init__(self, location=location)
         self.thaw()
 
         self.kind         = kind

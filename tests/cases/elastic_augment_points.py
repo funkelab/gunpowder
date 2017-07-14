@@ -1,6 +1,6 @@
 import unittest
 from gunpowder import *
-from gunpowder.points import PointsTypes, Points, BasePoint
+from gunpowder.points import PointsTypes, Points, Point
 
 import numpy as np
 import math
@@ -29,7 +29,7 @@ class PointTestSource3D(BatchProvider):
         id_to_point = {}
         for point_id, location in self.point_dic.items():
             location += roi_points.get_offset()
-            id_to_point[point_id] = BasePoint(location)
+            id_to_point[point_id] = Point(location)
 
         batch.points[PointsTypes.PRESYN] = Points(data=id_to_point, roi=roi_points,
                                                  resolution=self.resolution)
