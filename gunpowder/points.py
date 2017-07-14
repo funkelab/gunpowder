@@ -81,7 +81,7 @@ class BasePoint(Freezable):
 
 
 class SynPoint(BasePoint):
-    def __init__(self, location, kind, location_id, synapse_id, partner_ids, props={}):
+    def __init__(self, location, kind, location_id, synapse_id, partner_ids, props=None):
         """
         :param kind:        'PreSyn' or 'PostSyn' 
         :param location:     ndarray, [zyx]
@@ -97,7 +97,10 @@ class SynPoint(BasePoint):
         self.location_id  = location_id
         self.synapse_id   = synapse_id
         self.partner_ids  = partner_ids
-        self.props        = props
+        if props is None:
+            self.props = {}
+        else:
+            self.props = props
 
         self.freeze()
 
