@@ -188,7 +188,6 @@ class ElasticAugment(BatchFilter):
                             del points.data[ori_point_id]
                             del relabeled_points_dic[point_id]
 
-                        logger.debug("%s" %points.roi)
                     all_points_mapped = True
                 else:
                     id_map_volume.fill(0)
