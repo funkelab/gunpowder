@@ -103,11 +103,3 @@ class SynPoint(BasePoint):
             self.props = props
 
         self.freeze()
-
-    def get_copy(self):
-        return SynPoint(kind=self.kind,
-                                location=self.location,
-                                location_id=self.location_id,
-                                synapse_id=self.synapse_id,
-                                partner_ids=self.partner_ids,
-                                props=self.props)

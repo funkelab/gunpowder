@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from copy import deepcopy
 
 from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
@@ -218,9 +219,9 @@ class Hdf5Source(BatchProvider):
                 syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
                                      synapse_id=syn_id, partner_ids=partners_ids, props=props)
                 if kind == 'PreSyn':
-                    presyn_points_dict[int(node_id)] = syn_point.get_copy()
+                    presyn_points_dict[int(node_id)] = deepcopy(syn_point)
                 elif kind == 'PostSyn':
-                    postsyn_points_dict[int(node_id)] = syn_point.get_copy()
+                    postsyn_points_dict[int(node_id)] = deepcopy(syn_point)
 
         return presyn_points_dict, postsyn_points_dict
 
