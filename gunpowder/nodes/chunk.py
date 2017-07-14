@@ -7,7 +7,7 @@ from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
-from gunpowder.points import PointsTypes, PointsOfType
+from gunpowder.points import PointsTypes, Points
 from gunpowder.roi import Roi
 from gunpowder.volume import VolumeTypes, Volume
 
@@ -68,9 +68,9 @@ class Chunk(BatchFilter):
                 self.__fill(batch.volumes[volume_type].data, volume.data,
                             request.volumes[volume_type], volume.roi)
 
-            for (points_type, points_of_type) in chunk.points.items():
-                self.__fill_points(batch.points[points_type].data, points_of_type.data,
-                                   request.points[points_type], points_of_type.roi)
+            for (points_type, points) in chunk.points.items():
+                self.__fill_points(batch.points[points_type].data, points.data,
+                                   request.points[points_type], points.roi)
 
         return batch
 
@@ -90,7 +90,7 @@ class Chunk(BatchFilter):
                                                 resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
 
         for (points_type, roi) in request.points.items():
-            batch.points[points_type] = PointsOfType(data={},
+            batch.points[points_type] = Points(data={},
                                                         roi=roi,
                                                         resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
 

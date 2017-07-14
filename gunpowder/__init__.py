@@ -6,7 +6,7 @@ from .batch_request import BatchRequest
 from .build import build
 from .coordinate import Coordinate
 from .nodes import *
-from .points import PointsTypes, PointsOfType, SynPoint, PointsType, register_points_type
+from .points import PointsTypes, Points, SynPoint, PointsType, register_points_type
 from .producer_pool import ProducerPool
 from .provider_spec import ProviderSpec
 from .roi import Roi

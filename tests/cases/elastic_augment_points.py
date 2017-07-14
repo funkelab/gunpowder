@@ -1,6 +1,6 @@
 import unittest
 from gunpowder import *
-from gunpowder.points import PointsTypes, PointsOfType, BasePoint
+from gunpowder.points import PointsTypes, Points, BasePoint
 
 import numpy as np
 import math
@@ -31,7 +31,7 @@ class PointTestSource3D(BatchProvider):
             location += roi_points.get_offset()
             id_to_point[point_id] = BasePoint(location)
 
-        batch.points[PointsTypes.PRESYN] = PointsOfType(data=id_to_point, roi=roi_points,
+        batch.points[PointsTypes.PRESYN] = Points(data=id_to_point, roi=roi_points,
                                                  resolution=self.resolution)
         batch.volumes[VolumeTypes.GT_LABELS] = Volume(image,
                                                 roi=roi_volume, resolution=self.resolution)

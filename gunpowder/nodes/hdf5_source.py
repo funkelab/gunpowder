@@ -7,7 +7,7 @@ from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
-from gunpowder.points import PointsTypes, PointsOfType, SynPoint
+from gunpowder.points import PointsTypes, Points, SynPoint
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
@@ -149,7 +149,7 @@ class Hdf5Source(BatchProvider):
                 logger.debug("Reading %s in %s..." % (points_type, roi))
                 id_to_point = {PointsTypes.PRESYN: presyn_points, PointsTypes.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
-                batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
+                batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
 
         logger.debug("done")
 

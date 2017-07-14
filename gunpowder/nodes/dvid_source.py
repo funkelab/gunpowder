@@ -8,7 +8,7 @@ from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.points import PointsTypes, PointsOfType, SynPoint
+from gunpowder.points import PointsTypes, Points, SynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
@@ -131,7 +131,7 @@ class DvidSource(BatchProvider):
             logger.debug("Reading %s in %s..."%(points_type, roi))
             id_to_point = {PointsTypes.PRESYN: presyn_points,
                            PointsTypes.POSTSYN: postsyn_points}[points_type]
-            batch.points[points_type] = PointsOfType(data=id_to_point, roi=roi, resolution=self.resolution)
+            batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=self.resolution)
 
         logger.debug("done")
 

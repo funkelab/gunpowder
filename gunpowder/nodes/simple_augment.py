@@ -56,9 +56,9 @@ class SimpleAugment(BatchFilter):
                 volume.data = volume.data.transpose(self.transpose)
         # points
         total_roi_offset = self.total_roi.get_offset()
-        for (points_type, pointsoftype) in batch.points.items():
+        for (points_type, points) in batch.points.items():
 
-            for loc_id, syn_point in pointsoftype.data.items():
+            for loc_id, syn_point in points.data.items():
                 # mirror
                 location_in_total_offset = syn_point.location - total_roi_offset
                 syn_point.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]

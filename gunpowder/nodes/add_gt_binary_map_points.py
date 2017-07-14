@@ -64,7 +64,7 @@ class AddGtBinaryMapOfPoints(BatchFilter):
 
         for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes.items()):
             if volume_type in request.volumes:
-                binary_map = self.__get_binary_map(batch, request, points_type, volume_type, pointsoftype=batch.points[points_type],
+                binary_map = self.__get_binary_map(batch, request, points_type, volume_type, points=batch.points[points_type],
                                                    marker='gaussian')
                 resolution = batch.points[points_type].resolution
                 batch.volumes[volume_type] = Volume(data=binary_map,
@@ -72,14 +72,14 @@ class AddGtBinaryMapOfPoints(BatchFilter):
                                                     resolution = resolution)
 
 
-    def __get_binary_map(self, batch, request, points_type, volume_type, pointsoftype, marker='gaussian'):
+    def __get_binary_map(self, batch, request, points_type, volume_type, points, marker='gaussian'):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
 
         shape_bm_volume  = request.volumes[volume_type].get_shape()
         offset_bm_volume = request.volumes[volume_type].get_offset()
         binary_map       = np.zeros(shape_bm_volume, dtype='uint8')
 
-        for loc_id in pointsoftype.data.keys():
+        for loc_id in points.data.keys():
             # check if location lies inside bounding box
             if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                 shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)

@@ -59,7 +59,7 @@ register_points_type(PointsType('PRESYN'))
 register_points_type(PointsType('POSTSYN'))
 
 
-class PointsOfType(Freezable):
+class Points(Freezable):
     def __init__(self, data, roi, resolution):
         """ Data structure to keep information about points locations within a ROI
         :param data:        a dictionary with node_ids as keys and SynPoint instances as values
