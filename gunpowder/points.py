@@ -62,7 +62,7 @@ register_points_type(PointsType('POSTSYN'))
 class Points(Freezable):
     def __init__(self, data, roi, resolution):
         """ Data structure to keep information about points locations within a ROI
-        :param data:        a dictionary with node_ids as keys and SynPoint instances as values
+        :param data:        a dictionary with node_ids as keys and Point instances as values
         :param roi:         Roi() (gunpowder.nodes.roi), Region of interest defined by offset and shape
         :param resolution:  n-dim tuple, list, resolution for positions of point locations 
         """
