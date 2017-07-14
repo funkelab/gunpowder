@@ -15,10 +15,12 @@ setup(
             'gunpowder.caffe.nodes',
             'gunpowder.ext'
         ],
-        install_requires = [
+        install_requires=[
             "numpy",
             "scipy",
             "h5py",
             "scikit-image",
+            "augment"
         ],
+        dependency_links=['git+https://github.com/funkey/augment#egg=augment']
 )
