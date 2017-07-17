@@ -60,7 +60,7 @@ class SimpleAugment(BatchFilter):
 
             for loc_id, syn_point in points.data.items():
                 # mirror
-                location_in_total_offset = syn_point.location - total_roi_offset
+                location_in_total_offset = np.asarray(syn_point.location) - total_roi_offset
                 syn_point.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
                                                  if m else syn_point.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
