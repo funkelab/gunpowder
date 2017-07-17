@@ -8,7 +8,7 @@ from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.points import PointsTypes, Points, SynPoint
+from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
@@ -200,7 +200,7 @@ class DvidSource(BatchProvider):
         return json_annotations
 
     def __read_syn_points(self, roi):
-        """ read json file from dvid source, in json format to craete a SynPoint for every location given """
+        """ read json file from dvid source, in json format to create a PreSynPoint/PostSynPoint for every location given """
         syn_file_json = self.__load_json_annotations(volume_shape=roi.get_shape(),  volume_offset=roi.get_offset(),
                                                      array_name= self.points_array_names[PointsTypes.PRESYN])
 
@@ -240,11 +240,13 @@ class DvidSource(BatchProvider):
                 props['multi']  = bool(distutils.util.strtobool(str_value_multi))
 
             # create synPoint with information collected so far (partner_ids not completed yet)
-            syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
-                                    synapse_id=syn_id, partner_ids=[], props=props)
             if kind == 'PreSyn':
+                syn_point = PreSynPoint(location=location, location_id=location_id,
+                                     synapse_id=syn_id, partner_ids=[], props=props)
                 presyn_points_dict[int(node_nr)] = deepcopy(syn_point)
             elif kind == 'PostSyn':
+                syn_point = PostSynPoint(location=location, location_id=location_id,
+                                     synapse_id=syn_id, partner_ids=[], props=props)
                 postsyn_points_dict[int(node_nr)] = deepcopy(syn_point)
 
         # add partner ids

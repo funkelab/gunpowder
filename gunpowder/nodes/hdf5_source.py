@@ -7,7 +7,7 @@ from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
-from gunpowder.points import PointsTypes, Points, SynPoint
+from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
@@ -198,11 +198,13 @@ class Hdf5Source(BatchProvider):
                     props = {'unsure': True}
 
                 # create synpaseLocation & add to dict
-                syn_point = SynPoint(kind=kind, location=location, location_id=location_id,
-                                     synapse_id=syn_id, partner_ids=partners_ids, props=props)
                 if kind == 'PreSyn':
+                    syn_point = PreSynPoint(location=location, location_id=location_id,
+                                         synapse_id=syn_id, partner_ids=partners_ids, props=props)
                     presyn_points_dict[int(node_id)] = deepcopy(syn_point)
                 elif kind == 'PostSyn':
+                    syn_point = PostSynPoint(location=location, location_id=location_id,
+                                         synapse_id=syn_id, partner_ids=partners_ids, props=props)
                     postsyn_points_dict[int(node_id)] = deepcopy(syn_point)
 
         return presyn_points_dict, postsyn_points_dict
