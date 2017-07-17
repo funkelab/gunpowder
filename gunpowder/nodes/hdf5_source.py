@@ -161,25 +161,7 @@ class Hdf5Source(BatchProvider):
     def __read(self, f, ds, roi):
         return np.array(f[ds][roi.get_bounding_box()])
 
-
-    def __is_inside_bb(self, location, bb_shape, bb_offset, margin=0):
-        try:
-            assert len(margin) == len(bb_shape)
-        except:
-            margin = (margin,)*len(bb_shape)
-
-        inside_bb = True
-        location  = np.asarray(location) - np.asarray(bb_offset)
-        for dim, size in enumerate(bb_shape):
-            if location[dim] < margin[dim]:
-                inside_bb = False
-            if location[dim] >= size - margin[dim]:
-                inside_bb = False
-        return inside_bb
-
-
     def __get_syn_points(self, roi, syn_file, dataset_offset=None):
-        bb_shape, bb_offset  = roi.get_shape(), roi.get_offset()
         presyn_points_dict, postsyn_points_dict = {}, {}
         presyn_node_ids  = syn_file['annotations/presynaptic_site/partners'][:, 0].tolist()
         postsyn_node_ids = syn_file['annotations/presynaptic_site/partners'][:, 1].tolist()
@@ -194,7 +176,7 @@ class Hdf5Source(BatchProvider):
 
 
             # cremi synapse locations are in physical space
-            if self.__is_inside_bb(location=location, bb_shape=bb_shape, bb_offset=bb_offset, margin=0):
+            if roi.contains(Coordinate(location)):
                 if node_id in presyn_node_ids:
                     kind = 'PreSyn'
                     assert syn_file['annotations/types'][node_nr] == 'presynaptic_site'
