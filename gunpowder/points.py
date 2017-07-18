@@ -1,5 +1,7 @@
 from .freezable import Freezable
 import logging
+import numpy as np
+from scipy.ndimage.morphology import distance_transform_edt
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +124,49 @@ class PostSynPoint(Point):
             self.props = props
 
         self.freeze()
+
+
+def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_size_physical=None):
+    """
+    Enlarge existing regions in a binary map.
+    Parameters
+    ----------
+        binary_map: numpy array
+            matrix with zeros, in which regions to be enlarged are indicated with a 1 (regions can already
+            represent larger areas)
+        marker_size_voxel: int
+            enlarged region have a marker_size (measured in voxels) margin added to
+            the already existing region (taking into account the provided voxel_size). For instance a marker_size_voxel
+            of 1 and a voxel_size of [2, 1, 1] (z, y, x) would add a voxel margin of 1 in x,y-direction and no margin
+            in z-direction.
+        voxel_size:     tuple, list or numpy array
+            indicates the physical voxel size of the binary_map.
+        marker_size_physical: int
+            if set, overwrites the marker_size_voxel parameter. Provides the margin size in physical units. For
+            instance, a voxel_size of [20, 10, 10] and marker_size_physical of 10 would add a voxel margin of 1 in
+            x,y-direction and no margin in z-direction.
+    Returns
+    ---------
+        binary_map: matrix with 0s and 1s of same dimension as input binary_map with enlarged regions (indicated with 1)
+    """
+    if voxel_size is None:
+        voxel_size = (1, 1, 1)
+    voxel_size = np.asarray(voxel_size)
+    if marker_size_physical is None:
+        voxel_size /= np.min(voxel_size)
+        marker_size = marker_size_voxel
+    else:
+        marker_size = marker_size_physical
+    binary_map = np.logical_not(binary_map)
+    binary_map = distance_transform_edt(binary_map, sampling=voxel_size)
+    binary_map = binary_map <= marker_size
+    binary_map = binary_map.astype(np.uint8)
+    return binary_map
+
+
+
+
+
+
+
+
