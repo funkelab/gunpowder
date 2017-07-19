@@ -150,7 +150,7 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
         binary_map: matrix with 0s and 1s of same dimension as input binary_map with enlarged regions (indicated with 1)
     """
     if voxel_size is None:
-        voxel_size = (1, 1, 1)
+        voxel_size = (1,)*binary_map.shape[0]
     voxel_size = np.asarray(voxel_size)
     if marker_size_physical is None:
         voxel_size /= np.min(voxel_size)
