@@ -5,6 +5,7 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.points import RasterizationSetting, enlarge_binary_map
 
 logger = logging.getLogger(__name__)
 
@@ -14,12 +15,16 @@ class AddGtMaskExclusiveZone(BatchFilter):
     regions (surrounding the ON regions) of the given binary map are set to 0, whereas all the others are set to 1.
     '''
 
-    def __init__(self, gaussian_sigma_for_zone=1):
+    def __init__(self, gaussian_sigma_for_zone=1, rasterization_setting=None):
         ''' Add ExclusiveZone mask for given binary map as volume to batch
             Args:
                 gaussian_sigma_for_zone: float, defines extend of exclusive zone around ON region in binary map
          '''
         self.gaussian_sigma_for_zone = gaussian_sigma_for_zone
+        if rasterization_setting is None:
+            self.rasterization_setting = RasterizationSetting()
+        else:
+            self.rasterization_setting = rasterization_setting
         self.skip_next = False
 
 
@@ -71,14 +76,15 @@ class AddGtMaskExclusiveZone(BatchFilter):
         for EZ_mask_type in self.EZ_masks_to_create:
             binary_map_type = self.EZ_masks_to_binary_map[EZ_mask_type]
             binary_map = batch.volumes[binary_map_type].data
-
-            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape())
+            resolution = batch.volumes[binary_map_type].resolution
+            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape(),
+                                                    resolution=resolution)
 
             batch.volumes[EZ_mask_type] = Volume(data= EZ_mask,
                                                  roi=request.volumes[EZ_mask_type],
-                                                 resolution=batch.volumes[binary_map_type].resolution)
+                                                 resolution=resolution)
 
-    def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask):
+    def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask, resolution=None):
         ''' Exclusive zone surrounds every synapse. Created by enlarging the ON regions of given binary map
         with different gaussian filter, make it binary and subtract the original binary map from it '''
 
@@ -86,10 +92,17 @@ class AddGtMaskExclusiveZone(BatchFilter):
         slices = [slice(diff, shape - diff) for diff, shape in zip(shape_diff, binary_map.shape)]
         relevant_binary_map = binary_map[slices]
 
-        BM_enlarged_cont = ndimage.filters.gaussian_filter(relevant_binary_map.astype('float32'),
-                                                           sigma=self.gaussian_sigma_for_zone)
-        BM_enlarged_binary = np.zeros_like(relevant_binary_map)
-        BM_enlarged_binary[np.nonzero(BM_enlarged_cont)] = 1
+        if self.rasterization_setting.marker_type == 'gaussian':
+            BM_enlarged_cont = ndimage.filters.gaussian_filter(relevant_binary_map.astype('float32'),
+                                                               sigma=self.gaussian_sigma_for_zone)
+            BM_enlarged_binary = np.zeros_like(relevant_binary_map)
+            BM_enlarged_binary[np.nonzero(BM_enlarged_cont)] = 1
+        elif self.rasterization_setting.marker_type == 'blob':
+            BM_enlarged_binary = enlarge_binary_map(relevant_binary_map,
+                                                    marker_size_voxel=self.rasterization_setting.marker_size_voxel,
+                                                    voxel_size=resolution,
+                                                    marker_size_physical=self.rasterization_setting.marker_size_physical)
+
 
         exclusive_zone = np.ones_like(BM_enlarged_binary) - (BM_enlarged_binary - relevant_binary_map)
         return exclusive_zone
