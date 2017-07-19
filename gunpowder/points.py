@@ -164,6 +164,15 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
     return binary_map
 
 
+class RasterizationSetting(Freezable):
+    def __init__(self, marker_size_voxel=1, marker_size_physical=None, marker_type='blob'):
+        self.thaw()
+        self.marker_size_voxel = marker_size_voxel
+        self.marker_size_physical = marker_size_physical
+        self.marker_type = marker_type # allowed marker types are blob or gaussian
+        self.freeze()
+
+
 
 
 
