@@ -165,17 +165,29 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
 
 
 class RasterizationSetting(Freezable):
-    def __init__(self, marker_size_voxel=1, marker_size_physical=None,
-                 marker_type='blob', stay_inside_volumetype=None):
+    '''Data structure to store parameters for rasterization of points.
+    Args:
+        marker_size_voxel (int): parameter only used, when marker_size_physical is not set/set to None. Specifies the
+        blob radius in voxel units.
+
+        marker_size_physical (int): if set, overwrites the marker_size_voxel parameter. Provides the radius size in
+        physical units. For instance, a points resolution of [20, 10, 10] and marker_size_physical of 10 would create a
+        blob with a radius of 1 in x,y-direction and no radius in z-direction.
+
+        stay_inside_volumetype (Volume.VolumeType): specified volume is used to mask out created blobs. The volume is
+        assumed to contain discrete objects. The object id at the specific point being rasterized is used to crop the
+        blob. Blob regions that are located outside of the object are masked out, such that the blob is only inside the
+        specific object.
+
+    Notes:
+        Takes the resolution provided for the respective points into account. Eg. anistropic resolutions result in
+        anistropict blob creations, as expected.
+    '''
+    def __init__(self, marker_size_voxel=1, marker_size_physical=None, stay_inside_volumetype=None):
         self.thaw()
-        assert marker_type == 'gaussian' or marker_type == 'blob', \
-            "Marker type %s not known. Valid marker types are 'gaussian' or 'blob'" %marker_type
-        if stay_inside_volumetype is not None:
-            assert marker_type == 'blob', "stay_inside_volumetype option is only implemented for marker type 'blob'"
         self.marker_size_voxel = marker_size_voxel
         self.marker_size_physical = marker_size_physical
-        self.marker_type = marker_type # allowed marker types are blob or gaussian
-        self.stay_inside_volumetype = stay_inside_volumetype # indicate volumetype to mask out blobs
+        self.stay_inside_volumetype = stay_inside_volumetype
         self.freeze()
 
 

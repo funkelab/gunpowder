@@ -92,16 +92,11 @@ class AddGtMaskExclusiveZone(BatchFilter):
         slices = [slice(diff, shape - diff) for diff, shape in zip(shape_diff, binary_map.shape)]
         relevant_binary_map = binary_map[slices]
 
-        if self.rasterization_setting.marker_type == 'gaussian':
-            BM_enlarged_cont = ndimage.filters.gaussian_filter(relevant_binary_map.astype('float32'),
-                                                               sigma=self.gaussian_sigma_for_zone)
-            BM_enlarged_binary = np.zeros_like(relevant_binary_map)
-            BM_enlarged_binary[np.nonzero(BM_enlarged_cont)] = 1
-        elif self.rasterization_setting.marker_type == 'blob':
-            BM_enlarged_binary = enlarge_binary_map(relevant_binary_map,
-                                                    marker_size_voxel=self.rasterization_setting.marker_size_voxel,
-                                                    voxel_size=resolution,
-                                                    marker_size_physical=self.rasterization_setting.marker_size_physical)
+
+        BM_enlarged_binary = enlarge_binary_map(relevant_binary_map,
+                                                marker_size_voxel=self.rasterization_setting.marker_size_voxel,
+                                                voxel_size=resolution,
+                                                marker_size_physical=self.rasterization_setting.marker_size_physical)
 
 
         exclusive_zone = np.ones_like(BM_enlarged_binary) - (BM_enlarged_binary - relevant_binary_map)
