@@ -165,16 +165,10 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
 
 
 class RasterizationSetting(Freezable):
-    def __init__(self, marker_size_voxel=1, marker_size_physical=None,
-                 marker_type='blob', stay_inside_volumetype=None):
+    def __init__(self, marker_size_voxel=1, marker_size_physical=None, stay_inside_volumetype=None):
         self.thaw()
-        assert marker_type == 'gaussian' or marker_type == 'blob', \
-            "Marker type %s not known. Valid marker types are 'gaussian' or 'blob'" %marker_type
-        if stay_inside_volumetype is not None:
-            assert marker_type == 'blob', "stay_inside_volumetype option is only implemented for marker type 'blob'"
         self.marker_size_voxel = marker_size_voxel
         self.marker_size_physical = marker_size_physical
-        self.marker_type = marker_type # allowed marker types are blob or gaussian
         self.stay_inside_volumetype = stay_inside_volumetype # indicate volumetype to mask out blobs
         self.freeze()
 
