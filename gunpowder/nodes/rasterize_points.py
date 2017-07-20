@@ -11,7 +11,7 @@ from gunpowder.points import PointsTypes, RasterizationSetting, enlarge_binary_m
 
 logger = logging.getLogger(__name__)
 
-class AddGtBinaryMapOfPoints(BatchFilter):
+class RasterizePoints(BatchFilter):
     ''' Create binary map for points of given PointsType in batch and add it as volume to batch '''
     def __init__(self, pointstype_to_volumetypes, pointstype_to_rastersettings=None):
         ''' Add binary map of given PointsType as volume to batch.
