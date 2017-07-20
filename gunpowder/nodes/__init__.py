@@ -1,5 +1,5 @@
 from .add_gt_affinities import AddGtAffinities
-from .add_gt_binary_map_points import AddGtBinaryMapOfPoints
+from .rasterize_points import RasterizePoints
 from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
 from .balance_affinity_labels import BalanceAffinityLabels
 from .batch_filter import BatchFilter
