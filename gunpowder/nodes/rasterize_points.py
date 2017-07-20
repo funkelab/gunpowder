@@ -89,13 +89,29 @@ class RasterizePoints(BatchFilter):
         else:
             raster_setting = RasterizationSetting()
         marker = raster_setting.marker_type
+        if raster_setting.stay_inside_volumetype is not None:
+            mask = batch.volumes[raster_setting.stay_inside_volumetype].data
+            assert binary_map.shape == mask.shape
+            binary_map_total = np.zeros_like(binary_map)
+
         for loc_id in points.data.keys():
             # check if location lies inside bounding box
             if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                 shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
                 shifted_loc = shifted_loc.astype(np.int32)
+                if raster_setting.stay_inside_volumetype is not None:
+                    # Get id of this location in the mask
+                    object_id = mask[[[loc] for loc in shifted_loc]]
                 if marker == 'blob':
                     binary_map[[[loc] for loc in shifted_loc]] = 1
+                    if raster_setting.stay_inside_volumetype is not None:
+                        binary_map = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
+                               marker_size_physical=raster_setting.marker_size_physical,
+                               voxel_size=batch.points[points_type].resolution)
+                        binary_map[mask != object_id] = 0
+                        binary_map_total += binary_map
+                        binary_map.fill(0)
+
                 elif marker == 'gaussian':
                     marker_size = 1
                     marker_locs = tuple( slice( max(0, shifted_loc[dim] - marker_size),
@@ -106,13 +122,15 @@ class RasterizePoints(BatchFilter):
                     # resulting in a binary map which is OFF at those locations instead of ON.
                     binary_map[marker_locs] = 255
 
-
         # return mask where location is marked as a blob. Set marker_size_voxel to 0, if you require a single point.
         if marker == 'blob':
-            binary_map = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
-                               marker_size_physical=raster_setting.marker_size_physical,
-                               voxel_size=batch.points[points_type].resolution)
-            return binary_map
+            if raster_setting.stay_inside_volumetype is not None:
+                binary_map_total[binary_map_total != 0] = 1
+                return binary_map_total
+            else:
+                return enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
+                                   marker_size_physical=raster_setting.marker_size_physical,
+                                   voxel_size=batch.points[points_type].resolution)
 
         # return mask where location is marked as a gaussian 'blob', produces more square like blobs and does not
         # take into account anisotropy of the data.
