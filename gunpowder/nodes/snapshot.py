@@ -96,6 +96,8 @@ class Snapshot(BatchFilter):
                             VolumeTypes.GT_MASK_EXCLUSIVEZONE_POSTSYN: 'volumes/labels/gt_mask_exclusivezone_postsyn',
                             VolumeTypes.PRED_BM_PRESYN: 'volumes/predicted_bm_presyn',
                             VolumeTypes.PRED_BM_POSTSYN: 'volumes/predicted_bm_postsyn',
+                            VolumeTypes.LOSS_SCALE_BM_PRESYN: 'volumes/loss_scale_presyn',
+                            VolumeTypes.LOSS_SCALE_BM_POSTSYN: 'volumes/loss_scale_postsyn',
                     }[volume_type]
 
                     offset = volume.roi.get_offset()
