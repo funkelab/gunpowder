@@ -43,10 +43,13 @@ class Train(BatchFilter):
             :class:``Coordinate``. This sets the resolutions of volumes created 
             by this node.
 
+        loss_scales (dict): Dictionary from :class:``VolumeType`` of the loss scale to
+            the name of the loss scale in the network.
+
         use_gpu (int): Which GPU to use. Set to ``None`` for CPU mode.
     '''
 
-    def __init__(self, solver_parameters, inputs, outputs, gradients, output_resolutions, use_gpu=None):
+    def __init__(self, solver_parameters, inputs, outputs, gradients, output_resolutions, loss_scales, use_gpu=None):
 
         # start training as a producer pool, so that we can gracefully exit if
         # anything goes wrong
@@ -60,6 +63,7 @@ class Train(BatchFilter):
         self.outputs   = outputs
         self.gradients = gradients
         self.output_resolutions = output_resolutions
+        self.loss_scales = loss_scales
 
         self.provides = self.outputs.keys() + self.gradients.keys()
 
@@ -164,7 +168,8 @@ class Train(BatchFilter):
 
     def __prepare_euclidean(self, batch, data):
 
-        data['scale'] = batch.volumes[VolumeTypes.LOSS_SCALE].data
+        for volume_type, name in self.loss_scales.items():
+            data[name] = batch.volumes[volume_type].data
 
     def __prepare_malis(self, batch, data):
 
