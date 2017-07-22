@@ -1,4 +1,4 @@
-from .balance_affinity_labels import TestBalanceAffinityLabels
+from .balance_labels import TestBalanceLabels
 from .chunk import TestChunk
 from .normalize import TestNormalize
 from .points_types import TestPointsTypes

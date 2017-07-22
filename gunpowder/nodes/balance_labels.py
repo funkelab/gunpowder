@@ -5,7 +5,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class BalanceAffinityLabels(BatchFilter):
+class BalanceLabels(BatchFilter):
     '''Creates a LOSS_SCALE volume that balances the loss between positive and 
     negative affinities.
     '''
