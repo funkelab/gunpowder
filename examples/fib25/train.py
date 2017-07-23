@@ -143,7 +143,6 @@ def train_until(max_iteration, gpu):
 
         # use 10 workers to pre-cache batches of the above pipeline
         PreCache(
-            request,
             cache_size=40,
             num_workers=10) +
 
