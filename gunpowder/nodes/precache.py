@@ -46,12 +46,12 @@ class PreCache(BatchFilter):
         if request != self.current_request:
 
             if self.workers is not None:
-                logger.debug("stopping current workers...")
+                logger.info("stopping current workers...")
                 self.workers.stop()
 
             self.current_request = copy.deepcopy(request)
 
-            logger.debug("starting new set of workers...")
+            logger.info("starting new set of workers...")
             self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(self.num_workers) ], queue_size=self.cache_size)
             self.workers.start()
 
