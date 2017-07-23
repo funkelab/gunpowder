@@ -79,7 +79,6 @@ def train():
         ZeroOutConstSections() +
         BalanceAffinityLabels() +
         PreCache(
-            request,
             cache_size=10,
             num_workers=5) +
         Snapshot(every=1, output_filename='final_it={iteration}_id={id}.hdf') +

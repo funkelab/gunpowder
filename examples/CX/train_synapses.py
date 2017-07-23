@@ -79,7 +79,7 @@ def train(max_iteration):
                             SimpleAugment(transpose_only_xy=True) +
                             IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
                             IntensityScaleShift(2, -1) +
-                            PreCache(request) +
+                            PreCache() +
                             Train(solver_parameters, net_inputs, net_outputs, net_gts, use_gpu=0) +
                             Snapshot(every=5000, output_filename='batch_{id}.hdf')
                           )

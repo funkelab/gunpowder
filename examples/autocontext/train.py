@@ -78,7 +78,6 @@ def train():
         ZeroOutConstSections() +
         SplitAndRenumberSegmentationLabels() +
         PreCache(
-            request,
             cache_size=10,
             num_workers=5) +
         AddDummyPredictions() +

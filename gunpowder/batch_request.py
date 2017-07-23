@@ -72,6 +72,18 @@ class BatchRequest(Freezable):
                 roi = collection_type[type]
                 collection_type[type] = roi.shift(center - roi.get_center())
 
+    def __eq__(self, other):
+
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+
+    def __ne__(self, other):
+
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
     def __repr__(self):
 
         r = ""
