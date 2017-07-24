@@ -55,7 +55,7 @@ class Hdf5Source(BatchProvider):
             if ds not in f:
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
 
-            dims = f[ds].shape
+            dims = Coordinate(f[ds].shape)
 
             if self.ndims is None:
                 self.ndims = len(dims)
@@ -108,7 +108,7 @@ class Hdf5Source(BatchProvider):
                 roi_shape = roi.get_shape()
                 voxel_size = volume_type.voxel_size
 
-                for d in range(len(roi.dims())):
+                for d in range(roi.dims()):
                     assert roi_shape[d]%voxel_size[d] == 0, \
                             "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
                                     request,
