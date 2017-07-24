@@ -33,8 +33,7 @@ class DownSampleTestSource(BatchProvider):
 
             batch.volumes[volume_type] = Volume(
                     data,
-                    roi,
-                    Coordinate((4,4,4)))
+                    roi)
         return batch
 
 class TestDownSample(ProviderTest):

@@ -34,7 +34,7 @@ class PointTestSource3D(BatchProvider):
         batch.points[PointsTypes.PRESYN] = Points(data=id_to_point, roi=roi_points,
                                                  resolution=self.resolution)
         batch.volumes[VolumeTypes.GT_LABELS] = Volume(image,
-                                                roi=roi_volume, resolution=self.resolution)
+                                                roi=roi_volume)
         return batch
 
 
