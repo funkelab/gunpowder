@@ -70,11 +70,17 @@ class ElasticAugment(BatchFilter):
         dims = len(total_roi.get_shape())
 
         self.voxel_size = None
+        prev_volume_type = None
         for volume_type in request.volumes.keys():
             if self.voxel_size is None:
                 self.voxel_size = volume_type.voxel_size
             else:
-                assert self.voxel_size == volume_type.voxel_size, "ElasticAugment can only be used with volumes of same voxel sizes."
+                assert self.voxel_size == volume_type.voxel_size, \
+                        "ElasticAugment can only be used with volumes of same voxel sizes, " \
+                        "but %s has %s, and %s has %s."%(
+                                volume_type, volume_type.voxel_size,
+                                prev_volume_type, prev_volume_type.voxel_size)
+            prev_volume_type = volume_type
 
         # get total roi in voxels
         total_roi /= self.voxel_size
