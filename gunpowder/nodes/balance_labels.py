@@ -41,8 +41,9 @@ class BalanceLabels(BatchFilter):
 
         for (label_volume, loss_scale_volume) in self.labels_to_loss_scale_volume.items():
             assert label_volume in self.spec.volumes, "Asked to balance labels {}, which are not provided.".format(label_volume)
-            for mask_volume in self.labels_to_mask_volumes[label_volume]:
-                assert mask_volume in self.spec.volumes, "Asked to apply mask ({}) to balance labels, but mask is not provided.".format(mask_volume)
+            if label_volume in self.labels_to_mask_volumes:
+                for mask_volume in self.labels_to_mask_volumes[label_volume]:
+                    assert mask_volume in self.spec.volumes, "Asked to apply mask ({}) to balance labels, but mask is not provided.".format(mask_volume)
             self.spec.volumes[loss_scale_volume] = self.spec.volumes[label_volume]
 
     def get_spec(self):
@@ -70,8 +71,9 @@ class BalanceLabels(BatchFilter):
             error_scale = np.ones(labels.data.shape, dtype=np.float)
 
             # set error_scale to 0 in masked-out areas
-            for mask_volume in self.labels_to_mask_volumes[label_volume]:
-                self.__mask_error_scale(error_scale, batch.volumes[mask_volume].data)
+            if label_volume in self.labels_to_mask_volumes:
+                for mask_volume in self.labels_to_mask_volumes[label_volume]:
+                    self.__mask_error_scale(error_scale, batch.volumes[mask_volume].data)
 
             # in the masked-in area, compute the fraction of positive samples
             masked_in = error_scale.sum()
