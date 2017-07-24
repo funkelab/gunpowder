@@ -1,4 +1,6 @@
 from .freezable import Freezable
+from gunpowder.coordinate import Coordinate
+import copy
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,7 @@ class VolumeType:
     def __init__(self, identifier, interpolate, voxel_size=(1,1,1)):
         self.identifier = identifier
         self.interpolate = interpolate
-        self.voxel_size = voxel_size
+        self.voxel_size = Coordinate(voxel_size)
         self.hash = hash(identifier)
 
     def __eq__(self, other):
