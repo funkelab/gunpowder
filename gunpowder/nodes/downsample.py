@@ -72,22 +72,22 @@ class DownSample(BatchFilter):
 
             input_roi = batch.volumes[input_volume].roi
             request_roi = request.volumes[output_volume]
-            input_resolution = batch.volumes[input_volume].resolution
-            request_resolution = input_resolution*f
+            input_voxel_size = input_volume.voxel_size
+            request_voxel_size = input_voxel_size*f
 
             assert input_roi.contains(request_roi)
             for d in range(input_roi.dims()):
-                assert request_roi.get_offset()[d]%input_resolution[d] == 0, \
-                        "request ROI %s for %s does not align with input resolution of %s"%(request_roi, output_volume, input_resolution)
-                assert request_roi.get_offset()[d]%request_resolution[d] == 0, \
-                        "request ROI %s for %s does not align with requested resolution of %s"%(request_roi, output_volume, request_resolution)
+                assert request_roi.get_offset()[d]%input_voxel_size[d] == 0, \
+                        "request ROI %s for %s does not align with input voxel size of %s"%(request_roi, output_volume, input_voxel_size)
+                assert request_roi.get_offset()[d]%request_voxel_size[d] == 0, \
+                        "request ROI %s for %s does not align with requested voxel size of %s"%(request_roi, output_volume, request_voxel_size)
 
             # get data corresponding to request roi
-            data_roi = request_roi/input_resolution
-            data_roi -= input_roi.get_begin()/input_resolution
+            data_roi = request_roi/input_voxel_size
+            data_roi -= input_roi.get_begin()/input_voxel_size
             data = batch.volumes[input_volume].data[data_roi.get_bounding_box()]
 
-            logger.debug("input ROI: %s, input resolution: %s, request ROI: %s, data roi: %s"%(input_roi, input_resolution, request_roi, data_roi))
+            logger.debug("input ROI: %s, input voxel size: %s, request ROI: %s, data roi: %s"%(input_roi, input_voxel_size, request_roi, data_roi))
 
             # downsample
             if isinstance(f, tuple):
@@ -99,13 +99,13 @@ class DownSample(BatchFilter):
 
             data = data[slices]
 
-            assert request_resolution*data.shape == request_roi.get_shape(), "%s*%s != %s"%(request_resolution, data.shape, request_roi.get_shape())
+            assert request_voxel_size*data.shape == request_roi.get_shape(), "%s*%s != %s"%(request_voxel_size, data.shape, request_roi.get_shape())
 
             # create output volume
             batch.volumes[output_volume] = Volume(
                     data,
                     request_roi,
-                    request_resolution)
+                    request_voxel_size)
 
         # restore requested rois
         for input_volume, downsample in self.volume_factors.items():
@@ -121,9 +121,9 @@ class DownSample(BatchFilter):
                 assert input_roi.contains(request_roi)
 
                 logger.debug("restoring original request roi %s of %s from %s"%(request_roi, input_volume, input_roi))
-                resolution = batch.volumes[input_volume].resolution
-                data_roi = request_roi/resolution
-                data_roi -= batch.volumes[input_volume].roi.get_begin()/resolution
+                voxel_size = input_volume.voxel_size
+                data_roi = request_roi/voxel_size
+                data_roi -= batch.volumes[input_volume].roi.get_begin()/voxel_size
                 data = batch.volumes[input_volume].data[data_roi.get_bounding_box()]
                 batch.volumes[input_volume].data = data
                 batch.volumes[input_volume].roi = request_roi
