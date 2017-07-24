@@ -16,6 +16,7 @@ from .intensity_scale_shift import IntensityScaleShift
 from .normalize import Normalize
 from .pad import Pad
 from .precache import PreCache
+from .prepare_malis import PrepareMalis
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
 from .random_provider import RandomProvider

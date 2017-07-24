@@ -98,6 +98,7 @@ class Snapshot(BatchFilter):
                             VolumeTypes.PRED_BM_POSTSYN: 'volumes/predicted_bm_postsyn',
                             VolumeTypes.LOSS_SCALE_BM_PRESYN: 'volumes/loss_scale_presyn',
                             VolumeTypes.LOSS_SCALE_BM_POSTSYN: 'volumes/loss_scale_postsyn',
+                            VolumeTypes.MALIS_COMP_LABEL: 'volumes/labels/malis_comp_label'
                     }[volume_type]
 
                     offset = volume.roi.get_offset()
