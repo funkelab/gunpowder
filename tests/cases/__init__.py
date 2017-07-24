@@ -1,5 +1,6 @@
 from .balance_affinity_labels import TestBalanceAffinityLabels
 from .chunk import TestChunk
+from .downsample import TestDownSample
 from .elastic_augment_points import TestElasticAugment
 from .normalize import TestNormalize
 from .points_types import TestPointsTypes
