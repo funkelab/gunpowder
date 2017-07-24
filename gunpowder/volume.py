@@ -17,11 +17,15 @@ class VolumeType:
             Indicates whether voxels can be interpolated (as for intensities) or 
             not (as for labels). This will be used by nodes that perform data 
             augmentations.
+
+        voxel_size (tuple of int):
+            The size of a voxel in world units.
     '''
 
-    def __init__(self, identifier, interpolate):
+    def __init__(self, identifier, interpolate, voxel_size):
         self.identifier = identifier
         self.interpolate = interpolate
+        self.voxel_size = voxel_size
         self.hash = hash(identifier)
 
     def __eq__(self, other):
@@ -104,10 +108,9 @@ register_volume_type(VolumeType('LOSS_GRADIENT_POSTSYN', interpolate=False))
 
 class Volume(Freezable):
 
-    def __init__(self, data, roi, resolution):
+    def __init__(self, data, roi):
 
         self.roi = roi
-        self.resolution = resolution
         self.data = data
 
         self.freeze()
