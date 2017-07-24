@@ -25,7 +25,7 @@ class Train(BatchFilter):
             solver to use for training, contains the network description as 
             well.
 
-        inputs (dict): Dictionary from :class:``VolumeType`` to the names of 
+        inputs (dict): Dictionary from :class:``VolumeType`` to the names of
             input layers in the network.
 
         outputs (dict): Dictionary from :class:``VolumeType`` to the names of 
@@ -124,11 +124,6 @@ class Train(BatchFilter):
         data = {}
         for volume_type, input_name in self.inputs.items():
             data[input_name] = batch.volumes[volume_type].data
-
-        if self.solver_parameters.train_state.get_stage(0) == 'malis':
-            logger.debug("Train process: preparing input data for Malis training")
-            self.__prepare_malis(batch, data)
-
         self.net_io.set_inputs(data)
 
         loss = self.solver.step(1)
@@ -158,43 +153,6 @@ class Train(BatchFilter):
         logger.info("Train process: iteration=%d loss=%f time=%f"%(self.solver.iter,batch.loss,time_of_iteration))
 
         return batch
-
-    def __prepare_malis(self, batch, data):
-
-        gt_labels = batch.volumes[VolumeTypes.GT_LABELS]
-        next_id = gt_labels.data.max() + 1
-
-        gt_pos_pass = gt_labels.data
-
-        if VolumeTypes.GT_IGNORE in batch.volumes:
-
-            gt_neg_pass = np.array(gt_labels.data)
-            gt_neg_pass[batch.volumes[VolumeTypes.GT_IGNORE].data==0] = next_id
-
-        else:
-
-            gt_neg_pass = gt_pos_pass
-
-        data['comp_label'] = np.array([gt_neg_pass, gt_pos_pass])
-        data['nhood'] = batch.affinity_neighborhood
-
-        # Why don't we update gt_affinities in the same way?
-        # -> not needed
-        #
-        # GT affinities are all 0 in the masked area (because masked area is
-        # assumed to be set to background in batch.gt).
-        #
-        # In the negative pass:
-        #
-        #   We set all affinities inside GT regions to 1. Affinities in masked
-        #   area as predicted. Belongs to one forground region (introduced
-        #   above). But we only count loss on edges connecting different labels
-        #   -> loss in masked-out area only from outside regions.
-        #
-        # In the positive pass:
-        #
-        #   We set all affinities outside GT regions to 0 -> no loss in masked
-        #   out area.
 
     def __consistency_check(self):
 
