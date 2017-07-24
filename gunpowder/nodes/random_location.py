@@ -69,6 +69,7 @@ class RandomLocation(BatchFilter):
 
             logger.info("allocating mask integral volume...")
 
+            self.mask_resolution = mask_batch.volumes[self.mask_volume_type].resolution
             mask_data = mask_batch.volumes[self.mask_volume_type].data
             mask_integral_dtype = np.uint64
             logger.debug("mask size is " + str(mask_data.size))
@@ -163,7 +164,8 @@ class RandomLocation(BatchFilter):
                 request_mask_roi = request_mask_roi.shift(random_shift)
 
                 # get coordinates inside mask volume
-                request_mask_roi_in_volume = request_mask_roi.shift(-self.mask_roi.get_offset())
+                request_mask_roi_in_volume = request_mask_roi/self.mask_resolution
+                request_mask_roi_in_volume -= self.mask_roi.get_offset()/self.mask_resolution
 
                 # get number of masked-in voxels
                 num_masked_in = integrate(
@@ -172,7 +174,7 @@ class RandomLocation(BatchFilter):
                         [request_mask_roi_in_volume.get_end()-(1,)*self.mask_integral.ndim]
                 )[0]
 
-                mask_ratio = float(num_masked_in)/request_mask_roi.size()
+                mask_ratio = float(num_masked_in)/request_mask_roi_in_volume.size()
                 logger.debug("mask ratio is %f"%mask_ratio)
 
                 if mask_ratio >= self.min_masked:
