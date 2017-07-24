@@ -1,5 +1,6 @@
 import copy
 import logging
+from gunpowder.coordinate import Coordinate
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +54,14 @@ class BatchProvider(object):
             )
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
-            dims = len(roi.get_shape())
-            assert volume.data.shape[-dims:] == roi.get_shape(), "%s ROI %s requested, but shape of volume is %s provided by %s."%(
+            dims = roi.dims()
+            data_shape = Coordinate(volume.data.shape[-dims:])
+            assert data_shape == roi.get_shape()/volume.resolution, "%s ROI %s requested, but size of volume is %s*%s=%s provided by %s."%(
                     volume_type,
                     roi,
-                    volume.data.shape,
+                    data_shape,
+                    volume.resolution,
+                    data_shape*volume.resolution,
                     type(self).__name__
             )
 
