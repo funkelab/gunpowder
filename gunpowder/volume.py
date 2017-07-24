@@ -22,7 +22,7 @@ class VolumeType:
             The size of a voxel in world units.
     '''
 
-    def __init__(self, identifier, interpolate, voxel_size):
+    def __init__(self, identifier, interpolate, voxel_size=(1,1,1)):
         self.identifier = identifier
         self.interpolate = interpolate
         self.voxel_size = voxel_size
