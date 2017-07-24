@@ -115,4 +115,27 @@ class Volume(Freezable):
         self.roi = roi
         self.data = data
 
+        voxel_size = self.get_voxel_size()
+        for d in range(len(voxel_size)):
+            assert voxel_size[d]*data.shape[-self.roi.dims()+d] == roi.get_shape()[d], \
+                    "ROI %s does not align with voxel size %s * data shape %s"%(roi, voxel_size, data.shape)
+
         self.freeze()
+
+    def get_voxel_size(self):
+
+        return self.roi.get_shape()/self.data.shape[-self.roi.dims():]
+
+    def crop(self, roi):
+        '''Create a cropped copy of this Volume.'''
+
+        assert self.roi.contains(roi)
+
+        voxel_size = self.get_voxel_size()
+        data_roi = (roi - self.roi.get_offset())/voxel_size
+        slices = data_roi.get_bounding_box()
+
+        while len(slices) < len(self.data.shape):
+            slices = (slice(None),) + slices
+
+        return Volume(self.data[slices], copy.deepcopy(roi))
