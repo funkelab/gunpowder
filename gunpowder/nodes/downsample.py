@@ -12,8 +12,8 @@ class DownSample(BatchFilter):
 
     Args:
 
-        volume_factors (dict): Dictionary mapping source :class:`VolumeType` to․
-            a tuple `(f, volume_type)` of downsampling factor `f` and target․
+        volume_factors (dict): Dictionary mapping target :class:`VolumeType` to․
+            a tuple `(f, volume_type)` of downsampling factor `f` and source․
             :class:`VolumeType`. `f` can be a single integer or a tuple of 
             integers, one for each dimension of the volume to downsample.
     ''' 
@@ -21,26 +21,21 @@ class DownSample(BatchFilter):
     def __init__(self, volume_factors):
 
         self.volume_factors = volume_factors
-        self.outputs = []
 
-        for input_volume, downsample in volume_factors.items():
+        for output_volume, downsample in volume_factors.items():
 
-            assert isinstance(input_volume, VolumeType)
+            assert isinstance(output_volume, VolumeType)
             assert isinstance(downsample, tuple)
             assert len(downsample) == 2
-            f, output_volume = downsample
-            assert isinstance(output_volume, VolumeType)
+            f, input_volume = downsample
+            assert isinstance(input_volume, VolumeType)
             assert isinstance(f, numbers.Number) or isinstance(f, tuple), "Scaling factor should be a number or a tuple of numbers."
-            assert output_volume not in self.outputs, "Output volume type %s is used twice."%output_volume
-
-            self.outputs.append(output_volume)
-
 
     def prepare(self, request):
 
-        for input_volume, downsample in self.volume_factors.items():
+        for output_volume, downsample in self.volume_factors.items():
 
-            f, output_volume = downsample
+            f, input_volume = downsample
 
             if output_volume not in request.volumes:
                 continue
@@ -63,9 +58,9 @@ class DownSample(BatchFilter):
 
     def process(self, batch, request):
 
-        for input_volume, downsample in self.volume_factors.items():
+        for output_volume, downsample in self.volume_factors.items():
 
-            f, output_volume = downsample
+            f, input_volume = downsample
 
             if output_volume not in request.volumes:
                 continue
