@@ -17,7 +17,9 @@ class PrepareMalis(BatchFilter):
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        self.spec.volumes[VolumeTypes.MALIS_COMP_LABEL] = self.spec.volumes[VolumeTypes.GT_LABELS]
+        # only give warning that GT_LABELS is missing, in prepare() when checked that node is not skipped
+        if VolumeTypes.GT_LABELS in self.spec.volumes:
+            self.spec.volumes[VolumeTypes.MALIS_COMP_LABEL] = self.spec.volumes[VolumeTypes.GT_LABELS]
 
     def get_spec(self):
         return self.spec
@@ -74,17 +76,3 @@ class PrepareMalis(BatchFilter):
         #
         #   We set all affinities outside GT regions to 0 -> no loss in masked
         #   out area.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
