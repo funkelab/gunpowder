@@ -47,8 +47,10 @@ class TestDownSample(ProviderTest):
 
         source = DownSampleTestSource()
 
-        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True))
-        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False))
+        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=(4,4,4)))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=(4,4,4)))
+        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True, voxel_size=(8,8,8)))
+        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False, voxel_size=(8,8,8)))
 
         request = BatchRequest()
         request.add_volume_request(VolumeTypes.RAW, (200,200,200))
@@ -87,13 +89,11 @@ class TestDownSample(ProviderTest):
 
                 self.assertTrue(volume.data[0,0,0] == 30)
                 self.assertTrue(volume.data[1,0,0] == 32)
-                self.assertTrue(volume.resolution == (8,8,8))
 
             elif volume_type == VolumeTypes.GT_LABELS_DOWNSAMPLED:
 
                 self.assertTrue(volume.data[0,0,0] == 0)
                 self.assertTrue(volume.data[1,0,0] == 2)
-                self.assertTrue(volume.resolution == (8,8,8))
 
             else:
 
