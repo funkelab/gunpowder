@@ -48,16 +48,14 @@ class DownSample(BatchFilter):
             logger.debug("preparing downsampling of " + str(input_volume))
 
             request_roi = request.volumes[output_volume]
-            scaled_roi = self.__scale_roi(request_roi, f)
-
-            logger.debug("needed request for %s in %s is %s in %s"%(request_roi, output_volume, scaled_roi, input_volume))
+            logger.debug("request ROI is %s"%request_roi)
 
             # add or merge to batch request
             if input_volume in request.volumes:
-                request.volumes[input_volume] = request.volumes[input_volume].union(scaled_roi)
+                request.volumes[input_volume] = request.volumes[input_volume].union(request_roi)
                 logger.debug("merging with existing request to %s"%request.volumes[input_volume])
             else:
-                request.volumes[input_volume] = scaled_roi
+                request.volumes[input_volume] = request_roi
                 logger.debug("adding as new request")
 
             # remove volume type provided by us
@@ -72,14 +70,24 @@ class DownSample(BatchFilter):
             if output_volume not in request.volumes:
                 continue
 
-            request_roi = request.volumes[output_volume]
-            scaled_roi = self.__scale_roi(request_roi, f)
             input_roi = batch.volumes[input_volume].roi
+            request_roi = request.volumes[output_volume]
+            input_resolution = batch.volumes[input_volume].resolution
+            request_resolution = input_resolution*f
 
-            assert input_roi.contains(scaled_roi)
+            assert input_roi.contains(request_roi)
+            for d in range(input_roi.dims()):
+                assert request_roi.get_offset()[d]%input_resolution[d] == 0, \
+                        "request ROI %s for %s does not align with input resolution of %s"%(request_roi, output_volume, input_resolution)
+                assert request_roi.get_offset()[d]%request_resolution[d] == 0, \
+                        "request ROI %s for %s does not align with requested resolution of %s"%(request_roi, output_volume, request_resolution)
 
-            # get data corresponding to scaled roi
-            data = batch.volumes[input_volume].data[(scaled_roi - input_roi.get_begin()).get_bounding_box()]
+            # get data corresponding to request roi
+            data_roi = request_roi/input_resolution
+            data_roi -= input_roi.get_begin()/input_resolution
+            data = batch.volumes[input_volume].data[data_roi.get_bounding_box()]
+
+            logger.debug("input ROI: %s, input resolution: %s, request ROI: %s, data roi: %s"%(input_roi, input_resolution, request_roi, data_roi))
 
             # downsample
             if isinstance(f, tuple):
@@ -91,13 +99,13 @@ class DownSample(BatchFilter):
 
             data = data[slices]
 
-            assert data.shape == request_roi.get_shape()
+            assert request_resolution*data.shape == request_roi.get_shape(), "%s*%s != %s"%(request_resolution, data.shape, request_roi.get_shape())
 
             # create output volume
             batch.volumes[output_volume] = Volume(
                     data,
                     request_roi,
-                    batch.volumes[input_volume].resolution*f)
+                    request_resolution)
 
         # restore requested rois
         for input_volume, downsample in self.volume_factors.items():
@@ -113,16 +121,9 @@ class DownSample(BatchFilter):
                 assert input_roi.contains(request_roi)
 
                 logger.debug("restoring original request roi %s of %s from %s"%(request_roi, input_volume, input_roi))
-
-                data = batch.volumes[input_volume].data[(request_roi - input_roi.get_begin()).get_bounding_box()]
+                resolution = batch.volumes[input_volume].resolution
+                data_roi = request_roi/resolution
+                data_roi -= batch.volumes[input_volume].roi.get_begin()/resolution
+                data = batch.volumes[input_volume].data[data_roi.get_bounding_box()]
                 batch.volumes[input_volume].data = data
                 batch.volumes[input_volume].roi = request_roi
-
-    def __scale_roi(self, roi, f):
-
-        prev_center = roi.get_center()
-        scaled_roi = roi*f
-        new_center = scaled_roi.get_center()
-        scaled_roi = scaled_roi - (new_center - prev_center)
-
-        return scaled_roi
