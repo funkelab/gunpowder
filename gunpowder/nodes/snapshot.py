@@ -86,7 +86,6 @@ class Snapshot(BatchFilter):
                     ds_name = self.dataset_names[volume_type]
 
                     offset = volume.roi.get_offset()
-                    offset*= volume.resolution
                     dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
                     dataset.attrs['offset'] = offset
                     dataset.attrs['resolution'] = volume.resolution
