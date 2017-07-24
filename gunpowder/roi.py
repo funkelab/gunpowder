@@ -1,5 +1,6 @@
 from .coordinate import Coordinate
 from .freezable import Freezable
+import numbers
 
 class Roi(Freezable):
     '''A rectengular region of interest, defined by an offset and a shape.
@@ -164,6 +165,26 @@ class Roi(Freezable):
 
         assert isinstance(other, Coordinate), "can only subtract Coordinate from Roi"
         return self.shift(-other)
+
+    def __mul__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only multiply with a number or tuple of numbers"
+        return Roi(self.__offset*other, self.__shape*other)
+
+    def __div__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset/other, self.__shape/other)
+
+    def __truediv__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset/other, self.__shape/other)
+
+    def __floordiv__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset//other, self.__shape//other)
 
     def __eq__(self, other):
 
