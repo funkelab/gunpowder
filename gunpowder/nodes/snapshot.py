@@ -88,7 +88,7 @@ class Snapshot(BatchFilter):
                     offset = volume.roi.get_offset()
                     dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
                     dataset.attrs['offset'] = offset
-                    dataset.attrs['resolution'] = volume.resolution
+                    dataset.attrs['resolution'] = volume_type.voxel_size
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
