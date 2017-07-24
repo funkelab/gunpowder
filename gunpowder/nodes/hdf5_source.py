@@ -21,9 +21,7 @@ class Hdf5Source(BatchProvider):
     attribute ``resolution`` is set in an HDF5 dataset, it will be used for the 
     resolution of the volume. If the attribute ``offset`` is set in an HDF5 
     dataset, it will be used as the offset of the :class:`Roi` provided by this 
-    node. It is assumed that the offset is given in world units. Since 
-    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided 
-    by the ``resolution``.
+    node. It is assumed that the offset is given in world units.
 
     Args:
 
@@ -83,11 +81,10 @@ class Hdf5Source(BatchProvider):
 
             if 'offset' in f[ds].attrs:
                 offset = Coordinate(f[ds].attrs['offset'])
-                offset /= self.resolutions[volume_type]
             else:
                 offset = Coordinate((0,)*self.ndims)
 
-            self.spec.volumes[volume_type] = Roi(offset, dims)
+            self.spec.volumes[volume_type] = Roi(offset, dims*self.resolutions[volume_type])
 
         if self.points_types is not None:
             for points_type in self.points_types:
@@ -117,15 +114,29 @@ class Hdf5Source(BatchProvider):
                 if not spec.volumes[volume_type].contains(roi):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
+                roi_shape = roi.get_shape()
+                resolution = self.resolutions[volume_type]
+
+                for d in range(len(roi.dims())):
+                    assert roi_shape[d]%resolution[d] == 0, \
+                            "in request %s, dimension %d of request %s is not a multiple of resolution %d"%(
+                                    request,
+                                    d,
+                                    volume_type,
+                                    self.resolutions[volume_type][d])
+
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
 
+                # scale request roi to voxel units
+                dataset_roi = roi/resolution
+
                 # shift request roi into dataset
-                dataset_roi = roi.shift(-spec.volumes[volume_type].get_offset())
+                dataset_roi = dataset_roi - spec.volumes[volume_type].get_offset()/resolution
 
                 batch.volumes[volume_type] = Volume(
                         self.__read(f, self.datasets[volume_type], dataset_roi),
                         roi=roi,
-                        resolution=self.resolutions[volume_type])
+                        resolution=resolution)
 
             # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
             # together s.t. ids are unique and allow to find partner locations
