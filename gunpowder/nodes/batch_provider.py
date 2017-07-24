@@ -56,12 +56,12 @@ class BatchProvider(object):
             # on top are okay, e.g., for affinities)
             dims = roi.dims()
             data_shape = Coordinate(volume.data.shape[-dims:])
-            assert data_shape == roi.get_shape()/volume.resolution, "%s ROI %s requested, but size of volume is %s*%s=%s provided by %s."%(
+            assert data_shape == roi.get_shape()/volume_type.voxel_size, "%s ROI %s requested, but size of volume is %s*%s=%s provided by %s."%(
                     volume_type,
                     roi,
                     data_shape,
-                    volume.resolution,
-                    data_shape*volume.resolution,
+                    volume_type.voxel_size,
+                    data_shape*volume_type.voxel_size,
                     type(self).__name__
             )
 
