@@ -14,7 +14,35 @@ logger = logging.getLogger(__name__)
 
 class ElasticAugment(BatchFilter):
     '''Elasticly deform a batch. Requests larger batches upstream to avoid data 
-    loss due to rotation and jitter.'''
+    loss due to rotation and jitter.
+
+    Args:
+        control_point_spacing (tuple of int): Distance between control points 
+            for the elastic deformation, in voxels per dimension.
+
+        jitter_sigma (tuple of float): Standard deviation of control point 
+            jitter distribution, in voxels per dimension.
+
+        rotation_interval (two floats): Interval to randomly sample rotation 
+            angles from (0,2PI).
+
+        prob_slip (float): Probability of a section to "slip", i.e., be 
+            independently moved in x-y.
+
+        prob_shift (float): Probability of a section and all following sections 
+            to move in x-y.
+
+        max_misalign (int): Maximal voxels to shift in x and y. Samples will be 
+            drawn uniformly.
+
+        subsample (bool): Instead of creating an elastic transformation on the 
+            full resolution, create one subsampled by the given factor, and 
+            linearly interpolate to obtain the full resolution transformation. 
+            This can significantly speed up this node, at the expense of having 
+            visible piecewise linear deformations for large factors. Usually, a 
+            factor of 4 can savely by used without noticable changes. However, 
+            the default is 1 (i.e., no subsampling).
+    '''
 
     def __init__(
             self,
@@ -25,35 +53,6 @@ class ElasticAugment(BatchFilter):
             prob_shift=0,
             max_misalign=0,
             subsample=1):
-        '''Create an elastic deformation augmentation.
-
-        Args:
-            control_point_spacing: Distance between control points for the 
-            elastic deformation, in voxels per dimension.
-
-            jitter_sigma: Standard deviation of control point jitter 
-            distribution, one value per dimension.
-
-            rotation_interval: Interval to randomly sample rotation angles from 
-            (0,2PI).
-
-            prob_slip: Probability of a section to "slip", i.e., be 
-            independently moved in x-y.
-
-            prob_shift: Probability of a section and all following sections to 
-            move in x-y.
-
-            max_misalign: Maximal voxels to shift in x and y. Samples will be 
-            drawn uniformly.
-
-            subsample: Instead of creating an elastic transformation on the full 
-            resolution, create one subsampled by the given factor, and linearly 
-            interpolate to obtain the full resolution transformation. This can 
-            significantly speed up this node, at the expense of having visible 
-            piecewise linear deformations for large factors. Usually, a factor 
-            of 4 can savely by used without noticable changes. However, the 
-            default is 1 (i.e., no subsampling).
-        '''
 
         self.control_point_spacing = control_point_spacing
         self.jitter_sigma = jitter_sigma
@@ -69,6 +68,22 @@ class ElasticAugment(BatchFilter):
         total_roi = request.get_total_roi()
         logger.debug("total ROI is %s"%total_roi)
         dims = len(total_roi.get_shape())
+
+        self.voxel_size = None
+        prev_volume_type = None
+        for volume_type in request.volumes.keys():
+            if self.voxel_size is None:
+                self.voxel_size = volume_type.voxel_size
+            else:
+                assert self.voxel_size == volume_type.voxel_size, \
+                        "ElasticAugment can only be used with volumes of same voxel sizes, " \
+                        "but %s has %s, and %s has %s."%(
+                                volume_type, volume_type.voxel_size,
+                                prev_volume_type, prev_volume_type.voxel_size)
+            prev_volume_type = volume_type
+
+        # get total roi in voxels
+        total_roi /= self.voxel_size
 
         # create a transformation for the total ROI
         rotation = random.random()*self.rotation_max_amount + self.rotation_start
@@ -100,6 +115,9 @@ class ElasticAugment(BatchFilter):
             for type, roi in collection_type.items():
                 logger.debug("downstream request ROI for %s is %s" % (type, roi))
 
+                # get roi in voxels
+                roi /= self.voxel_size
+
                 roi_in_total_roi = roi.shift(-total_roi.get_offset())
 
                 transformation = np.copy(
@@ -110,7 +128,7 @@ class ElasticAugment(BatchFilter):
                 # update request ROI to get all voxels necessary to perfrom
                 # transformation
                 roi = self.__recompute_roi(roi, transformation)
-                collection_type[type] = roi
+                collection_type[type] = roi*self.voxel_size
 
                 logger.debug("upstream request roi for %s = %s" % (type, roi))
 

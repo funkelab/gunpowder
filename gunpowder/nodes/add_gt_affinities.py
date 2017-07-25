@@ -19,12 +19,12 @@ class AddGtAffinities(BatchFilter):
         self.padding_neg = Coordinate(
                 min([0] + [a[d] for a in self.affinity_neighborhood])
                 for d in range(dims)
-        )
+        )*VolumeTypes.GT_LABELS.voxel_size
 
         self.padding_pos = Coordinate(
                 max([0] + [a[d] for a in self.affinity_neighborhood])
                 for d in range(dims)
-        )
+        )*VolumeTypes.GT_LABELS.voxel_size
 
         logger.debug("padding neg: " + str(self.padding_neg))
         logger.debug("padding pos: " + str(self.padding_pos))
@@ -50,15 +50,10 @@ class AddGtAffinities(BatchFilter):
             self.skip_next = True
             return
 
-        assert VolumeTypes.GT_LABELS in request.volumes, "AddGtAffinities can only be used if you request GT_LABELS"
-
         del request.volumes[VolumeTypes.GT_AFFINITIES]
 
         gt_labels_roi = request.volumes[VolumeTypes.GT_LABELS]
         logger.debug("downstream GT_LABELS request: " + str(gt_labels_roi))
-
-        # remember requested GT_LABELS ROI
-        self.gt_labels_roi = copy.deepcopy(gt_labels_roi)
 
         # shift GT_LABELS ROI by padding_neg
         gt_labels_roi = gt_labels_roi.shift(self.padding_neg)
@@ -77,26 +72,29 @@ class AddGtAffinities(BatchFilter):
             self.skip_next = False
             return
 
+        gt_labels_roi = request.volumes[VolumeTypes.GT_LABELS]
+
         logger.debug("computing ground-truth affinities from labels")
         gt_affinities = malis.seg_to_affgraph(
                 batch.volumes[VolumeTypes.GT_LABELS].data.astype(np.int32),
                 self.affinity_neighborhood
         ).astype(np.float32)
 
-        # crop to original GT_LABELS ROI
-        offset = self.gt_labels_roi.get_offset()
+        # crop affinities original GT_LABELS ROI
+        offset = gt_labels_roi.get_offset()
         shift = -offset - self.padding_neg
-        crop_roi = self.gt_labels_roi.shift(shift)
+        crop_roi = gt_labels_roi.shift(shift)
+        crop_roi /= VolumeTypes.GT_LABELS.voxel_size
         crop = crop_roi.get_bounding_box()
 
         logger.debug("cropping with " + str(crop))
         gt_affinities = gt_affinities[(slice(None),)+crop]
 
-        logger.debug("reset GT_LABELS ROI to " + str(self.gt_labels_roi))
-        batch.volumes[VolumeTypes.GT_LABELS].data = batch.volumes[VolumeTypes.GT_LABELS].data[crop]
-        batch.volumes[VolumeTypes.GT_LABELS].roi = self.gt_labels_roi
         batch.volumes[VolumeTypes.GT_AFFINITIES] = Volume(
                 gt_affinities,
-                self.gt_labels_roi, 
-                batch.volumes[VolumeTypes.GT_LABELS].resolution)
+                gt_labels_roi)
+
+        # crop to original GT_LABELS ROI
+        batch.volumes[VolumeTypes.GT_LABELS] = batch.volumes[VolumeTypes.GT_LABELS].crop(gt_labels_roi)
+
         batch.affinity_neighborhood = self.affinity_neighborhood

@@ -33,8 +33,7 @@ class ChunkTestSource(BatchProvider):
 
             batch.volumes[volume_type] = Volume(
                     data,
-                    roi,
-                    (1,1,1))
+                    roi)
         return batch
 
 class TestChunk(ProviderTest):

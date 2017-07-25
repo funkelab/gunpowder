@@ -24,24 +24,21 @@ class AffinityTestSource(BatchProvider):
                     0, 2,
                     (3,) + shape
                 ),
-                roi,
-                (1,1,1)
+                roi
         )
         batch.volumes[VolumeTypes.GT_MASK] = Volume(
                 np.random.randint(
                     0, 2,
                     shape
                 ),
-                roi,
-                (1,1,1)
+                roi
         )
         batch.volumes[VolumeTypes.GT_IGNORE] = Volume(
                 np.random.randint(
                     0, 2,
                     shape
                 ),
-                roi,
-                (1,1,1)
+                roi
         )
 
         return batch

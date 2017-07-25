@@ -19,42 +19,49 @@ class DownSampleTestSource(BatchProvider):
         # have the pixels encode their position
         for (volume_type, roi) in request.volumes.items():
 
+            for d in range(3):
+                assert roi.get_begin()[d]%4 == 0, "roi %s does not align with voxels"
+
+            data_roi = roi/4
+
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(roi.get_begin()[0], roi.get_end()[0]),
-                    range(roi.get_begin()[1], roi.get_end()[1]),
-                    range(roi.get_begin()[2], roi.get_end()[2]), indexing='ij')
+                    range(data_roi.get_begin()[0], data_roi.get_end()[0]),
+                    range(data_roi.get_begin()[1], data_roi.get_end()[1]),
+                    range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             batch.volumes[volume_type] = Volume(
                     data,
-                    roi,
-                    Coordinate((4,4,4)))
+                    roi)
         return batch
 
 class TestDownSample(ProviderTest):
 
     def test_output(self):
 
+        set_verbose(False)
         logger = logging.getLogger('gunpowder.nodes.downsample')
         logger.setLevel(logging.DEBUG)
 
         source = DownSampleTestSource()
 
-        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True))
-        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False))
+        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=(4,4,4)))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=(4,4,4)))
+        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True, voxel_size=(8,8,8)))
+        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False, voxel_size=(8,8,8)))
 
         request = BatchRequest()
-        request.add_volume_request(VolumeTypes.RAW, (100,100,100))
-        request.add_volume_request(VolumeTypes.RAW_DOWNSAMPLED, (50,50,50))
-        request.add_volume_request(VolumeTypes.GT_LABELS, (100,100,100))
-        request.add_volume_request(VolumeTypes.GT_LABELS_DOWNSAMPLED, (60,60,60))
+        request.add_volume_request(VolumeTypes.RAW, (200,200,200))
+        request.add_volume_request(VolumeTypes.RAW_DOWNSAMPLED, (120,120,120))
+        request.add_volume_request(VolumeTypes.GT_LABELS, (200,200,200))
+        request.add_volume_request(VolumeTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
 
         pipeline = (
                 DownSampleTestSource() +
                 DownSample({
-                        VolumeTypes.RAW: (2, VolumeTypes.RAW_DOWNSAMPLED),
-                        VolumeTypes.GT_LABELS: (2, VolumeTypes.GT_LABELS_DOWNSAMPLED),
+                        VolumeTypes.RAW_DOWNSAMPLED: (2, VolumeTypes.RAW),
+                        VolumeTypes.GT_LABELS_DOWNSAMPLED: (2, VolumeTypes.GT_LABELS),
                 })
         )
 
@@ -68,26 +75,24 @@ class TestDownSample(ProviderTest):
             if volume_type in [VolumeTypes.RAW, VolumeTypes.GT_LABELS]:
 
                 # the z,y,x coordinates of the ROI
+                roi = volume.roi/4
                 meshgrids = np.meshgrid(
-                        range(volume.roi.get_begin()[0], volume.roi.get_end()[0]),
-                        range(volume.roi.get_begin()[1], volume.roi.get_end()[1]),
-                        range(volume.roi.get_begin()[2], volume.roi.get_end()[2]), indexing='ij')
+                        range(roi.get_begin()[0], roi.get_end()[0]),
+                        range(roi.get_begin()[1], roi.get_end()[1]),
+                        range(roi.get_begin()[2], roi.get_end()[2]), indexing='ij')
                 data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-                self.assertTrue((volume.data == data).all(), str(volume_type))
-                self.assertTrue(volume.resolution == (4,4,4))
+                self.assertTrue(np.array_equal(volume.data, data), str(volume_type))
 
             elif volume_type == VolumeTypes.RAW_DOWNSAMPLED:
 
-                self.assertTrue(volume.data[0,0,0] == 0)
-                self.assertTrue(volume.data[1,0,0] == 2)
-                self.assertTrue(volume.resolution == (8,8,8))
+                self.assertTrue(volume.data[0,0,0] == 30)
+                self.assertTrue(volume.data[1,0,0] == 32)
 
             elif volume_type == VolumeTypes.GT_LABELS_DOWNSAMPLED:
 
-                self.assertTrue(volume.data[0,0,0] == -30)
-                self.assertTrue(volume.data[1,0,0] == -28)
-                self.assertTrue(volume.resolution == (8,8,8))
+                self.assertTrue(volume.data[0,0,0] == 0)
+                self.assertTrue(volume.data[1,0,0] == 2)
 
             else:
 

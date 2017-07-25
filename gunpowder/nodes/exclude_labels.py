@@ -63,7 +63,7 @@ class ExcludeLabels(BatchFilter):
             else:
                 include_mask[gt.data==label] = 0
 
-        distance_to_include = distance_transform_edt(include_mask, sampling=gt.resolution)
+        distance_to_include = distance_transform_edt(include_mask, sampling=VolumeTypes.GT_LABELS.voxel_size)
         logger.debug("max distance to foreground is " + str(distance_to_include.max()))
 
         # 1 marks included regions, plus a context area around them
@@ -80,4 +80,4 @@ class ExcludeLabels(BatchFilter):
         gt_ignore = np.zeros(gt_ignore_roi.get_shape(), dtype=np.uint8)
         gt_ignore[intersection_in_gt_ignore] = include_mask[intersection_in_gt]
 
-        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, gt_ignore_roi, gt.resolution)
+        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, gt_ignore_roi)

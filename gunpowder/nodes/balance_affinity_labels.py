@@ -53,8 +53,7 @@ class BalanceAffinityLabels(BatchFilter):
 
         batch.volumes[VolumeTypes.LOSS_SCALE] = Volume(
                 error_scale,
-                gt_affinities.roi,
-                gt_affinities.resolution)
+                gt_affinities.roi)
 
     def __mask_error_scale(self, error_scale, mask):
         for d in range(error_scale.shape[0]):

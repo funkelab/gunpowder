@@ -18,20 +18,17 @@ class Hdf5Source(BatchProvider):
     '''An HDF5 data source.
 
     Provides volumes from HDF5 datasets for each volume type given. If the 
-    attribute ``resolution`` is set in an HDF5 dataset, it will be used for the 
-    resolution of the volume. If the attribute ``offset`` is set in an HDF5 
-    dataset, it will be used as the offset of the :class:`Roi` provided by this 
-    node. It is assumed that the offset is given in world units. Since 
-    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided 
-    by the ``resolution``.
+    attribute ``resolution`` is set in an HDF5 dataset, it will be compared 
+    agains the volume's ``voxel_size`` and a warning issued if they differ. If 
+    the attribute ``offset`` is set in an HDF5 dataset, it will be used as the 
+    offset of the :class:`Roi` provided by this node. It is assumed that the 
+    offset is given in world units.
 
     Args:
 
         filename (string): The HDF5 file.
 
         datasets (dict): Dictionary of VolumeType -> dataset names that this source offers.
-
-        resolution (tuple): Overwrite the resolution stored in the HDF5 datasets.
     '''
 
     def __init__(
@@ -39,17 +36,13 @@ class Hdf5Source(BatchProvider):
             filename,
             datasets,
             points_types=None,
-            points_rois=None,
-            resolution=None):
+            points_rois=None):
 
         self.filename = filename
         self.datasets = datasets
 
         self.points_types      = points_types
         self.points_rois = points_rois
-
-        self.specified_resolution = resolution
-        self.resolutions = {}
 
     def setup(self):
 
@@ -62,32 +55,27 @@ class Hdf5Source(BatchProvider):
             if ds not in f:
                 raise RuntimeError("%s not in %s"%(ds,self.filename))
 
-            dims = f[ds].shape
+            dims = Coordinate(f[ds].shape)
 
             if self.ndims is None:
                 self.ndims = len(dims)
             else:
                 assert self.ndims == len(dims)
 
-            if self.specified_resolution is None:
-                if 'resolution' in f[ds].attrs:
-                    self.resolutions[volume_type] = Coordinate(f[ds].attrs['resolution'])
-                else:
-                    default_resolution = Coordinate((1,)*self.ndims)
-                    logger.warning("WARNING: your source does not contain resolution information"
-                                   " (no attribute 'resolution' in {} dataset). I will assume {}. "
-                                   "This might not be what you want.".format(ds,default_resolution))
-                    self.resolutions[volume_type] = default_resolution
-            else:
-                self.resolutions[volume_type] = self.specified_resolution
+            if 'resolution' in f[ds].attrs:
+                voxel_size = Coordinate(f[ds].attrs['resolution'])
+                if voxel_size != volume_type.voxel_size:
+                    logger.warning(
+                            "WARNING: Your source contains a resolution information of %s, "
+                            "but %s was set globally for %s"
+                            %(voxel_size, volume_type.voxel_size, volume_type))
 
             if 'offset' in f[ds].attrs:
                 offset = Coordinate(f[ds].attrs['offset'])
-                offset /= self.resolutions[volume_type]
             else:
                 offset = Coordinate((0,)*self.ndims)
 
-            self.spec.volumes[volume_type] = Roi(offset, dims)
+            self.spec.volumes[volume_type] = Roi(offset, dims*volume_type.voxel_size)
 
         if self.points_types is not None:
             for points_type in self.points_types:
@@ -117,15 +105,28 @@ class Hdf5Source(BatchProvider):
                 if not spec.volumes[volume_type].contains(roi):
                     raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
 
+                roi_shape = roi.get_shape()
+                voxel_size = volume_type.voxel_size
+
+                for d in range(roi.dims()):
+                    assert roi_shape[d]%voxel_size[d] == 0, \
+                            "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
+                                    request,
+                                    d,
+                                    volume_type,
+                                    voxel_size[d])
+
                 logger.debug("Reading %s in %s..."%(volume_type,roi))
 
+                # scale request roi to voxel units
+                dataset_roi = roi/voxel_size
+
                 # shift request roi into dataset
-                dataset_roi = roi.shift(-spec.volumes[volume_type].get_offset())
+                dataset_roi = dataset_roi - spec.volumes[volume_type].get_offset()/voxel_size
 
                 batch.volumes[volume_type] = Volume(
                         self.__read(f, self.datasets[volume_type], dataset_roi),
-                        roi=roi,
-                        resolution=self.resolutions[volume_type])
+                        roi=roi)
 
             # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
             # together s.t. ids are unique and allow to find partner locations

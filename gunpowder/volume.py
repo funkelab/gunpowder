@@ -1,9 +1,11 @@
 from .freezable import Freezable
+from gunpowder.coordinate import Coordinate
+import copy
 import logging
 
 logger = logging.getLogger(__name__)
 
-class VolumeType:
+class VolumeType(Freezable):
     '''Describes general properties of a volume type.
 
     Args:
@@ -17,12 +19,17 @@ class VolumeType:
             Indicates whether voxels can be interpolated (as for intensities) or 
             not (as for labels). This will be used by nodes that perform data 
             augmentations.
+
+        voxel_size (tuple of int):
+            The size of a voxel in world units.
     '''
 
-    def __init__(self, identifier, interpolate):
+    def __init__(self, identifier, interpolate, voxel_size=(1,1,1)):
         self.identifier = identifier
         self.interpolate = interpolate
+        self.voxel_size = Coordinate(voxel_size)
         self.hash = hash(identifier)
+        self.freeze()
 
     def __eq__(self, other):
         return hasattr(other, 'identifier') and self.identifier == other.identifier
@@ -104,10 +111,42 @@ register_volume_type(VolumeType('LOSS_GRADIENT_POSTSYN', interpolate=False))
 
 class Volume(Freezable):
 
-    def __init__(self, data, roi, resolution):
+    def __init__(self, data, roi):
 
         self.roi = roi
-        self.resolution = resolution
         self.data = data
 
+        voxel_size = self.get_voxel_size()
+        for d in range(len(voxel_size)):
+            assert voxel_size[d]*data.shape[-self.roi.dims()+d] == roi.get_shape()[d], \
+                    "ROI %s does not align with voxel size %s * data shape %s"%(roi, voxel_size, data.shape)
+
         self.freeze()
+
+    def get_voxel_size(self):
+
+        return self.roi.get_shape()/self.data.shape[-self.roi.dims():]
+
+    def crop(self, roi, copy=True):
+        '''Create a cropped copy of this Volume.
+
+        Args:
+
+            roi(:class:``Roi``): ROI in world units to crop to.
+
+            copy(bool): Make a copy of the data (default).
+        '''
+
+        assert self.roi.contains(roi)
+
+        voxel_size = self.get_voxel_size()
+        data_roi = (roi - self.roi.get_offset())/voxel_size
+        slices = data_roi.get_bounding_box()
+
+        while len(slices) < len(self.data.shape):
+            slices = (slice(None),) + slices
+
+        data = self.data[slices]
+        if copy:
+            data = np.array(data)
+        return Volume(data, copy.deepcopy(roi))

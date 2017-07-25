@@ -34,7 +34,7 @@ class PointTestSource3D(BatchProvider):
         batch.points[PointsTypes.PRESYN] = Points(data=id_to_point, roi=roi_points,
                                                  resolution=self.resolution)
         batch.volumes[VolumeTypes.GT_LABELS] = Volume(image,
-                                                roi=roi_volume, resolution=self.resolution)
+                                                roi=roi_volume)
         return batch
 
 
@@ -62,6 +62,8 @@ class TestElasticAugment(unittest.TestCase):
             elastic_augm_node = ElasticAugment(control_point_spacing, [0, 2, 2],
                                                [0, math.pi / 2.0], subsample=subsample)
             pipeline = source_node + elastic_augm_node
+
+            VolumeTypes.GT_LABELS.voxel_size = Coordinate((1,1,1))
 
             with build(pipeline):
                 request = BatchRequest()

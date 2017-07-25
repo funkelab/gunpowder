@@ -15,11 +15,10 @@ class TestSource(BatchProvider):
         batch = Batch()
         batch.volumes[VolumeTypes.RAW] = Volume(
                 np.zeros(
-                        request.volumes[VolumeTypes.RAW].get_shape(),
+                        request.volumes[VolumeTypes.RAW].get_shape()/VolumeTypes.RAW.voxel_size,
                         dtype=np.uint8
                 ),
-                request.volumes[VolumeTypes.RAW],
-                (1,1,1)
+                request.volumes[VolumeTypes.RAW]
         )
         return batch
 
