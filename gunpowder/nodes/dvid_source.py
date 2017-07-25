@@ -26,8 +26,7 @@ class MaskNotProvidedException(Exception):
 class DvidSource(BatchProvider):
 
     def __init__(self, hostname, port, uuid, volume_array_names,
-                 points_array_names={}, points_rois={},
-                 resolution=None):
+                 points_array_names={}, points_rois={}):
         """
         :param hostname: hostname for DVID server
         :type hostname: str
@@ -36,8 +35,6 @@ class DvidSource(BatchProvider):
         :param uuid: UUID of node on DVID server
         :type uuid: str
         :param volume_array_names: dict {VolumeTypes:  DVID data instance for data in VolumeTypes}
-        :param resolution: resolution of source voxels in nanometers
-        :type resolution: tuple
         """
         self.hostname = hostname
         self.port = port
@@ -49,7 +46,6 @@ class DvidSource(BatchProvider):
         self.points_array_names = points_array_names
         self.points_rois        = points_rois
 
-        self.specified_resolution = resolution
         self.node_service = None
         self.dims = 0
         self.spec = ProviderSpec()
@@ -66,17 +62,6 @@ class DvidSource(BatchProvider):
     def get_spec(self):
         return self.spec
 
-    @property
-    def resolution(self):
-        if self.specified_resolution is not None:
-            return self.specified_resolution
-        else:
-            fib25_resolution = (8, 8, 8)
-            logger.warning("WARNING: your source does not contain resolution information. "
-                           "I will assume {}. "
-                           "This might not be what you want.".format(fib25_resolution))
-            return fib25_resolution
-
     def provide(self, request):
 
         timing = Timing(self)
@@ -85,7 +70,6 @@ class DvidSource(BatchProvider):
         spec = self.get_spec()
 
         batch = Batch()
-        logger.debug("providing batch with resolution of {}".format(self.resolution))
 
         for (volume_type, roi) in request.volumes.items():
             # check if requested volumetype can be provided
@@ -104,9 +88,7 @@ class DvidSource(BatchProvider):
             logger.debug("Reading %s in %s..."%(volume_type, roi))
             batch.volumes[volume_type] = Volume(
                     read(roi),
-                    roi=roi,
-                    # TODO: get resolution from repository
-                    resolution=self.resolution)
+                    roi=roi)
 
         # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
         # together s.t. the ids are unique and allow to find partner locations
@@ -131,7 +113,7 @@ class DvidSource(BatchProvider):
             logger.debug("Reading %s in %s..."%(points_type, roi))
             id_to_point = {PointsTypes.PRESYN: presyn_points,
                            PointsTypes.POSTSYN: postsyn_points}[points_type]
-            batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=self.resolution)
+            batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=(1,1,1)) # dummy resolution, to be removed
 
         logger.debug("done")
 
@@ -153,7 +135,7 @@ class DvidSource(BatchProvider):
         return Roi(offset=roi_min, shape=roi_max - roi_min)
 
     def __read_raw(self, roi):
-        slices = roi.get_bounding_box()
+        slices = (roi/VolumeTypes.RAW.voxel_size).get_bounding_box()
         data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.RAW])  # self.raw_array_name)
         try:
             return data_instance[slices]
@@ -163,7 +145,7 @@ class DvidSource(BatchProvider):
             raise DvidSourceReadException(msg)
 
     def __read_gt(self, roi):
-        slices = roi.get_bounding_box()
+        slices = (roi/VolumeTypes.GT_LABELS.voxel_size).get_bounding_box()
         data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_LABELS])  # self.gt_array_name)
         try:
             return data_instance[slices]
@@ -179,7 +161,7 @@ class DvidSource(BatchProvider):
         """
         if self.gt_mask_roi_name is None:
             raise MaskNotProvidedException
-        slices = roi.get_bounding_box()
+        slices = (roi/VolumeTypes.GT_MASK.voxel_size).get_bounding_box()
         dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_MASK])  # self.gt_mask_roi_name)
         try:
             return dvid_roi[slices]
