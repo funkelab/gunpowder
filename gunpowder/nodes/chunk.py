@@ -86,8 +86,7 @@ class Chunk(BatchFilter):
                 shape = roi.get_shape()
 
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
-                                                roi=roi,
-                                                resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
+                                                roi=roi)
 
         for (points_type, roi) in request.points.items():
             batch.points[points_type] = Points(data={},
@@ -96,8 +95,7 @@ class Chunk(BatchFilter):
 
 
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
-                                                roi=roi,
-                                                resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
+                                                roi=roi)
         return batch
 
     def __fill(self, a, b, roi_a, roi_b):
