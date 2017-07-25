@@ -91,8 +91,7 @@ class BalanceLabels(BatchFilter):
 
             batch.volumes[loss_scale_volume] = Volume(
                 error_scale,
-                labels.roi,
-                labels.resolution)
+                labels.roi)
 
     def __mask_error_scale(self, error_scale, mask):
 
