@@ -127,8 +127,15 @@ class Volume(Freezable):
 
         return self.roi.get_shape()/self.data.shape[-self.roi.dims():]
 
-    def crop(self, roi):
-        '''Create a cropped copy of this Volume.'''
+    def crop(self, roi, copy=True):
+        '''Create a cropped copy of this Volume.
+
+        Args:
+
+            roi(:class:``Roi``): ROI in world units to crop to.
+
+            copy(bool): Make a copy of the data (default).
+        '''
 
         assert self.roi.contains(roi)
 
@@ -139,4 +146,7 @@ class Volume(Freezable):
         while len(slices) < len(self.data.shape):
             slices = (slice(None),) + slices
 
-        return Volume(self.data[slices], copy.deepcopy(roi))
+        data = self.data[slices]
+        if copy:
+            data = np.array(data)
+        return Volume(data, copy.deepcopy(roi))
