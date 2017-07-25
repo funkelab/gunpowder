@@ -24,8 +24,7 @@ class TestSourcePrepareMalis(BatchProvider):
 
             batch.volumes[VolumeTypes.GT_LABELS] = Volume(
                     data_labels,
-                    gt_labels_roi,
-                    (1,1,1)
+                    gt_labels_roi
             )
 
         if VolumeTypes.GT_IGNORE in request.volumes:
@@ -36,8 +35,7 @@ class TestSourcePrepareMalis(BatchProvider):
 
             batch.volumes[VolumeTypes.GT_IGNORE] = Volume(
                     data_gt_ignore,
-                    gt_ignore_roi,
-                    (1,1,1)
+                    gt_ignore_roi
             )
 
         return batch
