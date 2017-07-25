@@ -60,8 +60,8 @@ class TestDownSample(ProviderTest):
         pipeline = (
                 DownSampleTestSource() +
                 DownSample({
-                        VolumeTypes.RAW: (2, VolumeTypes.RAW_DOWNSAMPLED),
-                        VolumeTypes.GT_LABELS: (2, VolumeTypes.GT_LABELS_DOWNSAMPLED),
+                        VolumeTypes.RAW_DOWNSAMPLED: (2, VolumeTypes.RAW),
+                        VolumeTypes.GT_LABELS_DOWNSAMPLED: (2, VolumeTypes.GT_LABELS),
                 })
         )
 
