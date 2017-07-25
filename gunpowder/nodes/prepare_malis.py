@@ -56,8 +56,7 @@ class PrepareMalis(BatchFilter):
             gt_neg_pass = gt_pos_pass
 
         batch.volumes[VolumeTypes.MALIS_COMP_LABEL] = Volume(data=np.array([gt_neg_pass, gt_pos_pass]),
-                                                             roi=request.volumes[VolumeTypes.GT_LABELS],
-                                                             resolution=batch.volumes[VolumeTypes.GT_LABELS].resolution)
+                                                             roi=request.volumes[VolumeTypes.GT_LABELS])
 
         # Why don't we update gt_affinities in the same way?
         # -> not needed
