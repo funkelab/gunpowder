@@ -100,6 +100,7 @@ register_volume_type(VolumeType('GT_IGNORE', interpolate=False))
 register_volume_type(VolumeType('PRED_AFFINITIES', interpolate=False))
 register_volume_type(VolumeType('LOSS_SCALE', interpolate=False))
 register_volume_type(VolumeType('LOSS_GRADIENT', interpolate=False))
+register_volume_type(VolumeType('MALIS_COMP_LABEL', interpolate=False))
 
 register_volume_type(VolumeType('GT_BM_PRESYN', interpolate=False))
 register_volume_type(VolumeType('GT_BM_POSTSYN', interpolate=False))
@@ -109,6 +110,10 @@ register_volume_type(VolumeType('PRED_BM_PRESYN', interpolate=False))
 register_volume_type(VolumeType('PRED_BM_POSTSYN', interpolate=False))
 register_volume_type(VolumeType('LOSS_GRADIENT_PRESYN', interpolate=False))
 register_volume_type(VolumeType('LOSS_GRADIENT_POSTSYN', interpolate=False))
+
+register_volume_type(VolumeType('LOSS_SCALE_BM_PRESYN', interpolate=False))
+register_volume_type(VolumeType('LOSS_SCALE_BM_POSTSYN', interpolate=False))
+
 
 class Volume(Freezable):
 

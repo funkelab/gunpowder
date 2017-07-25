@@ -1,6 +1,6 @@
 from .add_gt_affinities import AddGtAffinities
 from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
-from .balance_affinity_labels import BalanceAffinityLabels
+from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .chunk import Chunk
@@ -16,6 +16,7 @@ from .intensity_scale_shift import IntensityScaleShift
 from .normalize import Normalize
 from .pad import Pad
 from .precache import PreCache
+from .prepare_malis import PrepareMalis
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
 from .random_provider import RandomProvider

@@ -2,7 +2,7 @@ from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
 
-class AffinityTestSource(BatchProvider):
+class TestSource(BatchProvider):
 
     def get_spec(self):
 
@@ -43,12 +43,12 @@ class AffinityTestSource(BatchProvider):
 
         return batch
 
-class TestBalanceAffinityLabels(ProviderTest):
+class TestBalanceLabels(ProviderTest):
 
     def test_output(self):
 
-
-        pipeline = AffinityTestSource() + BalanceAffinityLabels()
+        pipeline = TestSource() + BalanceLabels({VolumeTypes.GT_AFFINITIES: VolumeTypes.LOSS_SCALE},
+                                                {VolumeTypes.GT_AFFINITIES: [VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE]})
 
         with build(pipeline):
 
