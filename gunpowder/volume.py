@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class VolumeType:
+class VolumeType(Freezable):
     '''Describes general properties of a volume type.
 
     Args:
@@ -29,6 +29,7 @@ class VolumeType:
         self.interpolate = interpolate
         self.voxel_size = Coordinate(voxel_size)
         self.hash = hash(identifier)
+        self.freeze()
 
     def __eq__(self, other):
         return hasattr(other, 'identifier') and self.identifier == other.identifier
