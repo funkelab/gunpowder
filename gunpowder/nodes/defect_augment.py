@@ -5,6 +5,7 @@ import random
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.build import build
+from gunpowder.coordinate import Coordinate
 from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
@@ -69,13 +70,13 @@ class DefectAugment(BatchFilter):
 
         raw = batch.volumes[VolumeTypes.RAW]
 
-        for c in range(batch.get_total_roi().get_shape()[self.axis]):
+        for c in range((raw.roi/VolumeTypes.RAW.voxel_size).get_shape()[self.axis]):
 
             r = random.random()
 
             section_selector = tuple(
                     slice(None if d != self.axis else c, None if d != self.axis else c+1)
-                    for d in range(batch.get_total_roi().dims())
+                    for d in range(raw.roi.dims())
             )
 
             if r < prob_missing_threshold:
@@ -100,9 +101,12 @@ class DefectAugment(BatchFilter):
                 logger.debug("Add artifact " + str(section_selector))
                 section = raw.data[section_selector]
 
+                assert VolumeTypes.RAW.voxel_size == VolumeTypes.ALPHA_MASK.voxel_size, \
+                        "Can only alpha blend RAW with ALPHA_MASK if both have the same voxel size"
+
                 artifact_request = BatchRequest()
-                artifact_request.add_volume_request(VolumeTypes.RAW, section.shape)
-                artifact_request.add_volume_request(VolumeTypes.ALPHA_MASK, section.shape)
+                artifact_request.add_volume_request(VolumeTypes.RAW, Coordinate(section.shape)*VolumeTypes.RAW.voxel_size)
+                artifact_request.add_volume_request(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*VolumeTypes.ALPHA_MASK.voxel_size)
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
