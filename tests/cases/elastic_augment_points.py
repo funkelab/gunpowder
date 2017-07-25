@@ -63,6 +63,8 @@ class TestElasticAugment(unittest.TestCase):
                                                [0, math.pi / 2.0], subsample=subsample)
             pipeline = source_node + elastic_augm_node
 
+            VolumeTypes.GT_LABELS.voxel_size = Coordinate((1,1,1))
+
             with build(pipeline):
                 request = BatchRequest()
                 request.add_points_request((PointsTypes.PRESYN), (50, 50, 50))
