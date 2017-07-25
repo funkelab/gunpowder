@@ -1,7 +1,8 @@
 from .freezable import Freezable
+from copy import deepcopy
 from gunpowder.coordinate import Coordinate
-import copy
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -149,4 +150,4 @@ class Volume(Freezable):
         data = self.data[slices]
         if copy:
             data = np.array(data)
-        return Volume(data, copy.deepcopy(roi))
+        return Volume(data, deepcopy(roi))
