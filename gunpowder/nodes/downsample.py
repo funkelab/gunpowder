@@ -100,8 +100,9 @@ class DownSample(BatchFilter):
                     request_roi)
 
         # restore requested rois
-        for input_volume, downsample in self.volume_factors.items():
+        for output_volume, downsample in self.volume_factors.items():
 
+            f, input_volume = downsample
             if input_volume not in batch.volumes:
                 continue
 
