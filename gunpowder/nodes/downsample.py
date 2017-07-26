@@ -12,11 +12,11 @@ class DownSample(BatchFilter):
 
     Args:
 
-        volume_factors (dict): Dictionary mapping target :class:`VolumeType` to․
-            a tuple `(f, volume_type)` of downsampling factor `f` and source․
+        volume_factors (dict): Dictionary mapping target :class:`VolumeType` to 
+            a tuple `(f, volume_type)` of downsampling factor `f` and source 
             :class:`VolumeType`. `f` can be a single integer or a tuple of 
             integers, one for each dimension of the volume to downsample.
-    ''' 
+    '''
 
     def __init__(self, volume_factors):
 
