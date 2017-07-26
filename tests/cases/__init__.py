@@ -1,3 +1,4 @@
+from .add_gt_affinities import TestAddGtAffinities
 from .balance_labels import TestBalanceLabels
 from .chunk import TestChunk
 from .downsample import TestDownSample
