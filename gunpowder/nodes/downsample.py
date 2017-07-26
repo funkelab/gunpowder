@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.volume import VolumeType, Volume
+import copy
 import logging
 import numbers
 import numpy as np
@@ -30,6 +31,18 @@ class DownSample(BatchFilter):
             f, input_volume = downsample
             assert isinstance(input_volume, VolumeType)
             assert isinstance(f, numbers.Number) or isinstance(f, tuple), "Scaling factor should be a number or a tuple of numbers."
+
+    def setup(self):
+
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.spec = copy.deepcopy(self.upstream_spec)
+
+        for output_volume, downsample in self.volume_factors.items():
+            _, input_volume = downsample
+            self.spec.volumes[output_volume] = self.spec.volumes[input_volume]
+
+    def get_spec(self):
+        return self.spec
 
     def prepare(self, request):
 
