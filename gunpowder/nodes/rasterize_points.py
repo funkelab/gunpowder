@@ -83,7 +83,6 @@ class RasterizePoints(BatchFilter):
         offset_bm_phys= request.volumes[volume_type].get_offset()
         binary_map       = np.zeros(shape_bm_volume, dtype='uint8')
 
-
         if volume_type in self.volumetype_to_rastersettings:
             raster_setting = self.volumetype_to_rastersettings[volume_type]
         else:
@@ -95,33 +94,43 @@ class RasterizePoints(BatchFilter):
                                                    'as specified with stay_inside_volumetype need to ' \
                                                    'be aligned: %s versus mask shape %s' %(binary_map.shape, mask.shape)
             binary_map_total = np.zeros_like(binary_map)
+            object_id_locations = {}
+            for loc_id in points.data.keys():
+                if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
+                    shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
+                    shifted_loc = shifted_loc.astype(np.int32)/voxel_size
 
-        for loc_id in points.data.keys():
-            # check if location lies inside bounding box
-            if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
-                shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
-                shifted_loc = shifted_loc.astype(np.int32)/voxel_size
-
-                if raster_setting.stay_inside_volumetype is not None:
                     # Get id of this location in the mask
-                    object_id = mask[[[loc] for loc in shifted_loc]]
+                    object_id = mask[[[loc] for loc in shifted_loc]][0] # 0 index, otherwise numpy array with single number
+                    if object_id in object_id_locations:
+                        object_id_locations[object_id].append(shifted_loc)
+                    else:
+                        object_id_locations[object_id] = [shifted_loc]
 
-                binary_map[[[loc] for loc in shifted_loc]] = 1
-                if raster_setting.stay_inside_volumetype is not None:
-                    binary_map = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
-                           marker_size_physical=raster_setting.marker_size_physical,
-                           voxel_size=batch.points[points_type].resolution)
-                    binary_map[mask != object_id] = 0
-                    binary_map_total += binary_map
-                    binary_map.fill(0)
-
-        # return mask where location is marked as a blob. Set marker_size_voxel to 0, if you require a single point.
-        if raster_setting.stay_inside_volumetype is not None:
+            # Process all points part of the same object together (for efficiency reason, but also because otherwise if
+            # donut flag is set, rasterization would create overlapping rings
+            for object_id, location_list in object_id_locations.items():
+                for location in location_list:
+                    binary_map[[[loc] for loc in location]] = 1
+                binary_map = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
+                       marker_size_physical=raster_setting.marker_size_physical,
+                       voxel_size=batch.points[points_type].resolution,
+                                                donut_inner_radius=raster_setting.donut_inner_radius)
+                binary_map[mask != object_id] = 0
+                binary_map_total += binary_map
+                binary_map.fill(0)
             binary_map_total[binary_map_total != 0] = 1
             return binary_map_total
         else:
+            for loc_id in points.data.keys():
+                if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
+                    shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
+                    shifted_loc = shifted_loc.astype(np.int32)/voxel_size
+                    binary_map[[[loc] for loc in shifted_loc]] = 1
+
             return enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
-                               marker_size_physical=raster_setting.marker_size_physical,
-                               voxel_size=batch.points[points_type].resolution)
+                       marker_size_physical=raster_setting.marker_size_physical,
+                       voxel_size=batch.points[points_type].resolution,
+                                                donut_inner_radius=raster_setting.donut_inner_radius)
 
 
