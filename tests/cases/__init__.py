@@ -1,5 +1,6 @@
 from .balance_labels import TestBalanceLabels
 from .chunk import TestChunk
+from .crop import TestCrop
 from .downsample import TestDownSample
 from .elastic_augment_points import TestElasticAugment
 from .normalize import TestNormalize
