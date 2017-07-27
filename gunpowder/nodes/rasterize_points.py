@@ -13,20 +13,20 @@ logger = logging.getLogger(__name__)
 
 class RasterizePoints(BatchFilter):
     ''' Create binary map for points of given PointsType in batch and add it as volume to batch '''
-    def __init__(self, pointstype_to_volumetypes, pointstype_to_rastersettings=None):
+    def __init__(self, pointstype_to_volumetypes, volumetype_to_rastersettings=None):
         ''' Add binary map of given PointsType as volume to batch.
         Args:
            pointstype_to_volumetypes: dict, e.g. {PointsType.PRESYN: VolumeTypes.GT_BM_PRESYN} creates a binary map
                                       of points in PointsType.PRESYN and adds the created binary map
                                       as a volume of type VolumeTypes.GT_BM_PRESYN to the batch if requested.
-           pointstype_to_rastersettings: dict. indicating which kind of rasterization to use for specific pointstype.
+           volumetype_to_rastersettings: dict. indicating which kind of rasterization to use for specific volumetype.
                                     Dict maps PointsType to instance of points.RasterizationSetting
         '''
         self.pointstype_to_volumetypes = pointstype_to_volumetypes
-        if pointstype_to_rastersettings is None:
-            self.pointstype_to_rastersettings = {}
+        if volumetype_to_rastersettings is None:
+            self.volumetype_to_rastersettings = {}
         else:
-            self.pointstype_to_rastersettings = pointstype_to_rastersettings
+            self.volumetype_to_rastersettings = volumetype_to_rastersettings
         self.skip_next = False
 
 
@@ -35,7 +35,7 @@ class RasterizePoints(BatchFilter):
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        for (points_type, volume_type) in self.pointstype_to_volumetypes.items():
+        for (points_type, volume_type) in self.pointstype_to_volumetypes:
             assert points_type in self.spec.points, "Asked for {} from {}, where {} is not provided.".format(volume_type, points_type, points_type)
             self.spec.volumes[volume_type] = self.spec.points[points_type]
 
@@ -47,7 +47,7 @@ class RasterizePoints(BatchFilter):
     def prepare(self, request):
 
         self.skip_next = True
-        for points_type, volume_type in self.pointstype_to_volumetypes.items():
+        for points_type, volume_type in self.pointstype_to_volumetypes:
             if volume_type in request.volumes:
                 del request.volumes[volume_type]
                 assert points_type in request.points
@@ -68,7 +68,7 @@ class RasterizePoints(BatchFilter):
             self.skip_next = False
             return
 
-        for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes.items()):
+        for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes):
             if volume_type in request.volumes:
                 binary_map = self.__get_binary_map(batch, request, points_type, volume_type, points=batch.points[points_type])
                 batch.volumes[volume_type] = Volume(data=binary_map,
@@ -84,8 +84,8 @@ class RasterizePoints(BatchFilter):
         binary_map       = np.zeros(shape_bm_volume, dtype='uint8')
 
 
-        if points_type in self.pointstype_to_rastersettings:
-            raster_setting = self.pointstype_to_rastersettings[points_type]
+        if volume_type in self.volumetype_to_rastersettings:
+            raster_setting = self.volumetype_to_rastersettings[volume_type]
         else:
             raster_setting = RasterizationSetting()
 
