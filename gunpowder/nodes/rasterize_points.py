@@ -16,11 +16,11 @@ class RasterizePoints(BatchFilter):
     def __init__(self, pointstype_to_volumetypes, volumetype_to_rastersettings=None):
         ''' Add binary map of given PointsType as volume to batch.
         Args:
-           pointstype_to_volumetypes: dict, e.g. {PointsType.PRESYN: VolumeTypes.GT_BM_PRESYN} creates a binary map
-                                      of points in PointsType.PRESYN and adds the created binary map
-                                      as a volume of type VolumeTypes.GT_BM_PRESYN to the batch if requested.
+           pointstype_to_volumetypes: list of pairs, e.g. [(PointsType.PRESYN, VolumeTypes.GT_BM_PRESYN), (PointsType.foo, VolumeTypes.bar)]
+           creates two new binary maps VolumeTypes.PRESYN and VolumeTypes.bar to the batch if requested.
+
            volumetype_to_rastersettings: dict. indicating which kind of rasterization to use for specific volumetype.
-                                    Dict maps PointsType to instance of points.RasterizationSetting
+                                    Dict maps VolumeTypes to instance of points.RasterizationSetting
         '''
         self.pointstype_to_volumetypes = pointstype_to_volumetypes
         if volumetype_to_rastersettings is None:
