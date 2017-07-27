@@ -38,9 +38,13 @@ class Coordinate(tuple):
 
             return Coordinate(a*b for a,b in zip(self, other))
 
-        if isinstance(other, numbers.Number):
+        elif isinstance(other, numbers.Number):
 
             return Coordinate(a*other for a in self)
+
+        else:
+
+            raise TypeError("multiplication of Coordinate with type %s not supported" %type(other))
 
     def __div__(self, other):
 
@@ -50,9 +54,13 @@ class Coordinate(tuple):
 
             return Coordinate(a/b for a,b in zip(self, other))
 
-        if isinstance(other, numbers.Number):
+        elif isinstance(other, numbers.Number):
 
             return Coordinate(a/other for a in self)
+
+        else:
+
+            raise TypeError("division of Coordinate with type %s not supported" % type(other))
 
     def __truediv__(self, other):
 
@@ -62,9 +70,13 @@ class Coordinate(tuple):
 
             return Coordinate(a/b for a,b in zip(self, other))
 
-        if isinstance(other, numbers.Number):
+        elif isinstance(other, numbers.Number):
 
             return Coordinate(a/other for a in self)
+
+        else:
+
+            raise TypeError("division of Coordinate with type %s not supported" % type(other))
 
     def __floordiv__(self, other):
 
@@ -74,6 +86,10 @@ class Coordinate(tuple):
 
             return Coordinate(a//b for a,b in zip(self, other))
 
-        if isinstance(other, numbers.Number):
+        elif isinstance(other, numbers.Number):
 
             return Coordinate(a//other for a in self)
+
+        else:
+
+            raise TypeError("division of Coordinate with type %s not supported" % type(other))
