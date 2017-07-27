@@ -192,7 +192,7 @@ class RasterizationSetting(Freezable):
         anistropict blob creations, as expected.
     '''
     def __init__(self, marker_size_voxel=1, marker_size_physical=None,
-                 stay_inside_volumetype=None, donut_inner_radius=None):
+                 stay_inside_volumetype=None, donut_inner_radius=None, invert_map=False):
         self.thaw()
         if donut_inner_radius is not None:
             if marker_size_physical is not None:
@@ -205,6 +205,7 @@ class RasterizationSetting(Freezable):
         self.marker_size_physical = marker_size_physical
         self.stay_inside_volumetype = stay_inside_volumetype
         self.donut_inner_radius = donut_inner_radius
+        self.invert_map = invert_map
         self.freeze()
 
 

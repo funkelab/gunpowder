@@ -120,17 +120,19 @@ class RasterizePoints(BatchFilter):
                 binary_map_total += binary_map
                 binary_map.fill(0)
             binary_map_total[binary_map_total != 0] = 1
-            return binary_map_total
         else:
             for loc_id in points.data.keys():
                 if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                     shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
                     shifted_loc = shifted_loc.astype(np.int32)/voxel_size
                     binary_map[[[loc] for loc in shifted_loc]] = 1
-
-            return enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
+            binary_map_total = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
                        marker_size_physical=raster_setting.marker_size_physical,
                        voxel_size=batch.points[points_type].resolution,
                                                 donut_inner_radius=raster_setting.donut_inner_radius)
+        if raster_setting.invert_map:
+            binary_map_total = np.logical_not(binary_map_total).astype(np.uint8)
+        return binary_map_total
+
 
 
