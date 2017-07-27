@@ -71,18 +71,18 @@ class RasterizePoints(BatchFilter):
         for nr, (points_type, volume_type) in enumerate(self.pointstype_to_volumetypes.items()):
             if volume_type in request.volumes:
                 binary_map = self.__get_binary_map(batch, request, points_type, volume_type, points=batch.points[points_type])
-                resolution = batch.points[points_type].resolution
                 batch.volumes[volume_type] = Volume(data=binary_map,
-                                                    roi = request.volumes[volume_type],
-                                                    resolution = resolution)
+                                                    roi=request.volumes[volume_type])
 
 
     def __get_binary_map(self, batch, request, points_type, volume_type, points):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
 
-        shape_bm_volume  = request.volumes[volume_type].get_shape()
-        offset_bm_volume = request.volumes[volume_type].get_offset()
+        voxel_size = volume_type.voxel_size
+        shape_bm_volume  = request.volumes[volume_type].get_shape()/voxel_size
+        offset_bm_phys= request.volumes[volume_type].get_offset()
         binary_map       = np.zeros(shape_bm_volume, dtype='uint8')
+
 
         if points_type in self.pointstype_to_rastersettings:
             raster_setting = self.pointstype_to_rastersettings[points_type]
@@ -91,14 +91,17 @@ class RasterizePoints(BatchFilter):
 
         if raster_setting.stay_inside_volumetype is not None:
             mask = batch.volumes[raster_setting.stay_inside_volumetype].data
-            assert binary_map.shape == mask.shape
+            assert binary_map.shape == mask.shape, 'shape of newly created rasterized volume and shape of mask volume ' \
+                                                   'as specified with stay_inside_volumetype need to ' \
+                                                   'be aligned: %s versus mask shape %s' %(binary_map.shape, mask.shape)
             binary_map_total = np.zeros_like(binary_map)
 
         for loc_id in points.data.keys():
             # check if location lies inside bounding box
             if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
-                shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_volume)
-                shifted_loc = shifted_loc.astype(np.int32)
+                shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
+                shifted_loc = shifted_loc.astype(np.int32)/voxel_size
+
                 if raster_setting.stay_inside_volumetype is not None:
                     # Get id of this location in the mask
                     object_id = mask[[[loc] for loc in shifted_loc]]
