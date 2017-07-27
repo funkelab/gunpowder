@@ -126,7 +126,8 @@ class PostSynPoint(Point):
         self.freeze()
 
 
-def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_size_physical=None):
+def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_size_physical=None,
+                       donut_inner_radius=None):
     """
     Enlarge existing regions in a binary map.
     Parameters
@@ -158,8 +159,10 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
     else:
         marker_size = marker_size_physical
     binary_map = np.logical_not(binary_map)
-    binary_map = distance_transform_edt(binary_map, sampling=voxel_size)
-    binary_map = binary_map <= marker_size
+    edtmap = distance_transform_edt(binary_map, sampling=voxel_size)
+    binary_map = edtmap <= marker_size
+    if donut_inner_radius is not None:
+        binary_map[edtmap <= donut_inner_radius] = False
     binary_map = binary_map.astype(np.uint8)
     return binary_map
 
@@ -179,15 +182,30 @@ class RasterizationSetting(Freezable):
         blob. Blob regions that are located outside of the object are masked out, such that the blob is only inside the
         specific object.
 
+        donut_inner_radius (int) : if set, instead of a blob, a donut is created. The size of the whole donut
+        corresponds to the size specified with marker_size_physical or marker_size_voxel. The size of the inner radius
+        (the region being cropped out) corresponds to donut_inner_radius. This parameter has to be provided in the same
+        unit as the specified marker_size.
+
     Notes:
         Takes the resolution provided for the respective points into account. Eg. anistropic resolutions result in
         anistropict blob creations, as expected.
     '''
-    def __init__(self, marker_size_voxel=1, marker_size_physical=None, stay_inside_volumetype=None):
+    def __init__(self, marker_size_voxel=1, marker_size_physical=None,
+                 stay_inside_volumetype=None, donut_inner_radius=None, invert_map=False):
         self.thaw()
+        if donut_inner_radius is not None:
+            if marker_size_physical is not None:
+                marker_size_check = marker_size_physical
+            else:
+                marker_size_check = marker_size_voxel
+            assert donut_inner_radius < marker_size_check, 'trying to create a donut in which the inner ' \
+                                                              'radius is larger than the donut size'
         self.marker_size_voxel = marker_size_voxel
         self.marker_size_physical = marker_size_physical
         self.stay_inside_volumetype = stay_inside_volumetype
+        self.donut_inner_radius = donut_inner_radius
+        self.invert_map = invert_map
         self.freeze()
 
 
