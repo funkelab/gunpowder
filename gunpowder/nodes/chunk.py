@@ -66,7 +66,7 @@ class Chunk(BatchFilter):
             # fill returned chunk into batch
             for (volume_type, volume) in chunk.volumes.items():
                 self.__fill(batch.volumes[volume_type].data, volume.data,
-                            request.volumes[volume_type], volume.roi)
+                            request.volumes[volume_type], volume.roi, volume_type.voxel_size)
 
             for (points_type, points) in chunk.points.items():
                 self.__fill_points(batch.points[points_type].data, points.data,
@@ -79,11 +79,11 @@ class Chunk(BatchFilter):
         batch = Batch()
         for (volume_type, roi) in request.volumes.items():
             if volume_type == VolumeTypes.PRED_AFFINITIES or volume_type == VolumeTypes.GT_AFFINITIES:
-                shape = (3,)+ roi.get_shape()
-            elif volume_type == VolumeTypes.PRED_BM_PRESYN:
-                shape = (1,)+roi.get_shape()
+                shape = (3,)+ (roi.get_shape()//volume_type.voxel_size)
+            elif volume_type == VolumeTypes.PRED_BM_PRESYN or VolumeTypes.PRED_BM_POSTSYN:
+                shape = (1,)+(roi.get_shape()//volume_type.voxel_size)
             else:
-                shape = roi.get_shape()
+                shape = (roi.get_shape()//volume_type.voxel_size)
 
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
                                                 roi=roi)
@@ -91,15 +91,17 @@ class Chunk(BatchFilter):
         for (points_type, roi) in request.points.items():
             batch.points[points_type] = Points(data={},
                                                         roi=roi,
-                                                        resolution=chunk_batch.volumes[VolumeTypes.RAW].resolution)
-
+                                                        resolution=VolumeTypes.RAW.voxel_size)
 
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
                                                 roi=roi)
         return batch
 
-    def __fill(self, a, b, roi_a, roi_b):
+    def __fill(self, a, b, roi_a, roi_b, voxel_size):
         logger.debug("filling " + str(roi_b) + " into " + str(roi_a))
+
+        roi_a = roi_a // voxel_size
+        roi_b = roi_b // voxel_size
 
         common_roi = roi_a.intersect(roi_b)
         if common_roi is None:
