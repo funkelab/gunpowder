@@ -41,10 +41,8 @@ class RasterizePoints(BatchFilter):
             assert points_type in self.spec.points, "Asked for {} from {}, where {} is not provided.".format(volume_type, points_type, points_type)
             self.spec.volumes[volume_type] = self.spec.points[points_type]
 
-
     def get_spec(self):
         return self.spec
-
 
     def prepare(self, request):
 
@@ -92,6 +90,12 @@ class RasterizePoints(BatchFilter):
 
         if raster_setting.stay_inside_volumetype is not None:
             mask = batch.volumes[raster_setting.stay_inside_volumetype].data
+            if mask.shape>binary_map.shape:
+                # assumption: the binary map is centered in the mask volume
+                offsets = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
+                slices = [slice(np.floor(offset), np.floor(offset)+bm_shape) for offset, bm_shape in
+                          zip(offsets, binary_map.shape)]
+                mask = mask[slices]
             assert binary_map.shape == mask.shape, 'shape of newly created rasterized volume and shape of mask volume ' \
                                                    'as specified with stay_inside_volumetype need to ' \
                                                    'be aligned: %s versus mask shape %s' %(binary_map.shape, mask.shape)
