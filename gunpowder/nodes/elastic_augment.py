@@ -151,7 +151,7 @@ class ElasticAugment(BatchFilter):
             # TODO: How to avoid having to allocate a new volume each time (rather reuse,
             # but difficult since shape is alternating)
             trial_nr, max_trials, all_points_mapped = 0, 5, False
-            shape_map = points.roi.get_shape()
+            shape_map = points.roi.get_shape()/self.voxel_size
             id_map_volume = np.zeros(shape_map, dtype=np.int32)
 
             # Get all points located in current batch and shift it based on absolute offset. Assign new ids to point
@@ -175,8 +175,8 @@ class ElasticAugment(BatchFilter):
                         new_pointid_to_ori_pointid[new_point_id] = [point_id]
                         ids_not_mapped.append(new_point_id)
                         relabeled_points_dic[new_point_id] = location
-                        new_point_id += 1
                         location_to_pointid_dic[tuple(location)] = new_point_id
+                        new_point_id += 1
                 else:
                     del points.data[point_id]
 
@@ -184,8 +184,7 @@ class ElasticAugment(BatchFilter):
                 marker_size = trial_nr # for each trial, the region of the point in the map is increased to increase
                 # the likelihood that the point still exists after transformation
                 id_map = self.__from_points_to_idmap(relabeled_points_dic, id_map_volume,
-                                                     ids_not_mapped, marker_size=marker_size,
-                                                     voxel_size=points.resolution)
+                                                     ids_not_mapped, marker_size=marker_size)
                 id_map = augment.apply_transformation(
                     id_map,
                     self.transformations[points_type],
@@ -204,19 +203,22 @@ class ElasticAugment(BatchFilter):
                                                                 relabeled_points_dic[point_id]))
                         for ori_point_id in new_pointid_to_ori_pointid[point_id]:
                             del points.data[ori_point_id]
-                            del relabeled_points_dic[point_id]
+                            if point_id in relabeled_points_dic:
+                                del relabeled_points_dic[point_id]
 
                     all_points_mapped = True
                 else:
                     id_map_volume.fill(0)
 
+            # restore original ROIs
+            points.roi = request.points[points_type]
+
             # assign new transformed location and map new ids back to original ids.
             for new_point_id, location in relabeled_points_dic.items():
                 for ori_point_id in new_pointid_to_ori_pointid[new_point_id]:
-                    points.data[ori_point_id].location = location
+                    points.data[ori_point_id].location = location + points.roi.get_offset() # shift back to original roi.
 
-            # restore original ROIs
-            points.roi = request.points[points_type]
+
 
     def __from_idmap_to_points(self, points, id_map, ids_in_map):
         for point_id in ids_in_map:
@@ -225,13 +227,14 @@ class ElasticAugment(BatchFilter):
             locations = zip(*np.where(id_map == point_id))
             # If there are more than one locations, heuristically grab the first one
             new_location = locations[0]
-            points[point_id] = new_location
+            points[point_id] = new_location*np.array(self.voxel_size)
 
-    def __from_points_to_idmap(self, points, id_map_volume, ids_to_map, marker_size=0, voxel_size=[1, 1, 1]):
+    def __from_points_to_idmap(self, points, id_map_volume, ids_to_map, marker_size=0):
         # TODO: This is partially a duplicate of add_gt_binary_map_points:get_binary_map, refactor!
-        relative_voxel_size = 1./(np.array(voxel_size)/np.min(np.array(voxel_size)))
+        relative_voxel_size = 1./(np.array(self.voxel_size)/np.min(np.array(self.voxel_size)))
         for point_id in ids_to_map:
             location = points[point_id].astype(np.int32)
+            location /= self.voxel_size # convert locations in world units to voxel units
             if marker_size > 0:
                 marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
                                           min(id_map_volume.shape[dim] - 1,
@@ -240,6 +243,7 @@ class ElasticAugment(BatchFilter):
 
             else:
                 marker_locs = [[loc] for loc in location]
+
             id_map_volume[marker_locs] = point_id
         return id_map_volume
 
