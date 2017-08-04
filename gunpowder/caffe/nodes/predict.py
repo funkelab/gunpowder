@@ -9,8 +9,9 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.roi import Roi
+from gunpowder.roi import Roi, Coordinate
 from gunpowder.volume import VolumeTypes, Volume
+
 
 logger = logging.getLogger(__name__)
 
@@ -133,10 +134,12 @@ class Predict(BatchFilter):
         logger.info("Predict process: time=%f (including %f waiting for batch)" % (predict_time, fetch_time))
 
         for volume_type, output_name in self.outputs.items():
+            voxel_size = self.output_resolutions[volume_type]
             batch.volumes[volume_type] = Volume(
                     data=output[output_name][0], # strip #batch dimension
-                    roi=Roi(), # dummy roi, will be corrected in process()
-                    resolution=self.output_resolutions[volume_type]
+                    roi=Roi(shape=Coordinate([dim for dim in
+                                              output[output_name][0].shape[-len(voxel_size):]])*voxel_size)
+                # dummy roi, will be corrected in process()
             )
 
         return batch
