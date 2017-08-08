@@ -115,6 +115,7 @@ class RasterizePoints(BatchFilter):
 
             # Process all points part of the same object together (for efficiency reason, but also because otherwise if
             # donut flag is set, rasterization would create overlapping rings
+
             for object_id, location_list in object_id_locations.items():
                 for location in location_list:
                     binary_map[[[loc] for loc in location]] = 1
@@ -136,6 +137,8 @@ class RasterizePoints(BatchFilter):
                        marker_size_physical=raster_setting.marker_size_physical,
                        voxel_size=batch.points[points_type].resolution,
                                                 donut_inner_radius=raster_setting.donut_inner_radius)
+        if len(points.data.keys()) == 0:
+            assert np.all(binary_map_total == 0)
         if raster_setting.invert_map:
             binary_map_total = np.logical_not(binary_map_total).astype(np.uint8)
         return binary_map_total

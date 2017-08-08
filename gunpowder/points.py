@@ -150,6 +150,9 @@ def enlarge_binary_map(binary_map, marker_size_voxel=1, voxel_size=None, marker_
     ---------
         binary_map: matrix with 0s and 1s of same dimension as input binary_map with enlarged regions (indicated with 1)
     """
+    if len(np.unique(binary_map)) == 1:
+        # Check whether there are regions at all. If  there is no region (or everything is full), return the same map.
+        return binary_map
     if voxel_size is None:
         voxel_size = (1,)*binary_map.shape[0]
     voxel_size = np.asarray(voxel_size)
