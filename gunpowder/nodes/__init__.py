@@ -3,6 +3,7 @@ from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
+from .crop import Crop
 from .chunk import Chunk
 from .defect_augment import DefectAugment
 from .downsample import DownSample
