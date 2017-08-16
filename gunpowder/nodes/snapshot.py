@@ -37,6 +37,10 @@ class Snapshot(BatchFilter):
             indicates gzip compression level. Otherwise, an integer indicates 
             the number of a dynamically loaded compression filter. (See 
             h5py.groups.create_dataset())
+
+        dataset_dtypes (dict): A dictionary from :class:`VolumeType` to datatype
+            (eg. np.int8). Volume to store is copied and casted to the specified type.
+             Original volume within the pipeline remains unchanged.
         '''
 
     def __init__(
@@ -46,7 +50,8 @@ class Snapshot(BatchFilter):
             output_filename='{id}.hdf',
             every=1,
             additional_request=None,
-            compression_type=None):
+            compression_type=None,
+            dataset_dtypes=None):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
         self.output_filename = output_filename
@@ -54,6 +59,10 @@ class Snapshot(BatchFilter):
         self.additional_request = BatchRequest() if additional_request is None else additional_request
         self.n = 0
         self.compression_type = compression_type
+        if dataset_dtypes is None:
+            self.dataset_dtypes = {}
+        else:
+            self.dataset_dtypes = dataset_dtypes
 
     def prepare(self, request):
 
@@ -86,7 +95,11 @@ class Snapshot(BatchFilter):
                     ds_name = self.dataset_names[volume_type]
 
                     offset = volume.roi.get_offset()
-                    dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
+                    if volume_type in self.dataset_dtypes:
+                        dtype = self.dataset_dtypes[volume_type]
+                        dataset = f.create_dataset(name=ds_name, data=volume.data.astype(dtype), compression=self.compression_type)
+                    else:
+                        dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
                     dataset.attrs['offset'] = offset
                     dataset.attrs['resolution'] = volume_type.voxel_size
 
