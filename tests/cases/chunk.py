@@ -8,10 +8,6 @@ class ChunkTestSource(BatchProvider):
         spec = ProviderSpec()
         spec.volumes[VolumeTypes.RAW] = Roi((20000,2000,2000), (2000,200,200))
         spec.volumes[VolumeTypes.GT_LABELS] = Roi((20100,2010,2010), (1800,180,180))
-
-        VolumeTypes.RAW.voxel_size       = (20,2,2)
-        VolumeTypes.GT_LABELS.voxel_size = (20,2,2)
-
         return spec
 
     def provide(self, request):
@@ -43,6 +39,10 @@ class ChunkTestSource(BatchProvider):
 class TestChunk(ProviderTest):
 
     def test_output(self):
+
+        voxel_size = (20, 2, 2)
+        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=voxel_size))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
 
         source = ChunkTestSource()
 
@@ -78,3 +78,9 @@ class TestChunk(ProviderTest):
             self.assertTrue((volume.data == data).all())
 
         assert(batch.volumes[VolumeTypes.RAW].roi.get_offset() == (20000, 2000, 2000))
+
+        # restore default volume types
+        voxel_size = (1,1,1)
+        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=voxel_size))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
+
