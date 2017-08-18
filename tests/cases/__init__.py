@@ -1,4 +1,5 @@
 from .add_gt_affinities import TestAddGtAffinities
+from .add_vector_map import TestAddVectorMap
 from .balance_labels import TestBalanceLabels
 from .chunk import TestChunk
 from .crop import TestCrop

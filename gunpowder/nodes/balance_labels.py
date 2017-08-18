@@ -77,7 +77,8 @@ class BalanceLabels(BatchFilter):
 
             # in the masked-in area, compute the fraction of positive samples
             masked_in = error_scale.sum()
-            num_pos = (labels.data * error_scale).sum()
+            labels_binary = np.floor(np.clip(labels.data+0.5, a_min=0, a_max=1))
+            num_pos  = (labels_binary * error_scale).sum()
             frac_pos = float(num_pos) / masked_in if masked_in > 0 else 0
             frac_pos = np.clip(frac_pos, 0.05, 0.95)
             frac_neg = 1.0 - frac_pos
@@ -87,7 +88,7 @@ class BalanceLabels(BatchFilter):
             w_neg = 1.0 / (2.0 * frac_neg)
 
             # scale the masked-in error_scale with the class weights
-            error_scale *= (labels.data >= 0.5) * w_pos + (labels.data < 0.5) * w_neg
+            error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
 
             batch.volumes[loss_scale_volume] = Volume(
                 error_scale,
