@@ -1,6 +1,7 @@
 from .freezable import Freezable
 from copy import deepcopy
 from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
 import logging
 import numpy as np
 
@@ -117,7 +118,10 @@ register_volume_type(VolumeType('LOSS_SCALE_BM_POSTSYN', interpolate=False))
 
 class Volume(Freezable):
 
-    def __init__(self, data, roi):
+    def __init__(self, data, roi=None):
+
+        if roi is None:
+            roi = Roi((0,)*len(data.shape), data.shape)
 
         self.roi = roi
         self.data = data
