@@ -124,12 +124,12 @@ class Volume(Freezable):
             roi = Roi((0,)*len(data.shape), data.shape)
 
         self.roi = roi
-        self.data = data
+        self.data = np.asarray(data)
 
         voxel_size = self.get_voxel_size()
         for d in range(len(voxel_size)):
-            assert voxel_size[d]*data.shape[-self.roi.dims()+d] == roi.get_shape()[d], \
-                    "ROI %s does not align with voxel size %s * data shape %s"%(roi, voxel_size, data.shape)
+            assert voxel_size[d]*self.data.shape[-self.roi.dims()+d] == roi.get_shape()[d], \
+                    "ROI %s does not align with voxel size %s * data shape %s"%(roi, voxel_size, self.data.shape)
 
         self.freeze()
 
