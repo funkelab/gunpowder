@@ -117,6 +117,17 @@ register_volume_type(VolumeType('LOSS_SCALE_BM_POSTSYN', interpolate=False))
 
 
 class Volume(Freezable):
+    '''Represents a volume as an array and a :class:`Roi`.
+
+    Args:
+
+        data (array-like): The data to be stored in the volume. Will be 
+            converted to an numpy array, if necessary.
+
+        roi (:class:`Roi`, optional): A region of interest describing the origin 
+            of the passed data. If not given, a :class:`Roi` with zero offset 
+            and shape `data.shape` will be created.
+    '''
 
     def __init__(self, data, roi=None):
 
