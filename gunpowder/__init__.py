@@ -12,6 +12,7 @@ from .provider_spec import ProviderSpec
 from .roi import Roi
 from .volume import register_volume_type, VolumeType, VolumeTypes, Volume
 import gunpowder.caffe
+import gunpowder.tensorflow
 
 # logging.basicConfig(level=logging.INFO)
 
