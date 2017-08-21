@@ -1,62 +1,48 @@
-from .freezable import Freezable
 from .roi import Roi
+from .provider_spec import ProviderSpec
+from .volume_spec import VolumeSpec
+from .points_spec import PointsSpec
 
-class BatchRequest(Freezable):
+class BatchRequest(ProviderSpec):
+    '''A collection of (possibly partial) :class:`VolumeSpec`s and 
+    :class:`PointsSpec`s forming a request.
 
-    def __init__(self, initial_volumes=None, initial_points=None):
+    Args:
 
-        if initial_volumes is None:
-            self.volumes = {}
-        else:
-            self.volumes = initial_volumes
+        volume_specs (dict): A dictionary from :class:`VolumeType` to :class:`VolumeSpec`.
 
-        if initial_points is None:
-            self.points = {}
-        else:
-            self.points = initial_points
-
-        self.freeze()
-
-        self.__center_rois()
+        points_specs (dict): A dictionary from :class:`PointsType` to :class:`PointsSpec`.
+    '''
 
     def add_volume_request(self, volume_type, shape):
+        '''Convenience method to add a volume request by providing only the 
+        shape of a ROI (in world units).
 
-        self.volumes[volume_type] = Roi((0,)*len(shape), shape)
+        A ROI with zero-offset will be generated. If more than one request is 
+        added, the ROIs with smaller shapes will be shifted to be centered in 
+        the largest one.
+        '''
 
+        volume_spec = VolumeSpec()
+        volume_spec.roi = Roi((0,)*len(shape), shape)
+
+        self.volume_specs[volume_type] = volume_spec
         self.__center_rois()
 
     def add_points_request(self, points_type, shape):
+        '''Convenience method to add a points request by providing only the 
+        shape of a ROI (in world units).
 
-        self.points[points_type] = Roi((0,)*len(shape), shape)
+        A ROI with zero-offset will be generated. If more than one request is 
+        added, the ROIs with smaller shapes will be shifted to be centered in 
+        the largest one.
+        '''
 
+        points_spec = PointsSpec()
+        points_spec.roi = Roi((0,)*len(shape), shape)
+
+        self.points_specs[points_type] = points_spec
         self.__center_rois()
-
-    def get_total_roi(self):
-        '''Get the union of all the requested volume ROIs.'''
-
-        total_roi = None
-
-        for collection_type in [self.volumes, self.points]:
-            for (type, roi) in collection_type.items():
-                if total_roi is None:
-                    total_roi = roi
-                else:
-                    total_roi = total_roi.union(roi)
-
-        return total_roi
-
-    def get_common_roi(self):
-        ''' Get the intersection of all the requested ROIs.'''
-
-        common_roi = None
-        for collection_type in [self.volumes, self.points]:
-            for (type, roi) in collection_type.items():
-                if common_roi is None:
-                    common_roi = roi
-                else:
-                    common_roi = common_roi.intersect(roi)
-
-        return common_roi
 
     def __center_rois(self):
         '''Ensure that all ROIs are centered around the same location.'''
@@ -67,27 +53,7 @@ class BatchRequest(Freezable):
 
         center = total_roi.get_center()
 
-        for collection_type in [self.volumes, self.points]:
-            for type in collection_type:
-                roi = collection_type[type]
-                collection_type[type] = roi.shift(center - roi.get_center())
-
-    def __eq__(self, other):
-
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        return NotImplemented
-
-    def __ne__(self, other):
-
-        if isinstance(other, self.__class__):
-            return not self.__eq__(other)
-        return NotImplemented
-
-    def __repr__(self):
-
-        r = ""
-        for collection_type in [self.volumes, self.points]:
-            for (type, roi) in collection_type.items():
-                r += "%s: %s\n"%(type, roi)
-        return r
+        for specs_type in [self.volume_specs, self.points_specs]:
+            for type in specs_type:
+                roi = specs_type[type].roi
+                specs_type[type].roi = roi.shift(center - roi.get_center())
