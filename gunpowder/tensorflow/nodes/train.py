@@ -99,7 +99,7 @@ class Train(BatchFilter):
             # if use_gpu is not None:
 
             self.session = tf.Session()
-            self.session.run(tf.initialize_all_variables())
+            self.session.run(tf.global_variables_initializer())
 
         batch, request = self.batch_in.get()
 
