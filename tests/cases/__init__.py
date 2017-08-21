@@ -5,6 +5,7 @@ from .chunk import TestChunk
 from .crop import TestCrop
 from .downsample import TestDownSample
 from .elastic_augment_points import TestElasticAugment
+from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
 from .normalize import TestNormalize
 from .points_types import TestPointsTypes
@@ -13,4 +14,3 @@ from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
 from .volume_types import TestVolumeTypes
-

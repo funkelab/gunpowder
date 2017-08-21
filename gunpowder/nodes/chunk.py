@@ -201,7 +201,7 @@ class Chunk(BatchFilter):
 
             stride = np.min(max_strides, axis=0)
 
-            logger.info("requesting chunk " + str(chunk_request))
+            logger.debug("requesting chunk " + str(chunk_request))
             self.requests.put(chunk_request)
 
             if (offset >= final_offset).all():
