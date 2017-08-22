@@ -125,7 +125,7 @@ class BatchProvider(object):
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
                             request_spec.voxel_size,
-                            volume_type,
+                            identifier,
                             provided_spec.voxel_size)
 
                 for d in range(request_roi.dims()):
@@ -133,7 +133,7 @@ class BatchProvider(object):
                             "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
                                     request,
                                     d,
-                                    volume_type,
+                                    identifier,
                                     provided_spec.voxel_size[d])
 
     def check_batch_consistency(self, batch, request):
