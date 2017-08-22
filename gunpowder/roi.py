@@ -3,7 +3,7 @@ from .freezable import Freezable
 import numbers
 
 class Roi(Freezable):
-    '''A rectengular region of interest, defined by an offset and a shape.
+    '''A rectangular region of interest, defined by an offset and a shape.
     '''
 
     def __init__(self, offset=None, shape=None):
