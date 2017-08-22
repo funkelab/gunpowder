@@ -29,12 +29,12 @@ class GrowBoundary(BatchFilter):
         if gt_mask is not None:
 
             # grow only in area where mask and gt are defined
-            crop = gt_mask.roi.intersect(gt.roi)
+            crop = gt_mask.spec.roi.intersect(gt.spec.roi)
 
             if crop is None:
-                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.roi,gt_mask.roi))
-            crop_in_gt = (crop.shift(-gt.roi.get_offset())/VolumeTypes.GT_LABELS.voxel_size).get_bounding_box()
-            crop_in_gt_mask = (crop.shift(-gt_mask.roi.get_offset())/VolumeTypes.GT_MASK.voxel_size).get_bounding_box()
+                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.spec.roi,gt_mask.spec.roi))
+            crop_in_gt = (crop.shift(-gt.spec.roi.get_offset())/VolumeTypes.GT_LABELS.voxel_size).get_bounding_box()
+            crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.get_offset())/VolumeTypes.GT_MASK.voxel_size).get_bounding_box()
 
             self.__grow(gt.data[crop_in_gt], gt_mask.data[crop_in_gt_mask], self.only_xy)
 
