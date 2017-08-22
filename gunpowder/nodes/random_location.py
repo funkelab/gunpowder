@@ -52,24 +52,24 @@ class RandomLocation(BatchFilter):
 
     def setup(self):
 
-        self.roi = self.get_spec().get_total_roi()
+        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.upstream_roi = self.upstream_spec.get_total_roi()
 
-        if self.roi is None:
+        if self.upstream_roi is None:
             raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")
 
         if self.min_masked > 0:
 
-            assert self.mask_volume_type in self.get_spec().volumes, "Upstream provider does not have %s"%self.mask_volume_type
-            self.mask_roi = self.get_spec().volumes[self.mask_volume_type]
+            assert self.mask_volume_type in self.upstream_spec.volumes, "Upstream provider does not have %s"%self.mask_volume_type
+            self.mask_spec = self.upstream_spec.volume_specs[self.mask_volume_type]
 
             logger.info("requesting complete mask...")
 
-            mask_request = BatchRequest({self.mask_volume_type: self.mask_roi})
+            mask_request = BatchRequest({self.mask_volume_type: self.mask_spec})
             mask_batch = self.get_upstream_provider().request_batch(mask_request)
 
             logger.info("allocating mask integral volume...")
 
-            self.mask_voxel_size = self.mask_volume_type.voxel_size
             mask_data = mask_batch.volumes[self.mask_volume_type].data
             mask_integral_dtype = np.uint64
             logger.debug("mask size is " + str(mask_data.size))
@@ -82,19 +82,28 @@ class RandomLocation(BatchFilter):
             self.mask_integral = np.array(mask_data>0, dtype=mask_integral_dtype)
             self.mask_integral = integral_image(self.mask_integral)
 
+        # clear bounding boxes of all provided volumes and points -- 
+        # RandomLocation does not have limits (offsets are ignored)
+        for volume_type, spec in self.get_spec().volume_specs.items():
+            spec.roi = None
+            self.update_volume_spec(volume_type, spec)
+        for points_type, spec in self.get_spec().points_specs.items():
+            spec.roi = None
+            self.update_points_spec(points_type, spec)
 
     def prepare(self, request):
 
         shift_roi = None
 
-        for collection_type in [request.volumes, request.points]:
-            for type, request_roi in collection_type.items():
-                if type in self.get_spec().volumes:
-                    provided_roi = self.get_spec().volumes[type]
-                elif type in self.get_spec().points:
-                    provided_roi = self.get_spec().points[type]
+        for specs_type in [request.volume_specs, request.points_specs]:
+            for type, request_spec in specs_type.items():
+                request_roi = request_spec.roi
+                if type in self.upstream_spec.volume_specs:
+                    provided_roi = self.upstream_spec.volume_specs[type].roi
+                elif type in self.upstream_spec.points_specs:
+                    provided_roi = self.upstream_spec.points_specs[type].roi
                 else:
-                    raise Exception("Requested %s, but source does not provide it."%type)
+                    raise Exception("Requested %s, but upstream does not provide it."%type)
                 type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
 
                 if shift_roi is None:
@@ -118,12 +127,14 @@ class RandomLocation(BatchFilter):
 
             good_location_found_for_mask, good_location_found_for_points = False, False
             if self.focus_points_type is not None:
-                focused_points_offset = request.points[self.focus_points_type].get_offset()
-                focused_points_shape  = request.points[self.focus_points_type].get_shape()
+
+                focused_points_roi = request.points_spec[self.focus_points_type].roi
+                focused_points_offset = focused_points_roi.get_offset()
+                focused_points_shape  = focused_points_roi.get_shape()
 
                 # prefetch points in roi of focus_points_type
                 request_for_focused_pointstype = BatchRequest()
-                request_for_focused_pointstype.points[self.focus_points_type] = request.points[self.focus_points_type].shift(random_shift)
+                request_for_focused_pointstype.points_spec[self.focus_points_type] = PointsSpec(roi=focused_points_roi.shift(random_shift))
                 batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_pointstype)
                 point_ids_in_batch = batch_of_points.points[self.focus_points_type].data.keys()
 
@@ -160,7 +171,7 @@ class RandomLocation(BatchFilter):
 
             if self.min_masked > 0:
                 # get randomly chosen mask ROI
-                request_mask_roi = request.volumes[self.mask_volume_type]
+                request_mask_roi = request.volume_specs[self.mask_volume_type].roi
                 request_mask_roi = request_mask_roi.shift(random_shift)
 
                 # get coordinates inside mask volume
@@ -188,23 +199,23 @@ class RandomLocation(BatchFilter):
 
         # shift request ROIs
         self.random_shift = random_shift
-        for collection_type in [request.volumes, request.points]:
-            for (type, roi) in collection_type.items():
-                roi = roi.shift(random_shift)
+        for specs_type in [request.volume_specs, request.points_specs]:
+            for (type, spec) in specs_type.items():
+                roi = spec.roi.shift(random_shift)
                 logger.debug("new %s ROI: %s"%(type, roi))
-                collection_type[type] = roi
-                assert self.roi.contains(roi)
+                specs_type[type].roi = roi
+                assert self.upstream_roi.contains(roi)
 
 
     def process(self, batch, request):
         # reset ROIs to request
-        for (volume_type, roi) in request.volumes.items():
-            batch.volumes[volume_type].roi = roi
-        for (points_type, roi) in request.points.items():
-            batch.points[points_type].roi = roi
+        for (volume_type, spec) in request.volume_specs.items():
+            batch.volumes[volume_type].spec.roi = spec.roi
+        for (points_type, spec) in request.points_specs.items():
+            batch.points[points_type].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
-        for (points_type, roi) in request.points.items():
+        for points_type in request.points_specs.keys():
             for point_id, point in batch.points[points_type].data.items():
                 batch.points[points_type].data[point_id].location -= self.random_shift
 
