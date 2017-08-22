@@ -21,5 +21,5 @@ class PointsSpec(Freezable):
 
     def __repr__(self):
         r = ""
-        r += "roi: " + str(self.roi)
+        r += "ROI: " + str(self.roi)
         return r

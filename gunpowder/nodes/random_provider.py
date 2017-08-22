@@ -13,26 +13,18 @@ class RandomProvider(BatchProvider):
 
         common_spec = None
 
-        # advertise volume_types only if all upstream providers have them
+        # advertise outputs only if all upstream providers have them
         for provider in self.get_upstream_providers():
 
             if common_spec is None:
-                common_spec = copy.deepcopy(provider.get_spec())
+                common_spec = copy.deepcopy(provider.spec)
             else:
-                my_volume_types = list(common_spec.volume_specs.keys())
-                for volume_type in my_volume_types:
-                    if volume_type not in provider.get_spec().volume_specs:
-                        del common_spec.volume_specs[volume_type]
+                for identifier, spec in provider.spec.items():
+                    if identifier not in common_spec:
+                        del common_spec[identifier]
 
-                my_points_types = list(common_spec.points_specs.keys())
-                for points_type in my_points_types:
-                    if points_type not in provider.get_spec().points_specs:
-                        del common_spec.points_specsc[points_type]
-
-        for volume_type, spec in common_spec.volume_specs.items():
-            self.add_volume_spec(volume_type, spec)
-        for points_type, spec in common_spec.points_specs.items():
-            self.add_points_spec(points_type, spec)
+        for identifier, spec in common_spec.items():
+            self.provides(identifier, spec)
 
     def provide(self, request):
         return random.choice(self.get_upstream_providers()).request_batch(request)

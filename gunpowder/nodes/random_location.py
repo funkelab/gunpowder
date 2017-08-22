@@ -52,7 +52,7 @@ class RandomLocation(BatchFilter):
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
+        self.upstream_spec = self.get_upstream_provider().spec
         self.upstream_roi = self.upstream_spec.get_total_roi()
 
         if self.upstream_roi is None:
@@ -84,12 +84,9 @@ class RandomLocation(BatchFilter):
 
         # clear bounding boxes of all provided volumes and points -- 
         # RandomLocation does not have limits (offsets are ignored)
-        for volume_type, spec in self.get_spec().volume_specs.items():
+        for identifier, spec in self.spec.items():
             spec.roi = None
-            self.update_volume_spec(volume_type, spec)
-        for points_type, spec in self.get_spec().points_specs.items():
-            spec.roi = None
-            self.update_points_spec(points_type, spec)
+            self.updates(identifier, spec)
 
     def prepare(self, request):
 

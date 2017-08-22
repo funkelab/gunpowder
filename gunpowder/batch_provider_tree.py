@@ -33,8 +33,9 @@ class BatchProviderTree(BatchProvider):
             upstream_providers += input.get_upstream_providers()
         return upstream_providers
 
-    def get_spec(self):
-        return self.output.get_spec()
+    @property
+    def spec(self):
+        return self.output.spec
 
     def provide(self, request):
 

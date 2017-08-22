@@ -81,13 +81,15 @@ class Hdf5Source(BatchProvider):
             spec.voxel_size = voxel_size
             spec.dtype = f[ds].dtype
 
-            self.add_volume_spec(volume_type, spec)
+            self.provides(volume_type, spec)
 
         if self.points_types is not None:
+
             for points_type in self.points_types:
                 spec = PointsSpec()
                 spec.roi = Roi(self.points_rois[points_type])
-                self.add_points_spec(points_type, spec)
+
+                self.provides(points_type, spec)
 
         f.close()
 
@@ -95,8 +97,6 @@ class Hdf5Source(BatchProvider):
 
         timing = Timing(self)
         timing.start()
-
-        spec = self.get_spec()
 
         batch = Batch()
 
@@ -106,16 +106,16 @@ class Hdf5Source(BatchProvider):
 
                 logger.debug("Reading %s in %s..."%(volume_type,request_spec.roi))
 
-                voxel_size = spec.volume_specs[volume_type].voxel_size
+                voxel_size = self.spec[volume_type].voxel_size
 
                 # scale request roi to voxel units
                 dataset_roi = request_spec.roi/voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = dataset_roi - spec.volume_specs[volume_type].roi.get_offset()/voxel_size
+                dataset_roi = dataset_roi - self.spec[volume_type].roi.get_offset()/voxel_size
 
                 # create volume spec
-                volume_spec = deepcopy(spec.volume_specs[volume_type])
+                volume_spec = deepcopy(self.spec[volume_type])
                 volume_spec.roi = request_spec.roi
 
                 # add volume to batch

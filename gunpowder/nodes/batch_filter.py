@@ -42,43 +42,25 @@ class BatchFilter(BatchProvider):
         assert len(self.get_upstream_providers()) == 1, "BatchFilters need to have exactly one upstream provider"
         return self.get_upstream_providers()[0]
 
-    def add_volume_spec(self, volume_type, volume_spec):
-        '''Introduce a new volume spec provided by this `BatchFilter`. Asserts 
-        that no upstream volume spec for the same volume type is shadowed.
+    def updates(self, identifier, spec):
+        '''Update an output provided by this `BatchFilter`.
+
+        Args:
+
+            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+
+            spec: A :class:`VolumeSpec` or `PointsSpec` to describe the output.
         '''
-        assert volume_type not in self.get_spec().volume_specs, "Node %s is trying to add spec for %s, but is already provided upstream."%(type(self).__name__, volume_type)
-        super(BatchFilter, self).add_volume_spec(volume_type, volume_spec)
 
-    def add_points_spec(self, points_type, points_spec):
-        '''Introduce a new points spec provided by this `BatchFilter`. Asserts 
-        that no upstream points spec for the same volume type is shadowed.
-        '''
-        assert points_type not in self.get_spec().points_specs, "Node %s is trying to add spec for %s, but is already provided upstream."%(type(self).__name__, points_type)
-        super(BatchFilter, self).add_points_spec(points_type, points_spec)
+        assert identifier in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, identifier)
+        self.spec[identifier] = spec
 
-    def update_volume_spec(self, volume_type, volume_spec):
-        '''Change the spec of a volume provided by this `BatchFilter`. Asserts 
-        that the volume type is provided upstream.
-        '''
-        assert volume_type in self.get_spec().volume_specs, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, volume_type)
-        self.get_spec().volume_specs[volume_type] = copy.deepcopy(volume_spec)
-        logger.debug("%s updates %s with %s"%(self.name(), volume_type, volume_spec))
+        logger.debug("%s updates %s with %s"%(self.name(), identifier, spec))
 
-    def update_points_spec(self, points_type, points_spec):
-        '''Change the spec of points provided by this `BatchFilter`. Asserts 
-        that the points type is provided upstream.
-        '''
-        assert points_type in self.get_spec().points_specs, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, points_type)
-        self.get_spec().points_specs[points_type] = copy.deepcopy(points_spec)
-        logger.debug("%s updates %s with %s"%(self.name(), points_type, points_spec))
-
-    def get_spec(self):
-
-        if not hasattr(self, 'spec'):
-            self.spec = copy.deepcopy(self.get_upstream_provider().get_spec())
-            assert self.spec is not None, "No provider spec was set and the upstream provider spec is not defined. Make sure you ask for the spec after 'build'ing your graph, or in 'setup' of your node."
-
-        return self.spec
+    def _init_spec(self):
+        # default for BatchFilters is to provide the same as upstream
+        if not hasattr(self, '_spec') or self._spec is None:
+            self._spec = copy.deepcopy(self.get_upstream_provider().spec)
 
     def provide(self, request):
 
@@ -104,6 +86,17 @@ class BatchFilter(BatchProvider):
         batch.profiling_stats.add(timing_process)
 
         return batch
+
+    def setup(self):
+        '''To be implemented in subclasses.
+
+        Called during initialization of the DAG. Callees can assume that all 
+        upstream providers are set up already.
+
+        In setup, call :fun:`provides` or :fun:`updates` to announce the volumes 
+        and points provided or changed by this node.
+        '''
+        pass
 
     def prepare(self, request):
         '''To be implemented in subclasses.
