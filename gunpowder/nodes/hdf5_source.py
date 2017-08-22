@@ -6,11 +6,13 @@ from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
-from gunpowder.profiling import Timing
 from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
+from gunpowder.points_spec import PointsSpec
+from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume_spec import VolumeSpec
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,11 @@ class Hdf5Source(BatchProvider):
     '''An HDF5 data source.
 
     Provides volumes from HDF5 datasets for each volume type given. If the 
-    attribute ``resolution`` is set in an HDF5 dataset, it will be compared 
-    agains the volume's ``voxel_size`` and a warning issued if they differ. If 
-    the attribute ``offset`` is set in an HDF5 dataset, it will be used as the 
-    offset of the :class:`Roi` provided by this node. It is assumed that the 
-    offset is given in world units.
+    attribute `resolution` is set in an HDF5 dataset, it will be used as the 
+    volume's `voxel_size` and a warning issued if they differ. If the attribute 
+    `offset` is set in an HDF5 dataset, it will be used as the offset of the 
+    :class:`Roi` for this volume. It is assumed that the offset is given in 
+    world units.
 
     Args:
 
@@ -41,14 +43,13 @@ class Hdf5Source(BatchProvider):
         self.filename = filename
         self.datasets = datasets
 
-        self.points_types      = points_types
+        self.points_types = points_types
         self.points_rois = points_rois
 
     def setup(self):
 
         f = h5py.File(self.filename, 'r')
 
-        self.spec = ProviderSpec()
         self.ndims = None
         for (volume_type, ds) in self.datasets.items():
 
@@ -64,27 +65,31 @@ class Hdf5Source(BatchProvider):
 
             if 'resolution' in f[ds].attrs:
                 voxel_size = Coordinate(f[ds].attrs['resolution'])
-                if voxel_size != volume_type.voxel_size:
-                    logger.warning(
-                            "WARNING: Your source contains a resolution information of %s, "
-                            "but %s was set globally for %s"
-                            %(voxel_size, volume_type.voxel_size, volume_type))
+            else:
+                voxel_size = Coordinate((1,1,1))
+                logger.warning(
+                        "WARNING: Your source does not contain resolution information for %s, voxel size has been set to (1,1,1). This might not be what you want."%volume_type
+                )
 
             if 'offset' in f[ds].attrs:
                 offset = Coordinate(f[ds].attrs['offset'])
             else:
                 offset = Coordinate((0,)*self.ndims)
 
-            self.spec.volumes[volume_type] = Roi(offset, dims*volume_type.voxel_size)
+            spec = VolumeSpec()
+            spec.roi = Roi(offset, dims*voxel_size)
+            spec.voxel_size = voxel_size
+            spec.dtype = f[ds].dtype
+
+            self.add_volume_spec(volume_type, spec)
 
         if self.points_types is not None:
             for points_type in self.points_types:
-                self.spec.points[points_type] = self.points_rois[points_type]
+                spec = PointsSpec()
+                spec.roi = Roi(self.points_rois[points_type])
+                self.add_points_spec(points_type, spec)
 
         f.close()
-
-    def get_spec(self):
-        return self.spec
 
     def provide(self, request):
 
@@ -97,60 +102,47 @@ class Hdf5Source(BatchProvider):
 
         with h5py.File(self.filename, 'r') as f:
 
-            for (volume_type, roi) in request.volumes.items():
+            for (volume_type, request_spec) in request.volume_specs.items():
 
-                if volume_type not in spec.volumes:
-                    raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
+                logger.debug("Reading %s in %s..."%(volume_type,request_spec.roi))
 
-                if not spec.volumes[volume_type].contains(roi):
-                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
-
-                roi_shape = roi.get_shape()
-                voxel_size = volume_type.voxel_size
-
-                for d in range(roi.dims()):
-                    assert roi_shape[d]%voxel_size[d] == 0, \
-                            "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
-                                    request,
-                                    d,
-                                    volume_type,
-                                    voxel_size[d])
-
-                logger.debug("Reading %s in %s..."%(volume_type,roi))
+                voxel_size = spec.volume_specs[volume_type].voxel_size
 
                 # scale request roi to voxel units
-                dataset_roi = roi/voxel_size
+                dataset_roi = request_spec.roi/voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = dataset_roi - spec.volumes[volume_type].get_offset()/voxel_size
+                dataset_roi = dataset_roi - spec.volume_specs[volume_type].roi.get_offset()/voxel_size
 
+                # create volume spec
+                volume_spec = deepcopy(spec.volume_specs[volume_type])
+                volume_spec.roi = request_spec.roi
+
+                # add volume to batch
                 batch.volumes[volume_type] = Volume(
                         self.__read(f, self.datasets[volume_type], dataset_roi),
-                        roi=roi)
+                        volume_spec)
 
             # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
             # together s.t. ids are unique and allow to find partner locations
-            if PointsTypes.PRESYN in request.points or PointsTypes.POSTSYN in request.points:
-                assert request.points[PointsTypes.PRESYN] == request.points[PointsTypes.POSTSYN]
+            if PointsTypes.PRESYN in request.points_specs or PointsTypes.POSTSYN in request.points_specs:
+                assert request.points_specs[PointsTypes.PRESYN].roi == request.points_specs[PointsTypes.POSTSYN].roi
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
-                dataset_offset = self.get_spec().points[PointsTypes.PRESYN].get_offset()
-                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points[PointsTypes.PRESYN],
+                dataset_offset = self.get_spec().points_specs[PointsTypes.PRESYN].roi.get_offset()
+                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points_specs[PointsTypes.PRESYN].roi,
                                                                       syn_file=f,
                                                                       dataset_offset=dataset_offset)
 
-            for (points_type, roi) in request.points.items():
+            for (points_type, request_spec) in request.points_specs.items():
 
-                if points_type not in spec.points:
-                    raise RuntimeError("Asked for %s which this source does not provide"%points_type)
-
-                if not spec.points[points_type].contains(roi):
-                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
-
-                logger.debug("Reading %s in %s..." % (points_type, roi))
+                logger.debug("Reading %s in %s..." % (points_type, request_spec.roi))
                 id_to_point = {PointsTypes.PRESYN: presyn_points, PointsTypes.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
-                batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=self.resolutions[VolumeTypes.RAW])
+
+                points_spec = deepcopy(sepc.points_spec[points_type])
+                points_spec.roi = request_spec.roi
+                batch.points[points_type] = Points(data=id_to_point, spec=points_spec)
 
         logger.debug("done")
 
