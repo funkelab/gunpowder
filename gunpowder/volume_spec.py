@@ -31,7 +31,7 @@ class VolumeSpec(Freezable):
     def __repr__(self):
         r = ""
         r += "ROI: " + str(self.roi) + ", "
-        r += "voxel size: " + str(self.roi) + ", "
+        r += "voxel size: " + str(self.voxel_size) + ", "
         r += "interpolatable: " + str(self.interpolatable) + ", "
         r += "dtype: " + str(self.dtype)
         return r
