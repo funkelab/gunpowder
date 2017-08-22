@@ -66,6 +66,17 @@ class ProviderSpec(Freezable):
         else:
             raise RuntimeError("Only VolumeSpec or PointsSpec can be used as keys in a %s."%type(self).__name__)
 
+    def __delitem__(self, identifier):
+
+        if isinstance(identifier, VolumeType):
+            del self.volume_specs[identifier]
+
+        elif isinstance(identifier, PointsType):
+            del self.points_specs[identifier]
+
+        else:
+            raise RuntimeError("Only VolumeSpec or PointsSpec can be used as keys in a %s."%type(self).__name__)
+
     def items(self):
 
         for (k,v) in self.volume_specs.items():
