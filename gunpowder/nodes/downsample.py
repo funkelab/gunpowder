@@ -34,15 +34,11 @@ class DownSample(BatchFilter):
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
-
         for output_volume, downsample in self.volume_factors.items():
-            _, input_volume = downsample
-            self.spec.volumes[output_volume] = self.spec.volumes[input_volume]
-
-    def get_spec(self):
-        return self.spec
+            f, input_volume = downsample
+            spec = copy.deepcopy(self.spec[input_volume])
+            spec.voxel_size *= f
+            self.provides(output_volume, spec)
 
     def prepare(self, request):
 
@@ -50,24 +46,24 @@ class DownSample(BatchFilter):
 
             f, input_volume = downsample
 
-            if output_volume not in request.volumes:
+            if output_volume not in request:
                 continue
 
             logger.debug("preparing downsampling of " + str(input_volume))
 
-            request_roi = request.volumes[output_volume]
+            request_roi = request[output_volume].roi
             logger.debug("request ROI is %s"%request_roi)
 
             # add or merge to batch request
-            if input_volume in request.volumes:
-                request.volumes[input_volume] = request.volumes[input_volume].union(request_roi)
-                logger.debug("merging with existing request to %s"%request.volumes[input_volume])
+            if input_volume in request:
+                request[input_volume].roi = request[input_volume].roi.union(request_roi)
+                logger.debug("merging with existing request to %s"%request[input_volume].roi)
             else:
-                request.volumes[input_volume] = request_roi
+                request[input_volume].roi = request_roi
                 logger.debug("adding as new request")
 
             # remove volume type provided by us
-            del request.volumes[output_volume]
+            del request[output_volume]
 
     def process(self, batch, request):
 
@@ -75,11 +71,11 @@ class DownSample(BatchFilter):
 
             f, input_volume = downsample
 
-            if output_volume not in request.volumes:
+            if output_volume not in request:
                 continue
 
-            input_roi = batch.volumes[input_volume].roi
-            request_roi = request.volumes[output_volume]
+            input_roi = batch.volumes[input_volume].spec.roi
+            request_roi = request[output_volume].roi
 
             assert input_roi.contains(request_roi)
 
@@ -95,9 +91,9 @@ class DownSample(BatchFilter):
             data = crop.data[slices]
 
             # create output volume
-            batch.volumes[output_volume] = Volume(
-                    data,
-                    request_roi)
+            spec = copy.deepcopy(self.spec[output_volume])
+            spec.roi = request_roi
+            batch.volumes[output_volume] = Volume(data, spec)
 
         # restore requested rois
         for output_volume, downsample in self.volume_factors.items():
@@ -106,8 +102,8 @@ class DownSample(BatchFilter):
             if input_volume not in batch.volumes:
                 continue
 
-            input_roi = batch.volumes[input_volume].roi
-            request_roi = request.volumes[input_volume]
+            input_roi = batch.volumes[input_volume].spec.roi
+            request_roi = request[input_volume].roi
 
             if input_roi != request_roi:
 
