@@ -50,5 +50,5 @@ class Batch(Freezable):
         r = ""
         for collection_type in [self.volumes, self.points]:
             for (type, obj) in collection_type.items():
-                r += "%s: %s\n"%(type, obj.roi)
+                r += "%s: %s\n"%(type, obj.spec)
         return r
