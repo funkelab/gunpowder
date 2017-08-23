@@ -108,8 +108,8 @@ class DefectAugment(BatchFilter):
                                                             "voxel size")
 
                 artifact_request = BatchRequest()
-                artifact_request.add_volume_request(VolumeTypes.RAW, Coordinate(section.shape)*raw_voxel_size)
-                artifact_request.add_volume_request(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*alpha_voxel_size)
+                artifact_request.add(VolumeTypes.RAW, Coordinate(section.shape)*raw_voxel_size)
+                artifact_request.add(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*alpha_voxel_size)
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
