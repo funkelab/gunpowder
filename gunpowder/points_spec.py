@@ -1,3 +1,4 @@
+import copy
 from .freezable import Freezable
 
 class PointsSpec(Freezable):
@@ -13,11 +14,15 @@ class PointsSpec(Freezable):
         part of a :class:`Points` set.
     '''
 
-    def __init__(self):
+    def __init__(self, roi=None):
 
-        self.roi = None
+        self.roi = roi
 
         self.freeze()
+
+    def copy(self):
+        '''Create a copy of this spec.'''
+        return copy.deepcopy(self)
 
     def __eq__(self, other):
 
