@@ -1,6 +1,5 @@
 from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeTypes, Volume
-import copy
 import collections
 import logging
 import numpy as np
@@ -44,7 +43,7 @@ class BalanceLabels(BatchFilter):
                 for mask_volume in self.labels_to_mask_volumes[label_volume]:
                     assert mask_volume in self.spec, "Asked to apply mask {} to balance labels, but mask is not provided.".format(mask_volume)
 
-            spec = copy.deepcopy(self.spec[label_volume])
+            spec = self.spec[label_volume].copy()
             spec.dtype = np.float32
             self.provides(loss_scale_volume, spec)
 
@@ -89,8 +88,8 @@ class BalanceLabels(BatchFilter):
             # scale the masked-in error_scale with the class weights
             error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
 
-            spec = copy.deepcopy(self.spec[loss_scale_volume])
-            spec.roi = copy.deepcopy(labels.spec.roi)
+            spec = self.spec[loss_scale_volume].copy()
+            spec.roi = labels.spec.roi.copy()
             batch.volumes[loss_scale_volume] = Volume(error_scale, spec)
 
     def __mask_error_scale(self, error_scale, mask):

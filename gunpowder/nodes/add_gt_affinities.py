@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 
@@ -61,7 +60,7 @@ class AddGtAffinities(BatchFilter):
         logger.debug("padding neg: " + str(self.padding_neg))
         logger.debug("padding pos: " + str(self.padding_pos))
 
-        spec = copy.deepcopy(self.spec[self.label_volume_type])
+        spec = self.spec[self.label_volume_type].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
         spec.dtype = np.float32
@@ -112,7 +111,7 @@ class AddGtAffinities(BatchFilter):
         logger.debug("cropping with " + str(crop))
         gt_affinities = gt_affinities[(slice(None),)+crop]
 
-        spec = copy.deepcopy(self.spec[self.affinity_volume_type])
+        spec = self.spec[self.affinity_volume_type].copy()
         spec.roi = gt_labels_roi
         batch.volumes[self.affinity_volume_type] = Volume(gt_affinities, spec)
 

@@ -104,7 +104,7 @@ class Hdf5Source(BatchProvider):
                 dataset_roi = dataset_roi - self.spec[volume_type].roi.get_offset()/voxel_size
 
                 # create volume spec
-                volume_spec = copy.deepcopy(self.spec[volume_type])
+                volume_spec = self.spec[volume_type].copy()
                 volume_spec.roi = request_spec.roi
 
                 # add volume to batch
@@ -133,7 +133,7 @@ class Hdf5Source(BatchProvider):
                     PointsTypes.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
 
-                points_spec = copy.deepcopy(self.spec[points_type])
+                points_spec = self.spec[points_type].copy()
                 points_spec.roi = request_spec.roi
                 batch.points[points_type] = Points(data=id_to_point, spec=points_spec)
 
@@ -156,7 +156,7 @@ class Hdf5Source(BatchProvider):
             assert self.ndims == len(dims)
 
         if volume_type in self.volume_specs:
-            spec = copy.deepcopy(self.volume_specs[volume_type])
+            spec = self.volume_specs[volume_type].copy()
         else:
             spec = VolumeSpec()
 

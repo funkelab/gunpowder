@@ -1,4 +1,3 @@
-import copy
 from gunpowder.points import PointsType
 from gunpowder.points_spec import PointsSpec
 from gunpowder.volume import VolumeType
@@ -60,13 +59,13 @@ class ProviderSpec(Freezable):
             assert isinstance(identifier, VolumeType), ("Only a VolumeType is "
                                                         "allowed as key for a "
                                                         "VolumeSpec value.")
-            self.volume_specs[identifier] = copy.deepcopy(spec)
+            self.volume_specs[identifier] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
             assert isinstance(identifier, PointsType), ("Only a PointsType is "
                                                         "allowed as key for a "
                                                         "PointsSpec value.")
-            self.points_specs[identifier] = copy.deepcopy(spec)
+            self.points_specs[identifier] = spec.copy()
 
         else:
             raise RuntimeError("Only VolumeSpec or PointsSpec can be set in a "

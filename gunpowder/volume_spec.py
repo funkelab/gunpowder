@@ -1,3 +1,4 @@
+import copy
 from .freezable import Freezable
 
 class VolumeSpec(Freezable):
@@ -27,6 +28,10 @@ class VolumeSpec(Freezable):
         self.dtype = dtype
 
         self.freeze()
+
+    def copy(self):
+        '''Create a copy of this spec.'''
+        return copy.deepcopy(self)
 
     def __repr__(self):
         r = ""

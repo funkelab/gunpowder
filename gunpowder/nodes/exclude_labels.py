@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
@@ -80,7 +79,7 @@ class ExcludeLabels(BatchFilter):
         gt_ignore = np.zeros((gt_ignore_roi//voxel_size).get_shape(), dtype=np.uint8)
         gt_ignore[intersection_in_gt_ignore.get_bounding_box()] = include_mask[intersection_in_gt.get_bounding_box()]
 
-        spec = copy.deepcopy(self.spec[VolumeTypes.GT_LABELS])
+        spec = self.spec[VolumeTypes.GT_LABELS].copy()
         spec.roi = gt_ignore_roi
         spec.dtype = np.uint8
         batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, spec)

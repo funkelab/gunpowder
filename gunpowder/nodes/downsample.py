@@ -1,7 +1,6 @@
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.volume import VolumeType, Volume
-import copy
 import logging
 import numbers
 import numpy as np
@@ -36,7 +35,7 @@ class DownSample(BatchFilter):
 
         for output_volume, downsample in self.volume_factors.items():
             f, input_volume = downsample
-            spec = copy.deepcopy(self.spec[input_volume])
+            spec = self.spec[input_volume].copy()
             spec.voxel_size *= f
             self.provides(output_volume, spec)
 
@@ -91,7 +90,7 @@ class DownSample(BatchFilter):
             data = crop.data[slices]
 
             # create output volume
-            spec = copy.deepcopy(self.spec[output_volume])
+            spec = self.spec[output_volume].copy()
             spec.roi = request_roi
             batch.volumes[output_volume] = Volume(data, spec)
 
