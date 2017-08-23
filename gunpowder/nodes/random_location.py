@@ -1,14 +1,14 @@
 import copy
-from random import randint
-from skimage.transform import integral_image, integrate
 import logging
-import numpy as np
+from random import randint
 
-from .batch_filter import BatchFilter
+import numpy as np
+from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 from gunpowder.volume import VolumeTypes
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
@@ -18,35 +18,36 @@ class RandomLocation(BatchFilter):
 
     The random location is chosen such that the batch request roi lies entirely
     inside the provider's roi.
+
+    If `min_masked` (and optionally `mask_volume_type`) are set, only
+    batches are returned that have at least the given ratio of masked-in
+    voxels. This is in general faster than using the ``Reject`` node, at the
+    expense of storing an integral volume of the complete mask.
+
+    If 'focus_points_type' is set, only batches are returned that have at least
+    one point of focus_points_type within the roi of PointsTypes.focus_points_type.
+
+    Remark
+    ------
+    focus_point_type does only work if there are only deterministic nodes upstream
+
+    Args:
+
+        min_masked: If non-zero, require that the random sample contains at
+            least that ratio of masked-in voxels.
+
+        mask_volume_type: The volume type to use for mask checks.
+
+        focus_points_type: gunpowder.PointsTypes, PointsTypes considered when
+            looking for good location of batch s.t. at least one point of this
+            PointsTypes is contained in batch
     '''
 
     def __init__(self, min_masked=0, mask_volume_type=VolumeTypes.GT_MASK, focus_points_type=None):
-        '''Create a random location sampler.
 
-        If `min_masked` (and optionally `mask_volume_type`) are set, only
-        batches are returned that have at least the given ratio of masked-in
-        voxels. This is in general faster than using the ``Reject`` node, at the
-        expense of storing an integral volume of the complete mask.
-
-        If 'focus_points_type' is set, only batches are returned that have at least
-        one point of focus_points_type within the roi of PointsTypes.focus_points_type. 
-        
-        Remark
-        ------
-        focus_point_type does only work if there are only deterministic nodes upstream
-
-        Args:
-
-            min_masked: If non-zero, require that the random sample contains at
-            least that ratio of masked-in voxels.
-
-            mask_volume_type: The volume type to use for mask checks.
-            
-            focus_points_type: gunpowder.PointsTypes, PointsTypes considered when looking for good location of batch
-                                    s.t. at least one point of this PointsTypes is contained in batch
-        '''
         self.min_masked = min_masked
         self.mask_volume_type = mask_volume_type
+        self.mask_spec = None
         self.focus_points_type = focus_points_type
 
 
@@ -60,7 +61,7 @@ class RandomLocation(BatchFilter):
 
         if self.min_masked > 0:
 
-            assert self.mask_volume_type in self.upstream_spec.volumes, "Upstream provider does not have %s"%self.mask_volume_type
+            assert self.mask_volume_type in self.upstream_spec, "Upstream provider does not have %s"%self.mask_volume_type
             self.mask_spec = self.upstream_spec.volume_specs[self.mask_volume_type]
 
             logger.info("requesting complete mask...")
@@ -172,18 +173,19 @@ class RandomLocation(BatchFilter):
                 request_mask_roi = request_mask_roi.shift(random_shift)
 
                 # get coordinates inside mask volume
-                request_mask_roi_in_volume = request_mask_roi/self.mask_voxel_size
-                request_mask_roi_in_volume -= self.mask_roi.get_offset()/self.mask_voxel_size
+                mask_voxel_size = self.spec[self.mask_volume_type].voxel_size
+                request_mask_roi_in_volume = request_mask_roi/mask_voxel_size
+                request_mask_roi_in_volume -= self.mask_spec.roi.get_offset()/mask_voxel_size
 
                 # get number of masked-in voxels
                 num_masked_in = integrate(
-                        self.mask_integral,
-                        [request_mask_roi_in_volume.get_begin()],
-                        [request_mask_roi_in_volume.get_end()-(1,)*self.mask_integral.ndim]
+                    self.mask_integral,
+                    [request_mask_roi_in_volume.get_begin()],
+                    [request_mask_roi_in_volume.get_end()-(1,)*self.mask_integral.ndim]
                 )[0]
 
                 mask_ratio = float(num_masked_in)/request_mask_roi_in_volume.size()
-                logger.debug("mask ratio is %f"%mask_ratio)
+                logger.debug("mask ratio is %f", mask_ratio)
 
                 if mask_ratio >= self.min_masked:
                     logger.debug("good batch found")
