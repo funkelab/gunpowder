@@ -75,6 +75,9 @@ class BatchProvider(object):
         if not hasattr(self, '_spec'):
             self._spec = None
 
+    def _reset_spec(self):
+        self._spec = None
+
     @property
     def spec(self):
         '''Get the :class:`ProviderSpec` of this `BatchProvider`.
