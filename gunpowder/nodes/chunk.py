@@ -22,19 +22,11 @@ class Chunk(BatchFilter):
         self.chunk_spec_template = chunk_spec
         self.cache_size          = cache_size
         self.num_workers         = num_workers
-        self.dims = self.chunk_spec_template.volumes[self.chunk_spec_template.volumes.keys()[0]].dims()
+        self.dims = self.chunk_spec_template.volume_specs[self.chunk_spec_template.volume_specs.keys()[0]].roi.dims()
 
-        for collection_type in [self.chunk_spec_template.volumes, self.chunk_spec_template.points]:
-            for type in collection_type:
-                assert self.dims == collection_type[type].dims(),\
-                    "Rois of different dimensionalities cannot be handled by chunk"
-
-    def setup(self):
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
-
-    def get_spec(self):
-        return self.spec
+        for identifier, spec in self.chunk_spec_template.items():
+            assert self.dims == spec.roi.dims(),\
+                "Rois of different dimensionalities cannot be handled by chunk"
 
     def teardown(self):
         if self.num_workers > 1:
@@ -66,35 +58,38 @@ class Chunk(BatchFilter):
             # fill returned chunk into batch
             for (volume_type, volume) in chunk.volumes.items():
                 self.__fill(batch.volumes[volume_type].data, volume.data,
-                            request.volumes[volume_type], volume.roi, volume_type.voxel_size)
+                            request.volume_specs[volume_type].roi, volume.spec.roi, self.spec[volume_type].voxel_size)
 
             for (points_type, points) in chunk.points.items():
                 self.__fill_points(batch.points[points_type].data, points.data,
-                                   request.points[points_type], points.roi)
+                                   request.points_specs[points_type].roi, points.roi)
 
         return batch
 
     def __setup_batch(self, request, chunk_batch):
 
         batch = Batch()
-        for (volume_type, roi) in request.volumes.items():
+        for (volume_type, spec) in request.volume_specs.items():
+            roi = spec.roi
+            voxel_size = self.spec[volume_type].voxel_size
             if volume_type == VolumeTypes.PRED_AFFINITIES or volume_type == VolumeTypes.GT_AFFINITIES:
-                shape = (3,)+ (roi.get_shape()//volume_type.voxel_size)
+                shape = (3,)+ (roi.get_shape()//voxel_size)
             elif volume_type == VolumeTypes.PRED_BM_PRESYN or VolumeTypes.PRED_BM_POSTSYN:
-                shape = (1,)+(roi.get_shape()//volume_type.voxel_size)
+                shape = (1,)+(roi.get_shape()//voxel_size)
             else:
-                shape = (roi.get_shape()//volume_type.voxel_size)
+                shape = (roi.get_shape()//voxel_size)
 
+            spec = self.spec[volume_type].copy()
+            spec.roi = roi
             batch.volumes[volume_type] = Volume(data=np.zeros(shape),
-                                                roi=roi)
+                                                spec=spec)
 
-        for (points_type, roi) in request.points.items():
-            batch.points[points_type] = Points(data={},
-                                                        roi=roi,
-                                                        resolution=VolumeTypes.RAW.voxel_size)
+        for (points_type, spec) in request.points_specs.items():
+            roi = spec.roi
+            spec = self.spec[points_type].copy()
+            spec.roi = roi
+            batch.points[points_type] = Points(data={}, spec=spec)
 
-            batch.volumes[volume_type] = Volume(data=np.zeros(shape),
-                                                roi=roi)
         return batch
 
     def __fill(self, a, b, roi_a, roi_b, voxel_size):
@@ -148,29 +143,32 @@ class Chunk(BatchFilter):
 
         # initial offset required per volume to be at beginning of its requested roi
         all_initial_offsets = []
-        for chunk_spec_type, request_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
-                                                 [self.request.volumes, self.request.points]):
-            for (type, roi) in chunk_spec_type.items():
-                all_initial_offsets.append(request_type[type].get_begin() - roi.get_offset())
+        for chunk_spec_type, request_type in zip([self.chunk_spec_template.volume_specs, self.chunk_spec_template.points_specs],
+                                                 [self.request.volume_specs, self.request.points_specs]):
+            for (type, spec) in chunk_spec_type.items():
+                roi = spec.roi
+                all_initial_offsets.append(request_type[type].roi.get_begin() - roi.get_offset())
         initial_offset = np.min(all_initial_offsets, axis=0)
 
         # max offsets required per volume to cover their entire requested roi
         all_max_offsets = []
-        for chunk_spec_type, request_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
-                                                 [self.request.volumes, self.request.points]):
-            for (type, roi) in chunk_spec_type.items():
-                all_max_offsets.append(request_type[type].get_end() - chunk_spec_type[type].get_shape()-chunk_spec_type[type].get_offset())
+        for chunk_spec_type, request_type in zip([self.chunk_spec_template.volume_specs, self.chunk_spec_template.points_specs],
+                                                 [self.request.volume_specs, self.request.points_specs]):
+            for (type, spec) in chunk_spec_type.items():
+                roi = spec.roi
+                all_max_offsets.append(request_type[type].roi.get_end() - chunk_spec_type[type].roi.get_shape()-chunk_spec_type[type].roi.get_offset())
         final_offset = np.max(all_max_offsets, axis=0)
 
         # check for all VolumeTypes and PointsTypes in template if requests of chunk can be provided
-        for chunk_spec_type, provider_spec_type in zip([self.chunk_spec_template.volumes, self.chunk_spec_template.points],
-                                                        [self.spec.volumes, self.spec.points]):
-            for type, roi in chunk_spec_type.items():
+        for chunk_spec_type, provider_spec_type in zip([self.chunk_spec_template.volume_specs, self.chunk_spec_template.points_specs],
+                                                        [self.spec.volume_specs, self.spec.points_specs]):
+            for type, spec in chunk_spec_type.items():
+                roi = spec.roi
                 complete_chunk_roi = Roi(initial_offset+roi.get_offset(),
                                          (final_offset - initial_offset) + roi.get_shape())
-                assert provider_spec_type[type].contains(complete_chunk_roi), "Request with current chunk template" \
+                assert provider_spec_type[type].roi.contains(complete_chunk_roi), "Request with current chunk template" \
                         " request for {} (complete:  {} ) roi which lies outside of its provided roi {} ".format(type,
-                                                                        complete_chunk_roi, provider_spec_type[type])
+                                                                        complete_chunk_roi, provider_spec_type[type].roi)
         offset = np.array(initial_offset)
         covered_final_roi = False
         while not covered_final_roi:
@@ -178,25 +176,26 @@ class Chunk(BatchFilter):
             chunk_request = copy.deepcopy(self.request)
             max_strides = []
             # change size and offset of the batch spec
-            for chunk_spec_type, chunk_request_type, request_type, provider_spec_type in zip([self.chunk_spec_template.volumes,
-                                                                                              self.chunk_spec_template.points],
-                                                                        [chunk_request.volumes, chunk_request.points],
-                                                                        [self.request.volumes, self.request.points],
-                                                                        [self.spec.volumes, self.spec.points]):
-                for type, roi in chunk_spec_type.items():
-                    chunk_request_type[type] = roi + Coordinate(offset)
+            for chunk_spec_type, chunk_request_type, request_type, provider_spec_type in zip([self.chunk_spec_template.volume_specs,
+                                                                                              self.chunk_spec_template.points_specs],
+                                                                        [chunk_request.volume_specs, chunk_request.points_specs],
+                                                                        [self.request.volume_specs, self.request.points_specs],
+                                                                        [self.spec.volume_specs, self.spec.points_specs]):
+                for type, spec in chunk_spec_type.items():
+                    roi = spec.roi
+                    chunk_request_type[type].roi = roi + Coordinate(offset)
                     max_stride = np.zeros([roi.dims()])
                     for dim in range(roi.dims()):
-                        if chunk_request_type[type].get_end()[dim] <= (request_type[type].get_end()[dim]-chunk_spec_type[type].get_shape()[dim]):
-                            max_stride[dim] = (request_type[type].get_begin()[dim] - chunk_request_type[type].get_begin()[dim]).clip(chunk_spec_type[type].get_shape()[dim])
+                        if chunk_request_type[type].roi.get_end()[dim] <= (request_type[type].roi.get_end()[dim]-chunk_spec_type[type].roi.get_shape()[dim]):
+                            max_stride[dim] = max((request_type[type].roi.get_begin()[dim] - chunk_request_type[type].roi.get_begin()[dim]), chunk_spec_type[type].roi.get_shape()[dim])
                         else:
-                            if chunk_request_type[type].get_end()[dim] < request_type[type].get_end()[dim]:
-                                max_stride[dim] = np.min((chunk_spec_type[type].get_shape()[dim],
-                                                          provider_spec_type[type].get_end()[dim] -
-                                                          chunk_request_type[type].get_end()[dim]))
+                            if chunk_request_type[type].roi.get_end()[dim] < request_type[type].roi.get_end()[dim]:
+                                max_stride[dim] = np.min((chunk_spec_type[type].roi.get_shape()[dim],
+                                                          provider_spec_type[type].roi.get_end()[dim] -
+                                                          chunk_request_type[type].roi.get_end()[dim]))
                             else:
                                 max_stride[dim] = np.min((final_offset[dim]-offset[dim],
-                                                          provider_spec_type[type].get_end()[dim] - chunk_request_type[type].get_end()[dim]))
+                                                          provider_spec_type[type].roi.get_end()[dim] - chunk_request_type[type].roi.get_end()[dim]))
                     max_strides.append(max_stride)
 
             stride = np.min(max_strides, axis=0)
