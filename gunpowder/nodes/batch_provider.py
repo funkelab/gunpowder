@@ -1,8 +1,10 @@
 import copy
 import logging
 from gunpowder.coordinate import Coordinate
+from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.volume import VolumeType
+from gunpowder.volume_spec import VolumeSpec
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,12 @@ class BatchProvider(object):
         for (identifier, request_spec) in request.items():
 
             assert identifier in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), identifier)
+            assert (
+                isinstance(request_spec, VolumeSpec) or
+                isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
+                                                        "%s"%(
+                                                            identifier,
+                                                            type(request_spec)))
 
             provided_spec = self.spec[identifier]
 
