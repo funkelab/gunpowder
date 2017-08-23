@@ -1,18 +1,17 @@
+import copy
 import logging
 import numpy as np
-from copy import deepcopy
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
-from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.volume import Volume, VolumeTypes
 from gunpowder.volume_spec import VolumeSpec
+from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
@@ -31,55 +30,45 @@ class Hdf5Source(BatchProvider):
         filename (string): The HDF5 file.
 
         datasets (dict): Dictionary of VolumeType -> dataset names that this source offers.
+
+        volume_specs (dict, optional): An optional dictionary of 
+            :class:`VolumeType` to :class:`VolumeSpec` to overwrite the volume 
+            specs automatically determined from the HDF5 file. This is useful to 
+            set a missing ``voxel_size``, for example. Only fields that are not 
+            ``None`` in the given :class:`VolumeSpec` will be used.
     '''
 
     def __init__(
             self,
             filename,
             datasets,
+            volume_specs=None,
             points_types=None,
             points_rois=None):
 
         self.filename = filename
         self.datasets = datasets
 
+        if volume_specs is None:
+            self.volume_specs = {}
+        else:
+            self.volume_specs = volume_specs
+
         self.points_types = points_types
         self.points_rois = points_rois
 
+        self.ndims = None
+
     def setup(self):
 
-        f = h5py.File(self.filename, 'r')
+        hdf_file = h5py.File(self.filename, 'r')
 
-        self.ndims = None
-        for (volume_type, ds) in self.datasets.items():
+        for (volume_type, ds_name) in self.datasets.items():
 
-            if ds not in f:
-                raise RuntimeError("%s not in %s"%(ds,self.filename))
+            if ds_name not in hdf_file:
+                raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
-            dims = Coordinate(f[ds].shape)
-
-            if self.ndims is None:
-                self.ndims = len(dims)
-            else:
-                assert self.ndims == len(dims)
-
-            if 'resolution' in f[ds].attrs:
-                voxel_size = Coordinate(f[ds].attrs['resolution'])
-            else:
-                voxel_size = Coordinate((1,1,1))
-                logger.warning(
-                        "WARNING: Your source does not contain resolution information for %s, voxel size has been set to (1,1,1). This might not be what you want."%volume_type
-                )
-
-            if 'offset' in f[ds].attrs:
-                offset = Coordinate(f[ds].attrs['offset'])
-            else:
-                offset = Coordinate((0,)*self.ndims)
-
-            spec = VolumeSpec()
-            spec.roi = Roi(offset, dims*voxel_size)
-            spec.voxel_size = voxel_size
-            spec.dtype = f[ds].dtype
+            spec = self.__read_spec(volume_type, hdf_file, ds_name)
 
             self.provides(volume_type, spec)
 
@@ -91,7 +80,7 @@ class Hdf5Source(BatchProvider):
 
                 self.provides(points_type, spec)
 
-        f.close()
+        hdf_file.close()
 
     def provide(self, request):
 
@@ -100,11 +89,11 @@ class Hdf5Source(BatchProvider):
 
         batch = Batch()
 
-        with h5py.File(self.filename, 'r') as f:
+        with h5py.File(self.filename, 'r') as hdf_file:
 
             for (volume_type, request_spec) in request.volume_specs.items():
 
-                logger.debug("Reading %s in %s..."%(volume_type,request_spec.roi))
+                logger.debug("Reading %s in %s...", volume_type, request_spec.roi)
 
                 voxel_size = self.spec[volume_type].voxel_size
 
@@ -115,32 +104,36 @@ class Hdf5Source(BatchProvider):
                 dataset_roi = dataset_roi - self.spec[volume_type].roi.get_offset()/voxel_size
 
                 # create volume spec
-                volume_spec = deepcopy(self.spec[volume_type])
+                volume_spec = copy.deepcopy(self.spec[volume_type])
                 volume_spec.roi = request_spec.roi
 
                 # add volume to batch
                 batch.volumes[volume_type] = Volume(
-                        self.__read(f, self.datasets[volume_type], dataset_roi),
-                        volume_spec)
+                    self.__read(hdf_file, self.datasets[volume_type], dataset_roi),
+                    volume_spec)
 
-            # if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created
-            # together s.t. ids are unique and allow to find partner locations
+            # if pre and postsynaptic locations required, their id
+            # SynapseLocation dictionaries should be created together s.t. ids
+            # are unique and allow to find partner locations
             if PointsTypes.PRESYN in request.points_specs or PointsTypes.POSTSYN in request.points_specs:
                 assert request.points_specs[PointsTypes.PRESYN].roi == request.points_specs[PointsTypes.POSTSYN].roi
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
-                dataset_offset = self.get_spec().points_specs[PointsTypes.PRESYN].roi.get_offset()
-                presyn_points, postsyn_points = self.__get_syn_points(roi=request.points_specs[PointsTypes.PRESYN].roi,
-                                                                      syn_file=f,
-                                                                      dataset_offset=dataset_offset)
+                dataset_offset = self.spec[PointsTypes.PRESYN].roi.get_offset()
+                presyn_points, postsyn_points = self.__get_syn_points(
+                    roi=request.points_specs[PointsTypes.PRESYN].roi,
+                    syn_file=hdf_file,
+                    dataset_offset=dataset_offset)
 
             for (points_type, request_spec) in request.points_specs.items():
 
-                logger.debug("Reading %s in %s..." % (points_type, request_spec.roi))
-                id_to_point = {PointsTypes.PRESYN: presyn_points, PointsTypes.POSTSYN: postsyn_points}[points_type]
+                logger.debug("Reading %s in %s...", points_type, request_spec.roi)
+                id_to_point = {
+                    PointsTypes.PRESYN: presyn_points,
+                    PointsTypes.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw volume
 
-                points_spec = deepcopy(sepc.points_spec[points_type])
+                points_spec = copy.deepcopy(self.spec[points_type])
                 points_spec.roi = request_spec.roi
                 batch.points[points_type] = Points(data=id_to_point, spec=points_spec)
 
@@ -151,8 +144,54 @@ class Hdf5Source(BatchProvider):
 
         return batch
 
-    def __read(self, f, ds, roi):
-        return np.array(f[ds][roi.get_bounding_box()])
+    def __read_spec(self, volume_type, hdf_file, ds_name):
+
+        dataset = hdf_file[ds_name]
+
+        dims = Coordinate(dataset.shape)
+
+        if self.ndims is None:
+            self.ndims = len(dims)
+        else:
+            assert self.ndims == len(dims)
+
+        if volume_type in self.volume_specs:
+            spec = copy.deepcopy(self.volume_specs[volume_type])
+        else:
+            spec = VolumeSpec()
+
+        if spec.voxel_size is None:
+
+            if 'resolution' in dataset.attrs:
+                spec.voxel_size = Coordinate(dataset.attrs['resolution'])
+            else:
+                spec.voxel_size = Coordinate((1, 1, 1))
+                logger.warning("WARNING: File %s does not contain resolution information "
+                               "for %s (dataset %s), voxel size has been set to (1,1,1). "
+                               "This might not be what you want.",
+                               self.filename, volume_type, ds_name)
+
+        if spec.roi is None:
+
+            if 'offset' in dataset.attrs:
+                offset = Coordinate(dataset.attrs['offset'])
+            else:
+                offset = Coordinate((0,)*self.ndims)
+
+            spec.roi = Roi(offset, dims*spec.voxel_size)
+
+        if spec.dtype is not None:
+            assert spec.dtype == dataset.dtype, ("dtype %s provided in volume_specs for %s, "
+                                                 "but differs from dataset %s dtype %s"%
+                                                 (self.volume_specs[volume_type].dtype,
+                                                  volume_type, ds_name, dataset.dtype))
+        else:
+            spec.dtype = dataset.dtype
+
+        return spec
+
+    def __read(self, hdf_file, ds_name, roi):
+        return np.array(hdf_file[ds_name][roi.get_bounding_box()])
 
     def __get_syn_points(self, roi, syn_file, dataset_offset=None):
         presyn_points_dict, postsyn_points_dict = {}, {}
@@ -194,11 +233,11 @@ class Hdf5Source(BatchProvider):
                 if kind == 'PreSyn':
                     syn_point = PreSynPoint(location=location, location_id=location_id,
                                          synapse_id=syn_id, partner_ids=partners_ids, props=props)
-                    presyn_points_dict[int(node_id)] = deepcopy(syn_point)
+                    presyn_points_dict[int(node_id)] = copy.deepcopy(syn_point)
                 elif kind == 'PostSyn':
                     syn_point = PostSynPoint(location=location, location_id=location_id,
                                          synapse_id=syn_id, partner_ids=partners_ids, props=props)
-                    postsyn_points_dict[int(node_id)] = deepcopy(syn_point)
+                    postsyn_points_dict[int(node_id)] = copy.deepcopy(syn_point)
 
         return presyn_points_dict, postsyn_points_dict
 
