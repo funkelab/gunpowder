@@ -97,3 +97,10 @@ class TestDownSample(ProviderTest):
             else:
 
                 self.assertTrue(False, "unexpected volume type")
+
+        # restore default volume types
+        voxel_size = (1,1,1)
+        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=voxel_size))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
+        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True, voxel_size=voxel_size))
+        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False, voxel_size=voxel_size))

@@ -110,6 +110,7 @@ class TestPrepareMalis(ProviderTest):
             # test if gt_ignore considered for gt_neg_pass ([0, ;;;]) and not for gt_pos_pass ([1, ...])
             # gt_neg_pass
             self.assertTrue((np.array_equal(batch.volumes[VolumeTypes.MALIS_COMP_LABEL].data[0, ...],
-                                            batch.volumes[VolumeTypes.GT_LABELS].data)))            # gt_pos_pass
+                                            batch.volumes[VolumeTypes.GT_LABELS].data)))
+            # gt_pos_pass
             self.assertTrue((np.array_equal(batch.volumes[VolumeTypes.MALIS_COMP_LABEL].data[1, ...],
                                             batch.volumes[VolumeTypes.GT_LABELS].data)))

@@ -46,6 +46,8 @@ class TestElasticAugment(unittest.TestCase):
         # within the object. Augmenting the volume with the object together with the point should result in a
         # transformed volume in which the point is still located within the object.
         voxel_size = Coordinate((2, 1, 1))
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
+
         for i in range(5):
             object_location = tuple([slice(30/voxel_size[0], 40/voxel_size[0]),
                                      slice(30/voxel_size[1], 40/voxel_size[1]),
@@ -66,8 +68,6 @@ class TestElasticAugment(unittest.TestCase):
                                                [0, math.pi / 2.0], subsample=subsample)
             pipeline = source_node + elastic_augm_node
 
-            VolumeTypes.GT_LABELS.voxel_size = Coordinate(voxel_size)
-
             with build(pipeline):
                 request = BatchRequest()
                 window_request = Coordinate((50, 50, 50))
@@ -83,3 +83,7 @@ class TestElasticAugment(unittest.TestCase):
                 self.assertTrue(volume[tuple(exp_loc_out_object)] == 0)
                 self.assertTrue(5 in batch.points[PointsTypes.PRESYN].data)
                 self.assertFalse(10 in batch.points[PointsTypes.PRESYN].data)
+
+        # restore default volume types
+        voxel_size = (1,1,1)
+        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
