@@ -19,12 +19,12 @@ class VolumeSpec(Freezable):
         dtype (np.dtype): The data type of the volume.
     '''
 
-    def __init__(self):
+    def __init__(self, roi=None, voxel_size=None, interpolatable=None, dtype=None):
 
-        self.roi = None
-        self.voxel_size = None
-        self.interpolatable = None
-        self.dtype = None
+        self.roi = roi
+        self.voxel_size = voxel_size
+        self.interpolatable = interpolatable
+        self.dtype = dtype
 
         self.freeze()
 
