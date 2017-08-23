@@ -41,17 +41,19 @@ class ProviderSpec(Freezable):
 
     def __init__(self, volume_specs=None, points_specs=None):
 
-        if volume_specs is None:
-            self.volume_specs = {}
-        else:
-            self.volume_specs = volume_specs
-
-        if points_specs is None:
-            self.points_specs = {}
-        else:
-            self.points_specs = points_specs
-
+        self.volume_specs = {}
+        self.points_specs = {}
         self.freeze()
+
+        # use __setitem__ instead of copying the dicts, this ensures type tests
+        # are run
+        if volume_specs is not None:
+            for identifier, spec in volume_specs.items():
+                self[identifier] = spec
+        if points_specs is not None:
+            for identifier, spec in points_specs.items():
+                self[identifier] = spec
+
 
     def __setitem__(self, identifier, spec):
 
