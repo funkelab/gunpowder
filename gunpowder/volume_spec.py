@@ -33,6 +33,18 @@ class VolumeSpec(Freezable):
         '''Create a copy of this spec.'''
         return copy.deepcopy(self)
 
+    def __eq__(self, other):
+
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+
+    def __ne__(self, other):
+
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
     def __repr__(self):
         r = ""
         r += "ROI: " + str(self.roi) + ", "
