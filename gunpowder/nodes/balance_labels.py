@@ -89,7 +89,7 @@ class BalanceLabels(BatchFilter):
             error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
 
             spec = self.spec[loss_scale_volume].copy()
-            spec.roi = labels.spec.roi.copy()
+            spec.roi = labels.spec.roi
             batch.volumes[loss_scale_volume] = Volume(error_scale, spec)
 
     def __mask_error_scale(self, error_scale, mask):
