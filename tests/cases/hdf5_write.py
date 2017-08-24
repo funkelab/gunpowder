@@ -5,15 +5,18 @@ from gunpowder.ext import h5py
 
 class Hdf5WriteTestSource(BatchProvider):
 
-    def get_spec(self):
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.RAW] = Roi((20000,2000,2000), (2000,200,200))
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((20100,2010,2010), (1800,180,180))
+    def setup(self):
 
-        VolumeTypes.RAW.voxel_size       = (20,2,2)
-        VolumeTypes.GT_LABELS.voxel_size = (20,2,2)
-
-        return spec
+        self.provides(
+            VolumeTypes.RAW,
+            VolumeSpec(
+                roi=Roi((20000, 2000, 2000), (2000, 200, 200)),
+                voxel_size=(20, 2, 2)))
+        self.provides(
+            VolumeTypes.GT_LABELS,
+            VolumeSpec(
+                roi=Roi((20100, 2010, 2010), (1800, 180, 180)),
+                voxel_size=(20, 2, 2)))
 
     def provide(self, request):
 
@@ -22,9 +25,10 @@ class Hdf5WriteTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (volume_type, roi) in request.volumes.items():
+        for (volume_type, spec) in request.volume_specs.items():
 
-            roi_voxel = roi // volume_type.voxel_size
+            roi = spec.roi
+            roi_voxel = roi // self.spec[volume_type].voxel_size
             # print("Hdf5WriteTestSource: Adding " + str(volume_type))
 
             # the z,y,x coordinates of the ROI
@@ -36,9 +40,11 @@ class Hdf5WriteTestSource(BatchProvider):
 
             # print("Roi is: " + str(roi))
 
+            spec = self.spec[volume_type].copy()
+            spec.roi = roi
             batch.volumes[volume_type] = Volume(
                     data,
-                    roi)
+                    spec)
         return batch
 
 class TestHdf5Write(ProviderTest):
@@ -47,22 +53,23 @@ class TestHdf5Write(ProviderTest):
 
         source = Hdf5WriteTestSource()
 
-        raw_roi    = source.get_spec().volumes[VolumeTypes.RAW]
-        labels_roi = source.get_spec().volumes[VolumeTypes.GT_LABELS]
-
         chunk_request = BatchRequest()
-        chunk_request.add_volume_request(VolumeTypes.RAW, (400,30,34))
-        chunk_request.add_volume_request(VolumeTypes.GT_LABELS, (200,10,14))
-
-        full_request = BatchRequest({
-                VolumeTypes.RAW: raw_roi,
-                VolumeTypes.GT_LABELS: labels_roi
-            }
-        )
+        chunk_request.add(VolumeTypes.RAW, (400,30,34))
+        chunk_request.add(VolumeTypes.GT_LABELS, (200,10,14))
 
         pipeline = source + Hdf5Write({VolumeTypes.RAW: 'volumes/raw'}, output_filename='hdf5_write_test.hdf') + Chunk(chunk_request)
 
         with build(pipeline):
+
+            raw_spec    = pipeline.spec[VolumeTypes.RAW]
+            labels_spec = pipeline.spec[VolumeTypes.GT_LABELS]
+
+            full_request = BatchRequest({
+                    VolumeTypes.RAW: raw_spec,
+                    VolumeTypes.GT_LABELS: labels_spec
+                }
+            )
+
             batch = pipeline.request_batch(full_request)
 
         # assert that stored HDF dataset equals batch volume
@@ -74,10 +81,9 @@ class TestHdf5Write(ProviderTest):
             batch_raw = batch.volumes[VolumeTypes.RAW]
             stored_raw = np.array(ds)
 
-            self.assertEqual(stored_raw.shape, batch_raw.roi.get_shape()//VolumeTypes.RAW.voxel_size)
-            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.roi.get_offset())
-            self.assertEqual(tuple(ds.attrs['resolution']), VolumeTypes.RAW.voxel_size)
-
-            print(stored_raw)
-            print(batch.volumes[VolumeTypes.RAW].data)
+            self.assertEqual(
+                stored_raw.shape,
+                batch_raw.spec.roi.get_shape()//batch_raw.spec.voxel_size)
+            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.get_offset())
+            self.assertEqual(tuple(ds.attrs['resolution']), batch_raw.spec.voxel_size)
             self.assertTrue((stored_raw == batch.volumes[VolumeTypes.RAW].data).all())
