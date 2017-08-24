@@ -13,16 +13,21 @@ class PointTestSource3D(BatchProvider):
         self.object_location = object_location
         self.point_dic = point_dic
 
-    def get_spec(self):
-        spec = ProviderSpec()
-        spec.points[PointsTypes.PRESYN] = Roi((0, 0, 0), (100, 100, 100))
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((0, 0, 0), (100, 100, 100))
-        return spec
+    def setup(self):
+
+        self.provides(
+            PointsTypes.PRESYN,
+            PointsSpec(roi=Roi((-100, -100, -100), (200, 200, 200))))
+        self.provides(
+            VolumeTypes.GT_LABELS,
+            VolumeSpec(
+                roi=Roi((-100, -100, -100), (200, 200, 200)),
+                voxel_size=self.voxel_size))
 
     def provide(self, request):
         batch = Batch()
-        roi_points = request.points[PointsTypes.PRESYN]
-        roi_volume = request.volumes[VolumeTypes.GT_LABELS]
+        roi_points = request[PointsTypes.PRESYN].roi
+        roi_volume = request[VolumeTypes.GT_LABELS].roi
         image = np.zeros(roi_volume.get_shape()/self.voxel_size)
         image[self.object_location] = 1
 
@@ -31,10 +36,14 @@ class PointTestSource3D(BatchProvider):
             location += roi_points.get_offset()
             id_to_point[point_id] = Point(location)
 
-        batch.points[PointsTypes.PRESYN] = Points(data=id_to_point, roi=roi_points,
-                                                 resolution=self.voxel_size)
-        batch.volumes[VolumeTypes.GT_LABELS] = Volume(image,
-                                                roi=roi_volume)
+        batch.points[PointsTypes.PRESYN] = Points(
+            id_to_point,
+            PointsSpec(roi=roi_points))
+        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        spec.roi = roi_volume
+        batch.volumes[VolumeTypes.GT_LABELS] = Volume(
+            image,
+            spec=spec)
         return batch
 
 
@@ -46,7 +55,6 @@ class TestElasticAugment(unittest.TestCase):
         # within the object. Augmenting the volume with the object together with the point should result in a
         # transformed volume in which the point is still located within the object.
         voxel_size = Coordinate((2, 1, 1))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
 
         for i in range(5):
             object_location = tuple([slice(30/voxel_size[0], 40/voxel_size[0]),
@@ -72,8 +80,8 @@ class TestElasticAugment(unittest.TestCase):
                 request = BatchRequest()
                 window_request = Coordinate((50, 50, 50))
 
-                request.add_points_request((PointsTypes.PRESYN), window_request)
-                request.add_volume_request((VolumeTypes.GT_LABELS), window_request)
+                request.add(PointsTypes.PRESYN, window_request)
+                request.add(VolumeTypes.GT_LABELS, window_request)
                 batch = pipeline.request_batch(request)
 
                 exp_loc_in_object = batch.points[PointsTypes.PRESYN].data[0].location/voxel_size
@@ -83,7 +91,3 @@ class TestElasticAugment(unittest.TestCase):
                 self.assertTrue(volume[tuple(exp_loc_out_object)] == 0)
                 self.assertTrue(5 in batch.points[PointsTypes.PRESYN].data)
                 self.assertFalse(10 in batch.points[PointsTypes.PRESYN].data)
-
-        # restore default volume types
-        voxel_size = (1,1,1)
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
