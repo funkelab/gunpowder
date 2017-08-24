@@ -1,4 +1,5 @@
 import copy
+from .coordinate import Coordinate
 from .freezable import Freezable
 
 class VolumeSpec(Freezable):
@@ -23,7 +24,7 @@ class VolumeSpec(Freezable):
     def __init__(self, roi=None, voxel_size=None, interpolatable=None, dtype=None):
 
         self.roi = roi
-        self.voxel_size = voxel_size
+        self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)
         self.interpolatable = interpolatable
         self.dtype = dtype
 
