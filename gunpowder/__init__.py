@@ -7,10 +7,12 @@ from .build import build
 from .coordinate import Coordinate
 from .nodes import *
 from .points import PointsTypes, Points, PreSynPoint, PostSynPoint, PointsType, register_points_type, Point
+from .points_spec import PointsSpec
 from .producer_pool import ProducerPool
 from .provider_spec import ProviderSpec
 from .roi import Roi
 from .volume import register_volume_type, VolumeType, VolumeTypes, Volume
+from .volume_spec import VolumeSpec
 import gunpowder.caffe
 
 # logging.basicConfig(level=logging.INFO)

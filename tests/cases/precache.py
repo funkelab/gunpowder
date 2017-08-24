@@ -1,7 +1,7 @@
-from .provider_test import ProviderTest
-from gunpowder import *
 import logging
 import time
+from gunpowder import *
+from .provider_test import ProviderTest
 
 class Delay(BatchFilter):
 
@@ -24,21 +24,26 @@ class TestPreCache(ProviderTest):
 
             start = time.time()
 
-            for i in range(100):
+            for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
-                self.assertTrue(batch.volumes[VolumeTypes.RAW].roi == self.test_request.volumes[VolumeTypes.RAW])
+                self.assertTrue(
+                    batch.volumes[VolumeTypes.RAW].spec.roi ==
+                    self.test_request[VolumeTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds
             self.assertTrue(time.time() - start < 2)
 
             # change request
-            self.test_request.volumes[VolumeTypes.RAW] = self.test_request.volumes[VolumeTypes.RAW].shift((1,1,1))
+            self.test_request[VolumeTypes.RAW].roi = \
+                self.test_request[VolumeTypes.RAW].roi.shift((1,1,1))
 
             start = time.time()
 
-            for i in range(100):
+            for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
-                self.assertTrue(batch.volumes[VolumeTypes.RAW].roi == self.test_request.volumes[VolumeTypes.RAW])
+                self.assertTrue(
+                    batch.volumes[VolumeTypes.RAW].spec.roi ==
+                    self.test_request[VolumeTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds
             self.assertTrue(time.time() - start < 2)

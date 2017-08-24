@@ -71,15 +71,15 @@ class ElasticAugment(BatchFilter):
 
         self.voxel_size = None
         prev_volume_type = None
-        for volume_type in request.volumes.keys():
+        for volume_type in request.volume_specs.keys():
             if self.voxel_size is None:
-                self.voxel_size = volume_type.voxel_size
+                self.voxel_size = self.spec[volume_type].voxel_size
             else:
-                assert self.voxel_size == volume_type.voxel_size, \
+                assert self.voxel_size == self.spec[volume_type].voxel_size, \
                         "ElasticAugment can only be used with volumes of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(
-                                volume_type, volume_type.voxel_size,
-                                prev_volume_type, prev_volume_type.voxel_size)
+                                volume_type, self.spec[volume_type].voxel_size,
+                                prev_volume_type, self.spec[prev_volume_type].voxel_size)
             prev_volume_type = volume_type
 
         # get total roi in voxels
@@ -111,26 +111,27 @@ class ElasticAugment(BatchFilter):
         # crop the parts corresponding to the requested volume ROIs
         self.transformations = {}
         logger.debug("total ROI is %s"%total_roi)
-        for collection_type in [request.volumes, request.points]:
-            for type, roi in collection_type.items():
-                logger.debug("downstream request ROI for %s is %s" % (type, roi))
+        for identifier, spec in request.items():
 
-                # get roi in voxels
-                roi /= self.voxel_size
+            roi = spec.roi
 
-                roi_in_total_roi = roi.shift(-total_roi.get_offset())
+            logger.debug("downstream request ROI for %s is %s" % (identifier, roi))
 
-                transformation = np.copy(
-                    self.total_transformation[(slice(None),) + roi_in_total_roi.get_bounding_box()]
-                )
-                self.transformations[type] = transformation
+            # get roi in voxels
+            roi /= self.voxel_size
 
-                # update request ROI to get all voxels necessary to perfrom
-                # transformation
-                roi = self.__recompute_roi(roi, transformation)
-                collection_type[type] = roi*self.voxel_size
+            roi_in_total_roi = roi.shift(-total_roi.get_offset())
 
-                logger.debug("upstream request roi for %s = %s" % (type, roi))
+            transformation = np.copy(
+                self.total_transformation[(slice(None),) + roi_in_total_roi.get_bounding_box()]
+            )
+            self.transformations[identifier] = transformation
+
+            # update request ROI to get all voxels necessary to perfrom
+            # transformation
+            spec.roi = self.__recompute_roi(roi, transformation)*self.voxel_size
+
+            logger.debug("upstream request roi for %s = %s" % (identifier, spec.roi))
 
 
     def process(self, batch, request):
@@ -141,30 +142,30 @@ class ElasticAugment(BatchFilter):
             volume.data = augment.apply_transformation(
                     volume.data,
                     self.transformations[volume_type],
-                    interpolate=volume_type.interpolate)
+                    interpolate=self.spec[volume_type].interpolatable)
 
             # restore original ROIs
-            volume.roi = request.volumes[volume_type]
+            volume.spec.roi = request[volume_type].roi
 
         for (points_type, points) in batch.points.items():
             # create map/volume from points and apply tranformation to corresponding map, reconvert map back to points
             # TODO: How to avoid having to allocate a new volume each time (rather reuse,
             # but difficult since shape is alternating)
             trial_nr, max_trials, all_points_mapped = 0, 5, False
-            shape_map = points.roi.get_shape()/self.voxel_size
+            shape_map = points.spec.roi.get_shape()/self.voxel_size
             id_map_volume = np.zeros(shape_map, dtype=np.int32)
 
             # Get all points located in current batch and shift it based on absolute offset. Assign new ids to point
             # ids to have positive consecutive numbers and to account for having multiple points with same location.
             ids_not_mapped = []
-            offset_volume = points.roi.get_offset()
+            offset_volume = points.spec.roi.get_offset()
             new_pointid_to_ori_pointid = {} # maps new id to original id(s)
             new_point_id = 1
             relabeled_points_dic = {} # new dictionary including only those points that are relevant for that batch
             location_to_pointid_dic = {}
             for point_id, point in points.data.items():
                 location = point.location
-                if points.roi.contains(Coordinate(location)):
+                if points.spec.roi.contains(Coordinate(location)):
                     location = location - np.asarray(offset_volume)
                     if tuple(location) in location_to_pointid_dic.keys():
                         id_with_same_location = location_to_pointid_dic[tuple(location)]
@@ -211,12 +212,12 @@ class ElasticAugment(BatchFilter):
                     id_map_volume.fill(0)
 
             # restore original ROIs
-            points.roi = request.points[points_type]
+            points.spec.roi = request[points_type].roi
 
             # assign new transformed location and map new ids back to original ids.
             for new_point_id, location in relabeled_points_dic.items():
                 for ori_point_id in new_pointid_to_ori_pointid[new_point_id]:
-                    points.data[ori_point_id].location = location + points.roi.get_offset() # shift back to original roi.
+                    points.data[ori_point_id].location = location + points.spec.roi.get_offset() # shift back to original roi.
 
 
 

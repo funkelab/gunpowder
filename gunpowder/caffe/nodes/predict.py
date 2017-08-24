@@ -9,8 +9,9 @@ from gunpowder.caffe.net_io_wrapper import NetIoWrapper
 from gunpowder.ext import caffe
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied
-from gunpowder.roi import Roi, Coordinate
-from gunpowder.volume import VolumeTypes, Volume
+from gunpowder.roi import Roi
+from gunpowder.volume import Volume
+from gunpowder.volume_spec import VolumeSpec
 
 
 logger = logging.getLogger(__name__)
@@ -35,14 +36,24 @@ class Predict(BatchFilter):
             node for each entry (if requested downstream). Set the resolution of 
             the new volume via parameter ``output_resolutions``.
 
-        output_resolutions (dict): Dictionary from :class:``VolumeType`` to 
-            :class:``Coordinate``. This sets the resolutions of volumes created 
-            by this node.
+        volume_specs (dict, optional): An optional dictionary of
+            :class:`VolumeType` to :class:`VolumeSpec` to set the volume specs
+            generated volumes (``outputs``). This is useful to set the
+            ``voxel_size``, for example, if they differ from the voxel size of
+            the input volumes. Only fields that are not ``None`` in the given
+            :class:`VolumeSpec` will be used.
 
         use_gpu (int): Which GPU to use. Set to ``None`` for CPU mode.
     '''
 
-    def __init__(self, prototxt, weights, inputs, outputs, output_resolutions, use_gpu=None):
+    def __init__(
+            self,
+            prototxt,
+            weights,
+            inputs,
+            outputs,
+            volume_specs=None,
+            use_gpu=None):
 
         for f in [prototxt, weights]:
             if not os.path.isfile(f):
@@ -58,20 +69,47 @@ class Predict(BatchFilter):
         self.net_initialized = False
         self.inputs = inputs
         self.outputs = outputs
-        self.output_resolutions = output_resolutions
+        self.volume_specs = {} if volume_specs is None else volume_specs
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
+        # get common voxel size of inputs, or None if they differ
+        common_voxel_size = None
+        for identifier in self.inputs:
 
-        for volume_type in self.outputs.keys():
-            self.spec.volumes[volume_type] = self.spec.volumes[VolumeTypes.RAW]
+            voxel_size = self.spec[identifier].voxel_size
+
+            if common_voxel_size is None:
+                common_voxel_size = voxel_size
+            elif common_voxel_size != voxel_size:
+                common_voxel_size = None
+                break
+
+        # announce provided outputs
+        for identifier in self.outputs.keys():
+
+            if identifier in self.volume_specs:
+                spec = self.volume_specs[identifier].copy()
+            else:
+                spec = VolumeSpec()
+
+            if spec.voxel_size is None:
+
+                assert common_voxel_size is not None, (
+                    "There is no common voxel size of the inputs, and no "
+                    "VolumeSpec has been given for %s that defines "
+                    "voxel_size."%identifier)
+
+                spec.voxel_size = common_voxel_size
+
+            if spec.interpolatable is None:
+
+                # default for predictions
+                spec.interpolatable = False
+
+            self.provides(identifier, spec)
 
         self.worker.start()
-
-    def get_spec(self):
-        return self.spec
 
     def teardown(self):
         self.worker.stop()
@@ -80,12 +118,12 @@ class Predict(BatchFilter):
 
         # remove request parts that we provide
         for volume_type in self.outputs.keys():
-            if volume_type in request.volumes:
-                del request.volumes[volume_type]
+            if volume_type in request:
+                del request[volume_type]
 
     def process(self, batch, request):
 
-        self.batch_in.put(batch)
+        self.batch_in.put((batch, request))
 
         try:
             out = self.worker.get()
@@ -93,8 +131,8 @@ class Predict(BatchFilter):
             raise PredictProcessDied()
 
         for volume_type in self.outputs.keys():
-            batch.volumes[volume_type]     = out.volumes[volume_type]
-            batch.volumes[volume_type].roi = request.volumes[volume_type]
+            if volume_type in request:
+                batch.volumes[volume_type] = out.volumes[volume_type]
 
 
     def __predict(self, use_gpu):
@@ -117,7 +155,7 @@ class Predict(BatchFilter):
 
         start = time.time()
 
-        batch = self.batch_in.get()
+        batch, request = self.batch_in.get()
 
         fetch_time = time.time() - start
 
@@ -134,12 +172,10 @@ class Predict(BatchFilter):
         logger.info("Predict process: time=%f (including %f waiting for batch)" % (predict_time, fetch_time))
 
         for volume_type, output_name in self.outputs.items():
-            voxel_size = self.output_resolutions[volume_type]
+            spec = self.spec[volume_type].copy()
+            spec.roi = request[volume_type].roi
             batch.volumes[volume_type] = Volume(
-                    data=output[output_name][0], # strip #batch dimension
-                    roi=Roi(shape=Coordinate([dim for dim in
-                                              output[output_name][0].shape[-len(voxel_size):]])*voxel_size)
-                # dummy roi, will be corrected in process()
-            )
+                    output[output_name][0], # strip #batch dimension
+                    spec)
 
         return batch

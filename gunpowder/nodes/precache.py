@@ -12,7 +12,9 @@ class WorkersDiedException(Exception):
     pass
 
 class PreCache(BatchFilter):
-    '''Pre-cache repeated equal batch requests. For the first of a series of equal batch request, a set of workers is spawned to pre-cache the batches in parallel processes. This way, subsequent requests can be served quickly.
+    '''Pre-cache repeated equal batch requests. For the first of a series of
+    equal batch request, a set of workers is spawned to pre-cache the batches
+    in parallel processes. This way, subsequent requests can be served quickly.
 
     This node only makes sense if:
 
@@ -46,7 +48,7 @@ class PreCache(BatchFilter):
         if request != self.current_request:
 
             if self.workers is not None:
-                logger.info("stopping current workers...")
+                logger.info("new request received, stopping current workers...")
                 self.workers.stop()
 
             self.current_request = copy.deepcopy(request)

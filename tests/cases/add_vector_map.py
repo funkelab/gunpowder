@@ -8,54 +8,69 @@ import numpy as np
 
 class AddVectorMapTestSource(BatchProvider):
 
-    def get_spec(self):
+    def setup(self):
 
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.RAW]       = Roi((1000,1000,1000), (400,400,400))
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((1000, 1000, 1000), (400, 400, 400))
-        spec.points[PointsTypes.PRESYN]     = Roi((1000,1000,1000), (400,400,400))
-        spec.points[PointsTypes.POSTSYN]    = Roi((1000, 1000, 1000), (400, 400, 400))
+        for identifier in [
+            VolumeTypes.RAW,
+            VolumeTypes.GT_LABELS]:
 
-        return spec
+            self.provides(
+                identifier,
+                VolumeSpec(
+                    roi=Roi((1000, 1000, 1000), (400, 400, 400)),
+                    voxel_size=(20, 2, 2)))
+
+        for identifier in [
+            PointsTypes.PRESYN,
+            PointsTypes.POSTSYN]:
+
+            self.provides(
+                identifier,
+                PointsSpec(
+                    roi=Roi((1000, 1000, 1000), (400, 400, 400))))
 
     def provide(self, request):
 
         batch = Batch()
 
         # have the pixels encode their position
-        if VolumeTypes.RAW in request.volumes:
+        if VolumeTypes.RAW in request:
 
             # the z,y,x coordinates of the ROI
-            roi = request.volumes[VolumeTypes.RAW]
-            roi_voxel = roi // VolumeTypes.RAW.voxel_size
+            roi = request[VolumeTypes.RAW].roi
+            roi_voxel = roi // self.spec[VolumeTypes.RAW].voxel_size
             meshgrids = np.meshgrid(
                     range(roi_voxel.get_begin()[0], roi_voxel.get_end()[0]),
                     range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
                     range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            batch.volumes[VolumeTypes.RAW] = Volume(data, roi)
+            spec = self.spec[VolumeTypes.RAW].copy()
+            spec.roi = roi
+            batch.volumes[VolumeTypes.RAW] = Volume(data, spec)
 
-        if VolumeTypes.GT_LABELS in request.volumes:
-            roi = request.volumes[VolumeTypes.GT_LABELS]
-            roi_voxel_shape = (roi // VolumeTypes.GT_LABELS.voxel_size).get_shape()
+        if VolumeTypes.GT_LABELS in request:
+            roi = request[VolumeTypes.GT_LABELS].roi
+            roi_voxel_shape = (roi // self.spec[VolumeTypes.GT_LABELS].voxel_size).get_shape()
             data = np.ones(roi_voxel_shape)
             data[roi_voxel_shape[0]//2:,roi_voxel_shape[1]//2:,:] = 2
             data[roi_voxel_shape[0]//2:, -(roi_voxel_shape[1] // 2):, :] = 3
-            batch.volumes[VolumeTypes.GT_LABELS] = Volume(data, roi)
+            spec = self.spec[VolumeTypes.GT_LABELS].copy()
+            spec.roi = roi
+            batch.volumes[VolumeTypes.GT_LABELS] = Volume(data, spec)
 
-        if PointsTypes.PRESYN in request.points:
-            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request.points[PointsTypes.PRESYN])
-        elif PointsTypes.POSTSYN in request.points:
-            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request.points[PointsTypes.POSTSYN])
+        if PointsTypes.PRESYN in request:
+            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsTypes.PRESYN].roi)
+        elif PointsTypes.POSTSYN in request:
+            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsTypes.POSTSYN].roi)
 
-        voxel_size_points = VolumeTypes.RAW.voxel_size
-        for (points_type, roi) in request.points.items():
+        voxel_size_points = self.spec[VolumeTypes.RAW].voxel_size
+        for (points_type, spec) in request.points_specs.items():
             if points_type == PointsTypes.PRESYN:
                 data = data_presyn
             if points_type == PointsTypes.POSTSYN:
                 data = data_postsyn
-            batch.points[points_type] = Points(data, roi, resolution=voxel_size_points)
+            batch.points[points_type] = Points(data, PointsSpec(spec.roi))
 
         return batch
 
@@ -63,7 +78,7 @@ class AddVectorMapTestSource(BatchProvider):
 
         presyn_locs, postsyn_locs = {}, {}
         min_dist_between_presyn_locs = 250
-        voxel_size_points = VolumeTypes.RAW.voxel_size
+        voxel_size_points = self.spec[VolumeTypes.RAW].voxel_size
         min_dist_pre_to_postsyn_loc, max_dist_pre_to_postsyn_loc= 60, 120
         num_presyn_locations  = roi.size() / (np.prod(50*np.asarray(voxel_size_points)))  # 1 synapse per 50vx^3 cube
         num_postsyn_locations = np.random.randint(low=1, high=3)  # 1 to 3 postsyn partners
@@ -111,24 +126,9 @@ class TestAddVectorMap(ProviderTest):
 
     def test_output_min_distance(self):
 
-        voxel_size = (20, 2, 2)
-        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_BM_PRESYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_BM_POSTSYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_VECTORS_MAP_PRESYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_VECTORS_MAP_POSTSYN', interpolate=False, voxel_size=voxel_size))
+        voxel_size = Coordinate((20, 2, 2))
 
-        request = BatchRequest()
-        raw_roi        = AddVectorMapTestSource().get_spec().volumes[VolumeTypes.RAW]
-        gt_labels_roi  = AddVectorMapTestSource().get_spec().volumes[VolumeTypes.GT_LABELS]
-        presyn_roi     = AddVectorMapTestSource().get_spec().points[PointsTypes.PRESYN]
-
-        request.add_volume_request(VolumeTypes.RAW, raw_roi.get_shape())
-        request.add_volume_request(VolumeTypes.GT_LABELS, gt_labels_roi.get_shape())
-        request.add_points_request(PointsTypes.PRESYN, presyn_roi.get_shape())
-        request.add_points_request(PointsTypes.POSTSYN, presyn_roi.get_shape())
-        request.add_volume_request(VolumeTypes.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
+        register_volume_type('GT_VECTORS_MAP_PRESYN')
 
         volumetypes_to_source_target_pointstypes = {VolumeTypes.GT_VECTORS_MAP_PRESYN: (PointsTypes.PRESYN, PointsTypes.POSTSYN)}
         volumetypes_to_stayinside_volumetypes    = {VolumeTypes.GT_VECTORS_MAP_PRESYN: VolumeTypes.GT_LABELS}
@@ -137,25 +137,41 @@ class TestAddVectorMap(ProviderTest):
         radius_phys  = 30
         pipeline_min_distance = AddVectorMapTestSource() +\
                                 AddVectorMap(src_and_trg_points = volumetypes_to_source_target_pointstypes,
+                                             voxel_sizes = {VolumeTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
                                              radius_phys = radius_phys,
                                              partner_criterion = 'min_distance',
                                              stayinside_volumetypes = volumetypes_to_stayinside_volumetypes,
                                              pad_for_partners = (0, 0, 0))
 
         with build(pipeline_min_distance):
+
+            request = BatchRequest()
+            raw_roi = pipeline_min_distance.spec[VolumeTypes.RAW].roi
+            gt_labels_roi = pipeline_min_distance.spec[VolumeTypes.GT_LABELS].roi
+            presyn_roi = pipeline_min_distance.spec[PointsTypes.PRESYN].roi
+
+            request.add(VolumeTypes.RAW, raw_roi.get_shape())
+            request.add(VolumeTypes.GT_LABELS, gt_labels_roi.get_shape())
+            request.add(PointsTypes.PRESYN, presyn_roi.get_shape())
+            request.add(PointsTypes.POSTSYN, presyn_roi.get_shape())
+            request.add(VolumeTypes.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
+            for identifier, spec in request.items():
+                spec.roi = spec.roi.shift((1000, 1000, 1000))
+
             batch = pipeline_min_distance.request_batch(request)
+
         presyn_locs  = batch.points[PointsTypes.PRESYN].data
         postsyn_locs = batch.points[PointsTypes.POSTSYN].data
         vector_map_presyn        = batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].get_offset()
+        offset_vector_map_presyn = request[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
         self.assertTrue(len(postsyn_locs)>0)
 
         for loc_id, point in presyn_locs.items():
 
-            if request.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].contains(Coordinate(point.location)):
-                self.assertTrue(batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)))
+            if request[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
+                self.assertTrue(batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 dist_to_loc = {}
                 for partner_id in point.partner_ids:
@@ -184,6 +200,7 @@ class TestAddVectorMap(ProviderTest):
 
         # test for partner criterion 'all'
         pipeline_all = AddVectorMapTestSource() + AddVectorMap(src_and_trg_points = volumetypes_to_source_target_pointstypes,
+                                                               voxel_sizes = {VolumeTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
                                                                radius_phys = radius_phys,
                                                                partner_criterion = 'all',
                                                                stayinside_volumetypes = volumetypes_to_stayinside_volumetypes,
@@ -195,15 +212,15 @@ class TestAddVectorMap(ProviderTest):
         presyn_locs  = batch.points[PointsTypes.PRESYN].data
         postsyn_locs = batch.points[PointsTypes.POSTSYN].data
         vector_map_presyn        = batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].get_offset()
+        offset_vector_map_presyn = request[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
         self.assertTrue(len(postsyn_locs)>0)
 
         for loc_id, point in presyn_locs.items():
 
-            if request.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].contains(Coordinate(point.location)):
-                self.assertTrue(batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)))
+            if request[VolumeTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
+                self.assertTrue(batch.volumes[VolumeTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 partner_ids_to_locs_per_src, count_vectors_per_partner = {}, {}
                 for partner_id in point.partner_ids:
@@ -231,18 +248,6 @@ class TestAddVectorMap(ProviderTest):
                 self.assertTrue((count_vectors_per_partner.values() - np.min(count_vectors_per_partner.values())
                                 <=len(count_vectors_per_partner.keys())).all())
 
-        # restore default volume types
-        voxel_size = (1,1,1)
-        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_BM_PRESYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_BM_POSTSYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_VECTORS_MAP_PRESYN', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_VECTORS_MAP_POSTSYN', interpolate=False, voxel_size=voxel_size))
-
-
-
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddVectorMap)
     unittest.TextTestRunner(verbosity=2).run(suite)
-

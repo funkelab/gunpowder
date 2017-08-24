@@ -4,42 +4,49 @@ import numpy as np
 
 class TestSource(BatchProvider):
 
-    def get_spec(self):
+    def setup(self):
 
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.GT_AFFINITIES] = Roi((0,0,0), (2000,200,200))
-        spec.volumes[VolumeTypes.GT_MASK] = Roi((0,0,0), (2000,200,200))
-        spec.volumes[VolumeTypes.GT_IGNORE] = Roi((0,0,0), (2000,200,200))
+        for identifier in [
+            VolumeTypes.GT_AFFINITIES,
+            VolumeTypes.GT_MASK,
+            VolumeTypes.GT_IGNORE]:
 
-        return spec
+            self.provides(
+                identifier,
+                VolumeSpec(
+                    roi=Roi((0, 0, 0), (2000, 200, 200)),
+                    voxel_size=(20, 2, 2)))
 
     def provide(self, request):
 
         batch = Batch()
 
-        roi = request.volumes[VolumeTypes.GT_AFFINITIES]
-        shape_vx = request.volumes[VolumeTypes.GT_AFFINITIES].get_shape() // VolumeTypes.GT_AFFINITIES.voxel_size
+        roi = request[VolumeTypes.GT_AFFINITIES].roi
+        shape_vx = roi.get_shape()//self.spec[VolumeTypes.GT_AFFINITIES].voxel_size
+
+        spec = self.spec[VolumeTypes.GT_AFFINITIES].copy()
+        spec.roi = roi
 
         batch.volumes[VolumeTypes.GT_AFFINITIES] = Volume(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
                 ),
-                roi
+                spec
         )
         batch.volumes[VolumeTypes.GT_MASK] = Volume(
                 np.random.randint(
                     0, 2,
                     shape_vx
                 ),
-                roi
+                spec
         )
         batch.volumes[VolumeTypes.GT_IGNORE] = Volume(
                 np.random.randint(
                     0, 2,
                     shape_vx
                 ),
-                roi
+                spec
         )
 
         return batch
@@ -48,15 +55,9 @@ class TestBalanceLabels(ProviderTest):
 
     def test_output(self):
 
-        voxel_size = (20, 2, 2)
-        register_volume_type(VolumeType('GT_MASK', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_IGNORE', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('LOSS_SCALE', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_AFFINITIES', interpolate=False, voxel_size=voxel_size))
-
-        pipeline = TestSource() + BalanceLabels({VolumeTypes.GT_AFFINITIES: VolumeTypes.LOSS_SCALE},
-                                                {VolumeTypes.GT_AFFINITIES: [VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE]})
+        pipeline = TestSource() + BalanceLabels(
+                {VolumeTypes.GT_AFFINITIES: VolumeTypes.LOSS_SCALE},
+                {VolumeTypes.GT_AFFINITIES: [VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE]})
 
         with build(pipeline):
 
@@ -64,8 +65,8 @@ class TestBalanceLabels(ProviderTest):
             for i in range(10):
 
                 request = BatchRequest()
-                request.add_volume_request(VolumeTypes.GT_AFFINITIES, (400,30,34))
-                request.add_volume_request(VolumeTypes.LOSS_SCALE, (400,30,34))
+                request.add(VolumeTypes.GT_AFFINITIES, (400,30,34))
+                request.add(VolumeTypes.LOSS_SCALE, (400,30,34))
 
                 batch = pipeline.request_batch(request)
 
@@ -97,19 +98,11 @@ class TestBalanceLabels(ProviderTest):
                 w_pos = 1.0/(2.0*frac_pos)
                 w_neg = 1.0/(2.0*frac_neg)
 
-                self.assertAlmostEqual((scale*mask*affs).sum(), w_pos*num_pos)
-                self.assertAlmostEqual((scale*mask*(1-affs)).sum(), w_neg*num_neg)
+                self.assertAlmostEqual((scale*mask*affs).sum(), w_pos*num_pos, 3)
+                self.assertAlmostEqual((scale*mask*(1-affs)).sum(), w_neg*num_neg, 3)
 
                 # check if LOSS_SCALE is omitted if not requested
-                del request.volumes[VolumeTypes.LOSS_SCALE]
+                del request[VolumeTypes.LOSS_SCALE]
 
                 batch = pipeline.request_batch(request)
                 self.assertTrue(VolumeTypes.LOSS_SCALE not in batch.volumes)
-
-        # restore default volume types
-        voxel_size = (1,1,1)
-        register_volume_type(VolumeType('GT_MASK', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_IGNORE', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('LOSS_SCALE', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=voxel_size))
-        register_volume_type(VolumeType('GT_AFFINTIIES', interpolate=False, voxel_size=voxel_size))

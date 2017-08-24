@@ -44,33 +44,33 @@ class PointsTypes:
     '''
     pass
 
-def register_points_type(points_type):
+def register_points_type(identifier):
     '''Register a new points type.
 
     For example, the following call::
 
-            register_points_type(PointsType('IDENTIFIER'))
+            register_points_type('IDENTIFIER')
 
-    will create a new points type available as ``PointsTypes.IDENTIFIER``. 
-    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries.
+    will create a new points type available as ``PointsTypes.IDENTIFIER``.
+    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    logger.debug("Registering volume type " + str(points_type))
+    points_type = PointsType(identifier)
+    logger.debug("Registering points type " + str(points_type))
     setattr(PointsTypes, points_type.identifier, points_type)
 
-register_points_type(PointsType('PRESYN'))
-register_points_type(PointsType('POSTSYN'))
+register_points_type('PRESYN')
+register_points_type('POSTSYN')
 
 
 class Points(Freezable):
-    def __init__(self, data, roi, resolution):
+    def __init__(self, data, spec):
         """ Data structure to keep information about points locations within a ROI
         :param data:        a dictionary with node_ids as keys and Point instances as values
-        :param roi:         Roi() (gunpowder.nodes.roi), Region of interest defined by offset and shape
-        :param resolution:  n-dim tuple, list, resolution for positions of point locations 
+        :param spec:        A :class:`PointsSpec` describing the metadata of the points
         """
         self.data = data
-        self.roi = roi
-        self.resolution = resolution
+        self.spec = spec
 
         self.freeze()
 

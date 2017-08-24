@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 
@@ -39,53 +38,51 @@ class AddGtAffinities(BatchFilter):
         self.label_volume_type = label_volume_type
         self.affinity_volume_type = affinity_volume_type
 
-        dims = self.affinity_neighborhood.shape[1]
-        self.padding_neg = Coordinate(
-                min([0] + [a[d] for a in self.affinity_neighborhood])
-                for d in range(dims)
-        )*self.label_volume_type.voxel_size
-
-        self.padding_pos = Coordinate(
-                max([0] + [a[d] for a in self.affinity_neighborhood])
-                for d in range(dims)
-        )*self.label_volume_type.voxel_size
-
-        logger.debug("padding neg: " + str(self.padding_neg))
-        logger.debug("padding pos: " + str(self.padding_pos))
-
         self.skip_next = False
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
+        assert self.label_volume_type in self.spec, "Upstream does not provide %s needed by AddGtAffinities"%self.label_volume_type
 
-        assert self.label_volume_type in self.spec.volumes, "AddGtAffinities can only be used if you provide %s"%self.label_volume_type
-        self.spec.volumes[self.affinity_volume_type] = self.spec.volumes[self.label_volume_type]
+        voxel_size = self.spec[self.label_volume_type].voxel_size
 
-    def get_spec(self):
-        return self.spec
+        dims = self.affinity_neighborhood.shape[1]
+        self.padding_neg = Coordinate(
+                min([0] + [a[d] for a in self.affinity_neighborhood])
+                for d in range(dims)
+        )*voxel_size
+
+        self.padding_pos = Coordinate(
+                max([0] + [a[d] for a in self.affinity_neighborhood])
+                for d in range(dims)
+        )*voxel_size
+
+        logger.debug("padding neg: " + str(self.padding_neg))
+        logger.debug("padding pos: " + str(self.padding_pos))
+
+        spec = self.spec[self.label_volume_type].copy()
+        if spec.roi is not None:
+            spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
+        spec.dtype = np.float32
+
+        self.provides(self.affinity_volume_type, spec)
 
     def prepare(self, request):
 
         # do nothing if no gt affinities were requested
-        if not self.affinity_volume_type in request.volumes:
+        if not self.affinity_volume_type in request:
             logger.warn("no affinites requested, will do nothing")
             self.skip_next = True
             return
 
-        del request.volumes[self.affinity_volume_type]
+        del request[self.affinity_volume_type]
 
-        gt_labels_roi = request.volumes[self.label_volume_type]
+        gt_labels_roi = request[self.label_volume_type].roi
         logger.debug("downstream %s request: "%self.label_volume_type + str(gt_labels_roi))
 
-        # shift labels ROI by padding_neg
-        gt_labels_roi = gt_labels_roi.shift(self.padding_neg)
-        # increase shape
-        shape = gt_labels_roi.get_shape()
-        shape = shape - self.padding_neg + self.padding_pos
-        gt_labels_roi.set_shape(shape)
-        request.volumes[self.label_volume_type] = gt_labels_roi
+        # grow labels ROI to accomodate padding
+        gt_labels_roi = gt_labels_roi.grow(-self.padding_neg, self.padding_pos)
+        request[self.label_volume_type].roi = gt_labels_roi
 
         logger.debug("upstream %s request: "%self.label_volume_type + str(gt_labels_roi))
 
@@ -96,7 +93,7 @@ class AddGtAffinities(BatchFilter):
             self.skip_next = False
             return
 
-        gt_labels_roi = request.volumes[self.label_volume_type]
+        gt_labels_roi = request[self.label_volume_type].roi
 
         logger.debug("computing ground-truth affinities from labels")
         gt_affinities = malis.seg_to_affgraph(
@@ -108,15 +105,15 @@ class AddGtAffinities(BatchFilter):
         offset = gt_labels_roi.get_offset()
         shift = -offset - self.padding_neg
         crop_roi = gt_labels_roi.shift(shift)
-        crop_roi /= self.label_volume_type.voxel_size
+        crop_roi /= self.spec[self.label_volume_type].voxel_size
         crop = crop_roi.get_bounding_box()
 
         logger.debug("cropping with " + str(crop))
         gt_affinities = gt_affinities[(slice(None),)+crop]
 
-        batch.volumes[self.affinity_volume_type] = Volume(
-                gt_affinities,
-                gt_labels_roi)
+        spec = self.spec[self.affinity_volume_type].copy()
+        spec.roi = gt_labels_roi
+        batch.volumes[self.affinity_volume_type] = Volume(gt_affinities, spec)
 
         # crop labels to original label ROI
         batch.volumes[self.label_volume_type] = batch.volumes[self.label_volume_type].crop(gt_labels_roi)

@@ -39,9 +39,9 @@ class Batch(Freezable):
         for collection_type in [self.volumes, self.points]:
             for (type, obj) in collection_type.items():
                 if total_roi is None:
-                    total_roi = obj.roi
+                    total_roi = obj.spec.roi
                 else:
-                    total_roi = total_roi.union(obj.roi)
+                    total_roi = total_roi.union(obj.spec.roi)
 
         return total_roi
 
@@ -50,5 +50,5 @@ class Batch(Freezable):
         r = ""
         for collection_type in [self.volumes, self.points]:
             for (type, obj) in collection_type.items():
-                r += "%s: %s\n"%(type, obj.roi)
+                r += "%s: %s\n"%(type, obj.spec)
         return r

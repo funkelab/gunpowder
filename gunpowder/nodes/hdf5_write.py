@@ -55,8 +55,6 @@ class Hdf5Write(BatchFilter):
 
     def create_output_file(self, batch):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-
         try:
             os.makedirs(self.output_dir)
         except:
@@ -67,10 +65,10 @@ class Hdf5Write(BatchFilter):
 
         for (volume_type, dataset_name) in self.dataset_names.items():
 
-            assert volume_type in self.upstream_spec.volumes, "Asked to store %s, but is not provided upstream."%volume_type
+            assert volume_type in self.spec, "Asked to store %s, but is not provided upstream."%volume_type
 
-            total_roi = self.upstream_spec.volumes[volume_type]
-            data_shape = total_roi.get_shape()//volume_type.voxel_size
+            total_roi = self.spec[volume_type].roi
+            data_shape = total_roi.get_shape()//self.spec[volume_type].voxel_size
 
             if volume_type in self.dataset_dtypes:
                 dtype = self.dataset_dtypes[volume_type]
@@ -84,7 +82,7 @@ class Hdf5Write(BatchFilter):
                     dtype=dtype)
 
             dataset.attrs['offset'] = total_roi.get_offset()
-            dataset.attrs['resolution'] = volume_type.voxel_size
+            dataset.attrs['resolution'] = self.spec[volume_type].voxel_size
 
             self.datasets[volume_type] = dataset
 
@@ -96,10 +94,10 @@ class Hdf5Write(BatchFilter):
 
         for volume_type, dataset in self.datasets.items():
 
-            roi = batch.volumes[volume_type].roi
+            roi = batch.volumes[volume_type].spec.roi
             data = batch.volumes[volume_type].data
-            total_roi = self.upstream_spec.volumes[volume_type]
+            total_roi = self.spec[volume_type].roi
 
             assert total_roi.contains(roi), "ROI %s of %s not in upstream provided ROI %s"%(roi, volume_type, total_roi)
-            data_roi = (roi - total_roi.get_offset())//volume_type.voxel_size
+            data_roi = (roi - total_roi.get_offset())//self.spec[volume_type].voxel_size
             dataset[data_roi.get_bounding_box()] = batch.volumes[volume_type].data

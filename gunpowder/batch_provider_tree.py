@@ -33,8 +33,9 @@ class BatchProviderTree(BatchProvider):
             upstream_providers += input.get_upstream_providers()
         return upstream_providers
 
-    def get_spec(self):
-        return self.output.get_spec()
+    @property
+    def spec(self):
+        return self.output.spec
 
     def provide(self, request):
 
@@ -77,10 +78,12 @@ class BatchProviderTree(BatchProvider):
         try:
             provider.teardown()
         except Exception as e:
-            # don't stop on exceptions, try to tear down as much as possible of 
+            # don't stop on exceptions, try to tear down as much as possible of
             # the DAG
             logger.error("encountered exception during teardown: " + str(e))
             traceback.print_exc()
+        finally:
+            provider._reset_spec()
 
 def batch_provider_add(self, batch_provider):
 
