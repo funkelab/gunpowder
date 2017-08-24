@@ -44,21 +44,23 @@ class PointsTypes:
     '''
     pass
 
-def register_points_type(points_type):
+def register_points_type(identifier):
     '''Register a new points type.
 
     For example, the following call::
 
-            register_points_type(PointsType('IDENTIFIER'))
+            register_points_type('IDENTIFIER')
 
-    will create a new points type available as ``PointsTypes.IDENTIFIER``. 
-    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries.
+    will create a new points type available as ``PointsTypes.IDENTIFIER``.
+    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    logger.debug("Registering volume type " + str(points_type))
+    points_type = PointsType(identifier)
+    logger.debug("Registering points type " + str(points_type))
     setattr(PointsTypes, points_type.identifier, points_type)
 
-register_points_type(PointsType('PRESYN'))
-register_points_type(PointsType('POSTSYN'))
+register_points_type('PRESYN')
+register_points_type('POSTSYN')
 
 
 class Points(Freezable):
