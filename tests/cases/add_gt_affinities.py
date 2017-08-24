@@ -38,6 +38,10 @@ class TestAddGtAffinities(ProviderTest):
 
     def test_output(self):
 
+        # skip the test if malis is not installed
+        if isinstance(gunpowder.ext.malis, gunpowder.ext.NoSuchModule):
+            return
+
         neighborhood = [
                 Coordinate((-2,0,0)),
                 Coordinate((0,-1,0)),
