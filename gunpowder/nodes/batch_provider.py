@@ -159,6 +159,12 @@ class BatchProvider(object):
                     volume.spec.roi,
                     self.name()
             )
+            assert volume.spec.voxel_size == self.spec[volume_type].voxel_size, (
+                "voxel size of %s announced, but %s "
+                "delivered for %s"%(
+                    self.spec[volume_type].voxel_size,
+                    volume.spec.voxel_size,
+                    volume_type))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             dims = request_spec.roi.dims()
