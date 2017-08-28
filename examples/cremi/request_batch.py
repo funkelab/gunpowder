@@ -14,6 +14,9 @@ def train():
     affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
     register_volume_type('GT_LABELS_2')
     register_volume_type('GT_LABELS_4')
+    register_volume_type('GT_BOUNDARY_GRADIENT')
+    register_volume_type('GT_BOUNDARY_DISTANCE')
+    register_volume_type('GT_BOUNDARY')
     n = 35
 
     request = BatchRequest()
@@ -23,6 +26,9 @@ def train():
     request.add(VolumeTypes.GT_LABELS_4, Coordinate((56,56,56))*(40,4,4))
     request.add(VolumeTypes.GT_IGNORE, Coordinate((56,56,56))*(40,4,4))
     request.add(VolumeTypes.GT_AFFINITIES, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY_GRADIENT, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY_DISTANCE, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY, Coordinate((56,56,56))*(40,4,4))
     request.add(VolumeTypes.LOSS_SCALE, Coordinate((56,56,56))*(40,4,4))
 
     data_sources = tuple(
@@ -89,6 +95,11 @@ def train():
             }
         ) +
         AddGtAffinities(affinity_neighborhood) +
+        AddBoundaryDistanceGradients(
+            gradient_volume_type=VolumeTypes.GT_BOUNDARY_GRADIENT,
+            distance_volume_type=VolumeTypes.GT_BOUNDARY_DISTANCE,
+            boundary_volume_type=VolumeTypes.GT_BOUNDARY,
+            normalize='l2') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(
             prob_missing=0.03,
@@ -109,6 +120,12 @@ def train():
                 VolumeTypes.GT_LABELS_4: 'volumes/labels/neuron_ids_4',
                 VolumeTypes.GT_IGNORE: 'volumes/labels/mask',
                 VolumeTypes.GT_AFFINITIES: 'volumes/labels/affinities',
+                VolumeTypes.GT_BOUNDARY_GRADIENT:
+                    'volumes/labels/boundary_gradient',
+                VolumeTypes.GT_BOUNDARY_DISTANCE:
+                    'volumes/labels/boundary_distance',
+                VolumeTypes.GT_BOUNDARY:
+                    'volumes/labels/boundary',
             },
             every=1,
             output_filename='final_it={iteration}_id={id}.hdf') +
