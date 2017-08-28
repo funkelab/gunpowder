@@ -69,7 +69,7 @@ class BatchProvider(object):
             self._spec = ProviderSpec()
 
         assert identifier not in self.spec, "Node %s is trying to add spec for %s, but is already provided."%(type(self).__name__, identifier)
-        self.spec[identifier] = spec
+        self.spec[identifier] = copy.deepcopy(spec)
 
         logger.debug("%s provides %s with spec %s"%(self.name(), identifier, spec))
 
