@@ -188,6 +188,21 @@ class Hdf5Source(BatchProvider):
         else:
             spec.dtype = dataset.dtype
 
+        if spec.interpolatable is None:
+
+            spec.interpolatable = spec.dtype in [
+                np.float,
+                np.float32,
+                np.float64,
+                np.float128,
+                np.uint8 # assuming this is not used for labels
+            ]
+            logger.warning("WARNING: You didn't set 'interpolatable' for %s "
+                           "(dataset %s). Based on the dtype %s, it has been "
+                           "set to %s. This might not be what you want.",
+                           volume_type, ds_name, spec.dtype,
+                           spec.interpolatable)
+
         return spec
 
     def __read(self, hdf_file, ds_name, roi):
