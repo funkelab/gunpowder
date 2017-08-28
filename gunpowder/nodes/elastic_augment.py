@@ -35,7 +35,7 @@ class ElasticAugment(BatchFilter):
         max_misalign (int): Maximal voxels to shift in x and y. Samples will be 
             drawn uniformly.
 
-        subsample (bool): Instead of creating an elastic transformation on the 
+        subsample (int): Instead of creating an elastic transformation on the 
             full resolution, create one subsampled by the given factor, and 
             linearly interpolate to obtain the full resolution transformation. 
             This can significantly speed up this node, at the expense of having 
@@ -86,19 +86,21 @@ class ElasticAugment(BatchFilter):
         total_roi /= self.voxel_size
 
         # create a transformation for the total ROI
-        rotation = random.random()*self.rotation_max_amount + self.rotation_start
         self.total_transformation = augment.create_identity_transformation(
                 total_roi.get_shape(),
                 subsample=self.subsample)
-        self.total_transformation += augment.create_elastic_transformation(
-                total_roi.get_shape(),
-                self.control_point_spacing,
-                self.jitter_sigma,
-                subsample=self.subsample)
-        self.total_transformation += augment.create_rotation_transformation(
-                total_roi.get_shape(),
-                rotation,
-                subsample=self.subsample)
+        if sum(self.jitter_sigma) > 0:
+            self.total_transformation += augment.create_elastic_transformation(
+                    total_roi.get_shape(),
+                    self.control_point_spacing,
+                    self.jitter_sigma,
+                    subsample=self.subsample)
+        rotation = random.random()*self.rotation_max_amount + self.rotation_start
+        if rotation != 0:
+            self.total_transformation += augment.create_rotation_transformation(
+                    total_roi.get_shape(),
+                    rotation,
+                    subsample=self.subsample)
 
         if self.subsample > 1:
             self.total_transformation = augment.upscale_transformation(
