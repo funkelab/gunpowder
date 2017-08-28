@@ -110,7 +110,7 @@ class Volume(Freezable):
 
     def __init__(self, data, spec=None):
 
-        self.spec = spec
+        self.spec = deepcopy(spec)
         self.data = data
 
         if spec is not None:

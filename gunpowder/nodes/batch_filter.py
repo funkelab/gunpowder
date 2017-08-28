@@ -53,7 +53,7 @@ class BatchFilter(BatchProvider):
         '''
 
         assert identifier in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, identifier)
-        self.spec[identifier] = spec
+        self.spec[identifier] = copy.deepcopy(spec)
 
         logger.debug("%s updates %s with %s"%(self.name(), identifier, spec))
 

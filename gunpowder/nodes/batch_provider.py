@@ -69,7 +69,7 @@ class BatchProvider(object):
             self._spec = ProviderSpec()
 
         assert identifier not in self.spec, "Node %s is trying to add spec for %s, but is already provided."%(type(self).__name__, identifier)
-        self.spec[identifier] = spec
+        self.spec[identifier] = copy.deepcopy(spec)
 
         logger.debug("%s provides %s with spec %s"%(self.name(), identifier, spec))
 
@@ -159,6 +159,12 @@ class BatchProvider(object):
                     volume.spec.roi,
                     self.name()
             )
+            assert volume.spec.voxel_size == self.spec[volume_type].voxel_size, (
+                "voxel size of %s announced, but %s "
+                "delivered for %s"%(
+                    self.spec[volume_type].voxel_size,
+                    volume.spec.voxel_size,
+                    volume_type))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             dims = request_spec.roi.dims()
