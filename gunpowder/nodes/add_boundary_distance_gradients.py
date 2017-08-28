@@ -144,6 +144,8 @@ class AddBoundaryDistanceGradients(BatchFilter):
         # diff  :   0 0 0 1 0 1 0 0 0 1 0       n - 1
         # bound.: 00000001000100000001000      2n - 1
 
+        logger.debug("computing boundaries for %s", labels.shape)
+
         dims = len(labels.shape)
         in_shape = labels.shape
         out_shape = tuple(2*s - 1 for s in in_shape)
@@ -151,7 +153,11 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
         boundaries = np.zeros(out_shape, dtype=np.bool)
 
+        logger.debug("boundaries shape is %s", boundaries.shape)
+
         for d in range(dims):
+
+            logger.debug("processing dimension %d", d)
 
             shift_p = [slice(None)]*dims
             shift_p[d] = slice(1, in_shape[d])
@@ -161,8 +167,12 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
             diff = (labels[shift_p] - labels[shift_n]) != 0
 
-            target = [slice(0, out_shape[d], 2)]*dims
+            logger.debug("diff shape is %s", diff.shape)
+
+            target = [slice(None, None, 2)]*dims
             target[d] = slice(1, out_shape[d], 2)
+
+            logger.debug("target slices are %s", target)
 
             boundaries[target] = diff
 
