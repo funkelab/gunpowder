@@ -1,6 +1,5 @@
 from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeTypes, Volume
-import copy
 import collections
 import logging
 import numpy as np
@@ -36,25 +35,24 @@ class BalanceLabels(BatchFilter):
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
-
         for (label_volume, loss_scale_volume) in self.labels_to_loss_scale_volume.items():
-            assert label_volume in self.spec.volumes, "Asked to balance labels {}, which are not provided.".format(label_volume)
+
+            assert label_volume in self.spec, "Asked to balance labels {}, which are not provided.".format(label_volume)
+
             if label_volume in self.labels_to_mask_volumes:
                 for mask_volume in self.labels_to_mask_volumes[label_volume]:
-                    assert mask_volume in self.spec.volumes, "Asked to apply mask ({}) to balance labels, but mask is not provided.".format(mask_volume)
-            self.spec.volumes[loss_scale_volume] = self.spec.volumes[label_volume]
+                    assert mask_volume in self.spec, "Asked to apply mask {} to balance labels, but mask is not provided.".format(mask_volume)
 
-    def get_spec(self):
-        return self.spec
+            spec = self.spec[label_volume].copy()
+            spec.dtype = np.float32
+            self.provides(loss_scale_volume, spec)
 
     def prepare(self, request):
 
         self.skip_next = True
         for _, loss_scale_volume in self.labels_to_loss_scale_volume.items():
-            if loss_scale_volume in request.volumes:
-                del request.volumes[loss_scale_volume]
+            if loss_scale_volume in request:
+                del request[loss_scale_volume]
                 self.skip_next = False
 
     def process(self, batch, request):
@@ -68,7 +66,7 @@ class BalanceLabels(BatchFilter):
             labels = batch.volumes[label_volume]
 
             # initialize error scale with 1s
-            error_scale = np.ones(labels.data.shape, dtype=np.float)
+            error_scale = np.ones(labels.data.shape, dtype=np.float32)
 
             # set error_scale to 0 in masked-out areas
             if label_volume in self.labels_to_mask_volumes:
@@ -90,9 +88,9 @@ class BalanceLabels(BatchFilter):
             # scale the masked-in error_scale with the class weights
             error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
 
-            batch.volumes[loss_scale_volume] = Volume(
-                error_scale,
-                labels.roi)
+            spec = self.spec[loss_scale_volume].copy()
+            spec.roi = labels.spec.roi
+            batch.volumes[loss_scale_volume] = Volume(error_scale, spec)
 
     def __mask_error_scale(self, error_scale, mask):
 

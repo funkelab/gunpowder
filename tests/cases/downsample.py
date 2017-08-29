@@ -5,19 +5,28 @@ import numpy as np
 
 class DownSampleTestSource(BatchProvider):
 
-    def get_spec(self):
+    def setup(self):
 
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.RAW] = Roi((1000,1000,1000), (100,100,100))
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((1005,1005,1005), (90,90,90))
-        return spec
+        self.provides(
+            VolumeTypes.RAW,
+            VolumeSpec(
+                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
+                voxel_size=(4, 4, 4)))
+
+        self.provides(
+            VolumeTypes.GT_LABELS,
+            VolumeSpec(
+                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
+                voxel_size=(4, 4, 4)))
 
     def provide(self, request):
 
         batch = Batch()
 
         # have the pixels encode their position
-        for (volume_type, roi) in request.volumes.items():
+        for (volume_type, spec) in request.volume_specs.items():
+
+            roi = spec.roi
 
             for d in range(3):
                 assert roi.get_begin()[d]%4 == 0, "roi %s does not align with voxels"
@@ -31,9 +40,11 @@ class DownSampleTestSource(BatchProvider):
                     range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
+            spec = self.spec[volume_type].copy()
+            spec.roi = roi
             batch.volumes[volume_type] = Volume(
                     data,
-                    roi)
+                    spec)
         return batch
 
 class TestDownSample(ProviderTest):
@@ -46,16 +57,14 @@ class TestDownSample(ProviderTest):
 
         source = DownSampleTestSource()
 
-        register_volume_type(VolumeType('RAW', interpolate=True, voxel_size=(4,4,4)))
-        register_volume_type(VolumeType('GT_LABELS', interpolate=False, voxel_size=(4,4,4)))
-        register_volume_type(VolumeType('RAW_DOWNSAMPLED', interpolate=True, voxel_size=(8,8,8)))
-        register_volume_type(VolumeType('GT_LABELS_DOWNSAMPLED', interpolate=False, voxel_size=(8,8,8)))
+        register_volume_type('RAW_DOWNSAMPLED')
+        register_volume_type('GT_LABELS_DOWNSAMPLED')
 
         request = BatchRequest()
-        request.add_volume_request(VolumeTypes.RAW, (200,200,200))
-        request.add_volume_request(VolumeTypes.RAW_DOWNSAMPLED, (120,120,120))
-        request.add_volume_request(VolumeTypes.GT_LABELS, (200,200,200))
-        request.add_volume_request(VolumeTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
+        request.add(VolumeTypes.RAW, (200,200,200))
+        request.add(VolumeTypes.RAW_DOWNSAMPLED, (120,120,120))
+        request.add(VolumeTypes.GT_LABELS, (200,200,200))
+        request.add(VolumeTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
 
         pipeline = (
                 DownSampleTestSource() +
@@ -75,7 +84,7 @@ class TestDownSample(ProviderTest):
             if volume_type in [VolumeTypes.RAW, VolumeTypes.GT_LABELS]:
 
                 # the z,y,x coordinates of the ROI
-                roi = volume.roi/4
+                roi = volume.spec.roi/4
                 meshgrids = np.meshgrid(
                         range(roi.get_begin()[0], roi.get_end()[0]),
                         range(roi.get_begin()[1], roi.get_end()[1]),

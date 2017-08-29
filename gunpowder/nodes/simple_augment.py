@@ -70,24 +70,22 @@ class SimpleAugment(BatchFilter):
         for collection_type in [batch.volumes, batch.points]:
             for (type, collector) in collection_type.items():
                 logger.debug("total ROI: %s"%self.total_roi)
-                logger.debug("upstream %s ROI: %s"%(type, collector.roi))
-                self.__mirror_roi(collector.roi, self.total_roi, self.mirror)
-                logger.debug("mirrored %s ROI: %s"%(type,collector.roi))
-                self.__transpose_roi(collector.roi, self.transpose)
-                logger.debug("transposed %s ROI: %s"%(type,collector.roi))
+                logger.debug("upstream %s ROI: %s"%(type, collector.spec.roi))
+                self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
+                logger.debug("mirrored %s ROI: %s"%(type,collector.spec.roi))
+                self.__transpose_roi(collector.spec.roi, self.transpose)
+                logger.debug("transposed %s ROI: %s"%(type,collector.spec.roi))
 
 
     def __mirror_request(self, request, mirror):
 
-        for collection_type in [request.volumes, request.points]:
-            for (type, roi) in collection_type.items():
-                self.__mirror_roi(roi, self.total_roi, mirror)
+        for identifier, spec in request.items():
+            self.__mirror_roi(spec.roi, self.total_roi, mirror)
 
     def __transpose_request(self, request, transpose):
 
-        for collection_type in [request.volumes, request.points]:
-            for (type, roi) in collection_type.items():
-                self.__transpose_roi(roi, transpose)
+        for identifier, spec in request.items():
+            self.__transpose_roi(spec.roi, transpose)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 

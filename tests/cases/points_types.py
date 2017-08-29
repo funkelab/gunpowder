@@ -6,8 +6,7 @@ class TestPointsTypes(unittest.TestCase):
 
     def test_register(self):
 
-        new_type = PointsType('TEST_POINTS1')
-        register_points_type(new_type)
+        register_points_type('TEST_POINTS1')
 
         print("pre-registered points type:", PointsTypes.PRESYN)
         print("new registered points type:", PointsTypes.TEST_POINTS1)

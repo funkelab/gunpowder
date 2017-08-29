@@ -9,16 +9,19 @@ class PointTestSource(BatchProvider):
     def __init__(self, voxel_size):
         self.voxel_size = voxel_size
 
-    def get_spec(self):
-        spec = ProviderSpec()
-        spec.points[PointsTypes.PRESYN] = Roi((0, 0, 0), (100, 100, 100))
-        return spec
+    def setup(self):
+
+        self.provides(
+            PointsTypes.PRESYN,
+            PointsSpec(roi=Roi((0, 0, 0), (100, 100, 100))))
 
     def provide(self, request):
         batch = Batch()
-        roi_points = request.points[PointsTypes.PRESYN]
+        roi_points = request[PointsTypes.PRESYN].roi
 
-        batch.points[PointsTypes.PRESYN] = Points(data={}, roi=roi_points, resolution=self.voxel_size)
+        batch.points[PointsTypes.PRESYN] = Points(
+            {},
+            PointsSpec(roi=roi_points))
         return batch
 
 class VolumeTestSoure(BatchProvider):
@@ -26,48 +29,56 @@ class VolumeTestSoure(BatchProvider):
     def __init__(self, voxel_size):
         self.voxel_size = voxel_size
 
-    def get_spec(self):
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((0, 0, 0), (100, 100, 100))
-        return spec
+    def setup(self):
 
+        self.provides(
+            VolumeTypes.GT_LABELS,
+            VolumeSpec(
+                roi=Roi((0, 0, 0), (100, 100, 100)),
+                voxel_size=self.voxel_size))
 
     def provide(self, request):
-        roi_volume = request.volumes[VolumeTypes.GT_LABELS]
+        roi_volume = request[VolumeTypes.GT_LABELS].roi
         print roi_volume
-        data = np.zeros(roi_volume.get_shape() / VolumeTypes.GT_LABELS.voxel_size)
+        data = np.zeros(
+            roi_volume.get_shape() /
+            self.spec[VolumeTypes.GT_LABELS].voxel_size)
         batch = Batch()
-        batch.volumes[VolumeTypes.GT_LABELS] = Volume(data, roi=roi_volume)
+        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        spec.roi = roi_volume
+        batch.volumes[VolumeTypes.GT_LABELS] = Volume(
+            data,
+            spec)
         return batch
 
 
 class TestMergeProvider(unittest.TestCase):
 
     def test_merge_basics(self):
-        voxel_size = tuple([1, 1, 1])
+        voxel_size = (1, 1, 1)
         pointssource = PointTestSource(voxel_size)
         volumesource = VolumeTestSoure(voxel_size)
-        pipeline = tuple([pointssource, volumesource]) + MergeProvider() + RandomLocation()
+        pipeline = (pointssource, volumesource) + MergeProvider() + RandomLocation()
         window_request = Coordinate((50, 50, 50))
         with build(pipeline):
             # Check basic merging.
             request = BatchRequest()
-            request.add_points_request((PointsTypes.PRESYN), window_request)
-            request.add_volume_request((VolumeTypes.GT_LABELS), window_request)
+            request.add((PointsTypes.PRESYN), window_request)
+            request.add((VolumeTypes.GT_LABELS), window_request)
             batch_res = pipeline.request_batch(request)
             self.assertTrue(VolumeTypes.GT_LABELS in batch_res.volumes)
             self.assertTrue(PointsTypes.PRESYN in batch_res.points)
 
             # Check that request of only one source also works.
             request = BatchRequest()
-            request.add_points_request((PointsTypes.PRESYN), window_request)
+            request.add((PointsTypes.PRESYN), window_request)
             batch_res = pipeline.request_batch(request)
             self.assertFalse(VolumeTypes.GT_LABELS in batch_res.volumes)
             self.assertTrue(PointsTypes.PRESYN in batch_res.points)
 
         # Check that it fails, when having two sources that provide the same type.
         volumesource2 = VolumeTestSoure(voxel_size)
-        pipeline_fail = tuple([volumesource, volumesource2]) + MergeProvider() + RandomLocation()
+        pipeline_fail = (volumesource, volumesource2) + MergeProvider() + RandomLocation()
         with self.assertRaises(AssertionError):
             with build(pipeline_fail):
                 pass

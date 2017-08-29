@@ -27,24 +27,17 @@ class Crop(BatchFilter):
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
-
-        for crop_specs, specs in zip([self.volumes, self.points],[self.spec.volumes, self.spec.points]):
+        for crop_specs, specs in zip([self.volumes, self.points],[self.spec.volume_specs, self.spec.points_specs]):
             for type, roi in crop_specs.items():
                 assert type in specs, "Asked to crop {} which is not provided".format(type)
-                assert specs[type].contains(roi), "Asked to Crop {} out at {} which is" \
-                                            " not within provided ROI {}".format(type, roi, specs[type])
+                assert specs[type].roi.contains(roi), "Asked to Crop {} out at {} which is" \
+                                            " not within provided ROI {}".format(type, roi, specs[type].roi)
 
-        for crop_specs, specs in zip([self.volumes, self.points], [self.spec.volumes, self.spec.points]):
+        for crop_specs, specs in zip([self.volumes, self.points], [self.spec.volume_specs, self.spec.points_specs]):
             for type, roi in crop_specs.items():
-                specs[type] = roi
-
-    def get_spec(self):
-        return self.spec
-
-    def prepare(self, request):
-        pass
+                spec = specs[type].copy()
+                spec.roi = roi
+                self.updates(type, spec)
 
     def process(self, batch, request):
         pass

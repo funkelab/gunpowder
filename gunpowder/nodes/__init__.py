@@ -1,11 +1,12 @@
+from .add_boundary_distance_gradients import AddBoundaryDistanceGradients
 from .add_gt_affinities import AddGtAffinities
 from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
 from .add_vector_map import AddVectorMap
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
-from .crop import Crop
 from .chunk import Chunk
+from .crop import Crop
 from .defect_augment import DefectAugment
 from .downsample import DownSample
 from .dvid_source import DvidSource
@@ -13,6 +14,7 @@ from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
 from .grow_boundary import GrowBoundary
 from .hdf5_source import Hdf5Source
+from .hdf5_write import Hdf5Write
 from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .merge_provider import MergeProvider
@@ -29,4 +31,3 @@ from .simple_augment import SimpleAugment
 from .snapshot import Snapshot
 from .split_and_renumber_segmentation_labels import SplitAndRenumberSegmentationLabels
 from .zero_out_const_sections import ZeroOutConstSections
-

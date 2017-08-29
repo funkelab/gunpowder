@@ -1,16 +1,38 @@
 import logging
-import numpy as np
 import random
+import numpy as np
 
-from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
-from gunpowder.build import build
 from gunpowder.coordinate import Coordinate
 from gunpowder.volume import VolumeTypes
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
 class DefectAugment(BatchFilter):
+    '''Augment a batch by introducing section defects.
+
+    Args:
+
+        prob_missing, prob_low_contrast, prob_artifact:
+
+            Probabilities of having a missing section, low-contrast section, 
+            or an artifact (see param 'artifact_source'). The sum should not 
+            exceed 1.
+
+        contrast_scale:
+
+            By how much to scale the intensities for a low-contrast section.
+
+        artifact_source:
+
+            A gunpowder batch provider that delivers VolumeTypes.RAW and 
+            VolumeTypes.ALPHA_MASK, used if prob_artifact > 0.
+
+        axis:
+
+            Along which axis sections are cut.
+    '''
 
     def __init__(
             self,
@@ -20,29 +42,6 @@ class DefectAugment(BatchFilter):
             contrast_scale=0.1,
             artifact_source=None,
             axis=0):
-        '''Create a new DefectAugment node.
-
-        Args
-
-            prob_missing, prob_low_contrast, prob_artifact:
-
-                Probabilities of having a missing section, low-contrast section, 
-                or an artifact (see param 'artifact_source'). The sum should not 
-                exceed 1.
-
-            contrast_scale:
-
-                By how much to scale the intensities for a low-contrast section.
-
-            artifact_source:
-
-                A gunpowder batch provider that delivers VolumeTypes.RAW and 
-                VolumeTypes.ALPHA_MASK, used if prob_artifact > 0.
-
-            axis:
-
-                Along which axis sections a cut.
-        '''
         self.prob_missing = prob_missing
         self.prob_low_contrast = prob_low_contrast
         self.prob_artifact = prob_artifact
@@ -62,21 +61,22 @@ class DefectAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        assert batch.get_total_roi().dims()==3, "DefectAugment works on 3D batches only"
+        assert batch.get_total_roi().dims() == 3, "DefectAugment works on 3D batches only"
 
         prob_missing_threshold = self.prob_missing
         prob_low_contrast_threshold = prob_missing_threshold + self.prob_low_contrast
         prob_artifact_threshold = prob_low_contrast_threshold + self.prob_artifact
 
         raw = batch.volumes[VolumeTypes.RAW]
+        raw_voxel_size = self.spec[VolumeTypes.RAW].voxel_size
 
-        for c in range((raw.roi/VolumeTypes.RAW.voxel_size).get_shape()[self.axis]):
+        for c in range((raw.spec.roi/raw_voxel_size).get_shape()[self.axis]):
 
             r = random.random()
 
             section_selector = tuple(
-                    slice(None if d != self.axis else c, None if d != self.axis else c+1)
-                    for d in range(raw.roi.dims())
+                slice(None if d != self.axis else c, None if d != self.axis else c+1)
+                for d in range(raw.spec.roi.dims())
             )
 
             if r < prob_missing_threshold:
@@ -101,12 +101,15 @@ class DefectAugment(BatchFilter):
                 logger.debug("Add artifact " + str(section_selector))
                 section = raw.data[section_selector]
 
-                assert VolumeTypes.RAW.voxel_size == VolumeTypes.ALPHA_MASK.voxel_size, \
-                        "Can only alpha blend RAW with ALPHA_MASK if both have the same voxel size"
+                alpha_voxel_size = self.artifact_source.spec[VolumeTypes.ALPHA_MASK].voxel_size
+
+                assert raw_voxel_size == alpha_voxel_size, ("Can only alpha blend RAW with "
+                                                            "ALPHA_MASK if both have the same "
+                                                            "voxel size")
 
                 artifact_request = BatchRequest()
-                artifact_request.add_volume_request(VolumeTypes.RAW, Coordinate(section.shape)*VolumeTypes.RAW.voxel_size)
-                artifact_request.add_volume_request(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*VolumeTypes.ALPHA_MASK.voxel_size)
+                artifact_request.add(VolumeTypes.RAW, Coordinate(section.shape)*raw_voxel_size)
+                artifact_request.add(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*alpha_voxel_size)
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
@@ -118,4 +121,6 @@ class DefectAugment(BatchFilter):
                 assert artifact_alpha.min() >= 0.0
                 assert artifact_alpha.max() <= 1.0
 
-                raw.data[section_selector] = section*(1.0 - artifact_alpha) + artifact_raw*artifact_alpha
+                raw.data[section_selector] = (
+                    section*(1.0 - artifact_alpha) +
+                    artifact_raw*artifact_alpha)

@@ -16,20 +16,10 @@ class VolumeType(Freezable):
             A human readable identifier for this volume type. Will be used as a 
             static attribute in :class:`VolumeTypes`. Should be upper case (like 
             ``RAW``, ``GT_LABELS``).
-
-        interpolate (bool):
-            Indicates whether voxels can be interpolated (as for intensities) or 
-            not (as for labels). This will be used by nodes that perform data 
-            augmentations.
-
-        voxel_size (tuple of int):
-            The size of a voxel in world units.
     '''
 
-    def __init__(self, identifier, interpolate, voxel_size=(1,1,1)):
+    def __init__(self, identifier):
         self.identifier = identifier
-        self.interpolate = interpolate
-        self.voxel_size = Coordinate(voxel_size)
         self.hash = hash(identifier)
         self.freeze()
 
@@ -78,42 +68,43 @@ class VolumeTypes:
     '''
     pass
 
-def register_volume_type(volume_type):
+def register_volume_type(identifier):
     '''Register a new volume type.
 
     For example, the following call::
 
-            register_volume_type(VolumeType('IDENTIFIER', interpolate=True))
+            register_volume_type('IDENTIFIER')
 
     will create a new volume type available as ``VolumeTypes.IDENTIFIER``. 
-    ``VolumeTypes.IDENTIFIER`` can then be used in dictionaries, as well as 
-    being queried for further specs like ``VolumeType.interpolate``.
+    ``VolumeTypes.IDENTIFIER`` can then be used in dictionaries, as it is done 
+    in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
+    volume_type = VolumeType(identifier)
     logger.debug("Registering volume type " + str(volume_type))
     setattr(VolumeTypes, volume_type.identifier, volume_type)
 
-register_volume_type(VolumeType('RAW', interpolate=True))
-register_volume_type(VolumeType('ALPHA_MASK', interpolate=True))
-register_volume_type(VolumeType('GT_LABELS', interpolate=False))
-register_volume_type(VolumeType('GT_AFFINITIES', interpolate=False))
-register_volume_type(VolumeType('GT_MASK', interpolate=False))
-register_volume_type(VolumeType('GT_IGNORE', interpolate=False))
-register_volume_type(VolumeType('PRED_AFFINITIES', interpolate=False))
-register_volume_type(VolumeType('LOSS_SCALE', interpolate=False))
-register_volume_type(VolumeType('LOSS_GRADIENT', interpolate=False))
-register_volume_type(VolumeType('MALIS_COMP_LABEL', interpolate=False))
+register_volume_type('RAW')
+register_volume_type('ALPHA_MASK')
+register_volume_type('GT_LABELS')
+register_volume_type('GT_AFFINITIES')
+register_volume_type('GT_MASK')
+register_volume_type('GT_IGNORE')
+register_volume_type('PRED_AFFINITIES')
+register_volume_type('LOSS_SCALE')
+register_volume_type('LOSS_GRADIENT')
+register_volume_type('MALIS_COMP_LABEL')
 
-register_volume_type(VolumeType('GT_BM_PRESYN', interpolate=False))
-register_volume_type(VolumeType('GT_BM_POSTSYN', interpolate=False))
-register_volume_type(VolumeType('GT_MASK_EXCLUSIVEZONE_PRESYN', interpolate=False))
-register_volume_type(VolumeType('GT_MASK_EXCLUSIVEZONE_POSTSYN', interpolate=False))
-register_volume_type(VolumeType('PRED_BM_PRESYN', interpolate=False))
-register_volume_type(VolumeType('PRED_BM_POSTSYN', interpolate=False))
-register_volume_type(VolumeType('LOSS_GRADIENT_PRESYN', interpolate=False))
-register_volume_type(VolumeType('LOSS_GRADIENT_POSTSYN', interpolate=False))
+register_volume_type('GT_BM_PRESYN')
+register_volume_type('GT_BM_POSTSYN')
+register_volume_type('GT_MASK_EXCLUSIVEZONE_PRESYN')
+register_volume_type('GT_MASK_EXCLUSIVEZONE_POSTSYN')
+register_volume_type('PRED_BM_PRESYN')
+register_volume_type('PRED_BM_POSTSYN')
+register_volume_type('LOSS_GRADIENT_PRESYN')
+register_volume_type('LOSS_GRADIENT_POSTSYN')
 
-register_volume_type(VolumeType('LOSS_SCALE_BM_PRESYN', interpolate=False))
-register_volume_type(VolumeType('LOSS_SCALE_BM_POSTSYN', interpolate=False))
+register_volume_type('LOSS_SCALE_BM_PRESYN')
+register_volume_type('LOSS_SCALE_BM_POSTSYN')
 
 
 class Volume(Freezable):
@@ -124,29 +115,20 @@ class Volume(Freezable):
         data (array-like): The data to be stored in the volume. Will be 
             converted to an numpy array, if necessary.
 
-        roi (:class:`Roi`, optional): A region of interest describing the origin 
-            of the passed data. If not given, a :class:`Roi` with zero offset 
-            and shape `data.shape` will be created.
+        spec (:class:`VolumeSpec`, optional): A spec describing the data.
     '''
 
-    def __init__(self, data, roi=None):
+    def __init__(self, data, spec=None):
 
-        if roi is None:
-            roi = Roi((0,)*len(data.shape), data.shape)
-
-        self.roi = roi
+        self.spec = deepcopy(spec)
         self.data = np.asarray(data)
 
-        voxel_size = self.get_voxel_size()
-        for d in range(len(voxel_size)):
-            assert voxel_size[d]*self.data.shape[-self.roi.dims()+d] == roi.get_shape()[d], \
-                    "ROI %s does not align with voxel size %s * data shape %s"%(roi, voxel_size, self.data.shape)
+        if spec is not None:
+            for d in range(len(spec.voxel_size)):
+                assert spec.voxel_size[d]*data.shape[-spec.roi.dims()+d] == spec.roi.get_shape()[d], \
+                        "ROI %s does not align with voxel size %s * data shape %s"%(spec.roi, spec.voxel_size, data.shape)
 
         self.freeze()
-
-    def get_voxel_size(self):
-
-        return self.roi.get_shape()/self.data.shape[-self.roi.dims():]
 
     def crop(self, roi, copy=True):
         '''Create a cropped copy of this Volume.
@@ -158,10 +140,10 @@ class Volume(Freezable):
             copy(bool): Make a copy of the data (default).
         '''
 
-        assert self.roi.contains(roi)
+        assert self.spec.roi.contains(roi)
 
-        voxel_size = self.get_voxel_size()
-        data_roi = (roi - self.roi.get_offset())/voxel_size
+        voxel_size = self.spec.voxel_size
+        data_roi = (roi - self.spec.roi.get_offset())/voxel_size
         slices = data_roi.get_bounding_box()
 
         while len(slices) < len(self.data.shape):
@@ -170,4 +152,7 @@ class Volume(Freezable):
         data = self.data[slices]
         if copy:
             data = np.array(data)
-        return Volume(data, deepcopy(roi))
+
+        spec = deepcopy(self.spec)
+        spec.roi = deepcopy(roi)
+        return Volume(data, spec)

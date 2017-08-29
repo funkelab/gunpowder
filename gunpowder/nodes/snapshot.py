@@ -70,9 +70,9 @@ class Snapshot(BatchFilter):
         self.n += 1
 
         # append additional volume requests, don't overwrite existing ones
-        for volume_type, roi in self.additional_request.volumes.items():
-            if volume_type not in request.volumes:
-                request.volumes[volume_type] = roi
+        for volume_type, spec in self.additional_request.volume_specs.items():
+            if volume_type not in request.volume_specs:
+                request.volume_specs[volume_type] = spec
 
     def process(self, batch, request):
 
@@ -84,7 +84,7 @@ class Snapshot(BatchFilter):
                 pass
 
             snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(batch.id).zfill(8),iteration=batch.iteration))
-            logging.info('saving to %s' %snapshot_name)
+            logger.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
                 for (volume_type, volume) in batch.volumes.items():
@@ -94,14 +94,14 @@ class Snapshot(BatchFilter):
 
                     ds_name = self.dataset_names[volume_type]
 
-                    offset = volume.roi.get_offset()
+                    offset = volume.spec.roi.get_offset()
                     if volume_type in self.dataset_dtypes:
                         dtype = self.dataset_dtypes[volume_type]
                         dataset = f.create_dataset(name=ds_name, data=volume.data.astype(dtype), compression=self.compression_type)
                     else:
                         dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
                     dataset.attrs['offset'] = offset
-                    dataset.attrs['resolution'] = volume_type.voxel_size
+                    dataset.attrs['resolution'] = self.spec[volume_type].voxel_size
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss

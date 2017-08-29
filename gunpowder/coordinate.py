@@ -3,7 +3,7 @@ import numbers
 class Coordinate(tuple):
 
     def __new__(cls, array_like):
-        return super(Coordinate, cls).__new__(cls, array_like)
+        return super(Coordinate, cls).__new__(cls, [int(x) for x in array_like])
 
     def dims(self):
         return len(self)

@@ -12,18 +12,24 @@ def train():
     set_verbose()
 
     affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
-    register_volume_type(VolumeType('GT_LABELS_2', interpolate=False, voxel_size=(2,2,2)))
-    register_volume_type(VolumeType('GT_LABELS_4', interpolate=False, voxel_size=(4,4,4)))
+    register_volume_type('GT_LABELS_2')
+    register_volume_type('GT_LABELS_4')
+    register_volume_type('GT_BOUNDARY_GRADIENT')
+    register_volume_type('GT_BOUNDARY_DISTANCE')
+    register_volume_type('GT_BOUNDARY')
     n = 35
 
     request = BatchRequest()
-    request.add_volume_request(VolumeTypes.RAW, (84,268,268))
-    request.add_volume_request(VolumeTypes.GT_LABELS, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_LABELS_2, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_LABELS_4, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_IGNORE, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_AFFINITIES, (56,56,56))
-    # request.add_volume_request(VolumeTypes.LOSS_SCALE, (56,56,56))
+    request.add(VolumeTypes.RAW, Coordinate((84,268,268))*(40,4,4))
+    request.add(VolumeTypes.GT_LABELS, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_LABELS_2, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_LABELS_4, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_IGNORE, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_AFFINITIES, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY_GRADIENT, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY_DISTANCE, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.GT_BOUNDARY, Coordinate((56,56,56))*(40,4,4))
+    request.add(VolumeTypes.LOSS_SCALE, Coordinate((56,56,56))*(40,4,4))
 
     data_sources = tuple(
         Hdf5Source(
@@ -44,6 +50,10 @@ def train():
             datasets = {
                 VolumeTypes.RAW: 'defect_sections/raw',
                 VolumeTypes.ALPHA_MASK: 'defect_sections/mask',
+            },
+            volume_specs = {
+                VolumeTypes.RAW: VolumeSpec(voxel_size=(40, 4, 4)),
+                VolumeTypes.ALPHA_MASK: VolumeSpec(voxel_size=(40, 4, 4)),
             }
         ) +
         RandomLocation(min_masked=0.05, mask_volume_type=VolumeTypes.ALPHA_MASK) +
@@ -85,6 +95,11 @@ def train():
             }
         ) +
         AddGtAffinities(affinity_neighborhood) +
+        AddBoundaryDistanceGradients(
+            gradient_volume_type=VolumeTypes.GT_BOUNDARY_GRADIENT,
+            distance_volume_type=VolumeTypes.GT_BOUNDARY_DISTANCE,
+            boundary_volume_type=VolumeTypes.GT_BOUNDARY,
+            normalize='l2') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(
             prob_missing=0.03,
@@ -93,7 +108,7 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
-        # BalanceAffinityLabels() +
+        BalanceLabels({VolumeTypes.GT_AFFINITIES: VolumeTypes.LOSS_SCALE}) +
         PreCache(
             cache_size=10,
             num_workers=5) +
@@ -105,6 +120,12 @@ def train():
                 VolumeTypes.GT_LABELS_4: 'volumes/labels/neuron_ids_4',
                 VolumeTypes.GT_IGNORE: 'volumes/labels/mask',
                 VolumeTypes.GT_AFFINITIES: 'volumes/labels/affinities',
+                VolumeTypes.GT_BOUNDARY_GRADIENT:
+                    'volumes/labels/boundary_gradient',
+                VolumeTypes.GT_BOUNDARY_DISTANCE:
+                    'volumes/labels/boundary_distance',
+                VolumeTypes.GT_BOUNDARY:
+                    'volumes/labels/boundary',
             },
             every=1,
             output_filename='final_it={iteration}_id={id}.hdf') +
@@ -113,9 +134,9 @@ def train():
 
     print("Requesting", n, "batches")
 
-    with build(batch_provider_tree) as minibatch_maker:
+    with build(batch_provider_tree):
         for i in range(n):
-            minibatch_maker.request_batch(request)
+            batch_provider_tree.request_batch(request)
 
     print("Finished")
 

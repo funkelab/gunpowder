@@ -1,42 +1,55 @@
-from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
+from .provider_test import ProviderTest
 
 class TestSourcePrepareMalis(BatchProvider):
 
-    def get_spec(self):
+    def setup(self):
 
-        spec = ProviderSpec()
-        spec.volumes[VolumeTypes.GT_LABELS] = Roi((15,15,15), (90,90,90))
-        spec.volumes[VolumeTypes.GT_IGNORE] = Roi((15,15,15), (90,90,90))
-        return spec
+        self.provides(
+            VolumeTypes.GT_LABELS,
+            VolumeSpec(
+                roi=Roi((0, 0, 0), (90, 90, 90)),
+                voxel_size=(1, 1, 1),
+                interpolatable=False))
+        self.provides(
+            VolumeTypes.GT_IGNORE,
+            VolumeSpec(
+                roi=Roi((0, 0, 0), (90, 90, 90)),
+                voxel_size=(1, 1, 1),
+                interpolatable=False))
 
     def provide(self, request):
 
         batch = Batch()
 
-        if VolumeTypes.GT_LABELS in request.volumes:
+        if VolumeTypes.GT_LABELS in request:
 
-            gt_labels_roi   = request.volumes[VolumeTypes.GT_LABELS]
-            gt_labels_shape = request.volumes[VolumeTypes.GT_LABELS].get_shape()
+            gt_labels_roi   = request[VolumeTypes.GT_LABELS].roi
+            gt_labels_shape = gt_labels_roi.get_shape()
+
             data_labels = np.ones(gt_labels_shape)
-            data_labels[gt_labels_shape[0]//2:,:,:] = 2
+            data_labels[gt_labels_shape[0]//2:, :, :] = 2
+            spec = self.spec[VolumeTypes.GT_LABELS].copy()
+            spec.roi = gt_labels_roi
 
             batch.volumes[VolumeTypes.GT_LABELS] = Volume(
-                    data_labels,
-                    gt_labels_roi
-            )
+                data_labels,
+                spec)
 
-        if VolumeTypes.GT_IGNORE in request.volumes:
-            gt_ignore_roi   = request.volumes[VolumeTypes.GT_IGNORE]
-            gt_ignore_shape = request.volumes[VolumeTypes.GT_IGNORE].get_shape()
+        if VolumeTypes.GT_IGNORE in request:
+
+            gt_ignore_roi   = request[VolumeTypes.GT_IGNORE].roi
+            gt_ignore_shape = gt_ignore_roi.get_shape()
+
             data_gt_ignore = np.ones(gt_ignore_shape)
             data_gt_ignore[:, gt_ignore_shape[1]//6:, :] = 0
+            spec = self.spec[VolumeTypes.GT_IGNORE].copy()
+            spec.roi = gt_ignore_roi
 
             batch.volumes[VolumeTypes.GT_IGNORE] = Volume(
-                    data_gt_ignore,
-                    gt_ignore_roi
-            )
+                data_gt_ignore,
+                spec)
 
         return batch
 
@@ -50,8 +63,8 @@ class TestPrepareMalis(ProviderTest):
         # test that MALIS_COMP_LABEL not in batch if not in request
         with build(pipeline):
             request = BatchRequest()
-            request.add_volume_request(VolumeTypes.GT_LABELS, (90, 90, 90))
-            request.add_volume_request(VolumeTypes.GT_IGNORE, (90, 90, 90))
+            request.add(VolumeTypes.GT_LABELS, (90, 90, 90))
+            request.add(VolumeTypes.GT_IGNORE, (90, 90, 90))
 
             batch = pipeline.request_batch(request)
 
@@ -62,9 +75,9 @@ class TestPrepareMalis(ProviderTest):
         with build(pipeline):
 
             request = BatchRequest()
-            request.add_volume_request(VolumeTypes.GT_LABELS, (90, 90, 90))
-            request.add_volume_request(VolumeTypes.GT_IGNORE, (90, 90, 90))
-            request.add_volume_request(VolumeTypes.MALIS_COMP_LABEL, (90, 90, 90))
+            request.add(VolumeTypes.GT_LABELS, (90, 90, 90))
+            request.add(VolumeTypes.GT_IGNORE, (90, 90, 90))
+            request.add(VolumeTypes.MALIS_COMP_LABEL, (90, 90, 90))
 
             batch = pipeline.request_batch(request)
 
@@ -86,8 +99,8 @@ class TestPrepareMalis(ProviderTest):
         with build(pipeline):
 
             request = BatchRequest()
-            request.add_volume_request(VolumeTypes.GT_LABELS, (90, 90, 90))
-            request.add_volume_request(VolumeTypes.MALIS_COMP_LABEL, (90, 90, 90))
+            request.add(VolumeTypes.GT_LABELS, (90, 90, 90))
+            request.add(VolumeTypes.MALIS_COMP_LABEL, (90, 90, 90))
 
             batch = pipeline.request_batch(request)
 
@@ -97,6 +110,7 @@ class TestPrepareMalis(ProviderTest):
             # test if gt_ignore considered for gt_neg_pass ([0, ;;;]) and not for gt_pos_pass ([1, ...])
             # gt_neg_pass
             self.assertTrue((np.array_equal(batch.volumes[VolumeTypes.MALIS_COMP_LABEL].data[0, ...],
-                                            batch.volumes[VolumeTypes.GT_LABELS].data)))            # gt_pos_pass
+                                            batch.volumes[VolumeTypes.GT_LABELS].data)))
+            # gt_pos_pass
             self.assertTrue((np.array_equal(batch.volumes[VolumeTypes.MALIS_COMP_LABEL].data[1, ...],
                                             batch.volumes[VolumeTypes.GT_LABELS].data)))
