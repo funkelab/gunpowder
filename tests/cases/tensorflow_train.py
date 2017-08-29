@@ -1,7 +1,8 @@
 import numpy as np
 from gunpowder import *
 from gunpowder.tensorflow import Train
-from gunpowder.ext import tensorflow as tf
+# from gunpowder.ext import tensorflow as tf
+import tensorflow as tf
 from .provider_test import ProviderTest
 
 register_volume_type('A')
@@ -42,7 +43,7 @@ class TestTensorflowTrainSource(BatchProvider):
 
 class TestTensorflowTrain(ProviderTest):
 
-    def test_output(self):
+    def create_meta_graph(self):
 
         # create a tf graph
         a = tf.placeholder(tf.float32, shape=(2, 2))
@@ -57,8 +58,20 @@ class TestTensorflowTrain(ProviderTest):
         opt = tf.train.AdamOptimizer()
         optimizer = opt.minimize(loss)
 
+        tf.train.export_meta_graph(filename='tf_graph.meta')
+
+        return [x.name for x in [a, b, c, optimizer, loss]]
+
+    def test_output(self):
+
+        set_verbose()
+
+        (a, b, c, optimizer, loss) = self.create_meta_graph()
+        print (a, b, c, optimizer, loss)
+
         source = TestTensorflowTrainSource()
         pipeline = source + Train(
+            'tf_graph',
             optimizer=optimizer,
             loss=loss,
             inputs={VolumeTypes.A: a, VolumeTypes.B: b},
