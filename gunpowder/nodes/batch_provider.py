@@ -139,13 +139,14 @@ class BatchProvider(object):
                             identifier,
                             provided_spec.voxel_size)
 
-                for d in range(request_roi.dims()):
-                    assert request_roi.get_shape()[d]%provided_spec.voxel_size[d] == 0, \
-                            "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
-                                    request,
-                                    d,
-                                    identifier,
-                                    provided_spec.voxel_size[d])
+                if request_roi is not None:
+                    for d in range(request_roi.dims()):
+                        assert request_roi.get_shape()[d]%provided_spec.voxel_size[d] == 0, \
+                                "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
+                                        request,
+                                        d,
+                                        identifier,
+                                        provided_spec.voxel_size[d])
 
     def check_batch_consistency(self, batch, request):
 
