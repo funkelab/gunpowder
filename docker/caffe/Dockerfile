@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM tensorflow/tensorflow:1.3.0-gpu
 LABEL maintainer jfunke@iri.upc.edu
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
