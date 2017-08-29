@@ -92,8 +92,8 @@ augmentations.</li>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
-<col width="27%" />
-<col width="73%" />
+<col width="38%" />
+<col width="62%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">identifier</th>
@@ -134,6 +134,26 @@ training.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">LOSS_GRADIENT</span></code></td>
 <td>Gradient of the training loss.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">GT_BM_PRESYN</span></code></td>
+<td>Ground truth of binary map for presynaptic locations</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">GT_BM_PRESYN</span></code></td>
+<td>Ground truth of binary map for postsynaptic locations</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">GT_MASK_EXCLUSIVEZONE_PRESYN</span></code></td>
+<td>ExculsiveZone binary mask (1-use,
+0-don’t use) around presyn locations</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">GT_MASK_EXCLUSIVEZONE_POSTSYN</span></code></td>
+<td>ExculsiveZone binary mask (1-use,
+0-don’t use) around postsyn locations</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">PRED_BM_PRESYN</span></code></td>
+<td>Predicted presynaptic locations</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">PRED_BM_POSTSYN</span></code></td>
+<td>Predicted postsynaptic locations</td>
 </tr>
 </tbody>
 </table>

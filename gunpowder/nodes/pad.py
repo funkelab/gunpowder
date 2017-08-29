@@ -13,23 +13,19 @@ class Pad(BatchFilter):
     '''Add a constant intensity padding around volumes of another batch 
     provider. This is useful if your requested batches can be larger than what 
     your source provides.
+
+    Args:
+
+        pad_sizes(dict, VolumeTypes -> [None,Coordinate]): Specifies the padding 
+            to be added to each volume type. If None, an infinite padding is 
+            added. If a Coordinate, this amount will be added to the ROI in the 
+            positive and negative direction.
+
+        pad_values(dict, VolumeTypes -> value or None): The values to report 
+            inside the padding. If not given, 0 is used.
     '''
 
     def __init__(self, pad_sizes, pad_values=None):
-        '''
-        Args:
-
-            pad_sizes: dict, VolumeTypes -> [None,Coordinate]
-
-                Specifies the padding to be added to each volume type. If None, 
-                an infinite padding is added. If a Coordinate, this amount will 
-                be added to the ROI in the positive and negative direction.
-
-            pad_values: dict, VolumeTypes -> value or None
-
-                The values to report inside the padding. If not given, 0 is 
-                used.
-        '''
 
         self.pad_sizes = pad_sizes
         if pad_values is None:
@@ -99,13 +95,14 @@ class Pad(BatchFilter):
 
             volume.data = self.__expand(
                     volume.data,
-                    volume.roi,
-                    self.request.volumes[volume_type],
+                    volume.roi/volume_type.voxel_size,
+                    self.request.volumes[volume_type]/volume_type.voxel_size,
                     self.pad_values[volume_type] if volume_type in self.pad_values else 0
             )
             volume.roi = self.request.volumes[volume_type]
 
     def __expand(self, a, from_roi, to_roi, value):
+        '''from_roi and to_roi should be in voxels.'''
 
         logger.debug("expanding array of shape %s from %s to %s"%(str(a.shape), from_roi, to_roi))
 

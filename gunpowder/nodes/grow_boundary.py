@@ -5,8 +5,15 @@ from .batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeTypes
 
 class GrowBoundary(BatchFilter):
-    '''Grow a boundary between regions. Does not grow at the border of the batch 
-    or the mask (if provided).
+    '''Grow a boundary between regions in ``GT_LABELS``. Does not grow at the 
+    border of the batch or the mask ``GT_MASK`` (if provided).
+
+    Args:
+        steps(int): Number of voxels (not world units!) to grow.
+
+        background(int): The label to assign to the boundary voxels.
+
+        only_xy(bool): Do not grow a boundary in the z direction.
     '''
 
     def __init__(self, steps=1, background=0, only_xy=False):
@@ -22,12 +29,13 @@ class GrowBoundary(BatchFilter):
         if gt_mask is not None:
 
             # grow only in area where mask and gt are defined
-            crop = gt_mask.roi.intersect(gt.roi)
+            crop = gt_mask.spec.roi.intersect(gt.spec.roi)
 
             if crop is None:
-                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.roi,gt_mask.roi))
-            crop_in_gt = crop.shift(-gt.roi.get_offset()).get_bounding_box()
-            crop_in_gt_mask = crop.shift(-gt_mask.roi.get_offset()).get_bounding_box()
+                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.spec.roi,gt_mask.spec.roi))
+            voxel_size = self.spec[VolumeTypes.GT_LABELS].voxel_size
+            crop_in_gt = (crop.shift(-gt.spec.roi.get_offset())/voxel_size).get_bounding_box()
+            crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.get_offset())/voxel_size).get_bounding_box()
 
             self.__grow(gt.data[crop_in_gt], gt_mask.data[crop_in_gt_mask], self.only_xy)
 

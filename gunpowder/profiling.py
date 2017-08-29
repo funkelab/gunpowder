@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import time
 
@@ -5,78 +6,130 @@ from .freezable import Freezable
 
 class Timing(Freezable):
 
-    def __init__(self, instance):
-        self.__name = type(instance).__name__
+    def __init__(self, node, method_name=None):
+        self.__name = type(node).__name__
+        self.__method_name = method_name
         self.__start = 0
+        self.__first_start = 0
+        self.__last_stop = 0
         self.__time = 0
         self.freeze()
 
     def start(self):
         self.__start = time.time()
+        if self.__first_start == 0:
+            self.__first_start = self.__start
 
     def stop(self):
         if self.__start == 0:
             return
-        self.__time += (time.time() - self.__start)
+        t = time.time()
+        self.__time += (t - self.__start)
         self.__start = 0
+        self.__last_stop = t
 
     def elapsed(self):
+        '''Accumulated time elapsed between calls to start() and stop().'''
 
         if self.__start == 0:
             return self.__time
 
         return self.__time + (time.time() - self.__start)
 
-    def get_name(self):
+    def span(self):
+        '''Timestamps of the first call to start() and last call to stop().'''
+        return self.__first_start, self.__last_stop
+
+    def get_node_name(self):
         return self.__name
+
+    def get_method_name(self):
+        return self.__method_name
+
+class TimingSummary(Freezable):
+    '''Holds repeated Timings of the same node/method to be queried for statistics.'''
+
+    def __init__(self):
+        self.timings = []
+        self.times = []
+        self.freeze()
+
+    def add(self, timing):
+        '''Add a Timing to this summary.'''
+        self.timings.append(timing)
+        self.times.append(timing.elapsed())
+
+    def merge(self, other):
+        '''Merge another summary into this one.'''
+        for timing in other.timings:
+            self.add(timing)
+
+    def counts(self):
+        return len(self.times)
+
+    def min(self):
+        return np.min(self.times)
+
+    def max(self):
+        return np.max(self.times)
+
+    def mean(self):
+        return np.mean(self.times)
+
+    def median(self):
+        return np.median(self.times)
 
 class ProfilingStats(Freezable):
 
     def __init__(self):
-        self.__timings = {}
+        self.__summaries = {}
         self.freeze()
 
     def add(self, timing):
-        '''Add a Timing instance. Timings are grouped by their name'''
+        '''Add a Timing instance. Timings are grouped by their class and method names.'''
 
-        name = timing.get_name()
+        node_name = timing.get_node_name()
+        method_name = timing.get_method_name()
+        id = (node_name, method_name)
 
-        if name not in self.__timings:
-            self.__timings[name] = []
-        self.__timings[name].append(timing)
+        if id not in self.__summaries:
+            self.__summaries[id] = TimingSummary()
+        self.__summaries[id].add(copy.deepcopy(timing))
 
     def merge_with(self, other):
-        '''Combine all Timings of two ProfilingStats.'''
+        '''Combine statitics of two ProfilingStats.'''
 
-        for name, timings in other.__timings.items():
-            for timing in timings:
-                self.add(timing)
+        for id, summary in other.__summaries.items():
+            if id in self.__summaries:
+                self.__summaries[id].merge(copy.deepcopy(summary))
+            else:
+                self.__summaries[id] = copy.deepcopy(summary)
 
-    def __repr__(self):
+    def get_timing_summaries(self):
+        '''Get a dictionary (node_name,method_name) -> TimingSummary.'''
+        return self.__summaries
 
-        rep = ""
+    def get_timing_summary(self, node_name, method_name=None):
+        '''Get a :class:`TimingSummary` for the given node and method name.'''
 
-        header = ""
-        header += "NODE".ljust(20)
-        header += "COUNTS".ljust(10)
-        header += "MIN".ljust(10)
-        header += "MAX".ljust(10)
-        header += "MEAN".ljust(10)
-        header += "MEDIAN".ljust(10)
-        header += "\n"
-        rep += header
+        if (node_name, method_name) not in self.__summaries:
+            raise RuntimeError("No timing summary for node %s, method %s"%(node_name,method_name))
 
-        for name, timings in self.__timings.items():
+        return self.__summaries[(node_name,method_name)]
 
-            times = np.array([ t.elapsed() for t in timings ])
-            row = ""
-            row += name[:19].ljust(20)
-            row += ("%d"%len(times))[:9].ljust(10)
-            row += ("%.2f"%np.min(times))[:9].ljust(10)
-            row += ("%.2f"%np.max(times))[:9].ljust(10)
-            row += ("%.2f"%np.mean(times))[:9].ljust(10)
-            row += ("%.2f"%np.median(times))[:9].ljust(10)
-            row += "\n"
-            rep += row
+    def span(self):
+        '''Timestamps of the first call to start() and last call to stop() over 
+        all Timings added.'''
 
-        return rep
+        spans = [t.span() for (_, summary) in self.__summaries.items() for t in summary.timings]
+        first_start = min([span[0] for span in spans])
+        last_stop = max([span[1] for span in spans])
+
+        return first_start, last_stop
+
+    def span_time(self):
+        '''Time between the first call to start() and last call to stop() over 
+        any timing.'''
+
+        start, stop = self.span()
+        return stop - start

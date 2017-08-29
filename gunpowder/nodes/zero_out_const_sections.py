@@ -18,6 +18,6 @@ class ZeroOutConstSections(BatchFilter):
 
         raw = batch.volumes[VolumeTypes.RAW]
 
-        for z in range(batch.get_total_roi().get_shape()[0]):
+        for z in range((raw.spec.roi/self.spec[VolumeTypes.RAW].voxel_size).get_shape()[0]):
             if raw.data[z].min() == raw.data[z].max():
                 raw.data[z] = 0

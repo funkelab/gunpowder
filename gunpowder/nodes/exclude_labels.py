@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
@@ -29,22 +28,14 @@ class ExcludeLabels(BatchFilter):
 
     def setup(self):
 
-        upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(upstream_spec)
-
-        assert VolumeTypes.GT_LABELS in self.spec.volumes, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
-
-        self.spec.volumes[VolumeTypes.GT_IGNORE] = self.spec.volumes[VolumeTypes.GT_LABELS]
-
-    def get_spec(self):
-        return self.spec
+        assert VolumeTypes.GT_LABELS in self.spec, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+        self.provides(VolumeTypes.GT_IGNORE, self.spec[VolumeTypes.GT_LABELS])
 
     def prepare(self, request):
 
-        assert VolumeTypes.GT_IGNORE in request.volumes, "If you use ExcludeLabels, you need to request VolumeTypes.GT_IGNORE."
-
         # we add it, don't request upstream
-        del request.volumes[VolumeTypes.GT_IGNORE]
+        if VolumeTypes.GT_IGNORE in request:
+            del request[VolumeTypes.GT_IGNORE]
 
     def process(self, batch, request):
 
@@ -63,21 +54,32 @@ class ExcludeLabels(BatchFilter):
             else:
                 include_mask[gt.data==label] = 0
 
-        distance_to_include = distance_transform_edt(include_mask, sampling=gt.resolution)
+        voxel_size = self.spec[VolumeTypes.GT_LABELS].voxel_size
+        distance_to_include = distance_transform_edt(include_mask, sampling=voxel_size)
         logger.debug("max distance to foreground is " + str(distance_to_include.max()))
 
         # 1 marks included regions, plus a context area around them
         include_mask = distance_to_include<self.ignore_mask_erode
 
-        # include mask was computed on GT_LABELS ROI, we need to copy it to the 
-        # requested GT_IGNORE ROI
-        gt_ignore_roi = request.volumes[VolumeTypes.GT_IGNORE]
+        if VolumeTypes.GT_IGNORE in request:
+            # include mask was computed on GT_LABELS ROI, we need to copy it to 
+            # the requested GT_IGNORE ROI
+            gt_ignore_roi = request[VolumeTypes.GT_IGNORE].roi
+        else:
+            gt_ignore_roi = gt.spec.roi
 
-        intersection = gt.roi.intersect(gt_ignore_roi)
-        intersection_in_gt = (intersection - gt.roi.get_offset()).get_bounding_box()
-        intersection_in_gt_ignore = (intersection - gt_ignore_roi.get_offset()).get_bounding_box()
+        intersection = gt.spec.roi.intersect(gt_ignore_roi)
+        intersection_in_gt = intersection - gt.spec.roi.get_offset()
+        intersection_in_gt_ignore = intersection - gt_ignore_roi.get_offset()
 
-        gt_ignore = np.zeros(gt_ignore_roi.get_shape(), dtype=np.uint8)
-        gt_ignore[intersection_in_gt_ignore] = include_mask[intersection_in_gt]
+        # to voxel coordinates
+        intersection_in_gt //= voxel_size
+        intersection_in_gt_ignore //= voxel_size
 
-        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, gt_ignore_roi, gt.resolution)
+        gt_ignore = np.zeros((gt_ignore_roi//voxel_size).get_shape(), dtype=np.uint8)
+        gt_ignore[intersection_in_gt_ignore.get_bounding_box()] = include_mask[intersection_in_gt.get_bounding_box()]
+
+        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        spec.roi = gt_ignore_roi
+        spec.dtype = np.uint8
+        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, spec)

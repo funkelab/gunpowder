@@ -86,7 +86,6 @@ def train():
         IntensityScaleShift(2,-1) +
         BalanceAffinityLabels() +
         PreCache(
-            request,
             cache_size=10,
             num_workers=5) +
         Train(solver_parameters, use_gpu=0) +

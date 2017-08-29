@@ -12,35 +12,50 @@ class WorkersDiedException(Exception):
     pass
 
 class PreCache(BatchFilter):
+    '''Pre-cache repeated equal batch requests. For the first of a series of
+    equal batch request, a set of workers is spawned to pre-cache the batches
+    in parallel processes. This way, subsequent requests can be served quickly.
 
-    def __init__(self, request, cache_size=50, num_workers=20):
-        '''
-            request:
+    This node only makes sense if:
 
-                A BatchRequest used to pre-cache batches.
+    1. Incoming batch requests are repeatedly the same.
+    2. There is a source of randomness in upstream nodes.
 
-            cache_size: int
+    Args:
 
-                How many batches to pre-cache.
+        cache_size (int): How many batches to hold at most in the cache.
 
-            num_workers: int
+        num_workers (int): How many processes to spawn to fill the cache.
+    '''
 
-                How many processes to spawn to fill the cache.
-        '''
-        self.request = copy.deepcopy(request)
-        self.batches = multiprocessing.Queue(maxsize=cache_size)
-        self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(num_workers) ], queue_size=cache_size)
+    def __init__(self, cache_size=50, num_workers=20):
 
-    def setup(self):
-        self.workers.start()
+        self.current_request = None
+        self.workers = None
+        self.cache_size = cache_size
+        self.num_workers = num_workers
 
     def teardown(self):
-        self.workers.stop()
+
+        if self.workers is not None:
+            self.workers.stop()
 
     def provide(self, request):
 
         timing = Timing(self)
         timing.start()
+
+        if request != self.current_request:
+
+            if self.workers is not None:
+                logger.info("new request received, stopping current workers...")
+                self.workers.stop()
+
+            self.current_request = copy.deepcopy(request)
+
+            logger.info("starting new set of workers...")
+            self.workers = ProducerPool([ lambda i=i: self.__run_worker(i) for i in range(self.num_workers) ], queue_size=self.cache_size)
+            self.workers.start()
 
         logger.debug("getting batch from queue...")
         batch = self.workers.get()
@@ -52,5 +67,4 @@ class PreCache(BatchFilter):
 
     def __run_worker(self, i):
 
-        request = copy.deepcopy(self.request)
-        return self.get_upstream_provider().request_batch(request)
+        return self.get_upstream_provider().request_batch(self.current_request)
