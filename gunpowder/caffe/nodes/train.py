@@ -48,7 +48,12 @@ class Train(GenericTrain):
             volume_specs=None,
             use_gpu=None):
 
-        super(Train, self).__init__(inputs, outputs, gradients, volume_specs)
+        super(Train, self).__init__(
+            inputs,
+            outputs,
+            gradients,
+            volume_specs,
+            spawn_subprocess=True)
         self.solver_parameters = solver_parameters
         self.use_gpu = use_gpu
         self.solver = None

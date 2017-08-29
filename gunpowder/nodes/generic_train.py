@@ -36,6 +36,9 @@ class GenericTrain(BatchFilter):
             to set the ``voxel_size``, for example, if they differ from the
             voxel size of the input volumes. Only fields that are not ``None``
             in the given :class:`VolumeSpec` will be used.
+
+        spawn_subprocess (bool, optional): Whether to run the ``train_step`` in
+            a separate process. Default is false.
     '''
 
     def __init__(
@@ -43,12 +46,8 @@ class GenericTrain(BatchFilter):
             inputs,
             outputs,
             gradients,
-            volume_specs=None):
-
-        # start training as a producer pool, so that we can gracefully exit if
-        # anything goes wrong
-        self.worker = ProducerPool([self.produce_train_batch], queue_size=1)
-        self.batch_in = multiprocessing.Queue(maxsize=1)
+            volume_specs=None,
+            spawn_subprocess=False):
 
         self.initialized = False
 
@@ -56,8 +55,16 @@ class GenericTrain(BatchFilter):
         self.outputs = outputs
         self.gradients = gradients
         self.volume_specs = {} if volume_specs is None else volume_specs
+        self.spawn_subprocess = spawn_subprocess
 
         self.provided_volumes = self.outputs.keys() + self.gradients.keys()
+
+        if self.spawn_subprocess:
+
+            # start training as a producer pool, so that we can gracefully exit if
+            # anything goes wrong
+            self.worker = ProducerPool([self.produce_train_batch], queue_size=1)
+            self.batch_in = multiprocessing.Queue(maxsize=1)
 
     def setup(self):
 
@@ -97,10 +104,12 @@ class GenericTrain(BatchFilter):
 
             self.provides(identifier, spec)
 
-        self.worker.start()
+        if self.spawn_subprocess:
+            self.worker.start()
 
     def teardown(self):
-        self.worker.stop()
+        if self.spawn_subprocess:
+            self.worker.stop()
 
     def prepare(self, request):
 
@@ -111,19 +120,30 @@ class GenericTrain(BatchFilter):
 
     def process(self, batch, request):
 
-        self.batch_in.put((batch, request))
+        if self.spawn_subprocess:
 
-        try:
-            out = self.worker.get()
-        except WorkersDied:
-            raise TrainProcessDied()
+            self.batch_in.put((batch, request))
 
-        for volume_type in self.provided_volumes:
-            if volume_type in request:
-                batch.volumes[volume_type] = out.volumes[volume_type]
+            try:
+                out = self.worker.get()
+            except WorkersDied:
+                raise TrainProcessDied()
 
-        batch.loss = out.loss
-        batch.iteration = out.iteration
+            for volume_type in self.provided_volumes:
+                if volume_type in request:
+                    batch.volumes[volume_type] = out.volumes[volume_type]
+
+            batch.loss = out.loss
+            batch.iteration = out.iteration
+
+        else:
+
+            if not self.initialized:
+
+                self.initialize()
+                self.initialized = True
+
+            self.train_step(batch, request)
 
     def train_step(self, batch, request):
         '''To be implemented in subclasses.
