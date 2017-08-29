@@ -45,8 +45,6 @@ class Train(GenericTrain):
             to set the ``voxel_size``, for example, if they differ from the
             voxel size of the input volumes. Only fields that are not ``None``
             in the given :class:`VolumeSpec` will be used.
-
-        use_gpu (int): Which GPU to use. Set to ``None`` for CPU mode.
     '''
 
     def __init__(
@@ -57,8 +55,7 @@ class Train(GenericTrain):
             inputs,
             outputs,
             gradients,
-            volume_specs=None,
-            use_gpu=None):
+            volume_specs=None):
 
         super(Train, self).__init__(
             inputs,
@@ -69,15 +66,11 @@ class Train(GenericTrain):
         self.meta_graph_filename = meta_graph_filename
         self.optimizer = optimizer
         self.loss = loss
-        self.use_gpu = use_gpu
         self.session = None
 
     def initialize(self):
 
         logger.info("Initializing tf session...")
-
-        # TODO: use gpu
-        # if self.use_gpu is not None:
 
         graph = tf.Graph()
         self.session = tf.Session(graph=graph)
