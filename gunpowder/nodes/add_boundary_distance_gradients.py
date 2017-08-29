@@ -99,6 +99,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
             distances = distance_transform_edt(
                 boundaries,
                 sampling=tuple(float(v)/2 for v in voxel_size))
+            distances = distances.astype(np.float32)
 
             # restore original shape
             downsample = (slice(None, None, 2),)*len(voxel_size)
