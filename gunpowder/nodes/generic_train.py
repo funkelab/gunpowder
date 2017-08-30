@@ -63,7 +63,7 @@ class GenericTrain(BatchFilter):
 
             # start training as a producer pool, so that we can gracefully exit if
             # anything goes wrong
-            self.worker = ProducerPool([self.produce_train_batch], queue_size=1)
+            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
             self.batch_in = multiprocessing.Queue(maxsize=1)
 
     def setup(self):
@@ -106,10 +106,18 @@ class GenericTrain(BatchFilter):
 
         if self.spawn_subprocess:
             self.worker.start()
+        else:
+            self.start()
+            self.initialized = True
 
     def teardown(self):
         if self.spawn_subprocess:
+            # signal "stop"
+            self.batch_in.put((None, None))
+            self.worker.get()
             self.worker.stop()
+        else:
+            self.stop()
 
     def prepare(self, request):
 
@@ -138,12 +146,16 @@ class GenericTrain(BatchFilter):
 
         else:
 
-            if not self.initialized:
-
-                self.initialize()
-                self.initialized = True
-
             self.train_step(batch, request)
+
+    def start(self):
+        '''To be implemented in subclasses.
+
+        This method will be called before the first call to :fun:`train_step`,
+        from the same process that :fun:`train_step` will be called from. Use
+        this to initialize you solver and training hardware.
+        '''
+        pass
 
     def train_step(self, batch, request):
         '''To be implemented in subclasses.
@@ -154,26 +166,31 @@ class GenericTrain(BatchFilter):
         and added to ``batch``.'''
         raise NotImplementedError("Class %s does not implement 'train_step'"%self.name())
 
-    def initialize(self):
+    def stop(self):
         '''To be implemented in subclasses.
 
-        This method will be called before the first call to :fun:`train_step`,
+        This method will be called after the last call to :fun:`train_step`,
         from the same process that :fun:`train_step` will be called from. Use
-        this to initialize you solver and training hardware.
+        this to tear down you solver and free training hardware.
         '''
         pass
 
-    def produce_train_batch(self):
+    def __produce_train_batch(self):
         '''Process one train batch.'''
 
         start = time.time()
 
         if not self.initialized:
 
-            self.initialize()
+            self.start()
             self.initialized = True
 
         batch, request = self.batch_in.get()
+
+        # stop signal
+        if batch is None:
+            self.stop()
+            return None
 
         self.train_step(batch, request)
 

@@ -59,7 +59,7 @@ class Train(GenericTrain):
         self.solver = None
         self.net_io = None
 
-    def initialize(self):
+    def start(self):
 
         logger.info("Initializing solver...")
 
