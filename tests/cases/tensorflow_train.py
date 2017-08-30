@@ -8,6 +8,7 @@ from .provider_test import ProviderTest
 register_volume_type('A')
 register_volume_type('B')
 register_volume_type('C')
+register_volume_type('GRADIENT_A')
 
 class TestTensorflowTrainSource(BatchProvider):
 
@@ -64,19 +65,17 @@ class TestTensorflowTrain(ProviderTest):
 
     def test_output(self):
 
-        set_verbose()
-
         (a, b, c, optimizer, loss) = self.create_meta_graph()
-        print (a, b, c, optimizer, loss)
 
         source = TestTensorflowTrainSource()
-        pipeline = source + Train(
+        train = Train(
             'tf_graph',
             optimizer=optimizer,
             loss=loss,
             inputs={VolumeTypes.A: a, VolumeTypes.B: b},
             outputs={VolumeTypes.C: c},
-            gradients={})
+            gradients={VolumeTypes.GRADIENT_A: a})
+        pipeline = source + train
 
 
         with build(pipeline):
@@ -85,8 +84,20 @@ class TestTensorflowTrain(ProviderTest):
                 VolumeTypes.A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
                 VolumeTypes.B: VolumeSpec(roi=Roi((0, 0), (2, 2))),
                 VolumeTypes.C: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+                VolumeTypes.GRADIENT_A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
             })
 
             batch = pipeline.request_batch(request)
 
-        self.assertAlmostEqual(batch.loss, 9.8994951)
+            self.assertAlmostEqual(batch.loss, 9.8994951)
+
+            gradient_a = batch.volumes[VolumeTypes.GRADIENT_A].data
+            self.assertTrue(gradient_a[0, 0] < gradient_a[0, 1])
+            self.assertTrue(gradient_a[0, 1] < gradient_a[1, 0])
+            self.assertTrue(gradient_a[1, 0] < gradient_a[1, 1])
+
+            for i in range(1000):
+                loss1 = batch.loss
+                batch = pipeline.request_batch(request)
+                loss2 = batch.loss
+                self.assertLess(loss2, loss1)

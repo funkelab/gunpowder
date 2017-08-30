@@ -67,23 +67,23 @@ class Train(GenericTrain):
         self.optimizer = optimizer
         self.loss = loss
         self.session = None
+        self.tf_gradient = {}
+        self.graph = None
 
-    def initialize(self):
+    def start(self):
 
         logger.info("Initializing tf session...")
 
-        graph = tf.Graph()
-        self.session = tf.Session(graph=graph)
+        self.graph = tf.Graph()
+        self.session = tf.Session(graph=self.graph)
 
-        with graph.as_default():
+        with self.graph.as_default():
 
             logger.info("Reading meta-graph...")
 
             saver = tf.train.import_meta_graph(
                 self.meta_graph_filename + '.meta',
                 clear_devices=True)
-
-            print [x.name for x in graph.get_operations() ]
 
             checkpoint_dir = os.path.dirname(self.meta_graph_filename)
             checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
@@ -95,13 +95,30 @@ class Train(GenericTrain):
                 self.session.run(tf.global_variables_initializer())
 
         # replace names of operations/tensors with actual operations/tensors
-        self.optimizer = graph.get_operation_by_name(self.optimizer)
-        self.loss = graph.get_tensor_by_name(self.loss)
+        self.optimizer = self.graph.get_operation_by_name(self.optimizer)
+        self.loss = self.graph.get_tensor_by_name(self.loss)
+
+        # add symbolic gradients
+        for volume_type, tensor_name in self.gradients.items():
+            tensor = self.graph.get_tensor_by_name(tensor_name)
+            self.tf_gradient[volume_type] = tf.gradients(
+                self.loss,
+                [tensor])[0]
 
     def train_step(self, batch, request):
 
         to_compute = {'optimizer': self.optimizer, 'loss': self.loss}
-        to_compute.update(self.outputs)
+
+        volume_outputs = {}
+        for volume_type in self.outputs:
+            if volume_type in request:
+                volume_outputs[volume_type] = self.outputs[volume_type]
+
+        for volume_type in self.gradients:
+            if volume_type in request:
+                volume_outputs[volume_type] = self.tf_gradient[volume_type]
+
+        to_compute.update(volume_outputs)
 
         feed_dict = {}
         for network_input, input_name in self.inputs.items():
@@ -116,24 +133,24 @@ class Train(GenericTrain):
 
         outputs = self.session.run(to_compute, feed_dict=feed_dict)
 
-        for volume_type, _ in self.outputs.items():
-            if volume_type in request:
-                spec = self.spec[volume_type].copy()
-                spec.roi = request[volume_type].roi
-                batch.volumes[volume_type] = Volume(
-                    outputs[volume_type],
-                    spec)
-
-        # TODO: how to get gradients from tf?
-        # if len(self.gradients) > 0:
-
-            # diffs = self.net_io.get_output_diffs()
-
-            # for volume_type, output_name in self.gradients.items():
-                # batch.volumes[volume_type] = Volume(
-                        # data=diffs[output_name][0], # strip #batch dimension
-                        # roi=Roi((0,0,0),diffs[output_name][0].shape[-3:])) # dummy roi, will be corrected in process()
+        for volume_type in volume_outputs:
+            spec = self.spec[volume_type].copy()
+            spec.roi = request[volume_type].roi
+            batch.volumes[volume_type] = Volume(
+                outputs[volume_type],
+                spec)
 
         batch.loss = outputs['loss']
         # TODO: get iteration
         batch.iteration = 0
+
+    def stop(self):
+
+        if self.session is not None:
+
+            self.optimizer = self.optimizer.name
+            self.loss = self.loss.name
+
+            self.session.close()
+            self.graph = None
+            self.session = None
