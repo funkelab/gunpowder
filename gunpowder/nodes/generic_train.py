@@ -72,6 +72,9 @@ class GenericTrain(BatchFilter):
         common_voxel_size = None
         for identifier in self.inputs:
 
+            if not isinstance(identifier, VolumeType):
+                continue
+
             voxel_size = self.spec[identifier].voxel_size
 
             if common_voxel_size is None:
