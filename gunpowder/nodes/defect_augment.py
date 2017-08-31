@@ -77,8 +77,10 @@ class DefectAugment(BatchFilter):
     # send roi request to data-source upstream
     def prepare(self, request):
 
-        # we prepare the augmentations, by determining which slices will be augmented by which method
-        # already. If one of the slices is augmented with 'deform', we prepare these trafos already
+        # we prepare the augmentations, by determining which slices
+        # will be augmented by which metho.
+        # If one of the slices is augmented with 'deform',
+        # we prepare these trafos already
         # and request a bigger roi from upstream
 
         prob_missing_threshold = self.prob_missing
@@ -123,11 +125,10 @@ class DefectAugment(BatchFilter):
         if 'deformed_slice' in self.slice_to_augmentation.values():
 
             # create roi sufficiently large to feed deformation
-            # TODO ideally, we would reead this off of the transformations we already
-            # created for the slice deformation, however this feels a bit over-engineered, because we know by how much we grow anyway...
             logger.debug("before growth: %s" % spec.roi)
             growth = Coordinate(
-                tuple(0 if d == self.axis else raw_voxel_size[d] * self.deformation_strength for d in range(spec.roi.dims()))
+                tuple(0 if d == self.axis else raw_voxel_size[d] * self.deformation_strength
+                      for d in range(spec.roi.dims()))
             )
             logger.debug("growing request by %s" % str(growth))
             source_roi = roi.grow(growth, growth)
@@ -217,7 +218,7 @@ class DefectAugment(BatchFilter):
             old_roi = request[VolumeTypes.RAW].roi
             logger.debug("resetting roi to %s" % old_roi)
             crop = tuple(
-                slice(None) if d == self.axis else slice(self.deformation_strength,-self.deformation_strength)
+                slice(None) if d == self.axis else slice(self.deformation_strength, -self.deformation_strength)
                 for d in range(raw.spec.roi.dims())
             )
             raw.data = raw.data[crop]
@@ -226,7 +227,8 @@ class DefectAugment(BatchFilter):
     def __prepare_deform_slice(self, slice_shape):
 
         # grow slice shape by 2 x deformation strength
-        shape = (slice_shape[0] + 2*self.deformation_strength, slice_shape[1] + 2*self.deformation_strength)
+        grow_by = 2 * self.deformation_strength
+        shape = (slice_shape[0] + grow_by, slice_shape[1] + grow_by)
 
         # randomly choose fixed x or fixed y with p = 1/2
         fixed_x = random.random() < .5
