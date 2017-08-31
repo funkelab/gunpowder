@@ -254,7 +254,7 @@ class DefectAugment(BatchFilter):
         normal_vector[1] = line_vector[0]
 
         # make meshgrid
-        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
+        x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]))
         # generate the vector field
         flow_x, flow_y = np.zeros(shape), np.zeros(shape)
 
