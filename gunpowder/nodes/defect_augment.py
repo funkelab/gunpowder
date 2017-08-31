@@ -88,9 +88,8 @@ class DefectAugment(BatchFilter):
 
         spec = request[VolumeTypes.RAW]
         roi = spec.roi
-        # FIXME this will log in pixel coordinates, is that what we want ?
-        raw_voxel_size = self.spec[VolumeTypes.RAW].voxel_size
         logger.debug("downstream request ROI is %s" % roi)
+        raw_voxel_size = self.spec[VolumeTypes.RAW].voxel_size
 
         # store the mapping slice to augmentation type in a dict
         self.slice_to_augmentation = {}
@@ -126,12 +125,12 @@ class DefectAugment(BatchFilter):
             # create roi sufficiently large to feed deformation
             # TODO ideally, we would reead this off of the transformations we already
             # created for the slice deformation, however this feels a bit over-engineered, because we know by how much we grow anyway...
-            source_roi = roi
-            # FIXME this only works for axis == 0
+            logger.debug("before growth: %s" % spec.roi)
             growth = Coordinate(
-                (0, raw_voxel_size[1] * self.deformation_strength, raw_voxel_size[2] * self.deformation_strength)
+                tuple(0 if d == self.axis else raw_voxel_size[d] * self.deformation_strength for d in range(spec.roi.dims()))
             )
-            source_roi.grow(growth, growth)
+            logger.debug("growing request by %s" % str(growth))
+            source_roi = roi.grow(growth, growth)
 
             # update request ROI to get all voxels necessary to perfrom
             # transformation
@@ -193,29 +192,36 @@ class DefectAugment(BatchFilter):
 
             elif augmentation_type == 'deformed_slice':
 
-                logger.debug("Add deformed slice " + str(section_selector))
-                section = raw.data[section_selector]
+                section = raw.data[section_selector].squeeze()
 
                 # set interpolation to cubic, spec interploatable is true, else to 0
-                interpolation = 3 if self.spec[VolumeTypes.raw].interpolatable else 0
+                interpolation = 3 if self.spec[VolumeTypes.RAW].interpolatable else 0
 
                 # load the deformation fields that were prepared for this slice
-                flow_x, flow_y = self.deform_slice_transformations[c]
+                flow_x, flow_y, line_mask = self.deform_slice_transformations[c]
 
+                # apply the deformation fields
+                shape = section.shape
                 section = map_coordinates(
                     section, (flow_y, flow_x), mode='constant', order=interpolation
                 ).reshape(shape)
 
-                # dilate the line mask and zero out the section below it
-                line_mask = binary_dilation(line_mask, iterations=10)
+                # zero-out data below the line mask
                 section[line_mask] = 0.
 
                 raw.data[section_selector] = section
 
         # in case we needed to change the ROI due to a deformation augment,
-        # restore original ROI
+        # restore original ROI and crop the volume data
         if 'deformed_slice' in self.slice_to_augmentation.values():
-            raw.spec.roi = request[VolumeTypes.RAW].roi
+            old_roi = request[VolumeTypes.RAW].roi
+            logger.debug("resetting roi to %s" % old_roi)
+            crop = tuple(
+                slice(None) if d == self.axis else slice(self.deformation_strength,-self.deformation_strength)
+                for d in range(raw.spec.roi.dims())
+            )
+            raw.data = raw.data[crop]
+            raw.spec.roi = old_roi
 
     def __prepare_deform_slice(self, slice_shape):
 
@@ -265,4 +271,7 @@ class DefectAugment(BatchFilter):
         # generate the flow fields
         flow_x, flow_y = (x + flow_x).reshape(-1, 1), (y + flow_y).reshape(-1, 1)
 
-        return flow_x, flow_y
+        # dilate the line mask
+        line_mask = binary_dilation(line_mask, iterations=10)
+
+        return flow_x, flow_y, line_mask
