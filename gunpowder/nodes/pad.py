@@ -35,55 +35,42 @@ class Pad(BatchFilter):
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
-
         for (volume_type, pad_size) in self.pad_sizes.items():
 
-            assert volume_type in self.spec.volumes, "Asked to pad %s, but is not provided upstream."%volume_type
-            assert self.spec.volumes[volume_type] is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%volume_type
+            assert volume_type in self.spec, "Asked to pad %s, but is not provided upstream."%volume_type
+            assert self.spec[volume_type].roi is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%volume_type
 
+            spec = self.spec[volume_type].copy()
             if pad_size is not None:
-                self.spec.volumes[volume_type] = self.upstream_spec.volumes[volume_type].grow(pad_size, pad_size)
-
-        logger.debug("upstream spec: " + str(self.upstream_spec))
-        logger.debug("provided spec:" + str(self.spec))
-
-    def get_spec(self):
-        return self.spec
+                spec.roi = spec.roi.grow(pad_size, pad_size)
+            else:
+                spec.roi = None
+            self.updates(volume_type, spec)
 
     def prepare(self, request):
 
-        logger.debug("request: %s"%request)
-        logger.debug("upstream spec: %s"%self.upstream_spec)
+        upstream_spec = self.get_upstream_provider().spec
 
-        # remember request
-        self.request = copy.deepcopy(request)
+        logger.debug("request: %s"%request)
+        logger.debug("upstream spec: %s"%upstream_spec)
 
         for volume_type in self.pad_sizes.keys():
 
-            if volume_type not in request.volumes:
+            if volume_type not in request:
                 continue
-            roi = request.volumes[volume_type]
-
-            # check out-of-bounds
-            # TODO: this should be moved to super class, this should hold for any 
-            # batch provider
-            if self.pad_sizes[volume_type] is not None:
-                if not self.spec.volumes[volume_type].intersects(roi):
-                    raise RuntimeError("%s ROI %s lies outside of padded ROI %s"%(volume_type,roi,self.spec.volumes[volume_type]))
+            roi = request[volume_type].roi
 
             # change request to fit into upstream spec
-            request.volumes[volume_type] = roi.intersect(self.upstream_spec.volumes[volume_type])
+            request[volume_type].roi = roi.intersect(upstream_spec[volume_type].roi)
 
-            if request.volumes[volume_type] is None:
+            if request[volume_type].roi is None:
 
                 logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%volume_type)
 
                 # ensure a valid request by asking for empty ROI
-                request.volumes[volume_type] = Roi(
-                        self.upstream_spec.volumes[volume_type].get_offset(),
-                        (0,)*self.upstream_spec.volumes[volume_type].dims()
+                request[volume_type].roi = Roi(
+                        upstream_spec[volume_type].roi.get_offset(),
+                        (0,)*upstream_spec[volume_type].roi.dims()
                 )
 
         logger.debug("new request: %s"%request)
@@ -95,11 +82,11 @@ class Pad(BatchFilter):
 
             volume.data = self.__expand(
                     volume.data,
-                    volume.roi/volume_type.voxel_size,
-                    self.request.volumes[volume_type]/volume_type.voxel_size,
+                    volume.spec.roi/volume.spec.voxel_size,
+                    request[volume_type].roi/volume.spec.voxel_size,
                     self.pad_values[volume_type] if volume_type in self.pad_values else 0
             )
-            volume.roi = self.request.volumes[volume_type]
+            volume.spec.roi = request[volume_type].roi
 
     def __expand(self, a, from_roi, to_roi, value):
         '''from_roi and to_roi should be in voxels.'''

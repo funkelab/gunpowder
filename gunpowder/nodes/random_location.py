@@ -1,4 +1,5 @@
 import copy
+import fractions
 import logging
 from random import randint
 
@@ -93,33 +94,46 @@ class RandomLocation(BatchFilter):
 
         shift_roi = None
 
-        for specs_type in [request.volume_specs, request.points_specs]:
-            for type, request_spec in specs_type.items():
-                request_roi = request_spec.roi
-                if type in self.upstream_spec.volume_specs:
-                    provided_roi = self.upstream_spec.volume_specs[type].roi
-                elif type in self.upstream_spec.points_specs:
-                    provided_roi = self.upstream_spec.points_specs[type].roi
-                else:
-                    raise Exception("Requested %s, but upstream does not provide it."%type)
-                type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
+        lcm_voxel_size = None
+        for identifier in request.volume_specs:
+            voxel_size = self.spec[identifier].voxel_size
+            if lcm_voxel_size is None:
+                lcm_voxel_size = voxel_size
+            else:
+                lcm_voxel_size = Coordinate(
+                    (a * b // fractions.gcd(a, b)
+                     for a, b in zip(lcm_voxel_size, voxel_size)))
+        logger.debug(
+            "restricting random locations to voxel size %s",
+            lcm_voxel_size)
 
-                if shift_roi is None:
-                    shift_roi = type_shift_roi
-                else:
-                    shift_roi = shift_roi.intersect(type_shift_roi)
+        for identifier, spec in request.items():
+            request_roi = spec.roi
+            if identifier in self.upstream_spec:
+                provided_roi = self.upstream_spec[identifier].roi
+            else:
+                raise Exception(
+                    "Requested %s, but upstream does not provide "
+                    "it."%identifier)
+            type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
+
+            if shift_roi is None:
+                shift_roi = type_shift_roi
+            else:
+                shift_roi = shift_roi.intersect(type_shift_roi)
 
         logger.debug("valid shifts for request in " + str(shift_roi))
 
-        assert shift_roi.size() > 0, "Can not satisfy batch request, no location covers all requested ROIs."
+        lcm_shift_roi = shift_roi/lcm_voxel_size
+        assert lcm_shift_roi.size() > 0, "Can not satisfy batch request, no location covers all requested ROIs."
 
         good_location_found_for_mask, good_location_found_for_points = False, False
         while not good_location_found_for_mask or not good_location_found_for_points:
             # select a random point inside ROI
             random_shift = Coordinate(
                     randint(int(begin), int(end-1))
-                    for begin, end in zip(shift_roi.get_begin(), shift_roi.get_end())
-                                        )
+                    for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
+            random_shift *= lcm_voxel_size
             initial_random_shift = copy.deepcopy(random_shift)
             logger.debug("random shift: " + str(random_shift))
 
@@ -218,3 +232,6 @@ class RandomLocation(BatchFilter):
             for point_id, point in batch.points[points_type].data.items():
                 batch.points[points_type].data[point_id].location -= self.random_shift
 
+    def lcm(self, a, b):
+
+        return 
