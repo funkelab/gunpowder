@@ -207,6 +207,9 @@ class DefectAugment(BatchFilter):
                     section, (flow_y, flow_x), mode='constant', order=interpolation
                 ).reshape(shape)
 
+                # things can get smaller than 0 at the boundary, so we clip
+                section = np.clip(section, 0., 1.)
+
                 # zero-out data below the line mask
                 section[line_mask] = 0.
 
