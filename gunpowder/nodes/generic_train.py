@@ -3,7 +3,8 @@ import multiprocessing
 import time
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.producer_pool import ProducerPool, WorkersDied
+from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
+from gunpowder.volume import VolumeType
 from gunpowder.volume_spec import VolumeSpec
 
 logger = logging.getLogger(__name__)
@@ -117,7 +118,10 @@ class GenericTrain(BatchFilter):
         if self.spawn_subprocess:
             # signal "stop"
             self.batch_in.put((None, None))
-            self.worker.get()
+            try:
+                self.worker.get(timeout=2)
+            except NoResult:
+                pass
             self.worker.stop()
         else:
             self.stop()
