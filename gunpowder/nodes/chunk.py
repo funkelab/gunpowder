@@ -72,12 +72,12 @@ class Chunk(BatchFilter):
         for (volume_type, spec) in request.volume_specs.items():
             roi = spec.roi
             voxel_size = self.spec[volume_type].voxel_size
-            if volume_type == VolumeTypes.PRED_AFFINITIES or volume_type == VolumeTypes.GT_AFFINITIES:
-                shape = (3,)+ (roi.get_shape()//voxel_size)
-            elif volume_type == VolumeTypes.PRED_BM_PRESYN or VolumeTypes.PRED_BM_POSTSYN:
-                shape = (1,)+(roi.get_shape()//voxel_size)
-            else:
-                shape = (roi.get_shape()//voxel_size)
+
+            # get the 'non-spatial' shape of the chunk-batch
+            # and append the shape of the request to it
+            volume = chunk_batch.volumes[volume_type]
+            shape = volume.data.shape[:-roi.dims()]
+            shape += (roi.get_shape() // voxel_size)
 
             spec = self.spec[volume_type].copy()
             spec.roi = roi
