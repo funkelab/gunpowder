@@ -14,6 +14,10 @@ ENV DVISION_ROOT=/src/dvision
 ENV DVISION_REPOSITORY=https://github.com/TuragaLab/dvision.git
 ENV DVISION_REVISION=v0.1.1
 
+ENV WATERZ_ROOT=/src/waterz
+ENV WATERZ_REPOSITORY=https://github.com/funkey/waterz
+ENV WATERZ_REVISION=d2bede846391c56a54365c13d5b2f2f4e6db4ecd
+
 WORKDIR ${MALIS_ROOT}
 RUN git clone ${MALIS_REPOSITORY} . && \
     git checkout ${MALIS_REVISION}
@@ -30,6 +34,13 @@ WORKDIR ${DVISION_ROOT}
 RUN git clone -b ${DVISION_REVISION} --depth 1 ${DVISION_REPOSITORY} .
 RUN pip install -r requirements.txt
 ENV PYTHONPATH ${DVISION_ROOT}:$PYTHONPATH
+
+WORKDIR ${WATERZ_ROOT}
+RUN git clone ${WATERZ_REPOSITORY} . && \
+    git checkout ${WATERZ_REVISION}
+RUN pip install cython
+RUN mkdir -p /.cython/inline
+ENV PYTHONPATH ${WATERZ_ROOT}:$PYTHONPATH
 
 # install gunpowder
 
