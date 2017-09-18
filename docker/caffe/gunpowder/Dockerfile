@@ -4,7 +4,7 @@ LABEL maintainer jfunke@iri.upc.edu
 # install dependencies for gunpowder
 ENV MALIS_ROOT=/src/malis
 ENV MALIS_REPOSITORY=https://github.com/TuragaLab/malis.git
-ENV MALIS_REVISION=a1e084b0e0fec266c454431d786ac36b8ab6fe96
+ENV MALIS_REVISION=e4a359761710ce461d059bbe3bc117ec57e27833
 
 ENV AUGMENT_ROOT=/src/augment
 ENV AUGMENT_REPOSITORY=https://github.com/funkey/augment.git
