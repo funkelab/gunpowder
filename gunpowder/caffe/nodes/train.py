@@ -86,7 +86,11 @@ class Train(GenericTrain):
         data = {}
         for input_name, network_input in self.inputs.items():
             if isinstance(network_input, VolumeType):
-                data[input_name] = batch.volumes[network_input].data
+                if network_input in batch.volumes:
+                    data[input_name] = batch.volumes[network_input].data
+                else:
+                    logger.warn("batch does not contain %s, input %s will not "
+                                "be set", network_input, input_name)
             elif isinstance(network_input, np.ndarray):
                 data[input_name] = network_input
             elif isinstance(network_input, str):
