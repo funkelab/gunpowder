@@ -18,6 +18,10 @@ ENV WATERZ_ROOT=/src/waterz
 ENV WATERZ_REPOSITORY=https://github.com/funkey/waterz
 ENV WATERZ_REVISION=d2bede846391c56a54365c13d5b2f2f4e6db4ecd
 
+ENV MLPACK_ROOT=/src/mlpack
+ENV MLPACK_REPOSITORY=https://github.com/mlpack/mlpack
+ENV MLPACK_REVISION=8e5846575a37b6228cacc1a5306bdf8a276950fa
+
 WORKDIR ${MALIS_ROOT}
 RUN git clone ${MALIS_REPOSITORY} . && \
     git checkout ${MALIS_REVISION}
@@ -41,6 +45,15 @@ RUN git clone ${WATERZ_REPOSITORY} . && \
 RUN pip install cython
 RUN mkdir -p /.cython/inline
 ENV PYTHONPATH ${WATERZ_ROOT}:$PYTHONPATH
+
+WORKDIR ${MLPACK_ROOT}
+RUN git clone ${MLPACK_REPOSITORY} . && \
+    git checkout ${MLPACK_REVISION}
+RUN mkdir build
+WORKDIR ${MLPACK_ROOT}/build
+RUN cmake ..
+RUN make -j
+RUN make DESTDIR=/usr install
 
 # install gunpowder
 
