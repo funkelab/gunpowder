@@ -22,6 +22,11 @@ except ImportError:
     caffe = NoSuchModule('caffe')
 
 try:
+    import tensorflow
+except ImportError:
+    tensorflow = NoSuchModule('tensorflow')
+
+try:
     import malis
 except ImportError:
     malis = NoSuchModule('malis')

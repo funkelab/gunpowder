@@ -14,3 +14,4 @@ from .precache import TestPreCache
 from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
+from .tensorflow_train import TestTensorflowTrain

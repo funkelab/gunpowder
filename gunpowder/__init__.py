@@ -14,6 +14,7 @@ from .roi import Roi
 from .volume import register_volume_type, VolumeType, VolumeTypes, Volume
 from .volume_spec import VolumeSpec
 import gunpowder.caffe
+import gunpowder.tensorflow
 
 # logging.basicConfig(level=logging.INFO)
 

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM tensorflow/tensorflow:1.3.0-gpu
 LABEL maintainer jfunke@iri.upc.edu
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 ENV CAFFE_ROOT=/src/caffe
-ENV CAFFE_REPOSITORY=https://github.com/naibaf7/caffe.git
-ENV CAFFE_REVISION=483c58f5f46b5959dc0a978882843713daae18f6
+ENV CAFFE_REPOSITORY=https://github.com/funkey/caffe.git
+ENV CAFFE_REVISION=85d9789885d9b2af57ccdc4bc5337e20114c2524
 
 WORKDIR $CAFFE_ROOT
 RUN git clone ${CAFFE_REPOSITORY} . && \

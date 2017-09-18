@@ -1,6 +1,7 @@
 from .freezable import Freezable
 from copy import deepcopy
 from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
 import logging
 import numpy as np
 
@@ -107,11 +108,20 @@ register_volume_type('LOSS_SCALE_BM_POSTSYN')
 
 
 class Volume(Freezable):
+    '''Represents a volume as an array and a :class:`Roi`.
+
+    Args:
+
+        data (array-like): The data to be stored in the volume. Will be 
+            converted to an numpy array, if necessary.
+
+        spec (:class:`VolumeSpec`, optional): A spec describing the data.
+    '''
 
     def __init__(self, data, spec=None):
 
         self.spec = deepcopy(spec)
-        self.data = data
+        self.data = np.asarray(data)
 
         if spec is not None:
             for d in range(len(spec.voxel_size)):

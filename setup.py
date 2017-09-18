@@ -13,6 +13,8 @@ setup(
             'gunpowder.nodes',
             'gunpowder.caffe',
             'gunpowder.caffe.nodes',
+            'gunpowder.tensorflow',
+            'gunpowder.tensorflow.nodes',
             'gunpowder.ext'
         ],
         install_requires=[
