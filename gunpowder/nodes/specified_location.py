@@ -1,10 +1,8 @@
 import copy
-import fractions
 import logging
-from random import randint
+from random import choice
 
 import numpy as np
-from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
@@ -24,11 +22,6 @@ class SpecifiedLocation(BatchFilter):
 
     If a location requires a shift outside the bounding box of any upstream provider
     the module will skip that location with a warning.
-
-
-    Remark
-    ------
-    focus_point_type does only work if there are only deterministic nodes upstream
 
     Args:
 
@@ -54,7 +47,7 @@ class SpecifiedLocation(BatchFilter):
             raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")  
 
         # clear bounding boxes of all provided volumes and points -- 
-        # RandomLocation does not have limits (offsets are ignored)
+        # SpecifiedLocation does know its locations at setup (checks on the fly)
         for identifier, spec in self.spec.items():
             spec.roi = None
             self.updates(identifier, spec)
@@ -121,7 +114,7 @@ class SpecifiedLocation(BatchFilter):
     # get next shift from list
     def _get_next_shift(self, center_shift):
         if self.choose_randomly:
-            next_shift = Coordinate(random.choice(self.locs) - center_shift)
+            next_shift = Coordinate(choice(self.locs) - center_shift)
         else:
             next_shift = Coordinate(self.locs[self.loc_i] - center_shift)
             self.loc_i += 1
