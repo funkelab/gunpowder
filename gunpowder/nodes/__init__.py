@@ -24,6 +24,7 @@ from .precache import PreCache
 from .prepare_malis import PrepareMalis
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
+from .specified_location import SpecifiedLocation
 from .random_provider import RandomProvider
 from .rasterize_points import RasterizePoints
 from .reject import Reject
