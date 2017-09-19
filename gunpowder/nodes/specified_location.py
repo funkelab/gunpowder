@@ -14,19 +14,17 @@ from .batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class SpecifiedLocation(BatchFilter):
-    '''Choses a batch at a random location in the bounding box of the upstream
-    provider.
+    '''Choses a batch at a location from the list provided at init, making sure
+    it is in the bounding box of the upstream provider.
 
-    The random location is chosen such that the batch request roi lies entirely
-    inside the provider's roi.
+    Locations should be given in physical dimensions and with reference to (0,0,0)
 
-    If `min_masked` (and optionally `mask_volume_type`) are set, only
-    batches are returned that have at least the given ratio of masked-in
-    voxels. This is in general faster than using the ``Reject`` node, at the
-    expense of storing an integral volume of the complete mask.
+    Locations will be chosen in order or at random from the list depending on the 
+    choose_randomly parameter.
 
-    If 'focus_points_type' is set, only batches are returned that have at least
-    one point of focus_points_type within the roi of PointsTypes.focus_points_type.
+    If a location requires a shift outside the bounding box of any upstream provider
+    the module will skip that location with a warning.
+
 
     Remark
     ------
@@ -34,14 +32,10 @@ class SpecifiedLocation(BatchFilter):
 
     Args:
 
-        min_masked: If non-zero, require that the random sample contains at
-            least that ratio of masked-in voxels.
+        specified_locations: list, array, A list of locations to center batches. Should be given 
+        physical dimensions and with respect to (0,0,0)
 
-        mask_volume_type: The volume type to use for mask checks.
-
-        focus_points_type: gunpowder.PointsTypes, PointsTypes considered when
-            looking for good location of batch s.t. at least one point of this
-            PointsTypes is contained in batch
+        choose_randomly: bool, defines whether locations should be picked in order or at random from the list.
     '''
 
     def __init__(self, specified_locations, choose_randomly = False):
