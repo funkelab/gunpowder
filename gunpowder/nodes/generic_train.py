@@ -135,6 +135,8 @@ class GenericTrain(BatchFilter):
 
     def process(self, batch, request):
 
+        start = time.time()
+
         if self.spawn_subprocess:
 
             self.batch_in.put((batch, request))
@@ -154,6 +156,12 @@ class GenericTrain(BatchFilter):
         else:
 
             self.train_step(batch, request)
+
+        time_of_iteration = time.time() - start
+
+        logger.info(
+            "Train process: iteration=%d loss=%f time=%f",
+            batch.iteration, batch.loss, time_of_iteration)
 
     def start(self):
         '''To be implemented in subclasses.
@@ -185,8 +193,6 @@ class GenericTrain(BatchFilter):
     def __produce_train_batch(self):
         '''Process one train batch.'''
 
-        start = time.time()
-
         if not self.initialized:
 
             self.start()
@@ -200,10 +206,5 @@ class GenericTrain(BatchFilter):
             return None
 
         self.train_step(batch, request)
-
-        time_of_iteration = time.time() - start
-        logger.info(
-            "Train process: iteration=%d loss=%f time=%f",
-            batch.iteration, batch.loss, time_of_iteration)
 
         return batch
