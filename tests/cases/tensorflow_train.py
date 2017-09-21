@@ -72,9 +72,9 @@ class TestTensorflowTrain(ProviderTest):
             'tf_graph',
             optimizer=optimizer,
             loss=loss,
-            inputs={VolumeTypes.A: a, VolumeTypes.B: b},
-            outputs={VolumeTypes.C: c},
-            gradients={VolumeTypes.GRADIENT_A: a})
+            inputs={a: VolumeTypes.A, b: VolumeTypes.B},
+            outputs={c: VolumeTypes.C},
+            gradients={a: VolumeTypes.GRADIENT_A})
         pipeline = source + train
 
 
