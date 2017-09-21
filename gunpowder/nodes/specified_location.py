@@ -1,12 +1,8 @@
-import copy
-import logging
 from random import choice
-
+import logging
 import numpy as np
-from gunpowder.batch_request import BatchRequest
+
 from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
-from gunpowder.volume import VolumeTypes
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -17,7 +13,7 @@ class SpecifiedLocation(BatchFilter):
 
     Locations should be given in physical dimensions and with reference to (0,0,0)
 
-    Locations will be chosen in order or at random from the list depending on the 
+    Locations will be chosen in order or at random from the list depending on the
     choose_randomly parameter.
 
     If a location requires a shift outside the bounding box of any upstream provider
@@ -25,18 +21,21 @@ class SpecifiedLocation(BatchFilter):
 
     Args:
 
-        specified_locations: list, array, A list of locations to center batches. Should be given 
+        specified_locations: list, array, A list of locations to center batches. Should be given
         physical dimensions and with respect to (0,0,0)
 
-        choose_randomly: bool, defines whether locations should be picked in order or at random from the list.
+        choose_randomly: bool, defines whether locations should be picked in order or at random from
+        the list.
     '''
 
-    def __init__(self, specified_locations, choose_randomly = False):
+    def __init__(self, specified_locations, choose_randomly=False):
 
         self.locs = specified_locations
         self.choose_randomly = choose_randomly
         self.loc_i = 0
-
+        self.upstream_spec = None
+        self.upstream_roi = None
+        self.specified_shift = None
 
     def setup(self):
 
@@ -44,9 +43,10 @@ class SpecifiedLocation(BatchFilter):
         self.upstream_roi = self.upstream_spec.get_total_roi()
 
         if self.upstream_roi is None:
-            raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")  
+            raise RuntimeError("Can not draw random samples from a provider\
+                that does not have a bounding box.")
 
-        # clear bounding boxes of all provided volumes and points -- 
+        # clear bounding boxes of all provided volumes and points --
         # SpecifiedLocation does know its locations at setup (checks on the fly)
         for identifier, spec in self.spec.items():
             spec.roi = None
@@ -64,7 +64,8 @@ class SpecifiedLocation(BatchFilter):
                 raise Exception(
                     "Requested %s, but upstream does not provide "
                     "it."%identifier)
-            type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
+            type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow(
+                (0, 0, 0), -request_roi.get_shape())
 
             if shift_roi is None:
                 shift_roi = type_shift_roi
@@ -76,28 +77,29 @@ class SpecifiedLocation(BatchFilter):
         # shift to center
         center_shift = np.asarray(spec.roi.get_shape())/2
 
-        # shift request ROIs      
+        # shift request ROIs
         self.specified_shift = self._get_next_shift(center_shift)
-      
+
         # Make sure shift fits in roi of all request types
         for specs_type in [request.volume_specs, request.points_specs]:
-            for (type, spec) in specs_type.items():
+            for (data_type, spec) in specs_type.items():
 
                 roi = spec.roi.shift(self.specified_shift)
 
-                while not self.upstream_spec[type].roi.contains(roi):
-                    logger.warning("selected roi {} doesn't fit in upstream provider.\n Skipping this location...".format(roi) )
-               
-                    self.specified_shift = self._get_next_shift(center_shift) 
-                    roi = spec.roi.shift(self.specified_shift)      
-                             
+                while not self.upstream_spec[data_type].roi.contains(roi):
+                    logger.warning("selected roi {} doesn't fit in upstream provider.\n \
+                    Skipping this location...".format(roi))
+
+                    self.specified_shift = self._get_next_shift(center_shift)
+                    roi = spec.roi.shift(self.specified_shift)
+
         # Once an acceptable shift has been found, set that for all requests
         for specs_type in [request.volume_specs, request.points_specs]:
-            for (type, spec) in specs_type.items():
+            for (data_type, spec) in specs_type.items():
                 roi = spec.roi.shift(self.specified_shift)
-                specs_type[type].roi = roi
+                specs_type[data_type].roi = roi
 
-        logger.debug("{}'th shift selected: {}".format(self.loc_i, self.specified_shift) )
+        logger.debug("{}'th shift selected: {}".format(self.loc_i, self.specified_shift))
 
     def process(self, batch, request):
         # reset ROIs to request
@@ -119,5 +121,5 @@ class SpecifiedLocation(BatchFilter):
             next_shift = Coordinate(self.locs[self.loc_i] - center_shift)
             self.loc_i += 1
             if self.loc_i >= len(self.locs):
-               self.loc_i = 0
+                self.loc_i = 0
         return next_shift
