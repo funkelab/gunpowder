@@ -121,7 +121,7 @@ class Train(GenericTrain):
                 spec)
 
         batch.loss = outputs['loss']
-        batch.iteration = outputs['iteration']
+        batch.iteration = outputs['iteration'][0]
 
         if batch.iteration%self.save_every == 0:
 
