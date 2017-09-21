@@ -1,4 +1,6 @@
 import numpy as np
+import glob
+import os
 from gunpowder import *
 from gunpowder.tensorflow import Train
 # from gunpowder.ext import tensorflow as tf
@@ -65,6 +67,19 @@ class TestTensorflowTrain(ProviderTest):
 
     def test_output(self):
 
+        set_verbose(False)
+
+        # start clean
+        for filename in glob.glob('tf_graph.*'):
+            os.remove(filename)
+        for filename in glob.glob('tf_graph_checkpoint_*'):
+            os.remove(filename)
+        try:
+            os.remove('checkpoint')
+        except:
+            pass
+
+        # create model meta graph file and get input/output names
         (a, b, c, optimizer, loss) = self.create_meta_graph()
 
         source = TestTensorflowTrainSource()
@@ -74,18 +89,19 @@ class TestTensorflowTrain(ProviderTest):
             loss=loss,
             inputs={a: VolumeTypes.A, b: VolumeTypes.B},
             outputs={c: VolumeTypes.C},
-            gradients={a: VolumeTypes.GRADIENT_A})
+            gradients={a: VolumeTypes.GRADIENT_A},
+            save_every=100)
         pipeline = source + train
 
+        request = BatchRequest({
+            VolumeTypes.A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+            VolumeTypes.B: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+            VolumeTypes.C: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+            VolumeTypes.GRADIENT_A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+        })
 
+        # train for a couple of iterations
         with build(pipeline):
-
-            request = BatchRequest({
-                VolumeTypes.A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
-                VolumeTypes.B: VolumeSpec(roi=Roi((0, 0), (2, 2))),
-                VolumeTypes.C: VolumeSpec(roi=Roi((0, 0), (2, 2))),
-                VolumeTypes.GRADIENT_A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
-            })
 
             batch = pipeline.request_batch(request)
 
@@ -96,7 +112,16 @@ class TestTensorflowTrain(ProviderTest):
             self.assertTrue(gradient_a[0, 1] < gradient_a[1, 0])
             self.assertTrue(gradient_a[1, 0] < gradient_a[1, 1])
 
-            for i in range(1000):
+            for i in range(200-1):
+                loss1 = batch.loss
+                batch = pipeline.request_batch(request)
+                loss2 = batch.loss
+                self.assertLess(loss2, loss1)
+
+        # resume training
+        with build(pipeline):
+
+            for i in range(100):
                 loss1 = batch.loss
                 batch = pipeline.request_batch(request)
                 loss2 = batch.loss
