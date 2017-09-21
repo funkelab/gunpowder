@@ -124,8 +124,11 @@ class RandomLocation(BatchFilter):
 
         logger.debug("valid shifts for request in " + str(shift_roi))
 
+        assert shift_roi is not None and shift_roi.size() > 0, (
+                "Can not satisfy batch request, no location covers all "
+                "requested ROIs.")
+
         lcm_shift_roi = shift_roi/lcm_voxel_size
-        assert lcm_shift_roi.size() > 0, "Can not satisfy batch request, no location covers all requested ROIs."
 
         good_location_found_for_mask, good_location_found_for_points = False, False
         while not good_location_found_for_mask or not good_location_found_for_points:
