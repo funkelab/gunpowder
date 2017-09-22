@@ -47,13 +47,38 @@ class AddBlobsFromPoints(BatchFilter):
 
         self.blob_settings = blob_settings
 
-        for point_type, settings in self.blob_settings.items():
-            blob_settings[point_type]['blob_placer'] = BlobPlacer(
+        for blob_name, settings in self.blob_settings.items():
+
+            # Make sure required params are provided
+            params = settings.keys()
+
+            assert 'point_type' in params, "%s does not provide a point type, which is required \
+for each blob setting"%(blob_name)
+
+            assert 'output_volume_type' in params, "%s does not provide an output volume type, \
+which is required for each blob setting"%(blob_name)
+
+            assert 'output_voxel_size' in params, "%s does not provide an output voxel size, \
+which is required for each blob setting"%(blob_name)
+
+            assert 'restrictive_mask_type' in params, "%s does not provide a restrictive mask type,\
+ which is required for each blob setting"%(blob_name)
+
+            if 'radius' not in params:
+                logger.warning('No provided radius, assuming default size of 50 nm')
+                self.blob_settings[blob_name]['radius'] = 50
+
+            if 'id_mapper' not in params:
+                self.blob_settings[blob_name]['id_mapper'] = None
+
+            # Initialize blob placer
+            blob_settings[blob_name]['blob_placer'] = BlobPlacer(
                 radius=settings['radius'],
                 resolution=settings['output_voxel_size']
                 )
 
     def setup(self):
+
         for blob_name, settings in self.blob_settings.items():
             self.provides(
                 settings['output_volume_type'],
@@ -90,6 +115,7 @@ class AddBlobsFromPoints(BatchFilter):
             volume_type = settings['output_volume_type']
             voxel_size = settings['output_voxel_size']
             restrictive_mask_type = settings['restrictive_mask_type']
+            id_mapper = settings['id_mapper']
 
             # Make sure both the necesary point types and volumes are present
             assert point_type in batch.points, "Upstream does not provide required point type\
@@ -110,13 +136,14 @@ class AddBlobsFromPoints(BatchFilter):
                 settings['blob_placer'].place(blob_map, voxel_location, int(point_id),
                                               batch.volumes[restrictive_mask_type].data)
 
+
             # Provide volume
             spec = batch.volumes[restrictive_mask_type].spec.copy()
 
             batch.volumes[volume_type] = Volume(blob_map, spec=spec)
 
 class BlobPlacer:
-    def __init__(self, radius, resolution):
+    def __init__(self, radius, resolution, id_mapper=None):
         ''' Places synapse volume blobs from location data.
         Args:
             radius: int - that desired radius of synaptic blobs
@@ -141,6 +168,8 @@ class BlobPlacer:
 
         self.sphere_voxel_volume = np.sum(self.sphere_map, axis=(0, 1, 2))
 
+        self.id_mapper = id_mapper
+
     def place(self, matrix, location, marker, mask):
         ''' Places synapse
         Args:
@@ -153,6 +182,7 @@ class BlobPlacer:
         the same ID. Usually used to restrict synaptic blobs inside their
         respective cells (using segmentation)
         '''
+
         # Calculate cube circumscribing the sphere to place
         start = location - self.radius
         end = location + self.radius
