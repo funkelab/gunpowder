@@ -100,8 +100,13 @@ class Snapshot(BatchFilter):
                         dataset = f.create_dataset(name=ds_name, data=volume.data.astype(dtype), compression=self.compression_type)
                     else:
                         dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
+                    
                     dataset.attrs['offset'] = offset
                     dataset.attrs['resolution'] = self.spec[volume_type].voxel_size
+
+                    # if volume has attributes, add them to the dataset
+                    for attribute_name, attribute in volume.attrs.items():
+                        dataset.attrs[attribute_name] = attribute
 
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss

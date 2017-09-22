@@ -122,6 +122,7 @@ class Volume(Freezable):
 
         self.spec = deepcopy(spec)
         self.data = np.asarray(data)
+        self.attrs = {}
 
         if spec is not None:
             for d in range(len(spec.voxel_size)):
