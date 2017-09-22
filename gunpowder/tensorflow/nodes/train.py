@@ -77,6 +77,7 @@ class Train(GenericTrain):
         self.saver = None
         self.save_every = save_every
         self.iteration = None
+        self.iteration_increment = None
 
     def start(self):
 
@@ -107,7 +108,7 @@ class Train(GenericTrain):
         to_compute = {
             'optimizer': self.optimizer,
             'loss': self.loss,
-            'iteration': tf.assign(self.iteration, self.iteration + 1)}
+            'iteration': self.iteration_increment}
         to_compute.update(volume_outputs)
 
         # compute outputs, gradients, and update variables
@@ -164,6 +165,9 @@ class Train(GenericTrain):
                 shape=1,
                 initializer=tf.zeros_initializer,
                 trainable=False)
+            self.iteration_increment = tf.assign(
+                self.iteration,
+                self.iteration + 1)
 
         # create a saver for the current graph
         self.saver = tf.train.Saver()
