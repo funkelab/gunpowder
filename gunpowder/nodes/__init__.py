@@ -1,6 +1,7 @@
 from .add_boundary_distance_gradients import AddBoundaryDistanceGradients
 from .add_gt_affinities import AddGtAffinities
 from .add_gt_mask_exclusive_zone import AddGtMaskExclusiveZone
+from .add_blobs_from_points import AddBlobsFromPoints
 from .add_vector_map import AddVectorMap
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
