@@ -8,6 +8,40 @@ from .batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class AddBlobsFromPoints(BatchFilter):
+    '''Add a volume with blobs at locations given by a specified point type.
+    The blobs are also restricted to stay within the same class in the restrictive_mask volume
+    that corresponds to the center voxel of the blob.
+
+    Args:
+
+        blob_settings(dict) :   Where each desired output blob map should have it's own entry
+        consisting of the following format:
+
+        `blob_name` : dict (
+            'point_type' : Desired point type to use for blob locations
+            'output_volume_type': Desired volume type name for output map
+            'output_volume_dtype': Desired volume dtype name for output map
+            'radius': Desired radius of blobs, since blobs are restricted by the restricting mask,
+                      this radius should be thought of as the maximum radius of the blobs.
+            'output_voxel_size': voxel_size of output volume. Voxel size of restrictive mask
+            'restrictive_mask_type': Volume type of restrictive mask
+        )
+
+        This is an example blob_setting for presynaptic blobs in the cremi dataset:
+
+        add_blob_data = {
+                        'PRESYN':
+                            {
+                                'point_type': PointsTypes.PRESYN,
+                                'output_volume_type': VolumeTypes.PRESYN_BLOB,
+                                'output_volume_dtype': 'int64',
+                                'radius': 60,
+                                'output_voxel_size': voxel_size,
+                                'restrictive_mask_type': VolumeTypes.GT_LABELS,
+                                'max_desired_overlap': 0.05
+                            }
+                        }
+    '''
 
     def __init__(self, blob_settings):
 
