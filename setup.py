@@ -22,7 +22,8 @@ setup(
             "scipy",
             "h5py",
             "scikit-image",
-            "augment"
+            "augment",
+            "requests"
         ],
         dependency_links=['git+https://github.com/funkey/augment#egg=augment']
 )
