@@ -170,7 +170,7 @@ class Train(GenericTrain):
                 self.iteration + 1)
 
         # create a saver for the current graph
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=None)
 
         # find most recent checkpoint
         checkpoint_dir = os.path.dirname(self.meta_graph_filename)
