@@ -28,6 +28,13 @@ class Chunk(BatchFilter):
             assert self.dims == spec.roi.dims(),\
                 "Rois of different dimensionalities cannot be handled by chunk"
 
+    def setup(self):
+
+        for identifier, spec in self.spec.volume_specs.items():
+            assert spec.roi is not None, (
+                "The ROI of volume %s is not specified, Chunk does not know "
+                "what to do."%identifier)
+
     def teardown(self):
         if self.num_workers > 1:
             self.workers.stop()
