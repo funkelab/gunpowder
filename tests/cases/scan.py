@@ -51,7 +51,7 @@ class TestScan(ProviderTest):
 
     def test_output(self):
 
-        set_verbose()
+        # set_verbose()
 
         source = ScanTestSource()
 
@@ -59,7 +59,7 @@ class TestScan(ProviderTest):
         chunk_request.add(VolumeTypes.RAW, (400,30,34))
         chunk_request.add(VolumeTypes.GT_LABELS, (200,10,14))
 
-        pipeline = ScanTestSource() + Scan(chunk_request)
+        pipeline = ScanTestSource() + Scan(chunk_request, num_workers=10)
 
         with build(pipeline):
 

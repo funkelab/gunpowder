@@ -46,7 +46,7 @@ class Scan(BatchFilter):
 
         if self.num_workers > 1:
             self.workers = ProducerPool(
-                [self.__get_chunk for _ in range(self.num_workers)],
+                [self.__worker_get_chunk for _ in range(self.num_workers)],
                 queue_size=self.cache_size)
             self.workers.start()
 
@@ -211,6 +211,11 @@ class Scan(BatchFilter):
             spec.roi = spec.roi.shift(shift)
 
         return shifted
+
+    def __worker_get_chunk(self):
+
+        request = self.request_queue.get()
+        return self.__get_chunk(request)
 
     def __get_chunk(self, request):
 
