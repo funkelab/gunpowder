@@ -93,11 +93,18 @@ class RandomLocation(BatchFilter):
 
         shift_roi = None
 
-        lcm_voxel_size = request.get_lcm_voxel_size(
-                request.volume_specs.keys())
-        logger.debug(
-            "restricting random locations to voxel size %s",
-            lcm_voxel_size)
+        logger.debug("request: %s", request.volume_specs)
+        logger.debug("my spec: %s", self.spec)
+
+        if request.volume_specs.keys():
+            lcm_voxel_size = self.spec.get_lcm_voxel_size(
+                    request.volume_specs.keys())
+            logger.debug(
+                "restricting random locations to multiples of voxel size %s",
+                lcm_voxel_size)
+        else:
+            lcm_voxel_size = None
+
 
         for identifier, spec in request.items():
             request_roi = spec.roi
@@ -120,7 +127,10 @@ class RandomLocation(BatchFilter):
                 "Can not satisfy batch request, no location covers all "
                 "requested ROIs.")
 
-        lcm_shift_roi = shift_roi/lcm_voxel_size
+        if lcm_voxel_size is not None:
+            lcm_shift_roi = shift_roi/lcm_voxel_size
+        else:
+            lcm_shift_roi = shift_roi
 
         good_location_found_for_mask, good_location_found_for_points = False, False
         while not good_location_found_for_mask or not good_location_found_for_points:
@@ -128,7 +138,8 @@ class RandomLocation(BatchFilter):
             random_shift = Coordinate(
                     randint(int(begin), int(end-1))
                     for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
-            random_shift *= lcm_voxel_size
+            if lcm_voxel_size is not None:
+                random_shift *= lcm_voxel_size
             initial_random_shift = copy.deepcopy(random_shift)
             logger.debug("random shift: " + str(random_shift))
 
