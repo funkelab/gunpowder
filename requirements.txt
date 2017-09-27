@@ -3,4 +3,3 @@ scipy
 h5py
 scikit-image
 requests
-tensorflow
