@@ -160,6 +160,14 @@ class ProviderSpec(Freezable):
         if volume_types is None:
             volume_types = self.volume_specs.keys()
 
+        if not volume_types:
+            raise RuntimeError("Can not compute lcm voxel size -- there are "
+                               "no volume specs in this provider spec.")
+        else:
+            if not volume_types:
+                raise RuntimeError("Can not compute lcm voxel size -- list of "
+                                   "given volume specs is empty.")
+
         lcm_voxel_size = None
         for identifier in volume_types:
             voxel_size = self.volume_specs[identifier].voxel_size
