@@ -1,3 +1,4 @@
+import copy
 from .points import PointsType
 from .points_spec import PointsSpec
 from .provider_spec import ProviderSpec
@@ -32,6 +33,10 @@ class BatchRequest(ProviderSpec):
 
         self[identifier] = spec
         self.__center_rois()
+
+    def copy(self):
+        '''Create a copy of this request.'''
+        return copy.deepcopy(self)
 
     def __center_rois(self):
         '''Ensure that all ROIs are centered around the same location.'''

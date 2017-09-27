@@ -1,5 +1,4 @@
 import copy
-import fractions
 import logging
 from random import randint
 
@@ -94,15 +93,8 @@ class RandomLocation(BatchFilter):
 
         shift_roi = None
 
-        lcm_voxel_size = None
-        for identifier in request.volume_specs:
-            voxel_size = self.spec[identifier].voxel_size
-            if lcm_voxel_size is None:
-                lcm_voxel_size = voxel_size
-            else:
-                lcm_voxel_size = Coordinate(
-                    (a * b // fractions.gcd(a, b)
-                     for a, b in zip(lcm_voxel_size, voxel_size)))
+        lcm_voxel_size = request.get_lcm_voxel_size(
+                request.volume_specs.keys())
         logger.debug(
             "restricting random locations to voxel size %s",
             lcm_voxel_size)
