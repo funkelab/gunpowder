@@ -20,6 +20,14 @@ class BatchRequest(ProviderSpec):
         A ROI with zero-offset will be generated. If more than one request is
         added, the ROIs with smaller shapes will be shifted to be centered in
         the largest one.
+
+        Args:
+
+            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+
+            shape: A tuple containing the shape of the desired roi
+
+            voxel_size: A tuple contening the voxel sizes for each corresponding dimension
         '''
 
         if isinstance(identifier, VolumeType):
