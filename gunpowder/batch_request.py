@@ -13,7 +13,7 @@ class BatchRequest(ProviderSpec):
     For usage, see the documentation of :class:`ProviderSpec`.
     '''
 
-    def add(self, identifier, shape, voxel_size = None):
+    def add(self, identifier, shape, voxel_size=None):
         '''Convenience method to add a volume or point spec by providing only
         the shape of a ROI (in world units).
 
@@ -22,7 +22,6 @@ class BatchRequest(ProviderSpec):
         the largest one.
 
         Args:
-
             identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
 
             shape: A tuple containing the shape of the desired roi
