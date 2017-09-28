@@ -78,6 +78,14 @@ class AddBlobsFromPoints(BatchFilter):
                 if point_type not in request.points_specs:
                     request.add(point_type, request[volume_type].roi.get_shape())
 
+                # Get correct size for restrictive_mask_type
+                # pdb.set_trace()
+
+                if settings['restrictive_mask_type'] not in request.volume_specs:
+                    request.add(settings['restrictive_mask_type'], request[volume_type].roi.get_shape())
+
+                request[settings['restrictive_mask_type']].roi = request[volume_type].roi
+
                 # this node will provide this volume type
                 del request[volume_type]
             else:
@@ -141,9 +149,9 @@ class AddBlobsFromPoints(BatchFilter):
                                               batch.volumes[restrictive_mask_type].data)
 
             # Provide volume
-            spec = batch.volumes[restrictive_mask_type].spec.copy()
-
-            batch.volumes[volume_type] = Volume(blob_map, spec=spec)
+            # spec = batch.volumes[restrictive_mask_type].spec.copy()
+            # pdb.set_trace()
+            batch.volumes[volume_type] = Volume(blob_map, spec=request[volume_type].copy())
 
             # add id_mapping to attributes
             # if not hasattr(batch.volumes[volume_type], 'attrs'):
