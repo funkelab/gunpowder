@@ -4,6 +4,7 @@ import numpy as np
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_predict import GenericPredict
 from gunpowder.volume import VolumeType, Volume
+from gunpowder.tensorflow.local_server import LocalServer
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +50,20 @@ class Predict(GenericPredict):
 
     def start(self):
 
-        logger.info("Initializing tf session...")
+        target = LocalServer.get_target()
+        logger.info("Initializing tf session, connecting to %s...", target)
 
         self.graph = tf.Graph()
-        self.session = tf.Session(graph=self.graph)
+        self.session = tf.Session(
+            target=target,
+            graph=self.graph)
 
         with self.graph.as_default():
             self.__read_meta_graph()
 
     def predict(self, batch, request):
+
+        logger.debug("predicting in batch %i", batch.id)
 
         volume_outputs = self.__collect_requested_outputs(request)
         inputs = self.__collect_provided_inputs(batch)
@@ -71,6 +77,8 @@ class Predict(GenericPredict):
             batch.volumes[volume_type] = Volume(
                 outputs[volume_type],
                 spec)
+
+        logger.debug("predicted in batch %i", batch.id)
 
     def stop(self):
 
