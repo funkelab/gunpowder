@@ -1,6 +1,7 @@
 import logging
 import itertools
 import numpy as np
+import pdb
 
 from gunpowder.volume import Volume
 from .batch_filter import BatchFilter
@@ -25,6 +26,10 @@ class AddBlobsFromPoints(BatchFilter):
                       this radius should be thought of as the maximum radius of the blobs.
             'output_voxel_size': voxel_size of output volume. Voxel size of restrictive mask
             'restrictive_mask_type': Volume type of restrictive mask
+            'id_mapper': Functor (class with a __call__ function) that can take an ID and map it to
+            some other value. This class should also have a 'make_map' method that will be
+            called at the beggining of each process step and given all ids in all volumes to be
+            processed for that batch.
         )
 
         This is an example blob_setting for presynaptic blobs in the cremi dataset:
@@ -50,7 +55,8 @@ class AddBlobsFromPoints(BatchFilter):
         for point_type, settings in self.blob_settings.items():
             blob_settings[point_type]['blob_placer'] = BlobPlacer(
                 radius=settings['radius'],
-                resolution=settings['output_voxel_size']
+                resolution=settings['output_voxel_size'],
+                dtype=settings['output_volume_dtype']
                 )
 
     def setup(self):
@@ -72,6 +78,14 @@ class AddBlobsFromPoints(BatchFilter):
                 if point_type not in request.points_specs:
                     request.add(point_type, request[volume_type].roi.get_shape())
 
+                # Get correct size for restrictive_mask_type
+                # pdb.set_trace()
+
+                if settings['restrictive_mask_type'] not in request.volume_specs:
+                    request.add(settings['restrictive_mask_type'], request[volume_type].roi.get_shape())
+
+                request[settings['restrictive_mask_type']].roi = request[volume_type].roi
+
                 # this node will provide this volume type
                 del request[volume_type]
             else:
@@ -83,12 +97,11 @@ class AddBlobsFromPoints(BatchFilter):
 
     def process(self, batch, request):
 
+        # check volumes and gather all IDs
+        all_points = {}
         for blob_name, settings in self.blob_settings.items():
-
             # Unpack settings
             point_type = settings['point_type']
-            volume_type = settings['output_volume_type']
-            voxel_size = settings['output_voxel_size']
             restrictive_mask_type = settings['restrictive_mask_type']
 
             # Make sure both the necesary point types and volumes are present
@@ -98,25 +111,58 @@ class AddBlobsFromPoints(BatchFilter):
             assert restrictive_mask_type in batch.volumes, "Upstream does not provide required \
             volume type: %s"%restrictive_mask_type
 
+            # Get point data
+            points = batch.points[point_type]
+
+            all_points[point_type] = points
+
+        for blob_name, settings in self.blob_settings.items():
+
+            # Unpack settings
+            point_type = settings['point_type']
+            volume_type = settings['output_volume_type']
+            voxel_size = settings['output_voxel_size']
+            restrictive_mask_type = settings['restrictive_mask_type']
+            id_mapper = settings['id_mapper']
+            dtype = settings['output_volume_dtype']
+
+            if id_mapper is not None:
+                id_mapper.make_map(all_points)
+
             # Initialize output volume
             shape_volume = np.asarray(request[volume_type].roi.get_shape())/voxel_size
-            blob_map = np.zeros(shape_volume)
+            blob_map = np.zeros(shape_volume, dtype=dtype)
 
             # Get point data
             points = batch.points[point_type]
 
-            for point_id in points.data.keys():
-                voxel_location = (points.data[point_id].location/voxel_size).astype('int32')
-                settings['blob_placer'].place(blob_map, voxel_location, int(point_id),
+
+            for point_id, point_data in points.data.items():
+                voxel_location = (point_data.location/voxel_size).astype('int32')
+
+                synapse_id = point_data.synapse_id
+                # if mapping exists, do it
+                if id_mapper is not None:
+                    synapse_id = id_mapper(synapse_id)
+
+                settings['blob_placer'].place(blob_map, voxel_location, synapse_id,
                                               batch.volumes[restrictive_mask_type].data)
 
             # Provide volume
-            spec = batch.volumes[restrictive_mask_type].spec.copy()
+            # spec = batch.volumes[restrictive_mask_type].spec.copy()
+            # pdb.set_trace()
+            batch.volumes[volume_type] = Volume(blob_map, spec=request[volume_type].copy())
 
-            batch.volumes[volume_type] = Volume(blob_map, spec=spec)
+            # add id_mapping to attributes
+            # if not hasattr(batch.volumes[volume_type], 'attrs'):
+            #     batch.volumes[volume_type].attrs = {}''
+            id_map_list = np.array(list(id_mapper.get_map().items()))
+            batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
 
 class BlobPlacer:
-    def __init__(self, radius, resolution):
+
+    def __init__(self, radius, resolution, dtype = 'uint64'):
+
         ''' Places synapse volume blobs from location data.
         Args:
             radius: int - that desired radius of synaptic blobs
@@ -127,7 +173,7 @@ class BlobPlacer:
             self.resolution = np.asarray(self.resolution)
 
         self.radius = (radius/self.resolution)
-        self.sphere_map = np.zeros(self.radius*2)
+        self.sphere_map = np.zeros(self.radius*2, dtype=dtype)
         self.center = (np.asarray(self.sphere_map.shape))/2
 
         ranges = [range(0, self.radius[0]*2),

@@ -2,7 +2,7 @@ import numpy as np
 import glob
 import os
 from gunpowder import *
-from gunpowder.tensorflow import Train
+from gunpowder.tensorflow import Train, Predict
 # from gunpowder.ext import tensorflow as tf
 import tensorflow as tf
 from .provider_test import ProviderTest
@@ -126,3 +126,29 @@ class TestTensorflowTrain(ProviderTest):
                 batch = pipeline.request_batch(request)
                 loss2 = batch.loss
                 self.assertLess(loss2, loss1)
+
+        # predict
+        source = TestTensorflowTrainSource()
+        predict = Predict(
+            'tf_graph_checkpoint_300',
+            inputs={a: VolumeTypes.A, b: VolumeTypes.B},
+            outputs={c: VolumeTypes.C})
+        pipeline = source + predict
+
+        request = BatchRequest({
+            VolumeTypes.A: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+            VolumeTypes.B: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+            VolumeTypes.C: VolumeSpec(roi=Roi((0, 0), (2, 2))),
+        })
+
+        with build(pipeline):
+
+            prev_c = None
+
+            for i in range(100):
+                batch = pipeline.request_batch(request)
+                c = batch.volumes[VolumeTypes.C].data
+
+                if prev_c is not None:
+                    self.assertTrue(np.equal(c, prev_c))
+                    prev_c = c

@@ -1,3 +1,5 @@
+import fractions
+from gunpowder.coordinate import Coordinate
 from gunpowder.points import PointsType
 from gunpowder.points_spec import PointsSpec
 from gunpowder.volume import VolumeType
@@ -85,6 +87,10 @@ class ProviderSpec(Freezable):
             raise RuntimeError("Only VolumeSpec or PointsSpec can be used as "
                                "keys in a %s."%type(self).__name__)
 
+    def __len__(self):
+
+        return len(self.volume_specs) + len(self.points_specs)
+
     def __contains__(self, identifier):
 
         if isinstance(identifier, VolumeType):
@@ -130,7 +136,7 @@ class ProviderSpec(Freezable):
             return total_roi
 
     def get_common_roi(self):
-        ''' Get the intersection of all the requested ROIs.'''
+        '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
         for specs_type in [self.volume_specs, self.points_specs]:
@@ -141,6 +147,38 @@ class ProviderSpec(Freezable):
                     common_roi = common_roi.intersect(spec.roi)
 
         return common_roi
+
+    def get_lcm_voxel_size(self, volume_types=None):
+        '''Get the least common multiple of the voxel sizes in this spec.
+
+        Args:
+
+            volume_types (list of :class:`VolumeType`, optional): If given,
+                consider only the given volume types.
+        '''
+
+        if volume_types is None:
+            volume_types = self.volume_specs.keys()
+
+        if not volume_types:
+            raise RuntimeError("Can not compute lcm voxel size -- there are "
+                               "no volume specs in this provider spec.")
+        else:
+            if not volume_types:
+                raise RuntimeError("Can not compute lcm voxel size -- list of "
+                                   "given volume specs is empty.")
+
+        lcm_voxel_size = None
+        for identifier in volume_types:
+            voxel_size = self.volume_specs[identifier].voxel_size
+            if lcm_voxel_size is None:
+                lcm_voxel_size = voxel_size
+            else:
+                lcm_voxel_size = Coordinate(
+                    (a * b // fractions.gcd(a, b)
+                     for a, b in zip(lcm_voxel_size, voxel_size)))
+
+        return lcm_voxel_size
 
     def __eq__(self, other):
 

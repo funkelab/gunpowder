@@ -42,7 +42,7 @@ class Train(GenericTrain):
 
         volume_specs (dict, optional): An optional dictionary of
             :class:`VolumeType` to :class:`VolumeSpec` to set the volume specs
-            generated volumes (``outputs`` and ``gradients``). This is useful
+            of generated volumes (``outputs`` and ``gradients``). This is useful
             to set the ``voxel_size``, for example, if they differ from the
             voxel size of the input volumes. Only fields that are not ``None``
             in the given :class:`VolumeSpec` will be used.
@@ -77,6 +77,7 @@ class Train(GenericTrain):
         self.saver = None
         self.save_every = save_every
         self.iteration = None
+        self.iteration_increment = None
 
     def start(self):
 
@@ -107,7 +108,7 @@ class Train(GenericTrain):
         to_compute = {
             'optimizer': self.optimizer,
             'loss': self.loss,
-            'iteration': tf.assign(self.iteration, self.iteration + 1)}
+            'iteration': self.iteration_increment}
         to_compute.update(volume_outputs)
 
         # compute outputs, gradients, and update variables
@@ -164,9 +165,12 @@ class Train(GenericTrain):
                 shape=1,
                 initializer=tf.zeros_initializer,
                 trainable=False)
+            self.iteration_increment = tf.assign(
+                self.iteration,
+                self.iteration + 1)
 
         # create a saver for the current graph
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=None)
 
         # find most recent checkpoint
         checkpoint_dir = os.path.dirname(self.meta_graph_filename)

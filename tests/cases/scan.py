@@ -2,7 +2,7 @@ from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
 
-class ChunkTestSource(BatchProvider):
+class ScanTestSource(BatchProvider):
 
     def setup(self):
 
@@ -19,7 +19,7 @@ class ChunkTestSource(BatchProvider):
 
     def provide(self, request):
 
-        # print("ChunkTestSource: Got request " + str(request))
+        # print("ScanTestSource: Got request " + str(request))
 
         batch = Batch()
 
@@ -28,7 +28,7 @@ class ChunkTestSource(BatchProvider):
 
             roi = spec.roi
             roi_voxel = roi // self.spec[volume_type].voxel_size
-            # print("ChunkTestSource: Adding " + str(volume_type))
+            # print("ScanTestSource: Adding " + str(volume_type))
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
@@ -47,17 +47,19 @@ class ChunkTestSource(BatchProvider):
 
         return batch
 
-class TestChunk(ProviderTest):
+class TestScan(ProviderTest):
 
     def test_output(self):
 
-        source = ChunkTestSource()
+        # set_verbose()
+
+        source = ScanTestSource()
 
         chunk_request = BatchRequest()
         chunk_request.add(VolumeTypes.RAW, (400,30,34))
         chunk_request.add(VolumeTypes.GT_LABELS, (200,10,14))
 
-        pipeline = ChunkTestSource() + Chunk(chunk_request)
+        pipeline = ScanTestSource() + Scan(chunk_request, num_workers=10)
 
         with build(pipeline):
 
@@ -87,3 +89,4 @@ class TestChunk(ProviderTest):
             self.assertTrue((volume.data == data).all())
 
         assert(batch.volumes[VolumeTypes.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
+

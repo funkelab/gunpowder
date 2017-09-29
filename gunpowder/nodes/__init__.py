@@ -7,7 +7,6 @@ from .add_vector_map import AddVectorMap
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
-from .chunk import Chunk
 from .crop import Crop
 from .defect_augment import DefectAugment
 from .downsample import DownSample
@@ -26,11 +25,12 @@ from .precache import PreCache
 from .prepare_malis import PrepareMalis
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
-from .specified_location import SpecifiedLocation
 from .random_provider import RandomProvider
 from .rasterize_points import RasterizePoints
 from .reject import Reject
+from .scan import Scan
 from .simple_augment import SimpleAugment
 from .snapshot import Snapshot
+from .specified_location import SpecifiedLocation
 from .split_and_renumber_segmentation_labels import SplitAndRenumberSegmentationLabels
 from .zero_out_const_sections import ZeroOutConstSections
