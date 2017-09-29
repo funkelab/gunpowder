@@ -146,18 +146,26 @@ class AddBlobsFromPoints(BatchFilter):
                     synapse_id = id_mapper(synapse_id)
 
                 settings['blob_placer'].place(blob_map, voxel_location, synapse_id,
-                                              batch.volumes[restrictive_mask_type].data)
+                                              restrictive_mask.data)
 
             # Provide volume
             # spec = batch.volumes[restrictive_mask_type].spec.copy()
             # pdb.set_trace()
             batch.volumes[volume_type] = Volume(blob_map, spec=request[volume_type].copy())
+            batch.volumes[volume_type].spec.dtype = dtype
 
             # add id_mapping to attributes
             # if not hasattr(batch.volumes[volume_type], 'attrs'):
             #     batch.volumes[volume_type].attrs = {}''
             id_map_list = np.array(list(id_mapper.get_map().items()))
             batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
+
+            # Crop all other requests
+        for volume_type, volume in request.volume_specs.items():
+            batch.volumes[volume_type] = batch.volumes[volume_type].crop(volume.roi)
+
+        for points_type, points in request.points_specs.items():
+            batch.points[points_type] = batch.points[points_type].spec.roi = points.roi
 
 class BlobPlacer:
 
