@@ -57,7 +57,13 @@ class TestHdf5Write(ProviderTest):
         chunk_request.add(VolumeTypes.RAW, (400,30,34))
         chunk_request.add(VolumeTypes.GT_LABELS, (200,10,14))
 
-        pipeline = source + Hdf5Write({VolumeTypes.RAW: 'volumes/raw'}, output_filename='hdf5_write_test.hdf') + Chunk(chunk_request)
+        pipeline = (
+            source +
+            Hdf5Write({
+                VolumeTypes.RAW: 'volumes/raw'
+            },
+            output_filename='hdf5_write_test.hdf') +
+            Scan(chunk_request))
 
         with build(pipeline):
 
