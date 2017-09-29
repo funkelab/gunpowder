@@ -1,7 +1,6 @@
 import logging
 import itertools
 import numpy as np
-import pdb
 
 from gunpowder.volume import Volume
 from .batch_filter import BatchFilter
@@ -73,18 +72,20 @@ class AddBlobsFromPoints(BatchFilter):
             if volume_type in request:
 
                 point_type = settings['point_type']
+                request_roi = request[volume_type].roi
+
 
                 # If point is not already requested, add to request
                 if point_type not in request.points_specs:
-                    request.add(point_type, request[volume_type].roi.get_shape())
+                    request.add(point_type, request_roi.get_shape())
 
                 # Get correct size for restrictive_mask_type
-                # pdb.set_trace()
-
-                if settings['restrictive_mask_type'] not in request.volume_specs:
-                    request.add(settings['restrictive_mask_type'], request[volume_type].roi.get_shape())
-
-                request[settings['restrictive_mask_type']].roi = request[volume_type].roi
+                restrictive_mask_type = settings['restrictive_mask_type']
+                if restrictive_mask_type not in request.volume_specs:
+                    request.add(restrictive_mask_type, request_roi.get_shape())
+                else:
+                    request[restrictive_mask_type].roi =\
+                     request[restrictive_mask_type].roi.union(request_roi)
 
                 # this node will provide this volume type
                 del request[volume_type]
@@ -123,6 +124,8 @@ class AddBlobsFromPoints(BatchFilter):
             volume_type = settings['output_volume_type']
             voxel_size = settings['output_voxel_size']
             restrictive_mask_type = settings['restrictive_mask_type']
+            restrictive_mask = batch.volumes[restrictive_mask_type].crop(request[volume_type].roi)
+
             id_mapper = settings['id_mapper']
             dtype = settings['output_volume_dtype']
 
@@ -168,14 +171,14 @@ class AddBlobsFromPoints(BatchFilter):
             batch.points[points_type] = batch.points[points_type].spec.roi = points.roi
 
 class BlobPlacer:
-
-    def __init__(self, radius, resolution, dtype = 'uint64'):
-
-        ''' Places synapse volume blobs from location data.
+    ''' Places synapse volume blobs from location data.
         Args:
             radius: int - that desired radius of synaptic blobs
             resolution: array, list, tuple - voxel size in physical
         '''
+
+    def __init__(self, radius, resolution, dtype='uint64'):
+
         self.resolution = resolution
         if isinstance(self.resolution, (list, tuple)):
             self.resolution = np.asarray(self.resolution)
