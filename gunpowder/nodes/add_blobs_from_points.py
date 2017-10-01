@@ -1,7 +1,6 @@
 import logging
 import itertools
 import numpy as np
-import pdb
 
 from gunpowder.volume import Volume
 from .batch_filter import BatchFilter
@@ -55,7 +54,7 @@ class AddBlobsFromPoints(BatchFilter):
         for point_type, settings in self.blob_settings.items():
             blob_settings[point_type]['blob_placer'] = BlobPlacer(
                 radius=settings['radius'],
-                resolution=settings['output_voxel_size'],
+                voxel_size=settings['output_voxel_size'],
                 dtype=settings['output_volume_dtype']
                 )
 
@@ -73,18 +72,20 @@ class AddBlobsFromPoints(BatchFilter):
             if volume_type in request:
 
                 point_type = settings['point_type']
+                request_roi = request[volume_type].roi
+
 
                 # If point is not already requested, add to request
                 if point_type not in request.points_specs:
-                    request.add(point_type, request[volume_type].roi.get_shape())
+                    request.add(point_type, request_roi.get_shape())
 
                 # Get correct size for restrictive_mask_type
-                # pdb.set_trace()
-
-                if settings['restrictive_mask_type'] not in request.volume_specs:
-                    request.add(settings['restrictive_mask_type'], request[volume_type].roi.get_shape())
-
-                request[settings['restrictive_mask_type']].roi = request[volume_type].roi
+                restrictive_mask_type = settings['restrictive_mask_type']
+                if restrictive_mask_type not in request.volume_specs:
+                    request.add(restrictive_mask_type, request_roi.get_shape())
+                else:
+                    request[restrictive_mask_type].roi =\
+                     request[restrictive_mask_type].roi.union(request_roi)
 
                 # this node will provide this volume type
                 del request[volume_type]
@@ -123,6 +124,8 @@ class AddBlobsFromPoints(BatchFilter):
             volume_type = settings['output_volume_type']
             voxel_size = settings['output_voxel_size']
             restrictive_mask_type = settings['restrictive_mask_type']
+            restrictive_mask = batch.volumes[restrictive_mask_type].crop(request[volume_type].roi)
+
             id_mapper = settings['id_mapper']
             dtype = settings['output_volume_dtype']
 
@@ -146,12 +149,13 @@ class AddBlobsFromPoints(BatchFilter):
                     synapse_id = id_mapper(synapse_id)
 
                 settings['blob_placer'].place(blob_map, voxel_location, synapse_id,
-                                              batch.volumes[restrictive_mask_type].data)
+                                              restrictive_mask.data)
 
             # Provide volume
             # spec = batch.volumes[restrictive_mask_type].spec.copy()
             # pdb.set_trace()
             batch.volumes[volume_type] = Volume(blob_map, spec=request[volume_type].copy())
+            batch.volumes[volume_type].spec.dtype = dtype
 
             # add id_mapping to attributes
             # if not hasattr(batch.volumes[volume_type], 'attrs'):
@@ -159,20 +163,27 @@ class AddBlobsFromPoints(BatchFilter):
             id_map_list = np.array(list(id_mapper.get_map().items()))
             batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
 
+            # Crop all other requests
+        for volume_type, volume in request.volume_specs.items():
+            batch.volumes[volume_type] = batch.volumes[volume_type].crop(volume.roi)
+
+        for points_type, points in request.points_specs.items():
+            batch.points[points_type] = batch.points[points_type].spec.roi = points.roi
+
 class BlobPlacer:
-
-    def __init__(self, radius, resolution, dtype = 'uint64'):
-
-        ''' Places synapse volume blobs from location data.
+    ''' Places synapse volume blobs from location data.
         Args:
             radius: int - that desired radius of synaptic blobs
-            resolution: array, list, tuple - voxel size in physical
+            voxel_size: array, list, tuple - voxel size in physical
         '''
-        self.resolution = resolution
-        if isinstance(self.resolution, (list, tuple)):
-            self.resolution = np.asarray(self.resolution)
 
-        self.radius = (radius/self.resolution)
+    def __init__(self, radius, voxel_size, dtype='uint64'):
+
+        self.voxel_size = voxel_size
+        if isinstance(self.voxel_size, (list, tuple)):
+            self.voxel_size = np.asarray(self.voxel_size)
+
+        self.radius = (radius/self.voxel_size)
         self.sphere_map = np.zeros(self.radius*2, dtype=dtype)
         self.center = (np.asarray(self.sphere_map.shape))/2
 
@@ -182,7 +193,7 @@ class BlobPlacer:
 
         for index in np.asarray(list(itertools.product(*ranges))):
             # if distance less than r, place a 1
-            if np.linalg.norm((self.center-index)*self.resolution) <= radius:
+            if np.linalg.norm((self.center-index)*self.voxel_size) <= radius:
                 self.sphere_map[tuple(index)] = 1
 
         self.sphere_voxel_volume = np.sum(self.sphere_map, axis=(0, 1, 2))
