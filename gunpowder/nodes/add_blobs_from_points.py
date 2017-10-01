@@ -54,7 +54,7 @@ class AddBlobsFromPoints(BatchFilter):
         for point_type, settings in self.blob_settings.items():
             blob_settings[point_type]['blob_placer'] = BlobPlacer(
                 radius=settings['radius'],
-                resolution=settings['output_voxel_size'],
+                voxel_size=settings['output_voxel_size'],
                 dtype=settings['output_volume_dtype']
                 )
 
@@ -174,16 +174,16 @@ class BlobPlacer:
     ''' Places synapse volume blobs from location data.
         Args:
             radius: int - that desired radius of synaptic blobs
-            resolution: array, list, tuple - voxel size in physical
+            voxel_size: array, list, tuple - voxel size in physical
         '''
 
-    def __init__(self, radius, resolution, dtype='uint64'):
+    def __init__(self, radius, voxel_size, dtype='uint64'):
 
-        self.resolution = resolution
-        if isinstance(self.resolution, (list, tuple)):
-            self.resolution = np.asarray(self.resolution)
+        self.voxel_size = voxel_size
+        if isinstance(self.voxel_size, (list, tuple)):
+            self.voxel_size = np.asarray(self.voxel_size)
 
-        self.radius = (radius/self.resolution)
+        self.radius = (radius/self.voxel_size)
         self.sphere_map = np.zeros(self.radius*2, dtype=dtype)
         self.center = (np.asarray(self.sphere_map.shape))/2
 
@@ -193,7 +193,7 @@ class BlobPlacer:
 
         for index in np.asarray(list(itertools.product(*ranges))):
             # if distance less than r, place a 1
-            if np.linalg.norm((self.center-index)*self.resolution) <= radius:
+            if np.linalg.norm((self.center-index)*self.voxel_size) <= radius:
                 self.sphere_map[tuple(index)] = 1
 
         self.sphere_voxel_volume = np.sum(self.sphere_map, axis=(0, 1, 2))
