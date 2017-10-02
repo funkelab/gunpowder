@@ -78,6 +78,9 @@ class AddBlobsFromPoints(BatchFilter):
                 # If point is not already requested, add to request
                 if point_type not in request.points_specs:
                     request.add(point_type, request_roi.get_shape())
+                else:
+                    request[point_type].roi =\
+                     request[point_type].roi.union(request_roi)
 
                 # Get correct size for restrictive_mask_type
                 restrictive_mask_type = settings['restrictive_mask_type']
@@ -140,8 +143,9 @@ class AddBlobsFromPoints(BatchFilter):
             points = batch.points[point_type]
 
 
+            offset = np.asarray(points.spec.roi.get_offset())
             for point_id, point_data in points.data.items():
-                voxel_location = (point_data.location/voxel_size).astype('int32')
+                voxel_location = np.round(((point_data.location - offset)/(voxel_size))).astype('int32')
 
                 synapse_id = point_data.synapse_id
                 # if mapping exists, do it
@@ -160,8 +164,9 @@ class AddBlobsFromPoints(BatchFilter):
             # add id_mapping to attributes
             # if not hasattr(batch.volumes[volume_type], 'attrs'):
             #     batch.volumes[volume_type].attrs = {}''
-            id_map_list = np.array(list(id_mapper.get_map().items()))
-            batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
+            if id_mapper is not None:
+                id_map_list = np.array(list(id_mapper.get_map().items()))
+                batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
 
             # Crop all other requests
         for volume_type, volume in request.volume_specs.items():
@@ -193,7 +198,7 @@ class BlobPlacer:
 
         for index in np.asarray(list(itertools.product(*ranges))):
             # if distance less than r, place a 1
-            if np.linalg.norm((self.center-index)*self.voxel_size) <= radius:
+            if np.linalg.norm((self.center - index)*self.voxel_size) <= radius:
                 self.sphere_map[tuple(index)] = 1
 
         self.sphere_voxel_volume = np.sum(self.sphere_map, axis=(0, 1, 2))
