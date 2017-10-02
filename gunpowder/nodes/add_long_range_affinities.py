@@ -53,7 +53,6 @@ class AddLongRangeAffinities(BatchFilter):
 
         spec = self.spec[self.volume_type_1].copy()
         # if spec.roi is not None:
-        #     spec.roi = spec.roi.grow(self.padding, self.padding)
 
         self.provides(self.affinity_volume_type_1, spec)
         self.provides(self.affinity_volume_type_2, spec)
@@ -77,13 +76,13 @@ class AddLongRangeAffinities(BatchFilter):
 
         # grow labels ROI to accomodate padding TODO: vol 2
         volume_1_roi = volume_1_roi.grow(self.padding, self.padding)
-        volume_2_roi = volume_1_roi.grow(self.padding, self.padding)
+        volume_2_roi = volume_2_roi.grow(self.padding, self.padding)
 
         request[self.volume_type_1].roi = volume_1_roi
         request[self.volume_type_2].roi = volume_2_roi
 
         logger.debug("upstream %s request: "%self.volume_type_1 + str(volume_1_roi))
-        logger.debug("upstream %s request: "%self.volume_type_1 + str(volume_2_roi))
+        logger.debug("upstream %s request: "%self.volume_type_2 + str(volume_2_roi))
 
         # pdb.set_trace()
 
@@ -157,7 +156,8 @@ class AddLongRangeAffinities(BatchFilter):
             batch.volumes[volume_type] = batch.volumes[volume_type].crop(volume.roi)
 
         for points_type, points in request.points_specs.items():
-            batch.points[points_type] = batch.points[points_type].spec.roi = points.roi
+            recropped = batch.points[points_type].spec.roi = points.roi
+            batch.points[points_type] = recropped
 
 
 def round_to_voxel_size(shape, voxel_size):
