@@ -75,7 +75,7 @@ class SpecifiedLocation(BatchFilter):
         logger.debug("valid shifts for request in " + str(shift_roi))
 
         # shift to center
-        center_shift = np.asarray(spec.roi.get_shape())/2
+        center_shift = np.asarray(spec.roi.get_shape())/2 + spec.roi.get_offset()
 
         # shift request ROIs
         self.specified_shift = self._get_next_shift(center_shift)
