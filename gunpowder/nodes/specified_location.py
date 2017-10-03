@@ -64,8 +64,8 @@ class SpecifiedLocation(BatchFilter):
                 raise Exception(
                     "Requested %s, but upstream does not provide "
                     "it."%identifier)
-            type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow(
-                (0, 0, 0), -request_roi.get_shape())
+            type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0, 0, 0),
+                                                    -request_roi.get_shape())
 
             if shift_roi is None:
                 shift_roi = type_shift_roi
@@ -77,21 +77,23 @@ class SpecifiedLocation(BatchFilter):
         # shift to center
         center_shift = np.asarray(spec.roi.get_shape())/2 + spec.roi.get_offset()
 
-        # shift request ROIs
-        self.specified_shift = self._get_next_shift(center_shift)
-
         # Make sure shift fits in roi of all request types
-        for specs_type in [request.volume_specs, request.points_specs]:
-            for (data_type, spec) in specs_type.items():
+        request_fits = False
+        while not request_fits:
+            request_fits = True
+            # shift request ROIs
+            self.specified_shift = self._get_next_shift(center_shift)
 
-                roi = spec.roi.shift(self.specified_shift)
-
-                while not self.upstream_spec[data_type].roi.contains(roi):
-                    logger.warning("selected roi {} doesn't fit in upstream provider.\n \
-                    Skipping this location...".format(roi))
-
-                    self.specified_shift = self._get_next_shift(center_shift)
+            for specs_type in [request.volume_specs, request.points_specs]:
+                for (data_type, spec) in specs_type.items():
                     roi = spec.roi.shift(self.specified_shift)
+                    if not self.upstream_spec[data_type].roi.contains(roi):
+                        request_fits = False
+                        logger.warning("selected roi {} doesn't fit in upstream provider.\n \
+Skipping this location...".format(roi))
+                        break;
+                if not request_fits:
+                    break;
 
         # Once an acceptable shift has been found, set that for all requests
         for specs_type in [request.volume_specs, request.points_specs]:
@@ -122,4 +124,5 @@ class SpecifiedLocation(BatchFilter):
             self.loc_i += 1
             if self.loc_i >= len(self.locs):
                 self.loc_i = 0
+                logger.warning('Ran out of specified locations, looping list')
         return next_shift
