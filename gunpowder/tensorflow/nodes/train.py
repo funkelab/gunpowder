@@ -98,15 +98,16 @@ class Train(GenericTrain):
         self.session = None
         self.tf_gradient = {}
         self.graph = None
-        self.saver = None
+        self.basic_saver = None
+        self.full_saver = None
         self.save_every = save_every
         self.iteration = None
         self.iteration_increment = None
 
         if isinstance(optimizer, basestring):
-            self.optimizer_func = optimizer
-        else:
             self.optimizer_loss_names = (optimizer, loss)
+        else:
+            self.optimizer_func = optimizer
 
     def start(self):
 
@@ -123,12 +124,6 @@ class Train(GenericTrain):
             # get actual operations/tensors from names
             self.optimizer = self.graph.get_operation_by_name(self.optimizer_loss_names[0])
             self.loss = self.graph.get_tensor_by_name(self.optimizer_loss_names[1])
-
-        else:
-
-            loss, optimizer = self.optimizer_func(self.graph)
-            self.loss = loss
-            self.optimizer = optimizer
 
         # add symbolic gradients
         for tensor_name in self.gradients:
@@ -171,7 +166,7 @@ class Train(GenericTrain):
                 "Creating checkpoint %s",
                 checkpoint_name)
 
-            self.saver.save(
+            self.full_saver.save(
                 self.session,
                 checkpoint_name)
 
@@ -206,23 +201,66 @@ class Train(GenericTrain):
                 self.iteration,
                 self.iteration + 1)
 
-        # create a saver for the current graph
-        self.saver = tf.train.Saver(max_to_keep=None)
+        # Until now, only variables have been added to the graph that are part
+        # of every checkpoint. We create a 'basic_saver' for only those
+        # variables.
+        self.basic_saver = tf.train.Saver(max_to_keep=None)
+
+        # Add custom optimizer and loss, if requested. This potentially adds
+        # more variables, not covered by the basic_saver.
+        if self.optimizer_func is not None:
+            loss, optimizer = self.optimizer_func(self.graph)
+            self.loss = loss
+            self.optimizer = optimizer
+
+        # We create a 'full_saver' including those variables.
+        self.full_saver = tf.train.Saver(max_to_keep=None)
 
         # find most recent checkpoint
         checkpoint_dir = os.path.dirname(self.meta_graph_filename)
         checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
 
-        # restore model
-        if checkpoint is not None:
+        if checkpoint:
 
-            logger.info("Restoring model from %s", checkpoint)
-            self.saver.restore(self.session, checkpoint)
+            try:
+                # Try to restore the graph, including the custom optimizer
+                # state (if a custom optimizer was used).
+                self.__restore_graph(checkpoint, restore_full=True)
+
+            except tf.errors.NotFoundError:
+
+                # If that failed, we just transitioned from an earlier training
+                # without the custom optimizer. In this case, restore only the
+                # variables of the original meta-graph and 'gunpowder'
+                # variables. Custom optimizer variables will be default
+                # initialized.
+                logger.info("Checkpoint did not contain custom optimizer "
+                            "variables")
+                self.__restore_graph(checkpoint, restore_full=False)
+        else:
+
+            logger.info("No checkpoint found")
+
+            # initialize all variables
+            self.session.run(tf.global_variables_initializer())
+
+    def __restore_graph(self, checkpoint, restore_full):
+
+        logger.info("Restoring model from %s", checkpoint)
+
+        if restore_full:
+
+            logger.info("...using a saver for all variables")
+            self.full_saver.restore(self.session, checkpoint)
 
         else:
 
-            logger.info("No checkpoint found, initializing variables")
+            # initialize all variables, such that non-basic variables are
+            # initialized
             self.session.run(tf.global_variables_initializer())
+
+            logger.info("...using a saver for basic variables only")
+            self.basic_saver.restore(self.session, checkpoint)
 
     def __collect_requested_outputs(self, request):
 
