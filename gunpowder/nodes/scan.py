@@ -67,6 +67,9 @@ class Scan(BatchFilter):
         shift_roi = self.__get_shift_roi(scan_spec)
 
         shifts = self.__enumerate_shifts(shift_roi, stride)
+        num_chunks = len(shifts)
+
+        logger.info("scanning over %d chunks", num_chunks)
 
         # the batch to return
         self.batch = Batch()
@@ -77,20 +80,26 @@ class Scan(BatchFilter):
                 shifted_reference = self.__shift_request(self.reference, shift)
                 self.request_queue.put(shifted_reference)
 
-            for _ in range(len(shifts)):
+            for i in range(num_chunks):
+
                 chunk = self.workers.get()
+
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
 
+                logger.info("processed chunk %d/%d", i, num_chunks)
+
         else:
 
-            for shift in shifts:
+            for i, shift in enumerate(shifts):
 
                 shifted_reference = self.__shift_request(self.reference, shift)
                 chunk = self.__get_chunk(shifted_reference)
 
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
+
+                logger.info("processed chunk %d/%d", i, num_chunks)
 
         batch = self.batch
         self.batch = None
