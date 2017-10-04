@@ -101,12 +101,15 @@ class AddBlobsFromPoints(BatchFilter):
 
     def process(self, batch, request):
 
-        # check volumes and gather all IDs
+        # check volumes and gather all IDs and synapse IDs
         all_points = {}
+        all_synapse_ids = {}
+
         for blob_name, settings in self.blob_settings.items():
             # Unpack settings
             point_type = settings['point_type']
             restrictive_mask_type = settings['restrictive_mask_type']
+
 
             # Make sure both the necesary point types and volumes are present
             assert point_type in batch.points, "Upstream does not provide required point type\
@@ -118,6 +121,19 @@ class AddBlobsFromPoints(BatchFilter):
             # Get point data
             points = batch.points[point_type]
 
+            # If point doesn't have it's corresponding partner, delete it
+            if 'partner_points' in settings.keys() and settings['partner_points'] is not None:
+                partner_points = batch.points[settings['partner_points']]
+                synapse_ids = []
+                for point_id, point in points.data.items():
+                    # pdb.set_trace()
+                    if not point.partner_ids[0] in partner_points.data.keys():
+                        logger.warning('Point %s has no partner. Deleting...'%point_id)
+                        del points.data[point_id]
+                    else:
+                        synapse_ids.append(point.synapse_id)
+
+            all_synapse_ids[point_type] = synapse_ids
             all_points[point_type] = points
 
         for blob_name, settings in self.blob_settings.items():
@@ -152,21 +168,21 @@ class AddBlobsFromPoints(BatchFilter):
                 if id_mapper is not None:
                     synapse_id = id_mapper(synapse_id)
 
-                settings['blob_placer'].place(blob_map, voxel_location, synapse_id,
-                                              restrictive_mask.data)
+                settings['blob_placer'].place(blob_map, voxel_location,
+                    synapse_id, restrictive_mask.data)
+
 
             # Provide volume
-            # spec = batch.volumes[restrictive_mask_type].spec.copy()
-            # pdb.set_trace()
             batch.volumes[volume_type] = Volume(blob_map, spec=request[volume_type].copy())
             batch.volumes[volume_type].spec.dtype = dtype
 
             # add id_mapping to attributes
-            # if not hasattr(batch.volumes[volume_type], 'attrs'):
-            #     batch.volumes[volume_type].attrs = {}''
             if id_mapper is not None:
                 id_map_list = np.array(list(id_mapper.get_map().items()))
                 batch.volumes[volume_type].attrs['id_mapping'] = id_map_list
+
+            batch.volumes[volume_type].attrs['point_ids'] = points.data.keys()
+            batch.volumes[volume_type].attrs['synapse_ids'] = all_synapse_ids[point_type]
 
             # Crop all other requests
         for volume_type, volume in request.volume_specs.items():
