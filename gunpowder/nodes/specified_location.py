@@ -28,7 +28,7 @@ class SpecifiedLocation(BatchFilter):
         the list.
     '''
 
-    def __init__(self, specified_locations, choose_randomly=False):
+    def __init__(self, specified_locations, choose_randomly=False, extra_data=None):
 
         self.locs = specified_locations
         self.choose_randomly = choose_randomly
@@ -36,6 +36,12 @@ class SpecifiedLocation(BatchFilter):
         self.upstream_spec = None
         self.upstream_roi = None
         self.specified_shift = None
+
+        assert len(extra_data) == len(specified_locations),\
+            "extra_data (%d) should match the length of specified locations (%d)"%(len(extra_data),\
+            len(specified_locations))
+
+        self.extra_data = extra_data
 
     def setup(self):
 
@@ -107,6 +113,10 @@ Skipping this location...".format(roi))
         # reset ROIs to request
         for (volume_type, spec) in request.volume_specs.items():
             batch.volumes[volume_type].spec.roi = spec.roi
+            if self.extra_data is not None:
+                batch.volumes[volume_type].attrs['specified_location_extra_data'] =\
+                 self.extra_data[self.loc_i]
+
         for (points_type, spec) in request.points_specs.items():
             batch.points[points_type].spec.roi = spec.roi
 
