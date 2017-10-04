@@ -91,8 +91,10 @@ class Train(GenericTrain):
             volume_specs,
             spawn_subprocess=False)
         self.meta_graph_filename = meta_graph_filename
-        self.optimizer = optimizer
-        self.loss = loss
+        self.optimizer_func = None
+        self.optimizer_loss_names = None
+        self.optimizer = None
+        self.loss = None
         self.session = None
         self.tf_gradient = {}
         self.graph = None
@@ -100,6 +102,11 @@ class Train(GenericTrain):
         self.save_every = save_every
         self.iteration = None
         self.iteration_increment = None
+
+        if isinstance(optimizer, basestring):
+            self.optimizer_func = optimizer
+        else:
+            self.optimizer_loss_names = (optimizer, loss)
 
     def start(self):
 
@@ -111,16 +118,15 @@ class Train(GenericTrain):
         with self.graph.as_default():
             self.__read_meta_graph()
 
-        if isinstance(self.optimizer, basestring):
+        if self.optimizer_func is None:
 
-            # replace names of operations/tensors with actual operations/tensors
-            self.optimizer = self.graph.get_operation_by_name(self.optimizer)
-            self.loss = self.graph.get_tensor_by_name(self.loss)
+            # get actual operations/tensors from names
+            self.optimizer = self.graph.get_operation_by_name(self.optimizer_loss_names[0])
+            self.loss = self.graph.get_tensor_by_name(self.optimizer_loss_names[1])
 
         else:
 
-            # assume that self.optimizer is a callable
-            loss, optimizer = self.optimizer(self.graph)
+            loss, optimizer = self.optimizer_func(self.graph)
             self.loss = loss
             self.optimizer = optimizer
 
@@ -173,8 +179,8 @@ class Train(GenericTrain):
 
         if self.session is not None:
 
-            self.optimizer = self.optimizer.name
-            self.loss = self.loss.name
+            self.optimizer = None
+            self.loss = None
 
             self.session.close()
             self.graph = None
