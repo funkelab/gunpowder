@@ -23,10 +23,32 @@ class Train(GenericTrain):
                 # store it
                 tf.train.export_meta_graph(filename=meta_graph_filename)
 
-        optimizer: The name of the tensorflow operator performing a training
-            iteration.
+        optimizer (string or function): Either the name of the tensorflow
+            operator performing a training iteration, or a function that, given
+            the graph of the meta-graph file, adds a custom loss and optimizer.
 
-        loss: The name of the tensorflow tensor containing the loss.
+            If a function is given, it should return a tuple ``(loss,
+            optimizer)`` of a tensor and an operator representing the loss and
+            the optimizer, respectively. In this case, parameter ``loss``
+            should be ``None``.
+
+            Example::
+
+                def add_custom_optimizer(graph):
+
+                    # get the output of your graph
+                    output = graph.get_tensor_by_name('...')
+
+                    # create your custom loss
+                    loss = custom_loss(output)
+
+                    # add an optimizer of your choice
+                    optimizer = tf.train.AdamOptimizer().minimize(loss)
+
+                    return (loss, optimizer)
+
+        loss (string or None): The name of the tensorflow tensor containing the
+            loss, or ``None`` if ``optimizer`` is a function.
 
         inputs (dict): Dictionary from the names of input tensors in the
             network to :class:``VolumeType`` or batch attribute name as string.
@@ -89,9 +111,18 @@ class Train(GenericTrain):
         with self.graph.as_default():
             self.__read_meta_graph()
 
-        # replace names of operations/tensors with actual operations/tensors
-        self.optimizer = self.graph.get_operation_by_name(self.optimizer)
-        self.loss = self.graph.get_tensor_by_name(self.loss)
+        if isinstance(self.optimizer, basestring):
+
+            # replace names of operations/tensors with actual operations/tensors
+            self.optimizer = self.graph.get_operation_by_name(self.optimizer)
+            self.loss = self.graph.get_tensor_by_name(self.loss)
+
+        else:
+
+            # assume that self.optimizer is a callable
+            loss, optimizer = self.optimizer(self.graph)
+            self.loss = loss
+            self.optimizer = optimizer
 
         # add symbolic gradients
         for tensor_name in self.gradients:
