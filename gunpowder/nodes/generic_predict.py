@@ -101,9 +101,6 @@ class GenericPredict(BatchFilter):
 
         if self.spawn_subprocess:
             self.worker.start()
-        else:
-            self.start()
-            self.initialized = True
 
     def teardown(self):
         if self.spawn_subprocess:
@@ -118,6 +115,10 @@ class GenericPredict(BatchFilter):
             self.stop()
 
     def prepare(self, request):
+
+        if not self.initialized:
+            self.start()
+            self.initialized = True
 
         # remove request parts that we provide
         for volume_type in self.outputs.values():
@@ -165,7 +166,7 @@ class GenericPredict(BatchFilter):
 
         This method will be called after the last call to :fun:`predict`,
         from the same process that :fun:`predict` will be called from. Use
-        this to tear down you model and free training hardware.
+        this to tear down your model and free training hardware.
         '''
         pass
 
