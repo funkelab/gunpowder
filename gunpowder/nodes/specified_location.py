@@ -21,25 +21,30 @@ class SpecifiedLocation(BatchFilter):
 
     Args:
 
-        specified_locations: list, array, A list of locations to center batches. Should be given
+        specified_coordinates: list, array, A list of locations to center batches. Should be given
         physical dimensions and with respect to (0,0,0)
 
         choose_randomly: bool, defines whether locations should be picked in order or at random from
         the list.
+
+        extra_data: list, array, A list of data that you want to be passed along with the volumes
+        provided by this node. This data will be appended as an attribute to the dataset so it must
+        be a data format compatible with hdf5.
     '''
 
-    def __init__(self, specified_locations, choose_randomly=False, extra_data=None):
+    def __init__(self, specified_coordinates, choose_randomly=False, extra_data=None):
 
-        self.locs = specified_locations
+        self.coordinates = specified_coordinates
         self.choose_randomly = choose_randomly
         self.loc_i = 0
         self.upstream_spec = None
         self.upstream_roi = None
         self.specified_shift = None
 
-        assert len(extra_data) == len(specified_locations),\
-            "extra_data (%d) should match the length of specified locations (%d)"%(len(extra_data),\
-            len(specified_locations))
+        if extra_data is not None:
+            assert len(extra_data) == len(specified_coordinates),\
+                "extra_data (%d) should match the length of specified locations (%d)"%(len(extra_data),\
+                len(specified_coordinates))
 
         self.extra_data = extra_data
 
@@ -109,14 +114,15 @@ class SpecifiedLocation(BatchFilter):
             for point_id, point in batch.points[points_type].data.items():
                 batch.points[points_type].data[point_id].location -= self.specified_shift
 
-    # get next shift from list
     def _get_next_shift(self, center_shift):
+        # gets next corrdinate from list
+
         if self.choose_randomly:
-            next_shift = Coordinate(choice(self.locs) - center_shift)
+            next_shift = choice(self.coordinates) - center_shift
         else:
-            next_shift = Coordinate(self.locs[self.loc_i] - center_shift)
+            next_shift = Coordinate(self.coordinates[self.loc_i] - center_shift)
             self.loc_i += 1
-            if self.loc_i >= len(self.locs):
+            if self.loc_i >= len(self.coordinates):
                 self.loc_i = 0
                 logger.warning('Ran out of specified locations, looping list')
         return next_shift
