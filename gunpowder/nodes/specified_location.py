@@ -81,27 +81,11 @@ class SpecifiedLocation(BatchFilter):
         logger.debug("valid shifts for request in " + str(shift_roi))
 
         # shift to center
-        center_shift = np.asarray(spec.roi.get_shape())/2 + spec.roi.get_offset()
+        center_shift = spec.roi.get_shape()/2 + spec.roi.get_offset()
 
-        # Make sure shift fits in roi of all request types
-        request_fits = False
-        while not request_fits:
-            request_fits = True
-            # shift request ROIs
-            self.specified_shift = self._get_next_shift(center_shift)
+        self.specified_shift = self._get_next_shift(center_shift)
 
-            for specs_type in [request.volume_specs, request.points_specs]:
-                for (data_type, spec) in specs_type.items():
-                    roi = spec.roi.shift(self.specified_shift)
-                    if not self.upstream_spec[data_type].roi.contains(roi):
-                        request_fits = False
-                        logger.warning("selected roi {} doesn't fit in upstream provider.\n \
-Skipping this location...".format(roi))
-                        break;
-                if not request_fits:
-                    break;
-
-        # Once an acceptable shift has been found, set that for all requests
+        # Set shift for all requests
         for specs_type in [request.volume_specs, request.points_specs]:
             for (data_type, spec) in specs_type.items():
                 roi = spec.roi.shift(self.specified_shift)
