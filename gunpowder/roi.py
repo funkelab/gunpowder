@@ -2,6 +2,7 @@ import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
 import numbers
+import numpy as np
 
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
@@ -225,6 +226,19 @@ class Roi(Freezable):
     def shift(self, by):
 
         return Roi(self.__offset + by, self.__shape)
+
+    def snap_to_grid(self, voxel_size, mode='GROW'):
+        shape_in_voxel_fractions = np.asarray(self.get_shape(),dtype='float')/np.asarray(voxel_size)
+        if mode == 'CLOSEST':
+            shape_in_voxel = np.round(shape_in_voxel_fractions)
+        elif mode == 'GROW':
+            shape_in_voxel = np.ceil(shape_in_voxel_fractions)
+        elif mode == 'SHRINK':
+            shape_in_voxel = np.floor(shape_in_voxel_fractions)
+        else:
+            assert False, 'Unknown mode %s for snap_to_grid'%mode
+        self.set_shape((shape_in_voxel*np.asarray(voxel_size)).astype('int'))
+
 
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
