@@ -31,6 +31,13 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
         normalize(string, optional): ``None``, ``'l1'``, or ``'l2'``. Specifies
             if and how to normalize the gradients.
+
+        scale(string, optional): ``None`` or ``exp``. If ``exp``, distance
+            gradients will be scaled by ``beta*e**(-d*alpha)``, where ``d`` is
+            the distance to the boundary.
+
+        scale_args(tuple, optional): For ``exp`` a tuple with the values of
+            ``alpha`` and ``beta``.
     '''
 
     def __init__(
@@ -39,7 +46,9 @@ class AddBoundaryDistanceGradients(BatchFilter):
             gradient_volume_type=None,
             distance_volume_type=None,
             boundary_volume_type=None,
-            normalize=None):
+            normalize=None,
+            scale=None,
+            scale_args=None):
 
         if label_volume_type is None:
             label_volume_type = VolumeTypes.GT_LABELS
@@ -49,6 +58,8 @@ class AddBoundaryDistanceGradients(BatchFilter):
         self.distance_volume_type = distance_volume_type
         self.boundary_volume_type = boundary_volume_type
         self.normalize = normalize
+        self.scale = scale
+        self.scale_args = scale_args
 
     def setup(self):
 
@@ -67,7 +78,9 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     def prepare(self, request):
 
-        del request[self.gradient_volume_type]
+        if self.gradient_volume_type in request:
+            del request[self.gradient_volume_type]
+
         if (
                 self.distance_volume_type is not None and
                 self.distance_volume_type in request):
@@ -78,6 +91,9 @@ class AddBoundaryDistanceGradients(BatchFilter):
             del request[self.boundary_volume_type]
 
     def process(self, batch, request):
+
+        if not self.gradient_volume_type in request:
+            return
 
         labels = batch.volumes[self.label_volume_type].data
         voxel_size = self.spec[self.label_volume_type].voxel_size
@@ -116,6 +132,9 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
         if self.normalize is not None:
             self.__normalize(gradients, self.normalize)
+
+        if self.scale is not None:
+            self.__scale(gradients, distances, self.scale, self.scale_args)
 
         spec = self.spec[self.gradient_volume_type].copy()
         spec.roi = request[self.gradient_volume_type].roi
@@ -193,3 +212,13 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
         factors[factors < 1e-5] = 1
         gradients /= factors
+
+    def __scale(self, gradients, distances, scale, scale_args):
+
+        dims = gradients.shape[0]
+
+        if scale == 'exp':
+            alpha, beta = self.scale_args
+            factors = np.exp(-distances*alpha)*beta
+
+        gradients *= factors
