@@ -104,7 +104,7 @@ class Train(GenericTrain):
         self.iteration = None
         self.iteration_increment = None
 
-        if isinstance(optimizer, basestring):
+        if isinstance(optimizer, str):
             self.optimizer_loss_names = (optimizer, loss)
         else:
             self.optimizer_func = optimizer
