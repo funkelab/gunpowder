@@ -58,7 +58,7 @@ class GenericTrain(BatchFilter):
         self.volume_specs = {} if volume_specs is None else volume_specs
         self.spawn_subprocess = spawn_subprocess
 
-        self.provided_volumes = self.outputs.values() + self.gradients.values()
+        self.provided_volumes = list(self.outputs.values()) + list(self.gradients.values())
 
         if self.spawn_subprocess:
 
