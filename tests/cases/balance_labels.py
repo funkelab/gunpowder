@@ -56,8 +56,9 @@ class TestBalanceLabels(ProviderTest):
     def test_output(self):
 
         pipeline = TestSource() + BalanceLabels(
-                {VolumeTypes.GT_AFFINITIES: VolumeTypes.LOSS_SCALE},
-                {VolumeTypes.GT_AFFINITIES: [VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE]})
+            labels=VolumeTypes.GT_AFFINITIES,
+            scales=VolumeTypes.LOSS_SCALE,
+            mask=[VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE])
 
         with build(pipeline):
 
