@@ -14,6 +14,11 @@ class TestSource(BatchProvider):
                 roi=Roi((-40, -40, -40), (160, 160, 160)),
                 voxel_size=(20, 4, 8),
                 interpolatable=False))
+        self.provides(
+            VolumeTypes.GT_MASK, VolumeSpec(
+                roi=Roi((-40, -40, -40), (160, 160, 160)),
+                voxel_size=(20, 4, 8),
+                interpolatable=False))
 
     def provide(self, request):
 
@@ -21,10 +26,23 @@ class TestSource(BatchProvider):
 
         roi = request[VolumeTypes.GT_LABELS].roi
         shape = (roi/self.spec[VolumeTypes.GT_LABELS].voxel_size).get_shape()
-
         spec = self.spec[VolumeTypes.GT_LABELS].copy()
         spec.roi = roi
+
         batch.volumes[VolumeTypes.GT_LABELS] = Volume(
+            np.random.randint(
+                0, 2,
+                shape
+            ),
+            spec
+        )
+
+        roi = request[VolumeTypes.GT_MASK].roi
+        shape = (roi/self.spec[VolumeTypes.GT_MASK].voxel_size).get_shape()
+        spec = self.spec[VolumeTypes.GT_MASK].copy()
+        spec.roi = roi
+
+        batch.volumes[VolumeTypes.GT_MASK] = Volume(
             np.random.randint(
                 0, 2,
                 shape
@@ -49,9 +67,16 @@ class TestAddGtAffinities(ProviderTest):
                 Coordinate((1,1,1))
         ]
 
+        register_volume_type('GT_AFFINITIES_MASK')
+
         pipeline = (
                 TestSource() +
-                AddGtAffinities(neighborhood)
+                AddGtAffinities(
+                    neighborhood,
+                    gt_labels=VolumeTypes.GT_LABELS,
+                    gt_labels_mask=VolumeTypes.GT_MASK,
+                    gt_affinities=VolumeTypes.GT_AFFINITIES,
+                    gt_affinities_mask=VolumeTypes.GT_AFFINITIES_MASK)
         )
 
         with build(pipeline):
@@ -60,15 +85,21 @@ class TestAddGtAffinities(ProviderTest):
 
                 request = BatchRequest()
                 request.add(VolumeTypes.GT_LABELS, (100,16,64))
+                request.add(VolumeTypes.GT_MASK, (100,16,64))
                 request.add(VolumeTypes.GT_AFFINITIES, (100,16,64))
+                request.add(VolumeTypes.GT_AFFINITIES_MASK, (100,16,64))
 
                 batch = pipeline.request_batch(request)
 
                 self.assertTrue(VolumeTypes.GT_LABELS in batch.volumes)
+                self.assertTrue(VolumeTypes.GT_MASK in batch.volumes)
                 self.assertTrue(VolumeTypes.GT_AFFINITIES in batch.volumes)
+                self.assertTrue(VolumeTypes.GT_AFFINITIES_MASK in batch.volumes)
 
                 labels = batch.volumes[VolumeTypes.GT_LABELS]
+                labels_mask = batch.volumes[VolumeTypes.GT_MASK]
                 affs = batch.volumes[VolumeTypes.GT_AFFINITIES]
+                affs_mask = batch.volumes[VolumeTypes.GT_AFFINITIES_MASK]
 
                 self.assertTrue((len(neighborhood),) + labels.data.shape == affs.data.shape)
 
@@ -85,8 +116,15 @@ class TestAddGtAffinities(ProviderTest):
 
                         a = labels.data[p]
                         b = labels.data[pn]
+                        masked = (
+                            labels_mask.data[p] == 0 or
+                            labels_mask.data[pn] == 0)
 
                         if a == b and a != 0 and b != 0:
                             self.assertEqual(affs.data[(n,)+p], 1.0, "%s -> %s, %s -> %s, but is not 1"%(p, pn, a, b))
                         else:
                             self.assertEqual(affs.data[(n,)+p], 0.0, "%s -> %s, %s -> %s, but is not 0"%(p, pn, a, b))
+                        if masked:
+                            self.assertEqual(affs_mask.data[(n,)+p], 0.0, (
+                                "%s or %s are masked, but mask is not 0"%
+                                (p, pn)))
