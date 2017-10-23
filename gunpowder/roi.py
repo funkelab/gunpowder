@@ -1,3 +1,4 @@
+import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
 import numbers
@@ -155,6 +156,10 @@ class Roi(Freezable):
         shape = self.__shape + amount_neg + amount_pos
 
         return Roi(offset, shape)
+
+    def copy(self):
+        '''Create a copy of this ROI.'''
+        return copy.deepcopy(self)
 
     def __add__(self, other):
 
