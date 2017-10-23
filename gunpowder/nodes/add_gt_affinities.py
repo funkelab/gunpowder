@@ -111,7 +111,11 @@ class AddGtAffinities(BatchFilter):
 
         # same for label mask
         if self.gt_labels_mask:
-            request[self.gt_labels_mask].roi = gt_labels_roi
+            assert (
+                request[self.gt_labels].roi ==
+                request[self.gt_labels_mask].roi),
+                ("GT label roi and GT label mask roi are not the same.")
+            request[self.gt_labels_mask].roi = gt_labels_roi.copy()
 
         logger.debug("upstream %s request: "%self.gt_labels + str(gt_labels_roi))
 
