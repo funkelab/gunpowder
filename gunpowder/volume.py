@@ -43,13 +43,16 @@ class VolumeTypes:
                                            raw volumes
                                            (used in :class:`DefectAugment`).
         ``GT_LABELS``                      Ground-truth object IDs.
-        ``GT_AFFINITIES``                  Ground-truth affinities.
         ``GT_MASK``                        Binary mask (1-use, 0-don't use) on ground-truth. No
                                            assumptions about masked out area (i.e., end of
                                            ground-truth).
         ``GT_IGNORE``                      Binary mask (1-use, 0-don't use) on ground-truth.
                                            Assumes that transition between 0 and 1 lies on an
                                            object boundary.
+        ``GT_AFFINITIES``                  Ground-truth affinities.
+        ``GT_AFFINITIES_MASK``             Binary mask (1-use, 0-don't use) on ground-truth. No
+                                           assumptions about masked out area (i.e., end of
+                                           ground-truth).
         ``PRED_AFFINITIES``                Predicted affinities.
         ``LOSS_SCALE``                     Used for element-wise multiplication with loss for
                                            training.
@@ -87,6 +90,7 @@ register_volume_type('RAW')
 register_volume_type('ALPHA_MASK')
 register_volume_type('GT_LABELS')
 register_volume_type('GT_AFFINITIES')
+register_volume_type('GT_AFFINITIES_MASK')
 register_volume_type('GT_MASK')
 register_volume_type('GT_IGNORE')
 register_volume_type('PRED_AFFINITIES')
