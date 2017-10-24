@@ -66,6 +66,13 @@ class BalanceLabels(BatchFilter):
 
         labels = batch.volumes[self.labels]
 
+        assert len(np.unique(labels.data)) <= 2, (
+            "Found more than two labels in %s."%self.labels)
+        assert np.min(labels.data) in [0.0, 1.0], (
+            "Labels %s are not binary."%self.labels)
+        assert np.max(labels.data) in [0.0, 1.0], (
+            "Labels %s are not binary."%self.labels)
+
         # initialize error scale with 1s
         error_scale = np.ones(labels.data.shape, dtype=np.float32)
 
@@ -80,10 +87,17 @@ class BalanceLabels(BatchFilter):
                     labels.data.shape))
             error_scale *= mask.data
 
+        self.__balance(labels.data, error_scale)
+
+        spec = self.spec[self.scales].copy()
+        spec.roi = labels.spec.roi
+        batch.volumes[self.scales] = Volume(error_scale, spec)
+
+    def __balance(self, labels, scale):
+
         # in the masked-in area, compute the fraction of positive samples
-        masked_in = error_scale.sum()
-        labels_binary = np.floor(np.clip(labels.data+0.5, a_min=0, a_max=1))
-        num_pos  = (labels_binary * error_scale).sum()
+        masked_in = scale.sum()
+        num_pos  = (labels*scale).sum()
         frac_pos = float(num_pos) / masked_in if masked_in > 0 else 0
         frac_pos = np.clip(frac_pos, 0.05, 0.95)
         frac_neg = 1.0 - frac_pos
@@ -92,9 +106,5 @@ class BalanceLabels(BatchFilter):
         w_pos = 1.0 / (2.0 * frac_pos)
         w_neg = 1.0 / (2.0 * frac_neg)
 
-        # scale the masked-in error_scale with the class weights
-        error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
-
-        spec = self.spec[self.scales].copy()
-        spec.roi = labels.spec.roi
-        batch.volumes[self.scales] = Volume(error_scale, spec)
+        # scale the masked-in scale with the class weights
+        scale *= (labels >= 0.5) * w_pos + (labels < 0.5) * w_neg
