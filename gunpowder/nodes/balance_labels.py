@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeTypes, Volume
 import collections
+import itertools
 import logging
 import numpy as np
 
@@ -22,9 +23,18 @@ class BalanceLabels(BatchFilter):
             masks) to consider for balancing. Every voxel marked with a 0 will
             not contribute to the scaling and will have a scale of 0 in
             `scales`.
+
+        slab (tuple of int, optional): A shape specification to perform the
+            balancing in slabs of this size. -1 can be used to refer to the
+            actual size of the label volume. For example, a slab of::
+
+                (2, -1, -1, -1)
+
+            will perform the balancing for every each slice `(0:2,:)`,
+            `(2:4,:)`, ... individually.
     '''
 
-    def __init__(self, labels, scales, mask=None):
+    def __init__(self, labels, scales, mask=None, slab=None):
 
         self.labels = labels
         self.scales = scales
@@ -34,6 +44,8 @@ class BalanceLabels(BatchFilter):
             self.masks = [mask]
         else:
             self.masks = mask
+
+        self.slab = slab
 
         self.skip_next = False
 
@@ -87,7 +99,25 @@ class BalanceLabels(BatchFilter):
                     labels.data.shape))
             error_scale *= mask.data
 
-        self.__balance(labels.data, error_scale)
+        if not self.slab:
+            slab = error_scale.shape
+        else:
+            # slab with -1 replaced by shape
+            slab = tuple(
+                m if s == -1 else s
+                for m, s in zip(error_scale.shape, self.slab))
+
+        slab_ranges = (
+            range(0, m, s)
+            for m, s in zip(error_scale.shape, slab))
+
+        for start in itertools.product(*slab_ranges):
+            slices = tuple(
+                slice(start[d], start[d] + slab[d])
+                for d in range(len(slab)))
+            self.__balance(
+                labels.data[slices],
+                error_scale[slices])
 
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
