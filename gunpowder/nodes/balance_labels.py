@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.volume import VolumeTypes, Volume
 import collections
+import itertools
 import logging
 import numpy as np
 
@@ -8,52 +9,66 @@ logger = logging.getLogger(__name__)
 
 
 class BalanceLabels(BatchFilter):
-    '''Creates loss_scale_volumes which apply the provided mask_volumes and balance the loss between positive
-        and negative labels in the label_volume.
-        The labels are balanced after the mask_volumes are applied to their corresponding label_volume.
+    '''Creates a scale volume to balance the loss between positive and negative
+    labels.
+
     Args:
-        labels_to_loss_scale_volume (dict): Dictionary from :class:``VolumeType`` of the labels to be scaled (label_volume)
-                                        to the :class:``VolumeTypes`` which will be created to store the loss scale volume
-                                        (loss_scale_volume). This new volume will have the same ROI and resolution
-                                        as the label_volume.
-        labels_to_mask_volumes (dict): Dictionary from :class:``VolumeType`` of the labels (label_volume) to be scaled
-                                        to a list or tuple of :class:``VolumeTypes`` of the masks to be applied to this
-                                        label_volume.
+
+        labels (:class:``VolumeType``): A volume containing binary labels.
+
+        scales (:class:``VolumeType``): A volume with scales to be created. This
+            new volume will have the same ROI and resolution as `labels`.
+
+        mask (:class:``VolumeType``, optional): An optional mask (or list of
+            masks) to consider for balancing. Every voxel marked with a 0 will
+            not contribute to the scaling and will have a scale of 0 in
+            `scales`.
+
+        slab (tuple of int, optional): A shape specification to perform the
+            balancing in slabs of this size. -1 can be used to refer to the
+            actual size of the label volume. For example, a slab of::
+
+                (2, -1, -1, -1)
+
+            will perform the balancing for every each slice `(0:2,:)`,
+            `(2:4,:)`, ... individually.
     '''
 
-    def __init__(self, labels_to_loss_scale_volume, labels_to_mask_volumes=None):
-        self.labels_to_loss_scale_volume = labels_to_loss_scale_volume
-        if labels_to_mask_volumes is None:
-            self.labels_to_mask_volumes = []
+    def __init__(self, labels, scales, mask=None, slab=None):
+
+        self.labels = labels
+        self.scales = scales
+        if mask is None:
+            self.masks = []
+        elif not isinstance(mask, collections.Iterable):
+            self.masks = [mask]
         else:
-            self.labels_to_mask_volumes = labels_to_mask_volumes
-            for label_volume, mask_volumes in self.labels_to_mask_volumes.items():
-                if not isinstance(mask_volumes, collections.Iterable):
-                    self.labels_to_mask_volumes[label_volume] = [mask_volumes]
+            self.masks = mask
+
+        self.slab = slab
 
         self.skip_next = False
 
     def setup(self):
 
-        for (label_volume, loss_scale_volume) in self.labels_to_loss_scale_volume.items():
+        assert self.labels in self.spec, (
+            "Asked to balance labels %s, which are not provided."%self.labels)
 
-            assert label_volume in self.spec, "Asked to balance labels {}, which are not provided.".format(label_volume)
+        for mask in self.masks:
+            assert mask in self.spec, (
+                "Asked to apply mask %s to balance labels, but mask is not "
+                "provided."%mask)
 
-            if label_volume in self.labels_to_mask_volumes:
-                for mask_volume in self.labels_to_mask_volumes[label_volume]:
-                    assert mask_volume in self.spec, "Asked to apply mask {} to balance labels, but mask is not provided.".format(mask_volume)
-
-            spec = self.spec[label_volume].copy()
-            spec.dtype = np.float32
-            self.provides(loss_scale_volume, spec)
+        spec = self.spec[self.labels].copy()
+        spec.dtype = np.float32
+        self.provides(self.scales, spec)
 
     def prepare(self, request):
 
         self.skip_next = True
-        for _, loss_scale_volume in self.labels_to_loss_scale_volume.items():
-            if loss_scale_volume in request:
-                del request[loss_scale_volume]
-                self.skip_next = False
+        if self.scales in request:
+            del request[self.scales]
+            self.skip_next = False
 
     def process(self, batch, request):
 
@@ -61,40 +76,65 @@ class BalanceLabels(BatchFilter):
             self.skip_next = False
             return
 
-        for label_volume, loss_scale_volume in self.labels_to_loss_scale_volume.items():
+        labels = batch.volumes[self.labels]
 
-            labels = batch.volumes[label_volume]
+        assert len(np.unique(labels.data)) <= 2, (
+            "Found more than two labels in %s."%self.labels)
+        assert np.min(labels.data) in [0.0, 1.0], (
+            "Labels %s are not binary."%self.labels)
+        assert np.max(labels.data) in [0.0, 1.0], (
+            "Labels %s are not binary."%self.labels)
 
-            # initialize error scale with 1s
-            error_scale = np.ones(labels.data.shape, dtype=np.float32)
+        # initialize error scale with 1s
+        error_scale = np.ones(labels.data.shape, dtype=np.float32)
 
-            # set error_scale to 0 in masked-out areas
-            if label_volume in self.labels_to_mask_volumes:
-                for mask_volume in self.labels_to_mask_volumes[label_volume]:
-                    self.__mask_error_scale(error_scale, batch.volumes[mask_volume].data)
+        # set error_scale to 0 in masked-out areas
+        for identifier in self.masks:
+            mask = batch.volumes[identifier]
+            assert labels.data.shape == mask.data.shape, (
+                "Shape of mask %s %s does not match %s %s"%(
+                    mask,
+                    mask.data.shape,
+                    self.labels,
+                    labels.data.shape))
+            error_scale *= mask.data
 
-            # in the masked-in area, compute the fraction of positive samples
-            masked_in = error_scale.sum()
-            labels_binary = np.floor(np.clip(labels.data+0.5, a_min=0, a_max=1))
-            num_pos  = (labels_binary * error_scale).sum()
-            frac_pos = float(num_pos) / masked_in if masked_in > 0 else 0
-            frac_pos = np.clip(frac_pos, 0.05, 0.95)
-            frac_neg = 1.0 - frac_pos
+        if not self.slab:
+            slab = error_scale.shape
+        else:
+            # slab with -1 replaced by shape
+            slab = tuple(
+                m if s == -1 else s
+                for m, s in zip(error_scale.shape, self.slab))
 
-            # compute the class weights for positive and negative samples
-            w_pos = 1.0 / (2.0 * frac_pos)
-            w_neg = 1.0 / (2.0 * frac_neg)
+        slab_ranges = (
+            range(0, m, s)
+            for m, s in zip(error_scale.shape, slab))
 
-            # scale the masked-in error_scale with the class weights
-            error_scale *= (labels_binary >= 0.5) * w_pos + (labels_binary < 0.5) * w_neg
+        for start in itertools.product(*slab_ranges):
+            slices = tuple(
+                slice(start[d], start[d] + slab[d])
+                for d in range(len(slab)))
+            self.__balance(
+                labels.data[slices],
+                error_scale[slices])
 
-            spec = self.spec[loss_scale_volume].copy()
-            spec.roi = labels.spec.roi
-            batch.volumes[loss_scale_volume] = Volume(error_scale, spec)
+        spec = self.spec[self.scales].copy()
+        spec.roi = labels.spec.roi
+        batch.volumes[self.scales] = Volume(error_scale, spec)
 
-    def __mask_error_scale(self, error_scale, mask):
+    def __balance(self, labels, scale):
 
-        if error_scale.shape == mask.shape:
-            error_scale = error_scale[np.newaxis, :]
-        for d in range(error_scale.shape[0]):
-            error_scale[d] *= mask
+        # in the masked-in area, compute the fraction of positive samples
+        masked_in = scale.sum()
+        num_pos  = (labels*scale).sum()
+        frac_pos = float(num_pos) / masked_in if masked_in > 0 else 0
+        frac_pos = np.clip(frac_pos, 0.05, 0.95)
+        frac_neg = 1.0 - frac_pos
+
+        # compute the class weights for positive and negative samples
+        w_pos = 1.0 / (2.0 * frac_pos)
+        w_neg = 1.0 / (2.0 * frac_neg)
+
+        # scale the masked-in scale with the class weights
+        scale *= (labels >= 0.5) * w_pos + (labels < 0.5) * w_neg
