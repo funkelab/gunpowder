@@ -8,7 +8,7 @@ class TestSource(BatchProvider):
 
         for identifier in [
             VolumeTypes.GT_AFFINITIES,
-            VolumeTypes.GT_MASK,
+            VolumeTypes.GT_AFFINITIES_MASK,
             VolumeTypes.GT_IGNORE]:
 
             self.provides(
@@ -34,17 +34,17 @@ class TestSource(BatchProvider):
                 ),
                 spec
         )
-        batch.volumes[VolumeTypes.GT_MASK] = Volume(
+        batch.volumes[VolumeTypes.GT_AFFINITIES_MASK] = Volume(
                 np.random.randint(
                     0, 2,
-                    shape_vx
+                    (3,) + shape_vx
                 ),
                 spec
         )
         batch.volumes[VolumeTypes.GT_IGNORE] = Volume(
                 np.random.randint(
                     0, 2,
-                    shape_vx
+                    (3,) + shape_vx
                 ),
                 spec
         )
@@ -58,7 +58,7 @@ class TestBalanceLabels(ProviderTest):
         pipeline = TestSource() + BalanceLabels(
             labels=VolumeTypes.GT_AFFINITIES,
             scales=VolumeTypes.LOSS_SCALE,
-            mask=[VolumeTypes.GT_MASK, VolumeTypes.GT_IGNORE])
+            mask=[VolumeTypes.GT_AFFINITIES_MASK, VolumeTypes.GT_IGNORE])
 
         with build(pipeline):
 
@@ -75,14 +75,11 @@ class TestBalanceLabels(ProviderTest):
 
                 affs = batch.volumes[VolumeTypes.GT_AFFINITIES].data
                 scale = batch.volumes[VolumeTypes.LOSS_SCALE].data
-                mask = batch.volumes[VolumeTypes.GT_MASK].data
+                mask = batch.volumes[VolumeTypes.GT_AFFINITIES_MASK].data
                 ignore = batch.volumes[VolumeTypes.GT_IGNORE].data
 
                 # combine mask and ignore
                 mask *= ignore
-
-                # make a mask on affinities
-                mask = np.array([mask, mask, mask])
 
                 self.assertTrue((scale[mask==1] > 0).all())
                 self.assertTrue((scale[mask==0] == 0).all())

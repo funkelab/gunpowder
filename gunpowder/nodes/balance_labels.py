@@ -70,8 +70,15 @@ class BalanceLabels(BatchFilter):
         error_scale = np.ones(labels.data.shape, dtype=np.float32)
 
         # set error_scale to 0 in masked-out areas
-        for mask in self.masks:
-            self.__mask_error_scale(error_scale, batch.volumes[mask].data)
+        for identifier in self.masks:
+            mask = batch.volumes[identifier]
+            assert labels.data.shape == mask.data.shape, (
+                "Shape of mask %s %s does not match %s %s"%(
+                    mask,
+                    mask.data.shape,
+                    self.labels,
+                    labels.data.shape))
+            error_scale *= mask.data
 
         # in the masked-in area, compute the fraction of positive samples
         masked_in = error_scale.sum()
@@ -91,10 +98,3 @@ class BalanceLabels(BatchFilter):
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
         batch.volumes[self.scales] = Volume(error_scale, spec)
-
-    def __mask_error_scale(self, error_scale, mask):
-
-        if error_scale.shape == mask.shape:
-            error_scale = error_scale[np.newaxis, :]
-        for d in range(error_scale.shape[0]):
-            error_scale[d] *= mask
