@@ -78,11 +78,13 @@ class Train(GenericTrain):
             meta_graph_filename,
             optimizer,
             loss,
+            summary,
             inputs,
             outputs,
             gradients,
             array_specs=None,
-            save_every=2000):
+            save_every=2000,
+            log_dir='./'):
 
         super(Train, self).__init__(
             inputs,
@@ -94,6 +96,7 @@ class Train(GenericTrain):
         self.optimizer_func = None
         self.optimizer_loss_names = None
         self.optimizer = None
+        self.summary = summary
         self.loss = None
         self.session = None
         self.tf_gradient = {}
@@ -103,7 +106,8 @@ class Train(GenericTrain):
         self.save_every = save_every
         self.iteration = None
         self.iteration_increment = None
-
+        self.train_writer = None
+        self.log_dir = log_dir
         if isinstance(optimizer, basestring):
             self.optimizer_loss_names = (optimizer, loss)
         else:
@@ -118,6 +122,8 @@ class Train(GenericTrain):
 
         with self.graph.as_default():
             self.__read_meta_graph()
+
+        self.train_writer = tf.summary.FileWriter(self.log_dir, self.graph)
 
         if self.optimizer_func is None:
 
@@ -144,7 +150,9 @@ class Train(GenericTrain):
         to_compute.update(array_outputs)
 
         # compute outputs, gradients, and update variables
-        outputs = self.session.run(to_compute, feed_dict=inputs)
+        outputs, summaries = self.session.run([to_compute, self.summary], feed_dict=inputs)
+
+
 
         for array_key in array_outputs:
             spec = self.spec[array_key].copy()
@@ -155,7 +163,7 @@ class Train(GenericTrain):
 
         batch.loss = outputs['loss']
         batch.iteration = outputs['iteration'][0]
-
+        self.train_writer.add_summary(summaries, batch.iteration)
         if batch.iteration%self.save_every == 0:
 
             checkpoint_name = (
@@ -176,7 +184,7 @@ class Train(GenericTrain):
 
             self.optimizer = None
             self.loss = None
-
+            self.train_writer.close()
             self.session.close()
             self.graph = None
             self.session = None
