@@ -164,7 +164,7 @@ class Scan(BatchFilter):
                 total_shift_roi = shift_roi
             else:
                 total_shift_roi = total_shift_roi.intersect(shift_roi)
-                if total_shift_roi is None:
+                if total_shift_roi.empty():
                     raise RuntimeError("There is no location where the ROIs "
                                        "the reference %s are contained in the "
                                        "request/upstream ROIs "
