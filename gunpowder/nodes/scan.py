@@ -153,6 +153,9 @@ class Scan(BatchFilter):
         # get individual shift ROIs and intersect them
         for identifier, reference_spec in self.reference.items():
 
+            if spec[identifier].roi is None:
+                continue
+
             # shift the spec roi such that its offset == shift from reference to
             # spec
             shift_roi = spec[identifier].roi.shift(-reference_spec.roi.get_offset())
@@ -169,6 +172,11 @@ class Scan(BatchFilter):
                                        "the reference %s are contained in the "
                                        "request/upstream ROIs "
                                        "%s."%(self.reference, spec))
+
+        if total_shift_roi is None:
+            raise RuntimeError("None of the upstream ROIs are bounded (all "
+                               "ROIs are None). Scan needs at least one "
+                               "bounded upstream ROI.")
 
         return total_shift_roi
 
