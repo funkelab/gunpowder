@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Hdf5Write(BatchFilter):
     '''Assemble volumes of passing batches in one HDF5 file. This is useful to 
-    store chunks produced by :class:`Chunk` on disk without keeping the larger 
+    store chunks produced by :class:`Scan` on disk without keeping the larger 
     volume in memory. The ROIs of the passing volumes will be used to determine 
     the position where to store the data in the dataset.
 
