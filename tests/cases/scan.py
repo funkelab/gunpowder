@@ -90,3 +90,8 @@ class TestScan(ProviderTest):
 
         assert(batch.volumes[VolumeTypes.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
 
+        # test scanning with empty request
+
+        pipeline = ScanTestSource() + Scan(chunk_request, num_workers=1)
+        with build(pipeline):
+            batch = pipeline.request_batch(BatchRequest())
