@@ -65,10 +65,24 @@ class Hdf5Write(BatchFilter):
 
         for (volume_type, dataset_name) in self.dataset_names.items():
 
-            assert volume_type in self.spec, "Asked to store %s, but is not provided upstream."%volume_type
+            logger.debug("Create dataset for %s", volume_type)
+
+            assert volume_type in self.spec, (
+                "Asked to store %s, but is not provided upstream."%volume_type)
+            assert volume_type in batch.volumes, (
+                "Asked to store %s, but is not part of batch."%volume_type)
+
+            batch_shape = batch.volumes[volume_type].data.shape
 
             total_roi = self.spec[volume_type].roi
+            dims = total_roi.dims()
+
+            # extends of spatial dimensions
             data_shape = total_roi.get_shape()//self.spec[volume_type].voxel_size
+            logger.debug("Shape in voxels: %s", data_shape)
+            # add channel dimensions (if present)
+            data_shape = batch_shape[:-dims] + data_shape
+            logger.debug("Shape with channel dimensions: %s", data_shape)
 
             if volume_type in self.dataset_dtypes:
                 dtype = self.dataset_dtypes[volume_type]
@@ -98,6 +112,14 @@ class Hdf5Write(BatchFilter):
             data = batch.volumes[volume_type].data
             total_roi = self.spec[volume_type].roi
 
-            assert total_roi.contains(roi), "ROI %s of %s not in upstream provided ROI %s"%(roi, volume_type, total_roi)
+            assert total_roi.contains(roi), (
+                "ROI %s of %s not in upstream provided ROI %s"%(
+                    roi, volume_type, total_roi))
+
             data_roi = (roi - total_roi.get_offset())//self.spec[volume_type].voxel_size
-            dataset[data_roi.get_bounding_box()] = batch.volumes[volume_type].data
+            dims = data_roi.dims()
+            channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
+            voxel_slices = data_roi.get_bounding_box()
+
+            dataset[channel_slices + voxel_slices] = batch.volumes[volume_type].data
+
