@@ -45,6 +45,9 @@ class BatchFilter(BatchProvider):
     def updates(self, identifier, spec):
         '''Update an output provided by this `BatchFilter`.
 
+        Implementations should call this in their :fun:`setup` method, which
+        will be called when the pipeline is build.
+
         Args:
 
             identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
