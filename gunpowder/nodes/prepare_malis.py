@@ -37,35 +37,20 @@ class PrepareMalis(BatchFilter):
         self.labels_volume_type = labels_volume_type
         self.ignore_volume_type = ignore_volume_type
         self.malis_comp_volume_type = malis_comp_volume_type
-        self.skip_next = False
 
     def setup(self):
 
-        # only give warning that GT_LABELS is missing, in prepare() when
-        # checked that node is not skipped
-        if self.labels_volume_type in self.spec:
-            spec = self.spec[self.labels_volume_type].copy()
-            self.provides(self.malis_comp_volume_type, spec)
+        spec = self.spec[self.labels_volume_type].copy()
+        self.provides(self.malis_comp_volume_type, spec)
+        self.enable_autoskip()
 
     def prepare(self, request):
 
-        # MALIS_COMP_LABEL has to be in request for PrepareMalis to run
-        if not self.malis_comp_volume_type in request:
-            logger.warn("no %s requested, will do nothing", self.malis_comp_volume_type)
-            self.skip_next = True
-        else:
-            assert self.labels_volume_type in request, ("PrepareMalis requires "
-                                                        "%s, but they are not "
-                                                        "in request"% \
-                                                        self.labels_volume_type)
-            del request[self.malis_comp_volume_type]
+        assert self.labels_volume_type in request, (
+            "PrepareMalis requires %s, but they are not in request"%
+            self.labels_volume_type)
 
     def process(self, batch, request):
-
-        # do nothing if MALIS_COMP_LABEL is not in request
-        if self.skip_next:
-            self.skip_next = False
-            return
 
         gt_labels = batch.volumes[self.labels_volume_type]
         next_id = gt_labels.data.max() + 1

@@ -31,12 +31,6 @@ class ExcludeLabels(BatchFilter):
         assert VolumeTypes.GT_LABELS in self.spec, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
         self.provides(VolumeTypes.GT_IGNORE, self.spec[VolumeTypes.GT_LABELS])
 
-    def prepare(self, request):
-
-        # we add it, don't request upstream
-        if VolumeTypes.GT_IGNORE in request:
-            del request[VolumeTypes.GT_IGNORE]
-
     def process(self, batch, request):
 
         gt = batch.volumes[VolumeTypes.GT_LABELS]

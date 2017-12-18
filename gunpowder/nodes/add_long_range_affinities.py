@@ -29,10 +29,6 @@ class AddLongRangeAffinities(BatchFilter):
         if affinity_volume_type_2 is None:
             self.affinity_volume_type_2 = VolumeTypes.POST_LR_AFFINITIES
 
-        self.skip_next = False
-
-
-
     def setup(self):
         assert self.volume_type_1 in self.spec, "Upstream does not provide %s needed by \
         AddGtAffinities"%self.volume_type_1
@@ -56,17 +52,9 @@ class AddLongRangeAffinities(BatchFilter):
 
         self.provides(self.affinity_volume_type_1, spec)
         self.provides(self.affinity_volume_type_2, spec)
+        self.enable_autoskip()
 
     def prepare(self, request):
-
-        # do nothing if no gt affinities were requested
-        if not (self.affinity_volume_type_1 in request and self.affinity_volume_type_2 in request):
-            logger.warn("no affinites requested, will do nothing")
-            self.skip_next = True
-            return
-
-        del request[self.affinity_volume_type_1]
-        del request[self.affinity_volume_type_2]
 
         volume_1_roi = request[self.volume_type_1].roi
         logger.debug("downstream %s request: "%self.volume_type_1 + str(volume_1_roi))
@@ -99,11 +87,6 @@ class AddLongRangeAffinities(BatchFilter):
         assert full_vol1.spec.voxel_size == full_vol2.spec.voxel_size,\
         "data type of volume 1(%s) and volume 2(%s) should match"%\
         (full_vol1.spec.voxel_size,full_vol2.spec.voxel_size)
-
-        # do nothing if no gt affinities were requested
-        if self.skip_next:
-            self.skip_next = False
-            return
 
         logger.debug("computing ground-truth affinities from labels")
 

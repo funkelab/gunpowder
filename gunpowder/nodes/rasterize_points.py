@@ -49,7 +49,6 @@ class RasterizePoints(BatchFilter):
         self.skip_next = True
         for volume_type, points_type in self.volumetypes_to_pointstype.items():
             if volume_type in request.volumes:
-                del request.volumes[volume_type]
                 assert points_type in request.points
                 # if at least one requested volume is in self.pointstype_to_volumes, therefore do not skip process
                 self.skip_next = False

@@ -61,9 +61,6 @@ class DownSample(BatchFilter):
                 request[input_volume].roi = request_roi
                 logger.debug("adding as new request")
 
-            # remove volume type provided by us
-            del request[output_volume]
-
     def process(self, batch, request):
 
         for output_volume, downsample in self.volume_factors.items():

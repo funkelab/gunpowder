@@ -76,20 +76,6 @@ class AddBoundaryDistanceGradients(BatchFilter):
             spec.voxel_size /= 2
             self.provides(self.boundary_volume_type, spec)
 
-    def prepare(self, request):
-
-        if self.gradient_volume_type in request:
-            del request[self.gradient_volume_type]
-
-        if (
-                self.distance_volume_type is not None and
-                self.distance_volume_type in request):
-            del request[self.distance_volume_type]
-        if (
-                self.boundary_volume_type is not None and
-                self.boundary_volume_type in request):
-            del request[self.boundary_volume_type]
-
     def process(self, batch, request):
 
         if not self.gradient_volume_type in request:

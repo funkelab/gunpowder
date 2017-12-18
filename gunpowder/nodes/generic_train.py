@@ -126,13 +126,6 @@ class GenericTrain(BatchFilter):
         else:
             self.stop()
 
-    def prepare(self, request):
-
-        # remove request parts that we provide
-        for volume_type in self.provided_volumes:
-            if volume_type in request:
-                del request[volume_type]
-
     def process(self, batch, request):
 
         start = time.time()
