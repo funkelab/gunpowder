@@ -120,11 +120,6 @@ class GenericPredict(BatchFilter):
             self.start()
             self.initialized = True
 
-        # remove request parts that we provide
-        for volume_type in self.outputs.values():
-            if volume_type in request:
-                del request[volume_type]
-
     def process(self, batch, request):
 
         if self.spawn_subprocess:

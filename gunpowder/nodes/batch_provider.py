@@ -11,16 +11,16 @@ logger = logging.getLogger(__name__)
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
-    A `BatchProvider` provides :class:`Batch`es containing :class:`Volume`s 
-    and/or :class:`Points`. The available types and ROIs `Volume`s and `Points` 
-    are specified in a :class:`ProviderSpec` instance, accessible via 
+    A `BatchProvider` provides :class:`Batch`es containing :class:`Volume`s
+    and/or :class:`Points`. The available types and ROIs `Volume`s and `Points`
+    are specified in a :class:`ProviderSpec` instance, accessible via
     `self.spec`.
 
-    To create a new `gunpowder` node, subclass this class and implement (at 
+    To create a new `gunpowder` node, subclass this class and implement (at
     least) :fun:`setup` and :fun:`provide`.
 
-    A `BatchProvider` can be linked to any number of other `BatchProvider`s 
-    upstream. If your node accepts exactly one upstream provider, consider 
+    A `BatchProvider` can be linked to any number of other `BatchProvider`s
+    upstream. If your node accepts exactly one upstream provider, consider
     subclassing :class:`BatchFilter` instead.
     '''
 
@@ -36,10 +36,10 @@ class BatchProvider(object):
     def setup(self):
         '''To be implemented in subclasses.
 
-        Called during initialization of the DAG. Callees can assume that all 
+        Called during initialization of the DAG. Callees can assume that all
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` to announce the volumes and points 
+        In setup, call :fun:`provides` to announce the volumes and points
         provided by this node.
         '''
         raise NotImplementedError("Class %s does not implement 'setup'"%self.name())
@@ -47,15 +47,15 @@ class BatchProvider(object):
     def teardown(self):
         '''To be implemented in subclasses.
 
-        Called during destruction of the DAG. Subclasses should use this to stop 
-        worker processes, if they used some.
+        Called during destruction of the DAG. Subclasses should use this to
+        stop worker processes, if they used some.
         '''
         pass
 
     def provides(self, identifier, spec):
         '''Introduce a new output provided by this `BatchProvider`.
 
-        Implementations should call this in their :fun:`setup` method, which 
+        Implementations should call this in their :fun:`setup` method, which
         will be called when the pipeline is build.
 
         Args:
@@ -68,8 +68,12 @@ class BatchProvider(object):
         if self.spec is None:
             self._spec = ProviderSpec()
 
-        assert identifier not in self.spec, "Node %s is trying to add spec for %s, but is already provided."%(type(self).__name__, identifier)
+        assert identifier not in self.spec, (
+            "Node %s is trying to add spec for %s, but is already "
+            "provided."%(type(self).__name__, identifier))
+
         self.spec[identifier] = copy.deepcopy(spec)
+        self.provided_items.append(identifier)
 
         logger.debug("%s provides %s with spec %s"%(self.name(), identifier, spec))
 
@@ -84,18 +88,40 @@ class BatchProvider(object):
     def spec(self):
         '''Get the :class:`ProviderSpec` of this `BatchProvider`.
 
-        Note that the spec is only available after the pipeline has been build. 
+        Note that the spec is only available after the pipeline has been build.
         Before that, it is None.
         '''
         self._init_spec()
         return self._spec
+
+    @property
+    def provided_items(self):
+        '''Get a list of the identifiers provided by this `BatchProvider`.
+
+        This list is only available after the pipeline has been build. Before
+        that, it is empty.
+        '''
+
+        if not hasattr(self, '_provided_items'):
+            self._provided_items = []
+
+        return self._provided_items
+
+    def remove_provided(self, request):
+        '''Remove identifiers from `request` that are provided by this
+        `BatchProvider`.
+        '''
+
+        for identifier in self.provided_items:
+            if identifier in request:
+                del request[identifier]
 
     def request_batch(self, request):
         '''Request a batch from this provider.
 
         Args:
 
-            request(:class:`BatchRequest`): A request containing (possibly 
+            request(:class:`BatchRequest`): A request containing (possibly
                 partial) :class:`VolumeSpec`s and :class:`PointsSpec`s.
         '''
 

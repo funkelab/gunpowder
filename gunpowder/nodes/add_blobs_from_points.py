@@ -89,9 +89,6 @@ class AddBlobsFromPoints(BatchFilter):
                 else:
                     request[restrictive_mask_type].roi =\
                      request[restrictive_mask_type].roi.union(request_roi)
-
-                # this node will provide this volume type
-                del request[volume_type]
             else:
                 # do nothing if no blobs of this type were requested
                 logger.warning('%s output volume type for %s never requested. \

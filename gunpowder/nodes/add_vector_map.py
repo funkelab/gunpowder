@@ -63,8 +63,6 @@ class AddVectorMap(BatchFilter):
         self.radius_phys                            = radius_phys
         self.partner_criterion                      = partner_criterion
 
-        self.skip_next = False
-
     def setup(self):
 
         for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
@@ -80,13 +78,10 @@ class AddVectorMap(BatchFilter):
                 interpolatable=False,
                 dtype=np.float32))
 
+        self.enable_autoskip()
 
     def prepare(self, request):
 
-        if len(self.volume_to_src_trg_points) == 0:
-            self.skip_next = True
-
-        self.skip_next = True
         for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
             if volume_type in request:
                 # increase or set request for points to be volume roi + padding for partners outside roi for target points
@@ -103,20 +98,7 @@ class AddVectorMap(BatchFilter):
                 else:
                     request[trg_points_type] = PointsSpec(padded_roi)
 
-                del request[volume_type]
-
-                # at least one requested volume is in self.pointstypes_to_volumestypes, therefore do not skip process
-                self.skip_next = False
-
-        if self.skip_next:
-            logger.warn("no VolumeTypes of VectorMap ({}) requested, will do nothing".format(self.volume_to_src_trg_points.values()))
-
     def process(self, batch, request):
-
-        # do nothing if no vector maps were requested
-        if self.skip_next:
-            self.skip_next = False
-            return
 
         # create vector map and add it to batch
         for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():

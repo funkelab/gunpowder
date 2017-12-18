@@ -59,8 +59,6 @@ class AddGtAffinities(BatchFilter):
         self.gt_affinities = gt_affinities
         self.gt_affinities_mask = gt_affinities_mask
 
-        self.skip_next = False
-
     def setup(self):
 
         assert self.gt_labels in self.spec, "Upstream does not provide %s needed by AddGtAffinities"%self.gt_labels
@@ -88,19 +86,9 @@ class AddGtAffinities(BatchFilter):
 
         self.provides(self.gt_affinities, spec)
         self.provides(self.gt_affinities_mask, spec)
-
+        self.enable_autoskip()
 
     def prepare(self, request):
-
-        # do nothing if no gt affinities were requested
-        if not self.gt_affinities in request:
-            logger.warn("no affinites requested, will do nothing")
-            self.skip_next = True
-            return
-
-        del request[self.gt_affinities]
-        if self.gt_affinities_mask in request:
-            del request[self.gt_affinities_mask]
 
         if self.gt_labels_mask:
             assert (
@@ -125,11 +113,6 @@ class AddGtAffinities(BatchFilter):
         logger.debug("upstream %s request: "%self.gt_labels + str(gt_labels_roi))
 
     def process(self, batch, request):
-
-        # do nothing if no gt affinities were requested
-        if self.skip_next:
-            self.skip_next = False
-            return
 
         gt_labels_roi = request[self.gt_labels].roi
 
