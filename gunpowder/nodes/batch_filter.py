@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 class BatchFilter(BatchProvider):
     '''Convenience wrapper for BatchProviders with exactly one input provider.
 
-    By default, a node of this class will expose the same :class:`ProviderSpec` 
-    as the upstream provider. You can modify the provider spec by calling 
-    :fun:`add_volume_spec`, :fun:`add_points_spec`, :fun:`update_volume_spec`, 
-    and :fun:`update_points_spec` in :fun:`setup`.
+    By default, a node of this class will expose the same :class:`ProviderSpec`
+    as the upstream provider. You can modify the provider spec by calling
+    :fun:`provides` and :fun:`updates` in :fun:`setup`.
 
-    Subclasses need to implement at least 'process' to modify a passed batch 
+    Subclasses need to implement at least 'process' to modify a passed batch
     (downstream). Optionally, the following methods can be implemented:
 
         setup
@@ -67,7 +66,7 @@ class BatchFilter(BatchProvider):
 
     def provide(self, request):
 
-        # operate on a copy of the request, to provide the original request to 
+        # operate on a copy of the request, to provide the original request to
         # 'process' for convenience
         upstream_request = copy.deepcopy(request)
 
@@ -75,6 +74,7 @@ class BatchFilter(BatchProvider):
 
         timing_prepare.start()
         self.prepare(upstream_request)
+        self.remove_provided(upstream_request)
         timing_prepare.stop()
 
         batch = self.get_upstream_provider().request_batch(upstream_request)
