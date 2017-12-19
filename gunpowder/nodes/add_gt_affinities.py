@@ -26,8 +26,13 @@ class AddGtAffinities(BatchFilter):
         gt_labels_mask(:class:``VolumeType``, optional): The volume type to use
             as a mask for ``gt_labels``. Affinities connecting at least one
             masked out label will be masked out in ``gt_affinities_mask``. If
-            not given, ``GT_AFFINITIES_MASK`` will contain ones everywhere (if
+            not given, ``gt_affinities_mask`` will contain ones everywhere (if
             requested).
+
+        gt_unlabelled(:class:``VolumeType``, optional): A binary volume to
+            indicate unlabelled areas with 0. Affinities from labelled to
+            unlabelled voxels are set to 0, affinities between unlabelled voxels
+            are masked out (they will not be used for training).
 
         gt_affinities(:class:``VolumeType``, optional): The volume type
             to generate containing the affinities. Defaults to
@@ -43,6 +48,7 @@ class AddGtAffinities(BatchFilter):
             affinity_neighborhood,
             gt_labels=None,
             gt_labels_mask=None,
+            gt_unlabelled=None,
             gt_affinities=None,
             gt_affinities_mask=None):
 
@@ -55,6 +61,7 @@ class AddGtAffinities(BatchFilter):
 
         self.affinity_neighborhood = np.array(affinity_neighborhood)
         self.gt_labels = gt_labels
+        self.gt_unlabelled = gt_unlabelled
         self.gt_labels_mask = gt_labels_mask
         self.gt_affinities = gt_affinities
         self.gt_affinities_mask = gt_affinities_mask
@@ -99,6 +106,15 @@ class AddGtAffinities(BatchFilter):
                     request[self.gt_labels].roi,
                     request[self.gt_labels_mask].roi))
 
+        if self.gt_unlabelled:
+            assert (
+                request[self.gt_labels].roi ==
+                request[self.gt_unlabelled].roi),(
+                "requested GT label roi %s and GT unlabelled mask roi %s are not "
+                "the same."%(
+                    request[self.gt_labels].roi,
+                    request[self.gt_unlabelled].roi))
+
         gt_labels_roi = request[self.gt_labels].roi
         logger.debug("downstream %s request: "%self.gt_labels + str(gt_labels_roi))
 
@@ -109,6 +125,9 @@ class AddGtAffinities(BatchFilter):
         # same for label mask
         if self.gt_labels_mask:
             request[self.gt_labels_mask].roi = gt_labels_roi.copy()
+        # and unlabelled mask
+        if self.gt_unlabelled:
+            request[self.gt_unlabelled].roi = gt_labels_roi.copy()
 
         logger.debug("upstream %s request: "%self.gt_labels + str(gt_labels_roi))
 
@@ -144,15 +163,30 @@ class AddGtAffinities(BatchFilter):
                 logger.debug("computing ground-truth affinities mask from "
                              "labels mask")
                 gt_affinities_mask = malis.seg_to_affgraph(
-                        batch.volumes[self.gt_labels_mask].data.astype(np.int32),
-                        self.affinity_neighborhood
-                ).astype(np.float32)
+                    batch.volumes[self.gt_labels_mask].data.astype(np.int32),
+                    self.affinity_neighborhood)
+                gt_affinities_mask = gt_affinities_mask[(slice(None),)+crop]
 
             else:
 
                 gt_affinities_mask = np.ones_like(gt_affinities)
 
-            gt_affinities_mask = gt_affinities_mask[(slice(None),)+crop]
+            if self.gt_unlabelled is not None:
+
+                # 1 for all affinities between unlabelled voxels
+                unlabelled = (1 - batch.volumes[self.gt_unlabelled].data)
+                unlabelled_mask = malis.seg_to_affgraph(
+                    unlabelled.astype(np.int32),
+                    self.affinity_neighborhood)
+                unlabelled_mask = unlabelled_mask[(slice(None),)+crop]
+
+                # 0 for all affinities between unlabelled voxels
+                unlabelled_mask = (1 - unlabelled_mask)
+
+                # combine with mask
+                gt_affinities_mask = gt_affinities_mask*unlabelled_mask
+
+            gt_affinities_mask = gt_affinities_mask.astype(np.float32)
             batch.volumes[self.gt_affinities_mask] = Volume(gt_affinities_mask, spec)
 
         else:
@@ -167,5 +201,8 @@ class AddGtAffinities(BatchFilter):
         # same for label mask
         if self.gt_labels_mask:
             batch.volumes[self.gt_labels_mask] = batch.volumes[self.gt_labels_mask].crop(gt_labels_roi)
+        # and unlabelled mask
+        if self.gt_unlabelled:
+            batch.volumes[self.gt_unlabelled] = batch.volumes[self.gt_unlabelled].crop(gt_labels_roi)
 
         batch.affinity_neighborhood = self.affinity_neighborhood
