@@ -52,6 +52,9 @@ class Roi(Freezable):
 
     def get_end(self):
         '''Smallest coordinate which is component-wise larger than any inside ROI.'''
+        if not self.__shape:
+            return self.__offset
+
         return self.__offset + self.__shape
 
     def get_shape(self):
@@ -112,6 +115,9 @@ class Roi(Freezable):
             raise RuntimeError("contains() can only be applied to Roi and Coordinate")
 
     def intersects(self, other):
+
+        if self.empty() or other.empty():
+            return False
 
         bb1 = self.get_bounding_box()
         bb2 = other.get_bounding_box()
@@ -230,4 +236,6 @@ class Roi(Freezable):
         return NotImplemented
 
     def __repr__(self):
+        if self.empty():
+            return "[empty ROI]"
         return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
