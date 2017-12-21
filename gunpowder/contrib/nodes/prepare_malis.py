@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from gunpowder.volume import Volume, VolumeTypes
-from .batch_filter import BatchFilter
+from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

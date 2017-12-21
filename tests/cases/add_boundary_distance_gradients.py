@@ -1,5 +1,6 @@
 from .provider_test import ProviderTest
 from gunpowder import *
+from gunpowder.contrib import AddBoundaryDistanceGradients
 import numpy as np
 
 class TestSource(BatchProvider):
