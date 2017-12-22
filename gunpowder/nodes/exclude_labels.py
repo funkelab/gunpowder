@@ -3,64 +3,84 @@ import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Volume
 
 logger = logging.getLogger(__name__)
 
 class ExcludeLabels(BatchFilter):
     '''Excludes several labels from the ground-truth.
 
-    The labels will be replaced by background_value. The GT_IGNORE mask will be 
-    set to 0 for the excluded locations that are further than ignore_mask_erode 
-    away from not excluded locations.
+    The labels will be replaced by background_value. An optional ignore mask
+    will be created and set to 0 for the excluded locations that are further
+    than a threshold away from not excluded locations.
     '''
 
-    def __init__(self, labels, ignore_mask_erode, background_value=0):
+    def __init__(
+            self,
+            labels,
+            exclude,
+            ignore_mask,
+            ignore_mask_erode=0,
+            background_value=0):
         '''
         Args:
-            labels: List of IDs to exclude from the ground-truth.
-            ignore_mask_erode: By how much (in world units) to erode the ignore mask.
-            background_value: Value to replace excluded IDs.
+
+            labels (:class:``VolumeType``): The volume containing the labels.
+
+            exclude (list of IDs): The labels to exclude from ``labels``.
+
+            ignore_mask (:class:``VolumeType``, optional): The ignore mask to
+                create.
+
+            ignore_mask_erode (float, optional): By how much (in world units) to erode
+                the ignore mask.
+
+            background_value (int, optional): Value to replace excluded IDs,
+                defaults to 0.
         '''
-        self.labels = set(labels)
+        self.labels = labels
+        self.exclude = set(exclude)
+        self.ignore_mask = ignore_mask
         self.ignore_mask_erode = ignore_mask_erode
         self.background_value = background_value
 
     def setup(self):
 
-        assert VolumeTypes.GT_LABELS in self.spec, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
-        self.provides(VolumeTypes.GT_IGNORE, self.spec[VolumeTypes.GT_LABELS])
+        assert self.labels in self.spec, "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+        if self.ignore_mask:
+            self.provides(self.ignore_mask, self.spec[self.labels])
 
     def process(self, batch, request):
 
-        gt = batch.volumes[VolumeTypes.GT_LABELS]
+        gt = batch.volumes[self.labels]
 
-        # 0 marks included regions (to be used directly with distance transform 
+        # 0 marks included regions (to be used directly with distance transform
         # later)
         include_mask = np.ones(gt.data.shape)
 
         gt_labels = np.unique(gt.data)
         logger.debug("batch contains GT labels: " + str(gt_labels))
         for label in gt_labels:
-            if label in self.labels:
+            if label in self.exclude:
                 logger.debug("excluding label " + str(label))
                 gt.data[gt.data==label] = self.background_value
             else:
                 include_mask[gt.data==label] = 0
 
-        voxel_size = self.spec[VolumeTypes.GT_LABELS].voxel_size
+        # if no ignore mask is provided or requested, we are done
+        if not self.ignore_mask or not self.ignore_mask in request:
+            return
+
+        voxel_size = self.spec[self.labels].voxel_size
         distance_to_include = distance_transform_edt(include_mask, sampling=voxel_size)
         logger.debug("max distance to foreground is " + str(distance_to_include.max()))
 
         # 1 marks included regions, plus a context area around them
         include_mask = distance_to_include<self.ignore_mask_erode
 
-        if VolumeTypes.GT_IGNORE in request:
-            # include mask was computed on GT_LABELS ROI, we need to copy it to 
-            # the requested GT_IGNORE ROI
-            gt_ignore_roi = request[VolumeTypes.GT_IGNORE].roi
-        else:
-            gt_ignore_roi = gt.spec.roi
+        # include mask was computed on labels ROI, we need to copy it to
+        # the requested ignore_mask ROI
+        gt_ignore_roi = request[self.ignore_mask].roi
 
         intersection = gt.spec.roi.intersect(gt_ignore_roi)
         intersection_in_gt = intersection - gt.spec.roi.get_offset()
@@ -73,7 +93,7 @@ class ExcludeLabels(BatchFilter):
         gt_ignore = np.zeros((gt_ignore_roi//voxel_size).get_shape(), dtype=np.uint8)
         gt_ignore[intersection_in_gt_ignore.get_bounding_box()] = include_mask[intersection_in_gt.get_bounding_box()]
 
-        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        spec = self.spec[self.labels].copy()
         spec.roi = gt_ignore_roi
         spec.dtype = np.uint8
-        batch.volumes[VolumeTypes.GT_IGNORE] = Volume(gt_ignore, spec)
+        batch.volumes[self.ignore_mask] = Volume(gt_ignore, spec)

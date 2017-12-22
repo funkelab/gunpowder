@@ -1,5 +1,6 @@
 from .provider_test import ProviderTest
 from gunpowder import *
+from gunpowder.contrib import AddBoundaryDistanceGradients
 import numpy as np
 
 class TestSource(BatchProvider):
@@ -41,6 +42,7 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
         pipeline = (
             TestSource() +
             AddBoundaryDistanceGradients(
+                label_volume_type=VolumeTypes.GT_LABELS,
                 distance_volume_type=VolumeTypes.GT_BOUNDARY_DISTANCES,
                 gradient_volume_type=VolumeTypes.GT_BOUNDARY_GRADIENTS)
         )

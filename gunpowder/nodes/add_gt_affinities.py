@@ -4,7 +4,7 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import malis
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Volume
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,10 @@ class AddGtAffinities(BatchFilter):
         affinity_neighborhood(list of offsets): List of offsets for the 
             affinities to consider for each voxel.
 
-        gt_labels(:class:``VolumeType``, optional): The volume type to
-            read the labels from. Defaults to ``GT_LABELS``.
+        gt_labels(:class:``VolumeType``): The volume to read the labels from.
+
+        gt_affinities(:class:``VolumeType``): The volume type to generate
+            containing the affinities.
 
         gt_labels_mask(:class:``VolumeType``, optional): The volume type to use
             as a mask for ``gt_labels``. Affinities connecting at least one
@@ -34,30 +36,19 @@ class AddGtAffinities(BatchFilter):
             unlabelled voxels are set to 0, affinities between unlabelled voxels
             are masked out (they will not be used for training).
 
-        gt_affinities(:class:``VolumeType``, optional): The volume type
-            to generate containing the affinities. Defaults to
-            ``GT_AFFINITIES``.
-
         gt_affinities_mask(:class:``VolumeType``, optional): The volume type to
             generate containing the affinitiy mask, as derived from parameter
-            ``gt_labels_mask``. Defaults to ``GT_AFFINITIES_MASK``.
+            ``gt_labels_mask``.
     '''
 
     def __init__(
             self,
             affinity_neighborhood,
-            gt_labels=None,
+            gt_labels,
+            gt_affinities,
             gt_labels_mask=None,
             gt_unlabelled=None,
-            gt_affinities=None,
             gt_affinities_mask=None):
-
-        if gt_labels is None:
-            gt_labels = VolumeTypes.GT_LABELS
-        if gt_affinities is None:
-            gt_affinities = VolumeTypes.GT_AFFINITIES
-        if gt_affinities_mask is None:
-            gt_affinities_mask = VolumeTypes.GT_AFFINITIES_MASK
 
         self.affinity_neighborhood = np.array(affinity_neighborhood)
         self.gt_labels = gt_labels
@@ -68,7 +59,9 @@ class AddGtAffinities(BatchFilter):
 
     def setup(self):
 
-        assert self.gt_labels in self.spec, "Upstream does not provide %s needed by AddGtAffinities"%self.gt_labels
+        assert self.gt_labels in self.spec, (
+            "Upstream does not provide %s needed by "
+            "AddGtAffinities"%self.gt_labels)
 
         voxel_size = self.spec[self.gt_labels].voxel_size
 
@@ -92,7 +85,8 @@ class AddGtAffinities(BatchFilter):
         spec.dtype = np.float32
 
         self.provides(self.gt_affinities, spec)
-        self.provides(self.gt_affinities_mask, spec)
+        if self.gt_affinities_mask:
+            self.provides(self.gt_affinities_mask, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
@@ -156,9 +150,9 @@ class AddGtAffinities(BatchFilter):
         spec.roi = gt_labels_roi
         batch.volumes[self.gt_affinities] = Volume(gt_affinities, spec)
 
-        if self.gt_affinities_mask in request:
+        if self.gt_affinities_mask and self.gt_affinities_mask in request:
 
-            if self.gt_labels_mask is not None:
+            if self.gt_labels_mask:
 
                 logger.debug("computing ground-truth affinities mask from "
                              "labels mask")
@@ -171,7 +165,7 @@ class AddGtAffinities(BatchFilter):
 
                 gt_affinities_mask = np.ones_like(gt_affinities)
 
-            if self.gt_unlabelled is not None:
+            if self.gt_unlabelled:
 
                 # 1 for all affinities between unlabelled voxels
                 unlabelled = (1 - batch.volumes[self.gt_unlabelled].data)

@@ -3,31 +3,27 @@ import logging
 import numpy as np
 import pdb
 
-from gunpowder.volume import Volume, VolumeTypes
-from .batch_filter import BatchFilter
+from gunpowder.volume import Volume
+from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
 class AddLongRangeAffinities(BatchFilter):
 
 
-    def __init__(self, affinity_vectors, volume_type_1=None, volume_type_2=None,
-        affinity_volume_type_1=None, affinity_volume_type_2=None):
+    def __init__(
+            self,
+            affinity_vectors,
+            volume_type_1,
+            volume_type_2,
+            affinity_volume_type_1,
+            affinity_volume_type_2):
 
         self.volume_type_1 = volume_type_1
         self.volume_type_2 = volume_type_2
         self.affinity_volume_type_1 = affinity_volume_type_1
         self.affinity_volume_type_2 = affinity_volume_type_2
         self.affinity_vectors = affinity_vectors
-
-        if volume_type_1 is None:
-            self.volume_type_1 = VolumeTypes.PRESYN
-        if volume_type_2 is None:
-            self.volume_type_2 = VolumeTypes.POSTSYN
-        if affinity_volume_type_1 is None:
-            self.affinity_volume_type_1 = VolumeTypes.PRE_LR_AFFINITIES
-        if affinity_volume_type_2 is None:
-            self.affinity_volume_type_2 = VolumeTypes.POST_LR_AFFINITIES
 
     def setup(self):
         assert self.volume_type_1 in self.spec, "Upstream does not provide %s needed by \
@@ -147,6 +143,3 @@ def round_to_voxel_size(shape, voxel_size):
     voxel_size = np.asarray(voxel_size, dtype=float)
     shape = np.ceil(shape/voxel_size)*voxel_size
     return np.array(shape, dtype='int32')
-
-
-

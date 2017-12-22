@@ -7,7 +7,6 @@ from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
-from gunpowder.volume import VolumeTypes
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -19,36 +18,35 @@ class RandomLocation(BatchFilter):
     The random location is chosen such that the batch request roi lies entirely
     inside the provider's roi.
 
-    If `min_masked` (and optionally `mask_volume_type`) are set, only
-    batches are returned that have at least the given ratio of masked-in
-    voxels. This is in general faster than using the ``Reject`` node, at the
-    expense of storing an integral volume of the complete mask.
+    If `min_masked` and `mask` are set, only batches are returned that have at
+    least the given ratio of masked-in voxels. This is in general faster than
+    using the ``Reject`` node, at the expense of storing an integral volume of
+    the complete mask.
 
-    If 'focus_points_type' is set, only batches are returned that have at least
-    one point of focus_points_type within the roi of PointsTypes.focus_points_type.
-
-    Remark
-    ------
-    focus_point_type does only work if there are only deterministic nodes upstream
+    If 'ensure_nonempty' is set to a :class:``PointsType``, only batches are
+    returned that have at least one point of this type within the requested
+    ROI.
 
     Args:
 
-        min_masked: If non-zero, require that the random sample contains at
-            least that ratio of masked-in voxels.
+        min_masked(float, optional): If non-zero, require that the random
+            sample contains at least that ratio of masked-in voxels.
 
-        mask_volume_type: The volume type to use for mask checks.
+        mask(:class:``VolumeType``): The volume type to use for mask checks.
 
-        focus_points_type: gunpowder.PointsTypes, PointsTypes considered when
-            looking for good location of batch s.t. at least one point of this
-            PointsTypes is contained in batch
+        ensure_nonempty(:class:``PointsType``, optional): Ensures that when
+            finding a random location, a request for ``ensure_nonempty`` will
+            contain at least one point. This does only work if all upstream
+            nodes are deterministic (e.g., there is no
+            :class:``RandomProvider`` upstream).
     '''
 
-    def __init__(self, min_masked=0, mask_volume_type=VolumeTypes.GT_MASK, focus_points_type=None):
+    def __init__(self, min_masked=0, mask=None, ensure_nonempty=None):
 
         self.min_masked = min_masked
-        self.mask_volume_type = mask_volume_type
+        self.mask = mask
         self.mask_spec = None
-        self.focus_points_type = focus_points_type
+        self.ensure_nonempty = ensure_nonempty
 
 
     def setup(self):
@@ -59,19 +57,19 @@ class RandomLocation(BatchFilter):
         if self.upstream_roi is None:
             raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")
 
-        if self.min_masked > 0:
+        if self.mask and self.min_masked > 0:
 
-            assert self.mask_volume_type in self.upstream_spec, "Upstream provider does not have %s"%self.mask_volume_type
-            self.mask_spec = self.upstream_spec.volume_specs[self.mask_volume_type]
+            assert self.mask in self.upstream_spec, "Upstream provider does not have %s"%self.mask
+            self.mask_spec = self.upstream_spec.volume_specs[self.mask]
 
             logger.info("requesting complete mask...")
 
-            mask_request = BatchRequest({self.mask_volume_type: self.mask_spec})
+            mask_request = BatchRequest({self.mask: self.mask_spec})
             mask_batch = self.get_upstream_provider().request_batch(mask_request)
 
             logger.info("allocating mask integral volume...")
 
-            mask_data = mask_batch.volumes[self.mask_volume_type].data
+            mask_data = mask_batch.volumes[self.mask].data
             mask_integral_dtype = np.uint64
             logger.debug("mask size is " + str(mask_data.size))
             if mask_data.size < 2**32:
@@ -144,21 +142,21 @@ class RandomLocation(BatchFilter):
             logger.debug("random shift: " + str(random_shift))
 
             good_location_found_for_mask, good_location_found_for_points = False, False
-            if self.focus_points_type is not None:
+            if self.ensure_nonempty is not None:
 
-                focused_points_roi = request.points_spec[self.focus_points_type].roi
+                focused_points_roi = request.points_spec[self.ensure_nonempty].roi
                 focused_points_offset = focused_points_roi.get_offset()
                 focused_points_shape  = focused_points_roi.get_shape()
 
-                # prefetch points in roi of focus_points_type
+                # prefetch points in roi of ensure_nonempty
                 request_for_focused_pointstype = BatchRequest()
-                request_for_focused_pointstype.points_spec[self.focus_points_type] = PointsSpec(roi=focused_points_roi.shift(random_shift))
+                request_for_focused_pointstype.points_spec[self.ensure_nonempty] = PointsSpec(roi=focused_points_roi.shift(random_shift))
                 batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_pointstype)
-                point_ids_in_batch = batch_of_points.points[self.focus_points_type].data.keys()
+                point_ids_in_batch = batch_of_points.points[self.ensure_nonempty].data.keys()
 
                 if len(point_ids_in_batch) > 0:
                     chosen_point_id       = np.random.choice(point_ids_in_batch, size=1)[0]
-                    chosen_point_location = Coordinate(batch_of_points.points[self.focus_points_type].data[chosen_point_id].location)
+                    chosen_point_location = Coordinate(batch_of_points.points[self.ensure_nonempty].data[chosen_point_id].location)
                     distance_focused_roi_to_chosen_point = chosen_point_location - (initial_random_shift + focused_points_offset)
                     local_shift_roi = Roi(offset=(distance_focused_roi_to_chosen_point - (focused_points_shape - Coordinate((2,2,2)))),
                                           shape=(focused_points_shape-Coordinate((2,2,2))))
@@ -187,13 +185,13 @@ class RandomLocation(BatchFilter):
             else:
                 good_location_found_for_points = True
 
-            if self.min_masked > 0:
+            if self.mask and self.min_masked > 0:
                 # get randomly chosen mask ROI
-                request_mask_roi = request.volume_specs[self.mask_volume_type].roi
+                request_mask_roi = request.volume_specs[self.mask].roi
                 request_mask_roi = request_mask_roi.shift(random_shift)
 
                 # get coordinates inside mask volume
-                mask_voxel_size = self.spec[self.mask_volume_type].voxel_size
+                mask_voxel_size = self.spec[self.mask].voxel_size
                 request_mask_roi_in_volume = request_mask_roi/mask_voxel_size
                 request_mask_roi_in_volume -= self.mask_spec.roi.get_offset()/mask_voxel_size
 
@@ -237,7 +235,3 @@ class RandomLocation(BatchFilter):
         for points_type in request.points_specs.keys():
             for point_id, point in batch.points[points_type].data.items():
                 batch.points[points_type].data[point_id].location -= self.random_shift
-
-    def lcm(self, a, b):
-
-        return 

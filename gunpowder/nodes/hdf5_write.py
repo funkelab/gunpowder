@@ -4,7 +4,6 @@ import os
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
-from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeTypes, Volume
+from gunpowder.volume import Volume
 import collections
 import itertools
 import logging

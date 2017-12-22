@@ -3,23 +3,40 @@ import logging
 import numpy as np
 from scipy import ndimage
 
-from .batch_filter import BatchFilter
+from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeTypes
 from gunpowder.points import RasterizationSetting, enlarge_binary_map
 
 logger = logging.getLogger(__name__)
 
 class AddGtMaskExclusiveZone(BatchFilter):
-    ''' Create ExclusizeZone mask for a binary map in batch and add it as volume to batch.
-    An ExclusiveZone mask is a bianry mask [0,1] where locations which lie within a given distance to the ON (=1) 
-    regions (surrounding the ON regions) of the given binary map are set to 0, whereas all the others are set to 1.
+    ''' Create ExclusizeZone mask for a binary map in batch and add it as
+    volume to batch.
+
+    An ExclusiveZone mask is a bianry mask [0,1] where locations which lie
+    within a given distance to the ON (=1) regions (surrounding the ON regions)
+    of the given binary map are set to 0, whereas all the others are set to 1.
+
+    Args:
+
+        EZ_masks_to_binary_map(dict, :class:``VolumeType``->:class:``VolumeType``):
+            Volumes of exclusive zones (keys of dict) to create for which
+            binary mask (values of dict).
+
+        gaussian_sigma_for_zone(float, optional): Defines extend of exclusive
+            zone around ON region in binary map. Defaults to 1.
+
+        rasterization_setting(:class:``RasterizationSetting``, optional): Which
+            rasterization setting to use.
     '''
 
-    def __init__(self, gaussian_sigma_for_zone=1, rasterization_setting=None):
-        ''' Add ExclusiveZone mask for given binary map as volume to batch
-            Args:
-                gaussian_sigma_for_zone: float, defines extend of exclusive zone around ON region in binary map
-         '''
+    def __init__(
+            self,
+            EZ_masks_to_binary_map,
+            gaussian_sigma_for_zone=1,
+            rasterization_setting=None):
+
+        self.EZ_masks_to_binary_map = EZ_masks_to_binary_map
         self.gaussian_sigma_for_zone = gaussian_sigma_for_zone
         if rasterization_setting is None:
             self.rasterization_setting = RasterizationSetting()
@@ -32,9 +49,6 @@ class AddGtMaskExclusiveZone(BatchFilter):
 
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
-
-        self.EZ_masks_to_binary_map = {VolumeTypes.GT_MASK_EXCLUSIVEZONE_PRESYN: VolumeTypes.GT_BM_PRESYN,
-                                       VolumeTypes.GT_MASK_EXCLUSIVEZONE_POSTSYN: VolumeTypes.GT_BM_POSTSYN}
 
         for EZ_mask_type, binary_map_type in self.EZ_masks_to_binary_map.items():
             if binary_map_type in self.upstream_spec.volumes:

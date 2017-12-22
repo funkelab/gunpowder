@@ -5,7 +5,6 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +15,12 @@ class Pad(BatchFilter):
 
     Args:
 
-        pad_sizes(dict, VolumeTypes -> [None,Coordinate]): Specifies the padding 
+        pad_sizes(dict, VolumeType -> [None,Coordinate]): Specifies the padding 
             to be added to each volume type. If None, an infinite padding is 
             added. If a Coordinate, this amount will be added to the ROI in the 
             positive and negative direction.
 
-        pad_values(dict, VolumeTypes -> value or None): The values to report 
+        pad_values(dict, VolumeType -> value or None): The values to report 
             inside the padding. If not given, 0 is used.
     '''
 

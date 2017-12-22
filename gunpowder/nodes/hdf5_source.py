@@ -9,7 +9,7 @@ from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Volume
 from gunpowder.volume_spec import VolumeSpec
 from .batch_provider import BatchProvider
 
@@ -214,8 +214,7 @@ class Hdf5Source(BatchProvider):
         postsyn_node_ids = syn_file['annotations/presynaptic_site/partners'][:, 1].tolist()
 
         for node_nr, node_id in enumerate(syn_file['annotations/ids']):
-            location     = syn_file['annotations/locations'][node_nr]
-            location /= self.resolutions[VolumeTypes.RAW]
+            location = syn_file['annotations/locations'][node_nr]
             if dataset_offset is not None:
                 logging.debug('adding global offset to points %i %i %i' %(dataset_offset[0],
                                                                           dataset_offset[1], dataset_offset[2]))
