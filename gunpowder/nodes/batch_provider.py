@@ -3,16 +3,16 @@ import logging
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
-from gunpowder.volume import VolumeType
-from gunpowder.volume_spec import VolumeSpec
+from gunpowder.volume import ArrayType
+from gunpowder.volume_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
 
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
-    A `BatchProvider` provides :class:`Batch`es containing :class:`Volume`s
-    and/or :class:`Points`. The available types and ROIs `Volume`s and `Points`
+    A `BatchProvider` provides :class:`Batch`es containing :class:`Array`s
+    and/or :class:`Points`. The available types and ROIs `Array`s and `Points`
     are specified in a :class:`ProviderSpec` instance, accessible via
     `self.spec`.
 
@@ -60,9 +60,9 @@ class BatchProvider(object):
 
         Args:
 
-            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
 
-            spec: A :class:`VolumeSpec` or `PointsSpec` to describe the output.
+            spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
 
         if self.spec is None:
@@ -122,7 +122,7 @@ class BatchProvider(object):
         Args:
 
             request(:class:`BatchRequest`): A request containing (possibly
-                partial) :class:`VolumeSpec`s and :class:`PointsSpec`s.
+                partial) :class:`ArraySpec`s and :class:`PointsSpec`s.
         '''
 
         logger.debug("%s got request %s"%(self.name(),request))
@@ -143,7 +143,7 @@ class BatchProvider(object):
 
             assert identifier in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), identifier)
             assert (
-                isinstance(request_spec, VolumeSpec) or
+                isinstance(request_spec, ArraySpec) or
                 isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
                                                         "%s"%(
                                                             identifier,
@@ -157,7 +157,7 @@ class BatchProvider(object):
             if provided_roi is not None:
                 assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), identifier, request_roi, provided_roi)
 
-            if isinstance(identifier, VolumeType):
+            if isinstance(identifier, ArrayType):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(

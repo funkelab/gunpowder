@@ -1,5 +1,5 @@
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 import collections
 import itertools
 import logging
@@ -14,12 +14,12 @@ class BalanceLabels(BatchFilter):
 
     Args:
 
-        labels (:class:``VolumeType``): A volume containing binary labels.
+        labels (:class:``ArrayType``): A volume containing binary labels.
 
-        scales (:class:``VolumeType``): A volume with scales to be created. This
+        scales (:class:``ArrayType``): A volume with scales to be created. This
             new volume will have the same ROI and resolution as `labels`.
 
-        mask (:class:``VolumeType``, optional): An optional mask (or list of
+        mask (:class:``ArrayType``, optional): An optional mask (or list of
             masks) to consider for balancing. Every voxel marked with a 0 will
             not contribute to the scaling and will have a scale of 0 in
             `scales`.
@@ -109,7 +109,7 @@ class BalanceLabels(BatchFilter):
 
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
-        batch.volumes[self.scales] = Volume(error_scale, spec)
+        batch.volumes[self.scales] = Array(error_scale, spec)
 
     def __balance(self, labels, scale):
 

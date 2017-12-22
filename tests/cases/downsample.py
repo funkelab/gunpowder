@@ -8,14 +8,14 @@ class DownSampleTestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            VolumeTypes.RAW,
-            VolumeSpec(
+            ArrayTypes.RAW,
+            ArraySpec(
                 roi=Roi((0, 0, 0), (1000, 1000, 1000)),
                 voxel_size=(4, 4, 4)))
 
         self.provides(
-            VolumeTypes.GT_LABELS,
-            VolumeSpec(
+            ArrayTypes.GT_LABELS,
+            ArraySpec(
                 roi=Roi((0, 0, 0), (1000, 1000, 1000)),
                 voxel_size=(4, 4, 4)))
 
@@ -42,7 +42,7 @@ class DownSampleTestSource(BatchProvider):
 
             spec = self.spec[volume_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Volume(
+            batch.volumes[volume_type] = Array(
                     data,
                     spec)
         return batch
@@ -61,16 +61,16 @@ class TestDownSample(ProviderTest):
         register_volume_type('GT_LABELS_DOWNSAMPLED')
 
         request = BatchRequest()
-        request.add(VolumeTypes.RAW, (200,200,200))
-        request.add(VolumeTypes.RAW_DOWNSAMPLED, (120,120,120))
-        request.add(VolumeTypes.GT_LABELS, (200,200,200))
-        request.add(VolumeTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
+        request.add(ArrayTypes.RAW, (200,200,200))
+        request.add(ArrayTypes.RAW_DOWNSAMPLED, (120,120,120))
+        request.add(ArrayTypes.GT_LABELS, (200,200,200))
+        request.add(ArrayTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
 
         pipeline = (
                 DownSampleTestSource() +
                 DownSample({
-                        VolumeTypes.RAW_DOWNSAMPLED: (2, VolumeTypes.RAW),
-                        VolumeTypes.GT_LABELS_DOWNSAMPLED: (2, VolumeTypes.GT_LABELS),
+                        ArrayTypes.RAW_DOWNSAMPLED: (2, ArrayTypes.RAW),
+                        ArrayTypes.GT_LABELS_DOWNSAMPLED: (2, ArrayTypes.GT_LABELS),
                 })
         )
 
@@ -81,7 +81,7 @@ class TestDownSample(ProviderTest):
 
             # assert that pixels encode their position for supposedly unaltered 
             # volumes
-            if volume_type in [VolumeTypes.RAW, VolumeTypes.GT_LABELS]:
+            if volume_type in [ArrayTypes.RAW, ArrayTypes.GT_LABELS]:
 
                 # the z,y,x coordinates of the ROI
                 roi = volume.spec.roi/4
@@ -93,12 +93,12 @@ class TestDownSample(ProviderTest):
 
                 self.assertTrue(np.array_equal(volume.data, data), str(volume_type))
 
-            elif volume_type == VolumeTypes.RAW_DOWNSAMPLED:
+            elif volume_type == ArrayTypes.RAW_DOWNSAMPLED:
 
                 self.assertTrue(volume.data[0,0,0] == 30)
                 self.assertTrue(volume.data[1,0,0] == 32)
 
-            elif volume_type == VolumeTypes.GT_LABELS_DOWNSAMPLED:
+            elif volume_type == ArrayTypes.GT_LABELS_DOWNSAMPLED:
 
                 self.assertTrue(volume.data[0,0,0] == 0)
                 self.assertTrue(volume.data[1,0,0] == 2)

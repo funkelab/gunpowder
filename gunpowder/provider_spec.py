@@ -2,22 +2,22 @@ import fractions
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import PointsType
 from gunpowder.points_spec import PointsSpec
-from gunpowder.volume import VolumeType
-from gunpowder.volume_spec import VolumeSpec
+from gunpowder.volume import ArrayType
+from gunpowder.volume_spec import ArraySpec
 from .freezable import Freezable
 
 class ProviderSpec(Freezable):
-    '''A collection of (possibly partial) :class:`VolumeSpec`s and
+    '''A collection of (possibly partial) :class:`ArraySpec`s and
     :class:`PointsSpec`s describing a :class:`BatchProvider`'s offered volumes
     and points.
 
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
-        provider_spec[volume_type] = VolumeSpec(...)
+        provider_spec[volume_type] = ArraySpec(...)
         provider_spec[points_type] = PointsSpec(...)
 
-    Here, ``volume_type`` and ``points_type`` are :class:`VolumeType` and
+    Here, ``volume_type`` and ``points_type`` are :class:`ArrayType` and
     :class:`PointsType` instances, previously registered with
     :fun:`register_volume_type` or :fun:`register_points_type`. The specs can
     be queried with::
@@ -34,8 +34,8 @@ class ProviderSpec(Freezable):
 
     Args:
 
-        volume_specs (dict): A dictionary from :class:`VolumeType` to
-            :class:`VolumeSpec`.
+        volume_specs (dict): A dictionary from :class:`ArrayType` to
+            :class:`ArraySpec`.
 
         points_specs (dict): A dictionary from :class:`PointsType` to
             :class:`PointsSpec`.
@@ -59,10 +59,10 @@ class ProviderSpec(Freezable):
 
     def __setitem__(self, identifier, spec):
 
-        if isinstance(spec, VolumeSpec):
-            assert isinstance(identifier, VolumeType), ("Only a VolumeType is "
+        if isinstance(spec, ArraySpec):
+            assert isinstance(identifier, ArrayType), ("Only a ArrayType is "
                                                         "allowed as key for a "
-                                                        "VolumeSpec value.")
+                                                        "ArraySpec value.")
             self.volume_specs[identifier] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
@@ -72,19 +72,19 @@ class ProviderSpec(Freezable):
             self.points_specs[identifier] = spec.copy()
 
         else:
-            raise RuntimeError("Only VolumeSpec or PointsSpec can be set in a "
+            raise RuntimeError("Only ArraySpec or PointsSpec can be set in a "
                                "%s."%type(self).__name__)
 
     def __getitem__(self, identifier):
 
-        if isinstance(identifier, VolumeType):
+        if isinstance(identifier, ArrayType):
             return self.volume_specs[identifier]
 
         elif isinstance(identifier, PointsType):
             return self.points_specs[identifier]
 
         else:
-            raise RuntimeError("Only VolumeSpec or PointsSpec can be used as "
+            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
                                "keys in a %s."%type(self).__name__)
 
     def __len__(self):
@@ -93,26 +93,26 @@ class ProviderSpec(Freezable):
 
     def __contains__(self, identifier):
 
-        if isinstance(identifier, VolumeType):
+        if isinstance(identifier, ArrayType):
             return identifier in self.volume_specs
 
         elif isinstance(identifier, PointsType):
             return identifier in self.points_specs
 
         else:
-            raise RuntimeError("Only VolumeSpec or PointsSpec can be used as "
+            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
                                "keys in a %s."%type(self).__name__)
 
     def __delitem__(self, identifier):
 
-        if isinstance(identifier, VolumeType):
+        if isinstance(identifier, ArrayType):
             del self.volume_specs[identifier]
 
         elif isinstance(identifier, PointsType):
             del self.points_specs[identifier]
 
         else:
-            raise RuntimeError("Only VolumeSpec or PointsSpec can be used as "
+            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
                                "keys in a %s."%type(self).__name__)
 
     def items(self):
@@ -153,7 +153,7 @@ class ProviderSpec(Freezable):
 
         Args:
 
-            volume_types (list of :class:`VolumeType`, optional): If given,
+            volume_types (list of :class:`ArrayType`, optional): If given,
                 consider only the given volume types.
         '''
 

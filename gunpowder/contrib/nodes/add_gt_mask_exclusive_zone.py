@@ -4,7 +4,7 @@ import numpy as np
 from scipy import ndimage
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Array, ArrayTypes
 from gunpowder.points import RasterizationSetting, enlarge_binary_map
 
 logger = logging.getLogger(__name__)
@@ -19,8 +19,8 @@ class AddGtMaskExclusiveZone(BatchFilter):
 
     Args:
 
-        EZ_masks_to_binary_map(dict, :class:``VolumeType``->:class:``VolumeType``):
-            Volumes of exclusive zones (keys of dict) to create for which
+        EZ_masks_to_binary_map(dict, :class:``ArrayType``->:class:``ArrayType``):
+            Arrays of exclusive zones (keys of dict) to create for which
             binary mask (values of dict).
 
         gaussian_sigma_for_zone(float, optional): Defines extend of exclusive
@@ -94,7 +94,7 @@ class AddGtMaskExclusiveZone(BatchFilter):
             EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape(),
                                                     resolution=resolution)
 
-            batch.volumes[EZ_mask_type] = Volume(data= EZ_mask,
+            batch.volumes[EZ_mask_type] = Array(data= EZ_mask,
                                                  roi=request.volumes[EZ_mask_type],
                                                  resolution=resolution)
 

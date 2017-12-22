@@ -7,14 +7,14 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class VolumeType(Freezable):
+class ArrayType(Freezable):
     '''Describes general properties of a volume type.
 
     Args:
 
         identifier (string):
             A human readable identifier for this volume type. Will be used as a
-            static attribute in :class:`VolumeTypes`. Should be upper case (like
+            static attribute in :class:`ArrayTypes`. Should be upper case (like
             ``RAW``, ``GT_LABELS``).
     '''
 
@@ -32,7 +32,7 @@ class VolumeType(Freezable):
     def __repr__(self):
         return self.identifier
 
-class VolumeTypes:
+class ArrayTypes:
     '''An expandable collection of volume types, which initially contains:
 
         =================================  ====================================================
@@ -78,13 +78,13 @@ def register_volume_type(identifier):
 
             register_volume_type('IDENTIFIER')
 
-    will create a new volume type available as ``VolumeTypes.IDENTIFIER``.
-    ``VolumeTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    will create a new volume type available as ``ArrayTypes.IDENTIFIER``.
+    ``ArrayTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
     in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    volume_type = VolumeType(identifier)
+    volume_type = ArrayType(identifier)
     logger.debug("Registering volume type " + str(volume_type))
-    setattr(VolumeTypes, volume_type.identifier, volume_type)
+    setattr(ArrayTypes, volume_type.identifier, volume_type)
 
 register_volume_type('RAW')
 register_volume_type('ALPHA_MASK')
@@ -111,7 +111,7 @@ register_volume_type('LOSS_SCALE_BM_PRESYN')
 register_volume_type('LOSS_SCALE_BM_POSTSYN')
 
 
-class Volume(Freezable):
+class Array(Freezable):
     '''Represents a volume as an array and a :class:`Roi`.
 
     Args:
@@ -119,7 +119,7 @@ class Volume(Freezable):
         data (array-like): The data to be stored in the volume. Will be
             converted to an numpy array, if necessary.
 
-        spec (:class:`VolumeSpec`, optional): A spec describing the data.
+        spec (:class:`ArraySpec`, optional): A spec describing the data.
     '''
 
     def __init__(self, data, spec=None, attrs=None):
@@ -139,7 +139,7 @@ class Volume(Freezable):
         self.freeze()
 
     def crop(self, roi, copy=True):
-        '''Create a cropped copy of this Volume.
+        '''Create a cropped copy of this Array.
 
         Args:
 
@@ -165,4 +165,4 @@ class Volume(Freezable):
         spec = deepcopy(self.spec)
         attrs = deepcopy(self.attrs)
         spec.roi = deepcopy(roi)
-        return Volume(data, spec, attrs)
+        return Array(data, spec, attrs)

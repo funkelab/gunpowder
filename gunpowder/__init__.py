@@ -13,8 +13,8 @@ from .points_spec import PointsSpec
 from .producer_pool import ProducerPool
 from .provider_spec import ProviderSpec
 from .roi import Roi
-from .volume import register_volume_type, VolumeType, VolumeTypes, Volume
-from .volume_spec import VolumeSpec
+from .volume import register_volume_type, ArrayType, ArrayTypes, Array
+from .volume_spec import ArraySpec
 import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib

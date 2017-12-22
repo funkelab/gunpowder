@@ -32,7 +32,7 @@ class RandomLocation(BatchFilter):
         min_masked(float, optional): If non-zero, require that the random
             sample contains at least that ratio of masked-in voxels.
 
-        mask(:class:``VolumeType``): The volume type to use for mask checks.
+        mask(:class:``ArrayType``): The volume type to use for mask checks.
 
         ensure_nonempty(:class:``PointsType``, optional): Ensures that when
             finding a random location, a request for ``ensure_nonempty`` will

@@ -180,7 +180,7 @@ class RasterizationSetting(Freezable):
         physical units. For instance, a points resolution of [20, 10, 10] and marker_size_physical of 10 would create a
         blob with a radius of 1 in x,y-direction and no radius in z-direction.
 
-        stay_inside_volumetype (Volume.VolumeType): specified volume is used to mask out created blobs. The volume is
+        stay_inside_volumetype (Array.ArrayType): specified volume is used to mask out created blobs. The volume is
         assumed to contain discrete objects. The object id at the specific point being rasterized is used to crop the
         blob. Blob regions that are located outside of the object are masked out, such that the blob is only inside the
         specific object.

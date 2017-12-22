@@ -12,7 +12,7 @@ from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Array, ArrayTypes
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class DvidSource(BatchProvider):
         :type port: int
         :param uuid: UUID of node on DVID server
         :type uuid: str
-        :param volume_array_names: dict {VolumeTypes:  DVID data instance for data in VolumeTypes}
+        :param volume_array_names: dict {ArrayTypes:  DVID data instance for data in ArrayTypes}
         :param points_voxel_size: (dict), :class:``PointsType`` to its voxel_size (tuple)
         """
         self.hostname = hostname
@@ -82,13 +82,13 @@ class DvidSource(BatchProvider):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type, roi, spec.volumes[volume_type]))
 
             read = {
-                VolumeTypes.RAW: self.__read_raw,
-                VolumeTypes.GT_LABELS: self.__read_gt,
-                VolumeTypes.GT_MASK: self.__read_gt_mask,
+                ArrayTypes.RAW: self.__read_raw,
+                ArrayTypes.GT_LABELS: self.__read_gt,
+                ArrayTypes.GT_MASK: self.__read_gt_mask,
             }[volume_type]
 
             logger.debug("Reading %s in %s..."%(volume_type, roi))
-            batch.volumes[volume_type] = Volume(
+            batch.volumes[volume_type] = Array(
                     read(roi),
                     roi=roi)
 
@@ -137,8 +137,8 @@ class DvidSource(BatchProvider):
         return Roi(offset=roi_min*voxel_size, shape=(roi_max - roi_min)*voxel_size)
 
     def __read_raw(self, roi):
-        slices = (roi/VolumeTypes.RAW.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.RAW])  # self.raw_array_name)
+        slices = (roi/ArrayTypes.RAW.voxel_size).get_bounding_box()
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[ArrayTypes.RAW])  # self.raw_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -147,8 +147,8 @@ class DvidSource(BatchProvider):
             raise DvidSourceReadException(msg)
 
     def __read_gt(self, roi):
-        slices = (roi/VolumeTypes.GT_LABELS.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_LABELS])  # self.gt_array_name)
+        slices = (roi/ArrayTypes.GT_LABELS.voxel_size).get_bounding_box()
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.volume_array_names[ArrayTypes.GT_LABELS])  # self.gt_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -163,8 +163,8 @@ class DvidSource(BatchProvider):
         """
         if self.gt_mask_roi_name is None:
             raise MaskNotProvidedException
-        slices = (roi/VolumeTypes.GT_MASK.voxel_size).get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.GT_MASK])  # self.gt_mask_roi_name)
+        slices = (roi/ArrayTypes.GT_MASK.voxel_size).get_bounding_box()
+        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.volume_array_names[ArrayTypes.GT_MASK])  # self.gt_mask_roi_name)
         try:
             return dvid_roi[slices]
         except Exception as e:
@@ -264,5 +264,5 @@ class DvidSource(BatchProvider):
 
     def __repr__(self):
         return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.volume_array_names[VolumeTypes.RAW],
-            self.volume_array_names[VolumeTypes.GT_LABELS])
+            self.hostname, self.port, self.uuid, self.volume_array_names[ArrayTypes.RAW],
+            self.volume_array_names[ArrayTypes.GT_LABELS])

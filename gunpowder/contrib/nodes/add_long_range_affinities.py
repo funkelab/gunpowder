@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pdb
 
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class AddLongRangeAffinities(BatchFilter):
             affinity_map[i,:,:,:] = np.bitwise_and(vol1.data, vol2.data)
 
 
-        batch.volumes[self.affinity_volume_type_1] = Volume(affinity_map,
+        batch.volumes[self.affinity_volume_type_1] = Array(affinity_map,
             spec=request[self.affinity_volume_type_1].copy())
 
         batch.volumes[self.affinity_volume_type_1].attrs['affinity_vectors'] =\
@@ -122,7 +122,7 @@ class AddLongRangeAffinities(BatchFilter):
             affinity_map[i,:,:,:] = np.bitwise_and(vol1.data, vol2.data)
 
 
-        batch.volumes[self.affinity_volume_type_2] = Volume(affinity_map,
+        batch.volumes[self.affinity_volume_type_2] = Array(affinity_map,
             spec=request[self.affinity_volume_type_2].copy())
 
         batch.volumes[self.affinity_volume_type_2].attrs['affinity_vectors'] =\

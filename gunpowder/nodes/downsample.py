@@ -1,6 +1,6 @@
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import VolumeType, Volume
+from gunpowder.volume import ArrayType, Array
 import logging
 import numbers
 import numpy as np
@@ -12,9 +12,9 @@ class DownSample(BatchFilter):
 
     Args:
 
-        volume_factors (dict): Dictionary mapping target :class:`VolumeType` to 
+        volume_factors (dict): Dictionary mapping target :class:`ArrayType` to 
             a tuple `(f, volume_type)` of downsampling factor `f` and source 
-            :class:`VolumeType`. `f` can be a single integer or a tuple of 
+            :class:`ArrayType`. `f` can be a single integer or a tuple of 
             integers, one for each dimension of the volume to downsample.
     '''
 
@@ -24,11 +24,11 @@ class DownSample(BatchFilter):
 
         for output_volume, downsample in volume_factors.items():
 
-            assert isinstance(output_volume, VolumeType)
+            assert isinstance(output_volume, ArrayType)
             assert isinstance(downsample, tuple)
             assert len(downsample) == 2
             f, input_volume = downsample
-            assert isinstance(input_volume, VolumeType)
+            assert isinstance(input_volume, ArrayType)
             assert isinstance(f, numbers.Number) or isinstance(f, tuple), "Scaling factor should be a number or a tuple of numbers."
 
     def setup(self):
@@ -89,7 +89,7 @@ class DownSample(BatchFilter):
             # create output volume
             spec = self.spec[output_volume].copy()
             spec.roi = request_roi
-            batch.volumes[output_volume] = Volume(data, spec)
+            batch.volumes[output_volume] = Array(data, spec)
 
         # restore requested rois
         for output_volume, downsample in self.volume_factors.items():

@@ -27,23 +27,23 @@ class TestPreCache(ProviderTest):
             for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
                 self.assertTrue(
-                    batch.volumes[VolumeTypes.RAW].spec.roi ==
-                    self.test_request[VolumeTypes.RAW].roi)
+                    batch.volumes[ArrayTypes.RAW].spec.roi ==
+                    self.test_request[ArrayTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds
             self.assertTrue(time.time() - start < 2)
 
             # change request
-            self.test_request[VolumeTypes.RAW].roi = \
-                self.test_request[VolumeTypes.RAW].roi.shift((1,1,1))
+            self.test_request[ArrayTypes.RAW].roi = \
+                self.test_request[ArrayTypes.RAW].roi.shift((1,1,1))
 
             start = time.time()
 
             for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
                 self.assertTrue(
-                    batch.volumes[VolumeTypes.RAW].spec.roi ==
-                    self.test_request[VolumeTypes.RAW].roi)
+                    batch.volumes[ArrayTypes.RAW].spec.roi ==
+                    self.test_request[ArrayTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds
             self.assertTrue(time.time() - start < 2)

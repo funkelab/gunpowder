@@ -2,7 +2,7 @@ import copy
 import logging
 import numpy as np
 
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -12,12 +12,12 @@ class PrepareMalis(BatchFilter):
 
     Args:
 
-        labels_volume_type(:class:`VolumeType`): The label volume to use.
+        labels_volume_type(:class:`ArrayType`): The label volume to use.
 
-        malis_comp_volume_type(:class:`VolumeType`): The malis component volume
+        malis_comp_volume_type(:class:`ArrayType`): The malis component volume
             to generate.
 
-        ignore_volume_type(:class:`VolumeType`, optional): An ignore mask to
+        ignore_volume_type(:class:`ArrayType`, optional): An ignore mask to
             use.
     '''
 
@@ -62,7 +62,7 @@ class PrepareMalis(BatchFilter):
 
         spec = self.spec[self.malis_comp_volume_type].copy()
         spec.roi = request[self.labels_volume_type].roi
-        batch.volumes[self.malis_comp_volume_type] = Volume(
+        batch.volumes[self.malis_comp_volume_type] = Array(
             np.array([gt_neg_pass, gt_pos_pass]),
             spec)
 

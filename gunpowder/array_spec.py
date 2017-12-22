@@ -2,17 +2,17 @@ import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
 
-class VolumeSpec(Freezable):
+class ArraySpec(Freezable):
     '''Contains meta-information about a volume. This is used by 
     :class:`BatchProvider`s to communicate the volumes they offer, as well as by 
-    :class:`Volume`s to describe the data they contain.
+    :class:`Array`s to describe the data they contain.
 
     Attributes:
 
         roi (:class:`Roi`): The region of interested represented by this volume 
             spec. Can be `None` for `BatchProvider`s that allow requests for 
             volumes everywhere, but will always be set for volume specs that are 
-            part of a :class:`Volume`.
+            part of a :class:`Array`.
 
         voxel_size (Coordinate): The size of the spatial axises in world units.
 

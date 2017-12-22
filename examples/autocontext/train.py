@@ -13,8 +13,8 @@ class DummyTrain(BatchFilter):
 class AddDummyPredictions(BatchFilter):
 
     def process(self, batch, request):
-        batch.volumes[VolumeTypes.PRED_AFFINITIES] = np.ones(
-                request.volumes[VolumeTypes.PRED_AFFINITIES], dtype=np.float32
+        batch.volumes[ArrayTypes.PRED_AFFINITIES] = np.ones(
+                request.volumes[ArrayTypes.PRED_AFFINITIES], dtype=np.float32
         )*0.5
 
 def train():
@@ -41,11 +41,11 @@ def train():
     solver_parameters.train_state.add_stage('euclid')
 
     request = BatchRequest()
-    request.add_volume_request(VolumeTypes.RAW, (84,268,268))
-    request.add_volume_request(VolumeTypes.GT_LABELS, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_IGNORE, (56,56,56))
-    request.add_volume_request(VolumeTypes.GT_AFFINITIES, (56,56,56))
-    request.add_volume_request(VolumeTypes.PRED_AFFINITIES, (84,268,268))
+    request.add_volume_request(ArrayTypes.RAW, (84,268,268))
+    request.add_volume_request(ArrayTypes.GT_LABELS, (56,56,56))
+    request.add_volume_request(ArrayTypes.GT_IGNORE, (56,56,56))
+    request.add_volume_request(ArrayTypes.GT_AFFINITIES, (56,56,56))
+    request.add_volume_request(ArrayTypes.PRED_AFFINITIES, (84,268,268))
 
     data_sources = tuple(
         Hdf5Source(

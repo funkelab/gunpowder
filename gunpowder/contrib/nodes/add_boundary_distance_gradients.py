@@ -3,7 +3,7 @@ import numpy as np
 
 from numpy.lib.stride_tricks import as_strided
 from scipy.ndimage.morphology import distance_transform_edt
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -16,16 +16,16 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     Args:
 
-        label_volume_type(:class:``VolumeType``): The volume type to read the
+        label_volume_type(:class:``ArrayType``): The volume type to read the
             labels from.
 
-        gradient_volume_type(:class:``VolumeType``): The volume type to
+        gradient_volume_type(:class:``ArrayType``): The volume type to
             generate containing the gradients.
 
-        distance_volume_type(:class:``VolumeType``, optional): The volume type
+        distance_volume_type(:class:``ArrayType``, optional): The volume type
             to generate containing the values of the distance transform.
 
-        boundary_volume_type(:class:``VolumeType``, optional): The volume type
+        boundary_volume_type(:class:``ArrayType``, optional): The volume type
             to generate containing a boundary labeling. Note this volume will
             be doubled as it encodes boundaries between voxels.
 
@@ -122,12 +122,12 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
         spec = self.spec[self.gradient_volume_type].copy()
         spec.roi = request[self.gradient_volume_type].roi
-        batch.volumes[self.gradient_volume_type] = Volume(gradients, spec)
+        batch.volumes[self.gradient_volume_type] = Array(gradients, spec)
 
         if (
                 self.distance_volume_type is not None and
                 self.distance_volume_type in request):
-            batch.volumes[self.distance_volume_type] = Volume(distances, spec)
+            batch.volumes[self.distance_volume_type] = Array(distances, spec)
 
         if (
                 self.boundary_volume_type is not None and
@@ -139,7 +139,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
             grown[tuple(slice(0, s) for s in boundaries.shape)] = boundaries
             spec.voxel_size = voxel_size/2
             logger.debug("voxel size of boundary volume: %s", spec.voxel_size)
-            batch.volumes[self.boundary_volume_type] = Volume(grown, spec)
+            batch.volumes[self.boundary_volume_type] = Array(grown, spec)
 
     def __find_boundaries(self, labels):
 

@@ -4,7 +4,7 @@ import numpy as np
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 from gunpowder.points import Points
 from .batch_filter import BatchFilter
 
@@ -270,7 +270,7 @@ class Scan(BatchFilter):
 
             spec = self.spec[volume_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Volume(data=np.zeros(shape),
+            batch.volumes[volume_type] = Array(data=np.zeros(shape),
                                                 spec=spec)
 
         for (points_type, spec) in batch_spec.points_specs.items():

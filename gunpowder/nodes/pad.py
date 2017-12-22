@@ -15,12 +15,12 @@ class Pad(BatchFilter):
 
     Args:
 
-        pad_sizes(dict, VolumeType -> [None,Coordinate]): Specifies the padding 
+        pad_sizes(dict, ArrayType -> [None,Coordinate]): Specifies the padding 
             to be added to each volume type. If None, an infinite padding is 
             added. If a Coordinate, this amount will be added to the ROI in the 
             positive and negative direction.
 
-        pad_values(dict, VolumeType -> value or None): The values to report 
+        pad_values(dict, ArrayType -> value or None): The values to report 
             inside the padding. If not given, 0 is used.
     '''
 

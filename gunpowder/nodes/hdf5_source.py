@@ -9,8 +9,8 @@ from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume
-from gunpowder.volume_spec import VolumeSpec
+from gunpowder.volume import Array
+from gunpowder.volume_spec import ArraySpec
 from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
@@ -29,13 +29,13 @@ class Hdf5Source(BatchProvider):
 
         filename (string): The HDF5 file.
 
-        datasets (dict): Dictionary of VolumeType -> dataset names that this source offers.
+        datasets (dict): Dictionary of ArrayType -> dataset names that this source offers.
 
         volume_specs (dict, optional): An optional dictionary of 
-            :class:`VolumeType` to :class:`VolumeSpec` to overwrite the volume 
+            :class:`ArrayType` to :class:`ArraySpec` to overwrite the volume 
             specs automatically determined from the HDF5 file. This is useful to 
             set a missing ``voxel_size``, for example. Only fields that are not 
-            ``None`` in the given :class:`VolumeSpec` will be used.
+            ``None`` in the given :class:`ArraySpec` will be used.
     '''
 
     def __init__(
@@ -108,7 +108,7 @@ class Hdf5Source(BatchProvider):
                 volume_spec.roi = request_spec.roi
 
                 # add volume to batch
-                batch.volumes[volume_type] = Volume(
+                batch.volumes[volume_type] = Array(
                     self.__read(hdf_file, self.datasets[volume_type], dataset_roi),
                     volume_spec)
 
@@ -158,7 +158,7 @@ class Hdf5Source(BatchProvider):
         if volume_type in self.volume_specs:
             spec = self.volume_specs[volume_type].copy()
         else:
-            spec = VolumeSpec()
+            spec = ArraySpec()
 
         if spec.voxel_size is None:
 

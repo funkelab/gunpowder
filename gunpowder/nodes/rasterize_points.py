@@ -5,7 +5,7 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import Volume
+from gunpowder.volume import Array
 from gunpowder.points import PointsTypes, RasterizationSetting, enlarge_binary_map
 
 
@@ -16,11 +16,11 @@ class RasterizePoints(BatchFilter):
     def __init__(self, volumes, rastersettings=None):
         ''' Add binary map of given PointsType as volume to batch.
         Args:
-            volumes (dict, :class:``VolumeType`` -> :class:``PointsType``):
+            volumes (dict, :class:``ArrayType`` -> :class:``PointsType``):
                 Which volumes to create (keys of the dict) from which points
                 (values of the dict).
 
-            rastersettings (dict, :class:``VolumeType``->:class:``RasterizationSetting``, optional):
+            rastersettings (dict, :class:``ArrayType``->:class:``RasterizationSetting``, optional):
                 Which settings to use to rasterize the points into volumes.
         '''
         self.volumes = volumes
@@ -53,7 +53,7 @@ class RasterizePoints(BatchFilter):
                 self.skip_next = False
 
         if self.skip_next:
-            logger.warn("no VolumeTypes of BinaryMask ({}) requested, will do nothing".format(self.volumes.values()))
+            logger.warn("no ArrayTypes of BinaryMask ({}) requested, will do nothing".format(self.volumes.values()))
 
         if len(self.volumes) == 0:
             self.skip_next = True
@@ -69,7 +69,7 @@ class RasterizePoints(BatchFilter):
         for nr, (volume_type, points_type) in enumerate(self.volumes.items()):
             if volume_type in request.volumes:
                 binary_map = self.__get_binary_map(batch, request, points_type, volume_type, points=batch.points[points_type])
-                batch.volumes[volume_type] = Volume(data=binary_map,
+                batch.volumes[volume_type] = Array(data=binary_map,
                                                     roi=request.volumes[volume_type])
 
 

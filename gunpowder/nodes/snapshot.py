@@ -12,7 +12,7 @@ class Snapshot(BatchFilter):
 
     Args:
 
-        dataset_names (dict): A dictionary from :class:`VolumeType` to names of 
+        dataset_names (dict): A dictionary from :class:`ArrayType` to names of 
             the datasets to store them in.
 
         output_dir (string): The directory to save the snapshots. Will be 
@@ -37,8 +37,8 @@ class Snapshot(BatchFilter):
             the number of a dynamically loaded compression filter. (See 
             h5py.groups.create_dataset())
 
-        dataset_dtypes (dict): A dictionary from :class:`VolumeType` to datatype
-            (eg. np.int8). Volume to store is copied and casted to the specified type.
+        dataset_dtypes (dict): A dictionary from :class:`ArrayType` to datatype
+            (eg. np.int8). Array to store is copied and casted to the specified type.
              Original volume within the pipeline remains unchanged.
         '''
 

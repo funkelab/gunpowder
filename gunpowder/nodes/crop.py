@@ -5,11 +5,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Crop(BatchFilter):
-    '''Limits provided ROI to user defined ROIs per Volume-/PointsTypes 
+    '''Limits provided ROI to user defined ROIs per Array-/PointsTypes 
         
     Args:
         
-        volumes (dict):     Dictionary from :class:``VolumeType`` to its new :class:``ROI``.
+        volumes (dict):     Dictionary from :class:``ArrayType`` to its new :class:``ROI``.
         points (dict):      Dictionary from :class:``PointsType`` to its new :class:``ROI``.
     '''
 

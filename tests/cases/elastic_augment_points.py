@@ -19,15 +19,15 @@ class PointTestSource3D(BatchProvider):
             PointsTypes.PRESYN,
             PointsSpec(roi=Roi((-100, -100, -100), (200, 200, 200))))
         self.provides(
-            VolumeTypes.GT_LABELS,
-            VolumeSpec(
+            ArrayTypes.GT_LABELS,
+            ArraySpec(
                 roi=Roi((-100, -100, -100), (200, 200, 200)),
                 voxel_size=self.voxel_size))
 
     def provide(self, request):
         batch = Batch()
         roi_points = request[PointsTypes.PRESYN].roi
-        roi_volume = request[VolumeTypes.GT_LABELS].roi
+        roi_volume = request[ArrayTypes.GT_LABELS].roi
         image = np.zeros(roi_volume.get_shape()/self.voxel_size)
         image[self.object_location] = 1
 
@@ -39,9 +39,9 @@ class PointTestSource3D(BatchProvider):
         batch.points[PointsTypes.PRESYN] = Points(
             id_to_point,
             PointsSpec(roi=roi_points))
-        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        spec = self.spec[ArrayTypes.GT_LABELS].copy()
         spec.roi = roi_volume
-        batch.volumes[VolumeTypes.GT_LABELS] = Volume(
+        batch.volumes[ArrayTypes.GT_LABELS] = Array(
             image,
             spec=spec)
         return batch
@@ -81,12 +81,12 @@ class TestElasticAugment(unittest.TestCase):
                 window_request = Coordinate((50, 50, 50))
 
                 request.add(PointsTypes.PRESYN, window_request)
-                request.add(VolumeTypes.GT_LABELS, window_request)
+                request.add(ArrayTypes.GT_LABELS, window_request)
                 batch = pipeline.request_batch(request)
 
                 exp_loc_in_object = batch.points[PointsTypes.PRESYN].data[0].location/voxel_size
                 exp_loc_out_object = batch.points[PointsTypes.PRESYN].data[2].location/voxel_size
-                volume = batch.volumes[VolumeTypes.GT_LABELS].data
+                volume = batch.volumes[ArrayTypes.GT_LABELS].data
                 self.assertTrue(volume[tuple(exp_loc_in_object)] == 1)
                 self.assertTrue(volume[tuple(exp_loc_out_object)] == 0)
                 self.assertTrue(5 in batch.points[PointsTypes.PRESYN].data)

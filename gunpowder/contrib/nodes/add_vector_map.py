@@ -4,8 +4,8 @@ import numpy as np
 from scipy.spatial import KDTree
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.volume import Volume
-from gunpowder.volume_spec import VolumeSpec
+from gunpowder.volume import Array
+from gunpowder.volume_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import enlarge_binary_map
 
@@ -24,16 +24,16 @@ class AddVectorMap(BatchFilter):
             voxel points (the different criterions are described below).
         
         Args:
-            src_and_trg_points (dict):      Dictionary from :class:``VolumeType`` of the vector map to be created
+            src_and_trg_points (dict):      Dictionary from :class:``ArrayType`` of the vector map to be created
                                             to a tuple (:class:``PointsTypes`` of the source points, :class:``PointsTypes``
                                             of the target points) which define the source and target points.
             voxel_sizes (dict):             Dictionary from
-                                            :class:``VolumeType`` of the vector
+                                            :class:``ArrayType`` of the vector
                                             map to be created to a
                                             :class:`Coordinate` for the voxel
                                             size of the volume.
-            stayinside_volumetypes (dict):  Dictionary from :class:``VolumeType`` of the vector map to be created to 
-                                            :class:``VolumeType`` of the stayinside_volume. 
+            stayinside_volumetypes (dict):  Dictionary from :class:``ArrayType`` of the vector map to be created to 
+                                            :class:``ArrayType`` of the stayinside_volume. 
                                             The stayinside_volume is assumed to contain discrete objects labeled with
                                             different object ids. The object id at the specific source location is used
                                             to restrict the region where vectors are created around a source location. 
@@ -70,7 +70,7 @@ class AddVectorMap(BatchFilter):
                 assert points_type in self.spec, "Asked for {} in AddVectorMap from {}, where {} is not provided.".\
                                                                 format(volume_type, points_type, points_type)
             neg_pad_for_partners = Coordinate((self.pad_for_partners*np.asarray([-1])).tolist())
-            self.provides(volume_type, VolumeSpec(
+            self.provides(volume_type, ArraySpec(
                 roi=self.spec[src_points_type].roi.grow(
                     neg_pad_for_partners,
                     neg_pad_for_partners),
@@ -106,7 +106,7 @@ class AddVectorMap(BatchFilter):
                 vector_map = self.__get_vector_map(batch=batch, request=request, vector_map_volume_type=volume_type)
                 spec = self.spec[volume_type].copy()
                 spec.roi = request[volume_type].roi
-                batch.volumes[volume_type] = Volume(data=vector_map, spec=spec)
+                batch.volumes[volume_type] = Array(data=vector_map, spec=spec)
 
         # restore request / remove not requested points in padding-for-neighbors region & shrink batch roi
         for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
