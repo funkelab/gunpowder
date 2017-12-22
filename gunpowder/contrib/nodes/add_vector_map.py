@@ -32,8 +32,8 @@ class AddVectorMap(BatchFilter):
                                             map to be created to a
                                             :class:`Coordinate` for the voxel
                                             size of the volume.
-            stayinside_volumetypes (dict):  Dictionary from :class:``VolumeTypes`` of the vector map to be created to 
-                                            :class:``VolumeTypes`` of the stayinside_volume. 
+            stayinside_volumetypes (dict):  Dictionary from :class:``VolumeType`` of the vector map to be created to 
+                                            :class:``VolumeType`` of the stayinside_volume. 
                                             The stayinside_volume is assumed to contain discrete objects labeled with
                                             different object ids. The object id at the specific source location is used
                                             to restrict the region where vectors are created around a source location. 

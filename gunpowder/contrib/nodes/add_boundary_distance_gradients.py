@@ -3,7 +3,7 @@ import numpy as np
 
 from numpy.lib.stride_tricks import as_strided
 from scipy.ndimage.morphology import distance_transform_edt
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Volume
 from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -42,16 +42,13 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     def __init__(
             self,
-            label_volume_type=None,
-            gradient_volume_type=None,
+            label_volume_type,
+            gradient_volume_type,
             distance_volume_type=None,
             boundary_volume_type=None,
             normalize=None,
             scale=None,
             scale_args=None):
-
-        if label_volume_type is None:
-            label_volume_type = VolumeTypes.GT_LABELS
 
         self.label_volume_type = label_volume_type
         self.gradient_volume_type = gradient_volume_type
@@ -75,6 +72,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
         if self.boundary_volume_type is not None:
             spec.voxel_size /= 2
             self.provides(self.boundary_volume_type, spec)
+        self.enable_autoskip()
 
     def process(self, batch, request):
 
