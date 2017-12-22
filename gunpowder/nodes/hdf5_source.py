@@ -215,7 +215,6 @@ class Hdf5Source(BatchProvider):
 
         for node_nr, node_id in enumerate(syn_file['annotations/ids']):
             location = syn_file['annotations/locations'][node_nr]
-            location /= self.resolutions[VolumeTypes.RAW]
             if dataset_offset is not None:
                 logging.debug('adding global offset to points %i %i %i' %(dataset_offset[0],
                                                                           dataset_offset[1], dataset_offset[2]))
