@@ -10,7 +10,6 @@ from scipy.ndimage.morphology import binary_dilation
 
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import VolumeTypes
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -19,17 +18,24 @@ class DefectAugment(BatchFilter):
 
     def __init__(
             self,
+            intensities,
             prob_missing=0.05,
             prob_low_contrast=0.05,
             prob_artifact=0.0,
             prob_deform=0.0,
             contrast_scale=0.1,
             artifact_source=None,
+            artifacts=None,
+            artifacts_mask=None,
             deformation_strength=20,
             axis=0):
         '''Create a new DefectAugment node.
 
-        Args
+        Args:
+
+            intensities(:class:``VolumeType``):
+
+                The volume of intensities to modify.
 
             prob_missing, prob_low_contrast, prob_artifact, prob_deform:
 
@@ -37,30 +43,43 @@ class DefectAugment(BatchFilter):
                 an artifact (see param 'artifact_source') or a deformed slice.
                 The sum should not exceed 1.
 
-        contrast_scale:
+            contrast_scale:
 
-            By how much to scale the intensities for a low-contrast section.
+                By how much to scale the intensities for a low-contrast section.
 
-        artifact_source:
+            artifact_source:
 
-            A gunpowder batch provider that delivers VolumeTypes.RAW and
-            VolumeTypes.ALPHA_MASK, used if prob_artifact > 0.
-                Strength of the deformation in slice.
+                A gunpowder batch provider that delivers intensities
+                (``artifacts``) and an alpha mask (``artifacts_mask``), used if
+                prob_artifact > 0.
 
-        deformation_strength:
+            artifacts(:class:``VolumeType``, optional):
 
-            Strength of the slice deformation.
+                The identifier to query ``artifact_source`` for to get the
+                intensities of the artifacts.
 
-        axis:
+            artifacts_mask(:class:``VolumeType``, optional):
 
-            Along which axis sections are cut.
+                The identifier to query ``artifact_source`` for to get the
+                alpha mask of the artifacts to blend them with ``intensities``.
+
+            deformation_strength:
+
+                Strength of the slice deformation.
+
+            axis:
+
+                Along which axis sections are cut.
         '''
+        self.intensities = intensities
         self.prob_missing = prob_missing
         self.prob_low_contrast = prob_low_contrast
         self.prob_artifact = prob_artifact
         self.prob_deform = prob_deform
         self.contrast_scale = contrast_scale
         self.artifact_source = artifact_source
+        self.artifacts = artifacts
+        self.artifacts_mask = artifacts_mask
         self.deformation_strength = deformation_strength
         self.axis = axis
 
@@ -78,7 +97,7 @@ class DefectAugment(BatchFilter):
     def prepare(self, request):
 
         # we prepare the augmentations, by determining which slices
-        # will be augmented by which metho.
+        # will be augmented by which method
         # If one of the slices is augmented with 'deform',
         # we prepare these trafos already
         # and request a bigger roi from upstream
@@ -88,10 +107,10 @@ class DefectAugment(BatchFilter):
         prob_artifact_threshold = prob_low_contrast_threshold + self.prob_artifact
         prob_deform_slice = prob_artifact_threshold + self.prob_deform
 
-        spec = request[VolumeTypes.RAW]
+        spec = request[self.intensities]
         roi = spec.roi
         logger.debug("downstream request ROI is %s" % roi)
-        raw_voxel_size = self.spec[VolumeTypes.RAW].voxel_size
+        raw_voxel_size = self.spec[self.intensities].voxel_size
 
         # store the mapping slice to augmentation type in a dict
         self.slice_to_augmentation = {}
@@ -142,8 +161,8 @@ class DefectAugment(BatchFilter):
 
         assert batch.get_total_roi().dims() == 3, "defectaugment works on 3d batches only"
 
-        raw = batch.volumes[VolumeTypes.RAW]
-        raw_voxel_size = self.spec[VolumeTypes.RAW].voxel_size
+        raw = batch.volumes[self.intensities]
+        raw_voxel_size = self.spec[self.intensities].voxel_size
 
         for c, augmentation_type in self.slice_to_augmentation.items():
 
@@ -169,20 +188,20 @@ class DefectAugment(BatchFilter):
 
                 section = raw.data[section_selector]
 
-                alpha_voxel_size = self.artifact_source.spec[VolumeTypes.ALPHA_MASK].voxel_size
+                alpha_voxel_size = self.artifact_source.spec[self.artifacts_mask].voxel_size
 
                 assert raw_voxel_size == alpha_voxel_size, ("Can only alpha blend RAW with "
                                                             "ALPHA_MASK if both have the same "
                                                             "voxel size")
 
                 artifact_request = BatchRequest()
-                artifact_request.add(VolumeTypes.RAW, Coordinate(section.shape)*raw_voxel_size)
-                artifact_request.add(VolumeTypes.ALPHA_MASK, Coordinate(section.shape)*alpha_voxel_size)
+                artifact_request.add(self.artifacts, Coordinate(section.shape)*raw_voxel_size)
+                artifact_request.add(self.artifacts_mask, Coordinate(section.shape)*alpha_voxel_size)
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
-                artifact_alpha = artifact_batch.volumes[VolumeTypes.ALPHA_MASK].data
-                artifact_raw   = artifact_batch.volumes[VolumeTypes.RAW].data
+                artifact_alpha = artifact_batch.volumes[self.artifacts_mask].data
+                artifact_raw   = artifact_batch.volumes[self.artifacts].data
 
                 assert artifact_raw.dtype == section.dtype
                 assert artifact_alpha.dtype == np.float32
@@ -196,7 +215,7 @@ class DefectAugment(BatchFilter):
                 section = raw.data[section_selector].squeeze()
 
                 # set interpolation to cubic, spec interploatable is true, else to 0
-                interpolation = 3 if self.spec[VolumeTypes.RAW].interpolatable else 0
+                interpolation = 3 if self.spec[self.intensities].interpolatable else 0
 
                 # load the deformation fields that were prepared for this slice
                 flow_x, flow_y, line_mask = self.deform_slice_transformations[c]
@@ -218,7 +237,7 @@ class DefectAugment(BatchFilter):
         # in case we needed to change the ROI due to a deformation augment,
         # restore original ROI and crop the volume data
         if 'deformed_slice' in self.slice_to_augmentation.values():
-            old_roi = request[VolumeTypes.RAW].roi
+            old_roi = request[self.intensities].roi
             logger.debug("resetting roi to %s" % old_roi)
             crop = tuple(
                 slice(None) if d == self.axis else slice(self.deformation_strength, -self.deformation_strength)

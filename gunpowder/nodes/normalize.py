@@ -2,35 +2,41 @@ import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
 class Normalize(BatchFilter):
-    '''Normalize the raw volume to values between 0 and 1.
+    '''Normalize the values of a volume to be floats between 0 and 1, based on
+    the type of the volume.
     '''
 
-    def __init__(self, factor=None, dtype=np.float32):
+    def __init__(self, volume, factor=None, dtype=np.float32):
 
+        self.volume = volume
         self.factor = factor
         self.dtype = dtype
 
     def process(self, batch, request):
 
         factor = self.factor
-        raw = batch.volumes[VolumeTypes.RAW]
+        volume = batch.volumes[self.volume]
 
         if factor is None:
 
-            logger.debug("automatically normalizing raw data with dtype=" + str(raw.data.dtype))
+            logger.debug("automatically normalizing %s with dtype=%s",
+                    self.volume, volume.data.dtype)
 
-            if raw.data.dtype == np.uint8:
+            if volume.data.dtype == np.uint8:
                 factor = 1.0/255
-            elif raw.data.dtype == np.float32:
-                assert raw.data.min() >= 0 and raw.data.max() <= 1, "Raw values are float but not in [0,1], I don't know how to normalize. Please provide a factor."
+            elif volume.data.dtype == np.float32:
+                assert volume.data.min() >= 0 and volume.data.max() <= 1, (
+                        "Values are float but not in [0,1], I don't know how "
+                        "to normalize. Please provide a factor.")
                 factor = 1.0
             else:
-                raise RuntimeError("Automatic normalization for " + str(raw.data.dtype) + " not implemented, please provide a factor.")
+                raise RuntimeError("Automatic normalization for " +
+                        str(volume.data.dtype) + " not implemented, please "
+                        "provide a factor.")
 
-        logger.debug("scaling raw data with " + str(factor))
-        raw.data = raw.data.astype(self.dtype)*factor
+        logger.debug("scaling %s with %f", self.volume, factor)
+        volume.data = volume.data.astype(self.dtype)*factor

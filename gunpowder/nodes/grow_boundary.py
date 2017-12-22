@@ -2,13 +2,19 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.volume import Volume
 
 class GrowBoundary(BatchFilter):
-    '''Grow a boundary between regions in ``GT_LABELS``. Does not grow at the 
-    border of the batch or the mask ``GT_MASK`` (if provided).
+    '''Grow a boundary between regions in a label volume. Does not grow at the
+    border of the batch or an optionally provided mask.
 
     Args:
+        labels(:class:``VolumeType``): The volume containing labels.
+
+        mask(:class:``VolumeType``, optional): A mask indicating unknown
+            regions. This is to avoid boundaries to grow between labelled and
+            unknown regions.
+
         steps(int): Number of voxels (not world units!) to grow.
 
         background(int): The label to assign to the boundary voxels.
@@ -16,15 +22,17 @@ class GrowBoundary(BatchFilter):
         only_xy(bool): Do not grow a boundary in the z direction.
     '''
 
-    def __init__(self, steps=1, background=0, only_xy=False):
+    def __init__(self, labels, mask, steps=1, background=0, only_xy=False):
+        self.labels = labels
+        self.mask = mask
         self.steps = steps
         self.background = background
         self.only_xy = only_xy
 
     def process(self, batch, request):
 
-        gt = batch.volumes[VolumeTypes.GT_LABELS]
-        gt_mask = None if VolumeTypes.GT_MASK not in batch.volumes else batch.volumes[VolumeTypes.GT_MASK]
+        gt = batch.volumes[self.labels]
+        gt_mask = None if not self.mask else batch.volumes[self.mask]
 
         if gt_mask is not None:
 
@@ -33,7 +41,7 @@ class GrowBoundary(BatchFilter):
 
             if crop is None:
                 raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.spec.roi,gt_mask.spec.roi))
-            voxel_size = self.spec[VolumeTypes.GT_LABELS].voxel_size
+            voxel_size = self.spec[self.labels].voxel_size
             crop_in_gt = (crop.shift(-gt.spec.roi.get_offset())/voxel_size).get_bounding_box()
             crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.get_offset())/voxel_size).get_bounding_box()
 

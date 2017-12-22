@@ -8,7 +8,6 @@ from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
-from gunpowder.volume import VolumeTypes
 
 logger = logging.getLogger(__name__)
 
