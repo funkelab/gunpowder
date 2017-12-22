@@ -144,7 +144,7 @@ class TestAddVectorMap(ProviderTest):
                                              voxel_sizes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: voxel_size},
                                              radius_phys = radius_phys,
                                              partner_criterion = 'min_distance',
-                                             stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
+                                             stayinside_array_keys = arraytypes_to_stayinside_arraytypes,
                                              pad_for_partners = (0, 0, 0))
 
         with build(pipeline_min_distance):
@@ -207,7 +207,7 @@ class TestAddVectorMap(ProviderTest):
                                                                voxel_sizes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: voxel_size},
                                                                radius_phys = radius_phys,
                                                                partner_criterion = 'all',
-                                                               stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
+                                                               stayinside_array_keys = arraytypes_to_stayinside_arraytypes,
                                                                pad_for_partners = (0, 0, 0))
 
         with build(pipeline_all):
