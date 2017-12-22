@@ -15,12 +15,12 @@ class Pad(BatchFilter):
 
     Args:
 
-        pad_sizes(dict, ArrayType -> [None,Coordinate]): Specifies the padding 
-            to be added to each array type. If None, an infinite padding is 
-            added. If a Coordinate, this amount will be added to the ROI in the 
+        pad_sizes(dict, ArrayKey -> [None,Coordinate]): Specifies the padding
+            to be added to each array. If None, an infinite padding is added.
+            If a Coordinate, this amount will be added to the ROI in the
             positive and negative direction.
 
-        pad_values(dict, ArrayType -> value or None): The values to report 
+        pad_values(dict, ArrayKey -> value or None): The values to report 
             inside the padding. If not given, 0 is used.
     '''
 
@@ -34,17 +34,17 @@ class Pad(BatchFilter):
 
     def setup(self):
 
-        for (array_type, pad_size) in self.pad_sizes.items():
+        for (array_key, pad_size) in self.pad_sizes.items():
 
-            assert array_type in self.spec, "Asked to pad %s, but is not provided upstream."%array_type
-            assert self.spec[array_type].roi is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%array_type
+            assert array_key in self.spec, "Asked to pad %s, but is not provided upstream."%array_key
+            assert self.spec[array_key].roi is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%array_key
 
-            spec = self.spec[array_type].copy()
+            spec = self.spec[array_key].copy()
             if pad_size is not None:
                 spec.roi = spec.roi.grow(pad_size, pad_size)
             else:
                 spec.roi = None
-            self.updates(array_type, spec)
+            self.updates(array_key, spec)
 
     def prepare(self, request):
 
@@ -53,23 +53,23 @@ class Pad(BatchFilter):
         logger.debug("request: %s"%request)
         logger.debug("upstream spec: %s"%upstream_spec)
 
-        for array_type in self.pad_sizes.keys():
+        for array_key in self.pad_sizes.keys():
 
-            if array_type not in request:
+            if array_key not in request:
                 continue
-            roi = request[array_type].roi
+            roi = request[array_key].roi
 
             # change request to fit into upstream spec
-            request[array_type].roi = roi.intersect(upstream_spec[array_type].roi)
+            request[array_key].roi = roi.intersect(upstream_spec[array_key].roi)
 
-            if request[array_type].roi is None:
+            if request[array_key].roi is None:
 
-                logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%array_type)
+                logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%array_key)
 
                 # ensure a valid request by asking for empty ROI
-                request[array_type].roi = Roi(
-                        upstream_spec[array_type].roi.get_offset(),
-                        (0,)*upstream_spec[array_type].roi.dims()
+                request[array_key].roi = Roi(
+                        upstream_spec[array_key].roi.get_offset(),
+                        (0,)*upstream_spec[array_key].roi.dims()
                 )
 
         logger.debug("new request: %s"%request)
@@ -77,15 +77,15 @@ class Pad(BatchFilter):
     def process(self, batch, request):
 
         # restore requested batch size and ROI
-        for (array_type, array) in batch.arrays.items():
+        for (array_key, array) in batch.arrays.items():
 
             array.data = self.__expand(
                     array.data,
                     array.spec.roi/array.spec.voxel_size,
-                    request[array_type].roi/array.spec.voxel_size,
-                    self.pad_values[array_type] if array_type in self.pad_values else 0
+                    request[array_key].roi/array.spec.voxel_size,
+                    self.pad_values[array_key] if array_key in self.pad_values else 0
             )
-            array.spec.roi = request[array_type].roi
+            array.spec.roi = request[array_key].roi
 
     def __expand(self, a, from_roi, to_roi, value):
         '''from_roi and to_roi should be in voxels.'''

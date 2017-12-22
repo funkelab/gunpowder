@@ -1,6 +1,6 @@
 import unittest
 from gunpowder import *
-from gunpowder.points import PointsTypes, Points
+from gunpowder.points import PointsKeys, Points
 
 import numpy as np
 
@@ -12,14 +12,14 @@ class PointTestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            PointsTypes.PRESYN,
+            PointsKeys.PRESYN,
             PointsSpec(roi=Roi((0, 0, 0), (100, 100, 100))))
 
     def provide(self, request):
         batch = Batch()
-        roi_points = request[PointsTypes.PRESYN].roi
+        roi_points = request[PointsKeys.PRESYN].roi
 
-        batch.points[PointsTypes.PRESYN] = Points(
+        batch.points[PointsKeys.PRESYN] = Points(
             {},
             PointsSpec(roi=roi_points))
         return batch
@@ -32,21 +32,21 @@ class ArrayTestSoure(BatchProvider):
     def setup(self):
 
         self.provides(
-            ArrayTypes.GT_LABELS,
+            ArrayKeys.GT_LABELS,
             ArraySpec(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=self.voxel_size))
 
     def provide(self, request):
-        roi_array = request[ArrayTypes.GT_LABELS].roi
+        roi_array = request[ArrayKeys.GT_LABELS].roi
         print roi_array
         data = np.zeros(
             roi_array.get_shape() /
-            self.spec[ArrayTypes.GT_LABELS].voxel_size)
+            self.spec[ArrayKeys.GT_LABELS].voxel_size)
         batch = Batch()
-        spec = self.spec[ArrayTypes.GT_LABELS].copy()
+        spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi_array
-        batch.arrays[ArrayTypes.GT_LABELS] = Array(
+        batch.arrays[ArrayKeys.GT_LABELS] = Array(
             data,
             spec)
         return batch
@@ -56,6 +56,7 @@ class TestMergeProvider(unittest.TestCase):
 
     def test_merge_basics(self):
         voxel_size = (1, 1, 1)
+        PointsKey('PRESYN')
         pointssource = PointTestSource(voxel_size)
         arraysource = ArrayTestSoure(voxel_size)
         pipeline = (pointssource, arraysource) + MergeProvider() + RandomLocation()
@@ -63,18 +64,18 @@ class TestMergeProvider(unittest.TestCase):
         with build(pipeline):
             # Check basic merging.
             request = BatchRequest()
-            request.add((PointsTypes.PRESYN), window_request)
-            request.add((ArrayTypes.GT_LABELS), window_request)
+            request.add((PointsKeys.PRESYN), window_request)
+            request.add((ArrayKeys.GT_LABELS), window_request)
             batch_res = pipeline.request_batch(request)
-            self.assertTrue(ArrayTypes.GT_LABELS in batch_res.arrays)
-            self.assertTrue(PointsTypes.PRESYN in batch_res.points)
+            self.assertTrue(ArrayKeys.GT_LABELS in batch_res.arrays)
+            self.assertTrue(PointsKeys.PRESYN in batch_res.points)
 
             # Check that request of only one source also works.
             request = BatchRequest()
-            request.add((PointsTypes.PRESYN), window_request)
+            request.add((PointsKeys.PRESYN), window_request)
             batch_res = pipeline.request_batch(request)
-            self.assertFalse(ArrayTypes.GT_LABELS in batch_res.arrays)
-            self.assertTrue(PointsTypes.PRESYN in batch_res.points)
+            self.assertFalse(ArrayKeys.GT_LABELS in batch_res.arrays)
+            self.assertTrue(PointsKeys.PRESYN in batch_res.points)
 
         # Check that it fails, when having two sources that provide the same type.
         arraysource2 = ArrayTestSoure(voxel_size)

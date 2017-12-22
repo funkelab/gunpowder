@@ -49,7 +49,7 @@ class BatchFilter(BatchProvider):
 
         Args:
 
-            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
             spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''

@@ -8,13 +8,13 @@ class DownSampleTestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            ArrayTypes.RAW,
+            ArrayKeys.RAW,
             ArraySpec(
                 roi=Roi((0, 0, 0), (1000, 1000, 1000)),
                 voxel_size=(4, 4, 4)))
 
         self.provides(
-            ArrayTypes.GT_LABELS,
+            ArrayKeys.GT_LABELS,
             ArraySpec(
                 roi=Roi((0, 0, 0), (1000, 1000, 1000)),
                 voxel_size=(4, 4, 4)))
@@ -24,7 +24,7 @@ class DownSampleTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (array_type, spec) in request.array_specs.items():
+        for (array_key, spec) in request.array_specs.items():
 
             roi = spec.roi
 
@@ -40,9 +40,9 @@ class DownSampleTestSource(BatchProvider):
                     range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            spec = self.spec[array_type].copy()
+            spec = self.spec[array_key].copy()
             spec.roi = roi
-            batch.arrays[array_type] = Array(
+            batch.arrays[array_key] = Array(
                     data,
                     spec)
         return batch
@@ -57,31 +57,31 @@ class TestDownSample(ProviderTest):
 
         source = DownSampleTestSource()
 
-        register_array_type('RAW_DOWNSAMPLED')
-        register_array_type('GT_LABELS_DOWNSAMPLED')
+        ArrayKey('RAW_DOWNSAMPLED')
+        ArrayKey('GT_LABELS_DOWNSAMPLED')
 
         request = BatchRequest()
-        request.add(ArrayTypes.RAW, (200,200,200))
-        request.add(ArrayTypes.RAW_DOWNSAMPLED, (120,120,120))
-        request.add(ArrayTypes.GT_LABELS, (200,200,200))
-        request.add(ArrayTypes.GT_LABELS_DOWNSAMPLED, (200,200,200))
+        request.add(ArrayKeys.RAW, (200,200,200))
+        request.add(ArrayKeys.RAW_DOWNSAMPLED, (120,120,120))
+        request.add(ArrayKeys.GT_LABELS, (200,200,200))
+        request.add(ArrayKeys.GT_LABELS_DOWNSAMPLED, (200,200,200))
 
         pipeline = (
                 DownSampleTestSource() +
                 DownSample({
-                        ArrayTypes.RAW_DOWNSAMPLED: (2, ArrayTypes.RAW),
-                        ArrayTypes.GT_LABELS_DOWNSAMPLED: (2, ArrayTypes.GT_LABELS),
+                        ArrayKeys.RAW_DOWNSAMPLED: (2, ArrayKeys.RAW),
+                        ArrayKeys.GT_LABELS_DOWNSAMPLED: (2, ArrayKeys.GT_LABELS),
                 })
         )
 
         with build(pipeline):
             batch = pipeline.request_batch(request)
 
-        for (array_type, array) in batch.arrays.items():
+        for (array_key, array) in batch.arrays.items():
 
             # assert that pixels encode their position for supposedly unaltered 
             # arrays
-            if array_type in [ArrayTypes.RAW, ArrayTypes.GT_LABELS]:
+            if array_key in [ArrayKeys.RAW, ArrayKeys.GT_LABELS]:
 
                 # the z,y,x coordinates of the ROI
                 roi = array.spec.roi/4
@@ -91,14 +91,14 @@ class TestDownSample(ProviderTest):
                         range(roi.get_begin()[2], roi.get_end()[2]), indexing='ij')
                 data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-                self.assertTrue(np.array_equal(array.data, data), str(array_type))
+                self.assertTrue(np.array_equal(array.data, data), str(array_key))
 
-            elif array_type == ArrayTypes.RAW_DOWNSAMPLED:
+            elif array_key == ArrayKeys.RAW_DOWNSAMPLED:
 
                 self.assertTrue(array.data[0,0,0] == 30)
                 self.assertTrue(array.data[1,0,0] == 32)
 
-            elif array_type == ArrayTypes.GT_LABELS_DOWNSAMPLED:
+            elif array_key == ArrayKeys.GT_LABELS_DOWNSAMPLED:
 
                 self.assertTrue(array.data[0,0,0] == 0)
                 self.assertTrue(array.data[1,0,0] == 2)

@@ -1,8 +1,8 @@
 import fractions
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import PointsType
+from gunpowder.points import PointsKey
 from gunpowder.points_spec import PointsSpec
-from gunpowder.array import ArrayType
+from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from .freezable import Freezable
 
@@ -14,16 +14,14 @@ class ProviderSpec(Freezable):
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
-        provider_spec[array_type] = ArraySpec(...)
-        provider_spec[points_type] = PointsSpec(...)
+        provider_spec[array_key] = ArraySpec(...)
+        provider_spec[points_key] = PointsSpec(...)
 
-    Here, ``array_type`` and ``points_type`` are :class:`ArrayType` and
-    :class:`PointsType` instances, previously registered with
-    :fun:`register_array_type` or :fun:`register_points_type`. The specs can
-    be queried with::
+    Here, ``array_key`` and ``points_key`` are :class:`ArrayKey` and
+    :class:`PointsKey`. The specs can be queried with::
 
-        array_spec = provider_spec[array_type]
-        points_spec = provider_spec[points_type]
+        array_spec = provider_spec[array_key]
+        points_spec = provider_spec[points_key]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``provider_spec.items()``.
@@ -34,10 +32,10 @@ class ProviderSpec(Freezable):
 
     Args:
 
-        array_specs (dict): A dictionary from :class:`ArrayType` to
+        array_specs (dict): A dictionary from :class:`ArrayKey` to
             :class:`ArraySpec`.
 
-        points_specs (dict): A dictionary from :class:`PointsType` to
+        points_specs (dict): A dictionary from :class:`PointsKey` to
             :class:`PointsSpec`.
     '''
 
@@ -60,13 +58,13 @@ class ProviderSpec(Freezable):
     def __setitem__(self, identifier, spec):
 
         if isinstance(spec, ArraySpec):
-            assert isinstance(identifier, ArrayType), ("Only a ArrayType is "
+            assert isinstance(identifier, ArrayKey), ("Only a ArrayKey is "
                                                         "allowed as key for a "
                                                         "ArraySpec value.")
             self.array_specs[identifier] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
-            assert isinstance(identifier, PointsType), ("Only a PointsType is "
+            assert isinstance(identifier, PointsKey), ("Only a PointsKey is "
                                                         "allowed as key for a "
                                                         "PointsSpec value.")
             self.points_specs[identifier] = spec.copy()
@@ -77,10 +75,10 @@ class ProviderSpec(Freezable):
 
     def __getitem__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             return self.array_specs[identifier]
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             return self.points_specs[identifier]
 
         else:
@@ -93,10 +91,10 @@ class ProviderSpec(Freezable):
 
     def __contains__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             return identifier in self.array_specs
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             return identifier in self.points_specs
 
         else:
@@ -105,10 +103,10 @@ class ProviderSpec(Freezable):
 
     def __delitem__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             del self.array_specs[identifier]
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             del self.points_specs[identifier]
 
         else:
@@ -148,28 +146,28 @@ class ProviderSpec(Freezable):
 
         return common_roi
 
-    def get_lcm_voxel_size(self, array_types=None):
+    def get_lcm_voxel_size(self, array_keys=None):
         '''Get the least common multiple of the voxel sizes in this spec.
 
         Args:
 
-            array_types (list of :class:`ArrayType`, optional): If given,
+            array_keys (list of :class:`ArrayKey`, optional): If given,
                 consider only the given array types.
         '''
 
-        if array_types is None:
-            array_types = self.array_specs.keys()
+        if array_keys is None:
+            array_keys = self.array_specs.keys()
 
-        if not array_types:
+        if not array_keys:
             raise RuntimeError("Can not compute lcm voxel size -- there are "
                                "no array specs in this provider spec.")
         else:
-            if not array_types:
+            if not array_keys:
                 raise RuntimeError("Can not compute lcm voxel size -- list of "
                                    "given array specs is empty.")
 
         lcm_voxel_size = None
-        for identifier in array_types:
+        for identifier in array_keys:
             voxel_size = self.array_specs[identifier].voxel_size
             if lcm_voxel_size is None:
                 lcm_voxel_size = voxel_size

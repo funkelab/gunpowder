@@ -7,11 +7,6 @@ from gunpowder.tensorflow import Train, Predict
 import tensorflow as tf
 from .provider_test import ProviderTest
 
-register_array_type('A')
-register_array_type('B')
-register_array_type('C')
-register_array_type('GRADIENT_A')
-
 class TestTensorflowTrainSource(BatchProvider):
 
     def setup(self):
@@ -21,24 +16,24 @@ class TestTensorflowTrainSource(BatchProvider):
             dtype=np.float32,
             interpolatable=True,
             voxel_size=(1, 1))
-        self.provides(ArrayTypes.A, spec)
-        self.provides(ArrayTypes.B, spec)
+        self.provides(ArrayKeys.A, spec)
+        self.provides(ArrayKeys.B, spec)
 
     def provide(self, request):
 
         batch = Batch()
 
-        spec = self.spec[ArrayTypes.A]
-        spec.roi = request[ArrayTypes.A].roi
+        spec = self.spec[ArrayKeys.A]
+        spec.roi = request[ArrayKeys.A].roi
 
-        batch.arrays[ArrayTypes.A] = Array(
+        batch.arrays[ArrayKeys.A] = Array(
             np.array([[0, 1], [2, 3]], dtype=np.float32),
             spec)
 
-        spec = self.spec[ArrayTypes.B]
-        spec.roi = request[ArrayTypes.B].roi
+        spec = self.spec[ArrayKeys.B]
+        spec.roi = request[ArrayKeys.B].roi
 
-        batch.arrays[ArrayTypes.B] = Array(
+        batch.arrays[ArrayKeys.B] = Array(
             np.array([[0, 1], [2, 3]], dtype=np.float32),
             spec)
 
@@ -79,6 +74,11 @@ class TestTensorflowTrain(ProviderTest):
         except:
             pass
 
+        ArrayKey('A')
+        ArrayKey('B')
+        ArrayKey('C')
+        ArrayKey('GRADIENT_A')
+
         # create model meta graph file and get input/output names
         (a, b, c, optimizer, loss) = self.create_meta_graph()
 
@@ -87,17 +87,17 @@ class TestTensorflowTrain(ProviderTest):
             'tf_graph',
             optimizer=optimizer,
             loss=loss,
-            inputs={a: ArrayTypes.A, b: ArrayTypes.B},
-            outputs={c: ArrayTypes.C},
-            gradients={a: ArrayTypes.GRADIENT_A},
+            inputs={a: ArrayKeys.A, b: ArrayKeys.B},
+            outputs={c: ArrayKeys.C},
+            gradients={a: ArrayKeys.GRADIENT_A},
             save_every=100)
         pipeline = source + train
 
         request = BatchRequest({
-            ArrayTypes.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayTypes.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayTypes.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayTypes.GRADIENT_A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.GRADIENT_A: ArraySpec(roi=Roi((0, 0), (2, 2))),
         })
 
         # train for a couple of iterations
@@ -107,7 +107,7 @@ class TestTensorflowTrain(ProviderTest):
 
             self.assertAlmostEqual(batch.loss, 9.8994951)
 
-            gradient_a = batch.arrays[ArrayTypes.GRADIENT_A].data
+            gradient_a = batch.arrays[ArrayKeys.GRADIENT_A].data
             self.assertTrue(gradient_a[0, 0] < gradient_a[0, 1])
             self.assertTrue(gradient_a[0, 1] < gradient_a[1, 0])
             self.assertTrue(gradient_a[1, 0] < gradient_a[1, 1])
@@ -131,14 +131,14 @@ class TestTensorflowTrain(ProviderTest):
         source = TestTensorflowTrainSource()
         predict = Predict(
             'tf_graph_checkpoint_300',
-            inputs={a: ArrayTypes.A, b: ArrayTypes.B},
-            outputs={c: ArrayTypes.C})
+            inputs={a: ArrayKeys.A, b: ArrayKeys.B},
+            outputs={c: ArrayKeys.C})
         pipeline = source + predict
 
         request = BatchRequest({
-            ArrayTypes.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayTypes.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayTypes.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            ArrayKeys.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
         })
 
         with build(pipeline):
@@ -147,7 +147,7 @@ class TestTensorflowTrain(ProviderTest):
 
             for i in range(100):
                 batch = pipeline.request_batch(request)
-                c = batch.arrays[ArrayTypes.C].data
+                c = batch.arrays[ArrayKeys.C].data
 
                 if prev_c is not None:
                     self.assertTrue(np.equal(c, prev_c))

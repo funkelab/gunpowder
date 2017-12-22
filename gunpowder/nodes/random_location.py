@@ -23,18 +23,18 @@ class RandomLocation(BatchFilter):
     using the ``Reject`` node, at the expense of storing an integral array of
     the complete mask.
 
-    If 'ensure_nonempty' is set to a :class:``PointsType``, only batches are
-    returned that have at least one point of this type within the requested
-    ROI.
+    If 'ensure_nonempty' is set to a :class:``PointsKey``, only batches are
+    returned that have at least one point of this point collection within the
+    requested ROI.
 
     Args:
 
         min_masked(float, optional): If non-zero, require that the random
             sample contains at least that ratio of masked-in voxels.
 
-        mask(:class:``ArrayType``): The array type to use for mask checks.
+        mask(:class:``ArrayKey``): The array to use for mask checks.
 
-        ensure_nonempty(:class:``PointsType``, optional): Ensures that when
+        ensure_nonempty(:class:``PointsKey``, optional): Ensures that when
             finding a random location, a request for ``ensure_nonempty`` will
             contain at least one point. This does only work if all upstream
             nodes are deterministic (e.g., there is no
@@ -149,9 +149,9 @@ class RandomLocation(BatchFilter):
                 focused_points_shape  = focused_points_roi.get_shape()
 
                 # prefetch points in roi of ensure_nonempty
-                request_for_focused_pointstype = BatchRequest()
-                request_for_focused_pointstype.points_spec[self.ensure_nonempty] = PointsSpec(roi=focused_points_roi.shift(random_shift))
-                batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_pointstype)
+                request_for_focused_points = BatchRequest()
+                request_for_focused_points.points_spec[self.ensure_nonempty] = PointsSpec(roi=focused_points_roi.shift(random_shift))
+                batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_points)
                 point_ids_in_batch = batch_of_points.points[self.ensure_nonempty].data.keys()
 
                 if len(point_ids_in_batch) > 0:
@@ -217,21 +217,21 @@ class RandomLocation(BatchFilter):
         # shift request ROIs
         self.random_shift = random_shift
         for specs_type in [request.array_specs, request.points_specs]:
-            for (type, spec) in specs_type.items():
+            for (key, spec) in specs_type.items():
                 roi = spec.roi.shift(random_shift)
-                logger.debug("new %s ROI: %s"%(type, roi))
-                specs_type[type].roi = roi
+                logger.debug("new %s ROI: %s"%(key, roi))
+                specs_type[key].roi = roi
                 assert self.upstream_roi.contains(roi)
 
 
     def process(self, batch, request):
         # reset ROIs to request
-        for (array_type, spec) in request.array_specs.items():
-            batch.arrays[array_type].spec.roi = spec.roi
-        for (points_type, spec) in request.points_specs.items():
-            batch.points[points_type].spec.roi = spec.roi
+        for (array_key, spec) in request.array_specs.items():
+            batch.arrays[array_key].spec.roi = spec.roi
+        for (points_key, spec) in request.points_specs.items():
+            batch.points[points_key].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
-        for points_type in request.points_specs.keys():
-            for point_id, point in batch.points[points_type].data.items():
-                batch.points[points_type].data[point_id].location -= self.random_shift
+        for points_key in request.points_specs.keys():
+            for point_id, point in batch.points[points_key].data.items():
+                batch.points[points_key].data[point_id].location -= self.random_shift

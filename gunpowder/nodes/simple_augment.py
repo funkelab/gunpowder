@@ -49,14 +49,14 @@ class SimpleAugment(BatchFilter):
                 for m in self.mirror
         )
         # arrays
-        for (array_type, array) in batch.arrays.items():
+        for (array_key, array) in batch.arrays.items():
 
             array.data = array.data[mirror]
             if self.transpose != (0,1,2):
                 array.data = array.data.transpose(self.transpose)
         # points
         total_roi_offset = self.total_roi.get_offset()
-        for (points_type, points) in batch.points.items():
+        for (points_key, points) in batch.points.items():
 
             for loc_id, syn_point in points.data.items():
                 # mirror

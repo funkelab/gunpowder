@@ -25,11 +25,11 @@ class ExcludeLabels(BatchFilter):
         '''
         Args:
 
-            labels (:class:``ArrayType``): The array containing the labels.
+            labels (:class:``ArrayKey``): The array containing the labels.
 
             exclude (list of IDs): The labels to exclude from ``labels``.
 
-            ignore_mask (:class:``ArrayType``, optional): The ignore mask to
+            ignore_mask (:class:``ArrayKey``, optional): The ignore mask to
                 create.
 
             ignore_mask_erode (float, optional): By how much (in world units) to erode

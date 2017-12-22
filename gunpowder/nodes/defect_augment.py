@@ -33,7 +33,7 @@ class DefectAugment(BatchFilter):
 
         Args:
 
-            intensities(:class:``ArrayType``):
+            intensities(:class:``ArrayKey``):
 
                 The array of intensities to modify.
 
@@ -53,12 +53,12 @@ class DefectAugment(BatchFilter):
                 (``artifacts``) and an alpha mask (``artifacts_mask``), used if
                 prob_artifact > 0.
 
-            artifacts(:class:``ArrayType``, optional):
+            artifacts(:class:``ArrayKey``, optional):
 
                 The identifier to query ``artifact_source`` for to get the
                 intensities of the artifacts.
 
-            artifacts_mask(:class:``ArrayType``, optional):
+            artifacts_mask(:class:``ArrayKey``, optional):
 
                 The identifier to query ``artifact_source`` for to get the
                 alpha mask of the artifacts to blend them with ``intensities``.

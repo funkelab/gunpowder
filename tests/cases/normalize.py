@@ -5,11 +5,11 @@ class TestNormalize(ProviderTest):
 
     def test_output(self):
 
-        pipeline = self.test_source + Normalize(ArrayTypes.RAW)
+        pipeline = self.test_source + Normalize(ArrayKeys.RAW)
 
         with build(pipeline):
             batch = pipeline.request_batch(self.test_request)
 
-            raw = batch.arrays[ArrayTypes.RAW]
+            raw = batch.arrays[ArrayKeys.RAW]
             self.assertTrue(raw.data.min() >= 0)
             self.assertTrue(raw.data.max() <= 1)

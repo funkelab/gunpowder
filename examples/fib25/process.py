@@ -23,13 +23,13 @@ def predict_affinities(gpu):
     # a chunk request that matches the dimensions of the network, will be used 
     # to chunk the whole array into batches of this size
     chunk_request = BatchRequest()
-    chunk_request.add_array_request(ArrayTypes.RAW, input_size)
-    chunk_request.add_array_request(ArrayTypes.PRED_AFFINITIES, output_size)
+    chunk_request.add_array_request(ArrayKeys.RAW, input_size)
+    chunk_request.add_array_request(ArrayKeys.PRED_AFFINITIES, output_size)
 
     # where to find the intensities
     source = Hdf5Source(
             'trvol-250-1.hdf',
-            datasets = { ArrayTypes.RAW: 'volumes/raw'}
+            datasets = { ArrayKeys.RAW: 'volumes/raw'}
     )
 
     # the prediction pipeline:
@@ -41,7 +41,7 @@ def predict_affinities(gpu):
 
             # zero-pad provided RAW to be able to draw batches close to the 
             # boundary of the available data
-            Pad({ ArrayTypes.RAW: (100, 100, 100) }) +
+            Pad({ ArrayKeys.RAW: (100, 100, 100) }) +
 
             # ensure RAW is in [-1,1]
             IntensityScaleShift(2, -1) +
@@ -67,12 +67,12 @@ def predict_affinities(gpu):
     with build(process_pipeline) as p:
 
         # get the ROI of the whole RAW region from the source
-        raw_roi = source.get_spec().arrays[ArrayTypes.RAW]
+        raw_roi = source.get_spec().arrays[ArrayKeys.RAW]
 
         # request affinity predictions for the whole RAW ROI
         whole_request = BatchRequest({
-                ArrayTypes.RAW: raw_roi,
-                ArrayTypes.PRED_AFFINITIES: raw_roi.grow(-context, -context)
+                ArrayKeys.RAW: raw_roi,
+                ArrayKeys.PRED_AFFINITIES: raw_roi.grow(-context, -context)
             })
 
         print("Requesting " + str(whole_request) + " in chunks of " + str(chunk_request))

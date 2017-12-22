@@ -67,12 +67,12 @@ def train_until(max_iteration, gpu):
 
     # arrays to request for each batch
     request = BatchRequest()
-    request.add_array_request(ArrayTypes.RAW, input_shape)
-    request.add_array_request(ArrayTypes.GT_LABELS, output_shape)
-    request.add_array_request(ArrayTypes.GT_MASK, output_shape)
-    request.add_array_request(ArrayTypes.GT_AFFINITIES, output_shape)
+    request.add_array_request(ArrayKeys.RAW, input_shape)
+    request.add_array_request(ArrayKeys.GT_LABELS, output_shape)
+    request.add_array_request(ArrayKeys.GT_MASK, output_shape)
+    request.add_array_request(ArrayKeys.GT_AFFINITIES, output_shape)
     if phase == 'euclid':
-        request.add_array_request(ArrayTypes.LOSS_SCALE, output_shape)
+        request.add_array_request(ArrayKeys.LOSS_SCALE, output_shape)
 
     # create a tuple of data sources, one for each HDF file
     data_sources = tuple(
@@ -81,9 +81,9 @@ def train_until(max_iteration, gpu):
         Hdf5Source(
             sample,
             datasets = {
-                ArrayTypes.RAW: 'volumes/raw',
-                ArrayTypes.GT_LABELS: 'volumes/labels/neuron_ids',
-                ArrayTypes.GT_MASK: 'volumes/labels/mask',
+                ArrayKeys.RAW: 'volumes/raw',
+                ArrayKeys.GT_LABELS: 'volumes/labels/neuron_ids',
+                ArrayKeys.GT_MASK: 'volumes/labels/mask',
             }
         ) +
 
@@ -94,8 +94,8 @@ def train_until(max_iteration, gpu):
         # the boundary of the available data
         Pad(
             {
-                ArrayTypes.RAW: Coordinate((100, 100, 100)),
-                ArrayTypes.GT_MASK: Coordinate((100, 100, 100))
+                ArrayKeys.RAW: Coordinate((100, 100, 100)),
+                ArrayKeys.GT_MASK: Coordinate((100, 100, 100))
             }
         ) +
 
@@ -153,7 +153,7 @@ def train_until(max_iteration, gpu):
         Snapshot(
             every=100,
             output_filename='batch_{iteration}.hdf',
-            additional_request=BatchRequest({ArrayTypes.LOSS_GRADIENT: request.arrays[ArrayTypes.GT_AFFINITIES]})) +
+            additional_request=BatchRequest({ArrayKeys.LOSS_GRADIENT: request.arrays[ArrayKeys.GT_AFFINITIES]})) +
 
         # add useful profiling stats to identify bottlenecks
         PrintProfilingStats(every=10)

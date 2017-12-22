@@ -28,19 +28,19 @@ def train():
     solver_parameters.train_state.add_stage('euclid')
 
     request = BatchRequest()
-    request.add_array_request(ArrayTypes.RAW, (84,268,268))
-    request.add_array_request(ArrayTypes.GT_LABELS, (56,56,56))
-    request.add_array_request(ArrayTypes.GT_MASK, (56,56,56))
-    request.add_array_request(ArrayTypes.GT_IGNORE, (56,56,56))
-    request.add_array_request(ArrayTypes.GT_AFFINITIES, (56,56,56))
+    request.add_array_request(ArrayKeys.RAW, (84,268,268))
+    request.add_array_request(ArrayKeys.GT_LABELS, (56,56,56))
+    request.add_array_request(ArrayKeys.GT_MASK, (56,56,56))
+    request.add_array_request(ArrayKeys.GT_IGNORE, (56,56,56))
+    request.add_array_request(ArrayKeys.GT_AFFINITIES, (56,56,56))
 
     data_sources = tuple(
         Hdf5Source(
             'sample_'+s+'_padded_20160501.aligned.filled.cropped.hdf',
             datasets = {
-                ArrayTypes.RAW: 'volumes/raw',
-                ArrayTypes.GT_LABELS: 'volumes/labels/neuron_ids_notransparency',
-                ArrayTypes.GT_MASK: 'volumes/labels/mask',
+                ArrayKeys.RAW: 'volumes/raw',
+                ArrayKeys.GT_LABELS: 'volumes/labels/neuron_ids_notransparency',
+                ArrayKeys.GT_MASK: 'volumes/labels/mask',
             }
         ) +
         Normalize() +
@@ -52,11 +52,11 @@ def train():
         Hdf5Source(
             'sample_ABC_padded_20160501.defects.hdf',
             datasets = {
-                ArrayTypes.RAW: 'defect_sections/raw',
-                ArrayTypes.ALPHA_MASK: 'defect_sections/mask',
+                ArrayKeys.RAW: 'defect_sections/raw',
+                ArrayKeys.ALPHA_MASK: 'defect_sections/mask',
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_array_type=ArrayTypes.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_array_key=ArrayKeys.ALPHA_MASK) +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +
@@ -64,7 +64,7 @@ def train():
     )
 
     snapshot_request = BatchRequest()
-    snapshot_request.add_array_request(ArrayTypes.LOSS_GRADIENT, (56,56,56))
+    snapshot_request.add_array_request(ArrayKeys.LOSS_GRADIENT, (56,56,56))
 
     batch_provider_tree = (
         data_sources +
