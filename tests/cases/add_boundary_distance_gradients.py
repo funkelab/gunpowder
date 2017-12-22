@@ -42,6 +42,7 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
         pipeline = (
             TestSource() +
             AddBoundaryDistanceGradients(
+                label_volume_type=VolumeTypes.GT_LABELS,
                 distance_volume_type=VolumeTypes.GT_BOUNDARY_DISTANCES,
                 gradient_volume_type=VolumeTypes.GT_BOUNDARY_GRADIENTS)
         )

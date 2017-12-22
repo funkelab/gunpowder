@@ -5,7 +5,7 @@ class TestNormalize(ProviderTest):
 
     def test_output(self):
 
-        pipeline = self.test_source + Normalize()
+        pipeline = self.test_source + Normalize(VolumeTypes.RAW)
 
         with build(pipeline):
             batch = pipeline.request_batch(self.test_request)
