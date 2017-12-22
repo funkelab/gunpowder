@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from scipy import ndimage
 
-from .batch_filter import BatchFilter
+from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.volume import Volume, VolumeTypes
 from gunpowder.points import RasterizationSetting, enlarge_binary_map
 

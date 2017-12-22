@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from .add_boundary_distance_gradients import TestAddBoundaryDistanceGradients
 from .add_gt_affinities import TestAddGtAffinities
 from .add_vector_map import TestAddVectorMap

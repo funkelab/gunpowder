@@ -1,4 +1,4 @@
-from .batch_filter import BatchFilter
+from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.volume import VolumeTypes
 
 class ZeroOutConstSections(BatchFilter):

@@ -1,6 +1,7 @@
 import unittest
 from .provider_test import ProviderTest
 from gunpowder import *
+from gunpowder.contrib import AddVectorMap
 
 from copy import deepcopy
 import itertools

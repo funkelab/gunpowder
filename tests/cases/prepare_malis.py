@@ -1,4 +1,5 @@
 from gunpowder import *
+from gunpowder.contrib import PrepareMalis
 import numpy as np
 from .provider_test import ProviderTest
 
