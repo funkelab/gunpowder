@@ -8,14 +8,14 @@ from gunpowder.ext import h5py
 logger = logging.getLogger(__name__)
 
 class Hdf5Write(BatchFilter):
-    '''Assemble volumes of passing batches in one HDF5 file. This is useful to 
+    '''Assemble arrays of passing batches in one HDF5 file. This is useful to 
     store chunks produced by :class:`Scan` on disk without keeping the larger 
-    volume in memory. The ROIs of the passing volumes will be used to determine 
+    array in memory. The ROIs of the passing arrays will be used to determine 
     the position where to store the data in the dataset.
 
     Args:
 
-        dataset_names (dict): A dictionary from :class:`VolumeType` to names of 
+        dataset_names (dict): A dictionary from :class:`ArrayType` to names of 
             the datasets to store them in.
 
         output_dir (string): The directory to save the HDF5 file. Will be 
@@ -29,9 +29,9 @@ class Hdf5Write(BatchFilter):
             the number of a dynamically loaded compression filter. (See 
             h5py.groups.create_dataset())
 
-        dataset_dtypes (dict): A dictionary from :class:`VolumeType` to datatype
-            (eg. np.int8). Volume to store is copied and casted to the specified type.
-             Original volume within the pipeline remains unchanged.
+        dataset_dtypes (dict): A dictionary from :class:`ArrayType` to datatype
+            (eg. np.int8). Array to store is copied and casted to the specified type.
+             Original array within the pipeline remains unchanged.
         '''
 
     def __init__(
@@ -62,31 +62,31 @@ class Hdf5Write(BatchFilter):
         self.file = h5py.File(os.path.join(self.output_dir, self.output_filename), 'w')
         self.datasets = {}
 
-        for (volume_type, dataset_name) in self.dataset_names.items():
+        for (array_type, dataset_name) in self.dataset_names.items():
 
-            logger.debug("Create dataset for %s", volume_type)
+            logger.debug("Create dataset for %s", array_type)
 
-            assert volume_type in self.spec, (
-                "Asked to store %s, but is not provided upstream."%volume_type)
-            assert volume_type in batch.volumes, (
-                "Asked to store %s, but is not part of batch."%volume_type)
+            assert array_type in self.spec, (
+                "Asked to store %s, but is not provided upstream."%array_type)
+            assert array_type in batch.arrays, (
+                "Asked to store %s, but is not part of batch."%array_type)
 
-            batch_shape = batch.volumes[volume_type].data.shape
+            batch_shape = batch.arrays[array_type].data.shape
 
-            total_roi = self.spec[volume_type].roi
+            total_roi = self.spec[array_type].roi
             dims = total_roi.dims()
 
             # extends of spatial dimensions
-            data_shape = total_roi.get_shape()//self.spec[volume_type].voxel_size
+            data_shape = total_roi.get_shape()//self.spec[array_type].voxel_size
             logger.debug("Shape in voxels: %s", data_shape)
             # add channel dimensions (if present)
             data_shape = batch_shape[:-dims] + data_shape
             logger.debug("Shape with channel dimensions: %s", data_shape)
 
-            if volume_type in self.dataset_dtypes:
-                dtype = self.dataset_dtypes[volume_type]
+            if array_type in self.dataset_dtypes:
+                dtype = self.dataset_dtypes[array_type]
             else:
-                dtype = batch.volumes[volume_type].data.dtype
+                dtype = batch.arrays[array_type].data.dtype
 
             dataset = self.file.create_dataset(
                     name=dataset_name,
@@ -95,9 +95,9 @@ class Hdf5Write(BatchFilter):
                     dtype=dtype)
 
             dataset.attrs['offset'] = total_roi.get_offset()
-            dataset.attrs['resolution'] = self.spec[volume_type].voxel_size
+            dataset.attrs['resolution'] = self.spec[array_type].voxel_size
 
-            self.datasets[volume_type] = dataset
+            self.datasets[array_type] = dataset
 
     def process(self, batch, request):
 
@@ -105,20 +105,20 @@ class Hdf5Write(BatchFilter):
             logger.info("Creating HDF file...")
             self.create_output_file(batch)
 
-        for volume_type, dataset in self.datasets.items():
+        for array_type, dataset in self.datasets.items():
 
-            roi = batch.volumes[volume_type].spec.roi
-            data = batch.volumes[volume_type].data
-            total_roi = self.spec[volume_type].roi
+            roi = batch.arrays[array_type].spec.roi
+            data = batch.arrays[array_type].data
+            total_roi = self.spec[array_type].roi
 
             assert total_roi.contains(roi), (
                 "ROI %s of %s not in upstream provided ROI %s"%(
-                    roi, volume_type, total_roi))
+                    roi, array_type, total_roi))
 
-            data_roi = (roi - total_roi.get_offset())//self.spec[volume_type].voxel_size
+            data_roi = (roi - total_roi.get_offset())//self.spec[array_type].voxel_size
             dims = data_roi.dims()
             channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
             voxel_slices = data_roi.get_bounding_box()
 
-            dataset[channel_slices + voxel_slices] = batch.volumes[volume_type].data
+            dataset[channel_slices + voxel_slices] = batch.arrays[array_type].data
 

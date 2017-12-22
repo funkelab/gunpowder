@@ -49,9 +49,9 @@ class BatchFilter(BatchProvider):
 
         Args:
 
-            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
 
-            spec: A :class:`VolumeSpec` or `PointsSpec` to describe the output.
+            spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
 
         assert identifier in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, identifier)
@@ -151,7 +151,7 @@ class BatchFilter(BatchProvider):
         Called during initialization of the DAG. Callees can assume that all 
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` or :fun:`updates` to announce the volumes 
+        In setup, call :fun:`provides` or :fun:`updates` to announce the arrays 
         and points provided or changed by this node.
         '''
         pass

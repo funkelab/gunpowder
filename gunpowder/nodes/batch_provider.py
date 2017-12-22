@@ -3,16 +3,16 @@ import logging
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
-from gunpowder.volume import VolumeType
-from gunpowder.volume_spec import VolumeSpec
+from gunpowder.array import ArrayType
+from gunpowder.array_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
 
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
-    A `BatchProvider` provides :class:`Batch`es containing :class:`Volume`s
-    and/or :class:`Points`. The available types and ROIs `Volume`s and `Points`
+    A `BatchProvider` provides :class:`Batch`es containing :class:`Array`s
+    and/or :class:`Points`. The available types and ROIs `Array`s and `Points`
     are specified in a :class:`ProviderSpec` instance, accessible via
     `self.spec`.
 
@@ -39,7 +39,7 @@ class BatchProvider(object):
         Called during initialization of the DAG. Callees can assume that all
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` to announce the volumes and points
+        In setup, call :fun:`provides` to announce the arrays and points
         provided by this node.
         '''
         raise NotImplementedError("Class %s does not implement 'setup'"%self.name())
@@ -60,9 +60,9 @@ class BatchProvider(object):
 
         Args:
 
-            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
 
-            spec: A :class:`VolumeSpec` or `PointsSpec` to describe the output.
+            spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
 
         if self.spec is None:
@@ -122,7 +122,7 @@ class BatchProvider(object):
         Args:
 
             request(:class:`BatchRequest`): A request containing (possibly
-                partial) :class:`VolumeSpec`s and :class:`PointsSpec`s.
+                partial) :class:`ArraySpec`s and :class:`PointsSpec`s.
         '''
 
         logger.debug("%s got request %s"%(self.name(),request))
@@ -143,7 +143,7 @@ class BatchProvider(object):
 
             assert identifier in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), identifier)
             assert (
-                isinstance(request_spec, VolumeSpec) or
+                isinstance(request_spec, ArraySpec) or
                 isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
                                                         "%s"%(
                                                             identifier,
@@ -157,7 +157,7 @@ class BatchProvider(object):
             if provided_roi is not None:
                 assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), identifier, request_roi, provided_roi)
 
-            if isinstance(identifier, VolumeType):
+            if isinstance(identifier, ArrayType):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
@@ -176,29 +176,29 @@ class BatchProvider(object):
 
     def check_batch_consistency(self, batch, request):
 
-        for (volume_type, request_spec) in request.volume_specs.items():
+        for (array_type, request_spec) in request.array_specs.items():
 
-            assert volume_type in batch.volumes, "%s requested, but %s did not provide it."%(volume_type,self.name())
-            volume = batch.volumes[volume_type]
-            assert volume.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                    volume_type,
+            assert array_type in batch.arrays, "%s requested, but %s did not provide it."%(array_type,self.name())
+            array = batch.arrays[array_type]
+            assert array.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                    array_type,
                     request_spec.roi,
-                    volume.spec.roi,
+                    array.spec.roi,
                     self.name()
             )
-            assert volume.spec.voxel_size == self.spec[volume_type].voxel_size, (
+            assert array.spec.voxel_size == self.spec[array_type].voxel_size, (
                 "voxel size of %s announced, but %s "
                 "delivered for %s"%(
-                    self.spec[volume_type].voxel_size,
-                    volume.spec.voxel_size,
-                    volume_type))
+                    self.spec[array_type].voxel_size,
+                    array.spec.voxel_size,
+                    array_type))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             dims = request_spec.roi.dims()
-            data_shape = Coordinate(volume.data.shape[-dims:])
-            voxel_size = self.spec[volume_type].voxel_size
-            assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of volume is %s*%s=%s provided by %s."%(
-                    volume_type,
+            data_shape = Coordinate(array.data.shape[-dims:])
+            voxel_size = self.spec[array_type].voxel_size
+            assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
+                    array_type,
                     request_spec.roi,
                     data_shape,
                     voxel_size,

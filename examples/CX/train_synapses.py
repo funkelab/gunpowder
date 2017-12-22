@@ -11,23 +11,23 @@ def train(max_iteration):
     request      = BatchRequest()
     shape_input  = (132, 132, 132)
     shape_output = (44, 44, 44)
-    request.add_volume_request(VolumeTypes.RAW, shape_input)
+    request.add_array_request(ArrayTypes.RAW, shape_input)
     request.add_points_request(PointsTypes.PRESYN, shape_output)
-    request.add_volume_request(VolumeTypes.GT_BM_PRESYN, shape_output)
-    request.add_volume_request(VolumeTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_output)
+    request.add_array_request(ArrayTypes.GT_BM_PRESYN, shape_output)
+    request.add_array_request(ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_output)
 
-    # define networks input, output and groundtruth names and VolumeTypes
+    # define networks input, output and groundtruth names and ArrayTypes
     net_inputs =  [
-                    net_input(volume_name='data', volume_type=VolumeTypes.RAW)
+                    net_input(array_name='data', array_type=ArrayTypes.RAW)
                   ]
 
     net_outputs = [
-                    net_output(volume_name='bm_presyn_pred', volume_type=VolumeTypes.PRED_BM_PRESYN,
-                               gt_name='bm_presyn_label', loss_volume_type=VolumeTypes.LOSS_GRADIENT_PRESYN),
+                    net_output(array_name='bm_presyn_pred', array_type=ArrayTypes.PRED_BM_PRESYN,
+                               gt_name='bm_presyn_label', loss_array_type=ArrayTypes.LOSS_GRADIENT_PRESYN),
                   ]
     net_gts =     [
-                    net_gt(volume_name='bm_presyn_label', volume_type=VolumeTypes.GT_BM_PRESYN,
-                           scale_name='bm_presyn_scale', mask_volume_type=VolumeTypes.GT_MASK_EXCLUSIVEZONE_PRESYN),
+                    net_gt(array_name='bm_presyn_label', array_type=ArrayTypes.GT_BM_PRESYN,
+                           scale_name='bm_presyn_scale', mask_array_type=ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN),
                   ]
 
     # define solver parameters
@@ -53,9 +53,9 @@ def train(max_iteration):
                                 hostname = 'emdata2',
                                 port     = 8000,
                                 uuid     = 'cb7dc',
-                                volume_array_names = {
-                                                       VolumeTypes.RAW:       'grayscale',
-                                                       VolumeTypes.GT_LABELS: 'labels'
+                                array_array_names = {
+                                                       ArrayTypes.RAW:       'grayscale',
+                                                       ArrayTypes.GT_LABELS: 'labels'
                                                      },
                                 points_array_names = {
                                                        PointsTypes.PRESYN: 'combined_synapses_08302016',
@@ -74,7 +74,7 @@ def train(max_iteration):
     batch_provider_tree = (
                             data_sources +
                             RandomProvider() +
-                            AddGtBinaryMapOfPoints({PointsTypes.PRESYN:  VolumeTypes.GT_BM_PRESYN}) +
+                            AddGtBinaryMapOfPoints({PointsTypes.PRESYN:  ArrayTypes.GT_BM_PRESYN}) +
                             AddGtMaskExclusiveZone() +
                             SimpleAugment(transpose_only_xy=True) +
                             IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +

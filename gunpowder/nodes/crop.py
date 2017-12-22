@@ -5,20 +5,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Crop(BatchFilter):
-    '''Limits provided ROI to user defined ROIs per Volume-/PointsTypes 
+    '''Limits provided ROI to user defined ROIs per Array-/PointsTypes 
         
     Args:
         
-        volumes (dict):     Dictionary from :class:``VolumeType`` to its new :class:``ROI``.
+        arrays (dict):     Dictionary from :class:``ArrayType`` to its new :class:``ROI``.
         points (dict):      Dictionary from :class:``PointsType`` to its new :class:``ROI``.
     '''
 
-    def __init__(self, volumes=None, points=None):
+    def __init__(self, arrays=None, points=None):
 
-        if volumes is None:
-            self.volumes = {}
+        if arrays is None:
+            self.arrays = {}
         else:
-            self.volumes = volumes
+            self.arrays = arrays
 
         if points is None:
             self.points = {}
@@ -27,13 +27,13 @@ class Crop(BatchFilter):
 
     def setup(self):
 
-        for crop_specs, specs in zip([self.volumes, self.points],[self.spec.volume_specs, self.spec.points_specs]):
+        for crop_specs, specs in zip([self.arrays, self.points],[self.spec.array_specs, self.spec.points_specs]):
             for type, roi in crop_specs.items():
                 assert type in specs, "Asked to crop {} which is not provided".format(type)
                 assert specs[type].roi.contains(roi), "Asked to Crop {} out at {} which is" \
                                             " not within provided ROI {}".format(type, roi, specs[type].roi)
 
-        for crop_specs, specs in zip([self.volumes, self.points], [self.spec.volume_specs, self.spec.points_specs]):
+        for crop_specs, specs in zip([self.arrays, self.points], [self.spec.array_specs, self.spec.points_specs]):
             for type, roi in crop_specs.items():
                 spec = specs[type].copy()
                 spec.roi = roi

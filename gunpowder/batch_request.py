@@ -3,18 +3,18 @@ from .points import PointsType
 from .points_spec import PointsSpec
 from .provider_spec import ProviderSpec
 from .roi import Roi
-from .volume import VolumeType
-from .volume_spec import VolumeSpec
+from .array import ArrayType
+from .array_spec import ArraySpec
 
 class BatchRequest(ProviderSpec):
-    '''A collection of (possibly partial) :class:`VolumeSpec`s and
+    '''A collection of (possibly partial) :class:`ArraySpec`s and
     :class:`PointsSpec`s forming a request.
 
     For usage, see the documentation of :class:`ProviderSpec`.
     '''
 
     def add(self, identifier, shape, voxel_size=None):
-        '''Convenience method to add a volume or point spec by providing only
+        '''Convenience method to add an array or point spec by providing only
         the shape of a ROI (in world units).
 
         A ROI with zero-offset will be generated. If more than one request is
@@ -22,19 +22,19 @@ class BatchRequest(ProviderSpec):
         the largest one.
 
         Args:
-            identifier: A :class:`VolumeType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
 
             shape: A tuple containing the shape of the desired roi
 
             voxel_size: A tuple contening the voxel sizes for each corresponding dimension
         '''
 
-        if isinstance(identifier, VolumeType):
-            spec = VolumeSpec()
+        if isinstance(identifier, ArrayType):
+            spec = ArraySpec()
         elif isinstance(identifier, PointsType):
             spec = PointsSpec()
         else:
-            raise RuntimeError("Only VolumeType or PointsType can be added.")
+            raise RuntimeError("Only ArrayType or PointsType can be added.")
 
         spec.roi = Roi((0,)*len(shape), shape)
 
@@ -57,7 +57,7 @@ class BatchRequest(ProviderSpec):
 
         center = total_roi.get_center()
 
-        for specs_type in [self.volume_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs]:
             for identifier in specs_type:
                 roi = specs_type[identifier].roi
                 specs_type[identifier].roi = roi.shift(center - roi.get_center())

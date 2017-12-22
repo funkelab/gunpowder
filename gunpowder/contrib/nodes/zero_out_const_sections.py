@@ -18,7 +18,7 @@ class ZeroOutConstSections(BatchFilter):
 
         assert batch.get_total_roi().dims() == 3, "This filter only works on 3D data."
 
-        raw = batch.volumes[self.intensities]
+        raw = batch.arrays[self.intensities]
 
         for z in range((raw.spec.roi/self.spec[self.intensities].voxel_size).get_shape()[0]):
             if raw.data[z].min() == raw.data[z].max():

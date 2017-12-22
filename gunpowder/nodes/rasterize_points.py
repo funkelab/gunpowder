@@ -5,25 +5,25 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
-from gunpowder.volume import Volume
+from gunpowder.array import Array
 from gunpowder.points import PointsTypes, RasterizationSetting, enlarge_binary_map
 
 
 logger = logging.getLogger(__name__)
 
 class RasterizePoints(BatchFilter):
-    ''' Create binary map for points of given PointsType in batch and add it as volume to batch '''
-    def __init__(self, volumes, rastersettings=None):
-        ''' Add binary map of given PointsType as volume to batch.
+    ''' Create binary map for points of given PointsType in batch and add it as array to batch '''
+    def __init__(self, arrays, rastersettings=None):
+        ''' Add binary map of given PointsType as array to batch.
         Args:
-            volumes (dict, :class:``VolumeType`` -> :class:``PointsType``):
-                Which volumes to create (keys of the dict) from which points
+            arrays (dict, :class:``ArrayType`` -> :class:``PointsType``):
+                Which arrays to create (keys of the dict) from which points
                 (values of the dict).
 
-            rastersettings (dict, :class:``VolumeType``->:class:``RasterizationSetting``, optional):
-                Which settings to use to rasterize the points into volumes.
+            rastersettings (dict, :class:``ArrayType``->:class:``RasterizationSetting``, optional):
+                Which settings to use to rasterize the points into arrays.
         '''
-        self.volumes = volumes
+        self.arrays = arrays
         if rastersettings is None:
             self.rastersettings = {}
         else:
@@ -36,9 +36,9 @@ class RasterizePoints(BatchFilter):
         self.upstream_spec = self.get_upstream_provider().get_spec()
         self.spec = copy.deepcopy(self.upstream_spec)
 
-        for (volume_type, points_type) in self.volumes.items():
-            assert points_type in self.spec.points, "Asked for {} from {}, where {} is not provided.".format(volume_type, points_type, points_type)
-            self.spec.volumes[volume_type] = self.spec.points[points_type]
+        for (array_type, points_type) in self.arrays.items():
+            assert points_type in self.spec.points, "Asked for {} from {}, where {} is not provided.".format(array_type, points_type, points_type)
+            self.spec.arrays[array_type] = self.spec.points[points_type]
 
     def get_spec(self):
         return self.spec
@@ -46,16 +46,16 @@ class RasterizePoints(BatchFilter):
     def prepare(self, request):
 
         self.skip_next = True
-        for volume_type, points_type in self.volumes.items():
-            if volume_type in request.volumes:
+        for array_type, points_type in self.arrays.items():
+            if array_type in request.arrays:
                 assert points_type in request.points
-                # if at least one requested volume is in self.pointstype_to_volumes, therefore do not skip process
+                # if at least one requested array is in self.pointstype_to_arrays, therefore do not skip process
                 self.skip_next = False
 
         if self.skip_next:
-            logger.warn("no VolumeTypes of BinaryMask ({}) requested, will do nothing".format(self.volumes.values()))
+            logger.warn("no ArrayTypes of BinaryMask ({}) requested, will do nothing".format(self.arrays.values()))
 
-        if len(self.volumes) == 0:
+        if len(self.arrays) == 0:
             self.skip_next = True
 
 
@@ -66,41 +66,41 @@ class RasterizePoints(BatchFilter):
             self.skip_next = False
             return
 
-        for nr, (volume_type, points_type) in enumerate(self.volumes.items()):
-            if volume_type in request.volumes:
-                binary_map = self.__get_binary_map(batch, request, points_type, volume_type, points=batch.points[points_type])
-                batch.volumes[volume_type] = Volume(data=binary_map,
-                                                    roi=request.volumes[volume_type])
+        for nr, (array_type, points_type) in enumerate(self.arrays.items()):
+            if array_type in request.arrays:
+                binary_map = self.__get_binary_map(batch, request, points_type, array_type, points=batch.points[points_type])
+                batch.arrays[array_type] = Array(data=binary_map,
+                                                    roi=request.arrays[array_type])
 
 
-    def __get_binary_map(self, batch, request, points_type, volume_type, points):
+    def __get_binary_map(self, batch, request, points_type, array_type, points):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
 
-        voxel_size = volume_type.voxel_size
-        shape_bm_volume  = request.volumes[volume_type].get_shape()/voxel_size
-        offset_bm_phys= request.volumes[volume_type].get_offset()
-        binary_map       = np.zeros(shape_bm_volume, dtype='uint8')
+        voxel_size = array_type.voxel_size
+        shape_bm_array  = request.arrays[array_type].get_shape()/voxel_size
+        offset_bm_phys= request.arrays[array_type].get_offset()
+        binary_map       = np.zeros(shape_bm_array, dtype='uint8')
 
-        if volume_type in self.rastersettings:
-            raster_setting = self.rastersettings[volume_type]
+        if array_type in self.rastersettings:
+            raster_setting = self.rastersettings[array_type]
         else:
             raster_setting = RasterizationSetting()
 
-        if raster_setting.stay_inside_volumetype is not None:
-            mask = batch.volumes[raster_setting.stay_inside_volumetype].data
+        if raster_setting.stay_inside_arraytype is not None:
+            mask = batch.arrays[raster_setting.stay_inside_arraytype].data
             if mask.shape>binary_map.shape:
-                # assumption: the binary map is centered in the mask volume
+                # assumption: the binary map is centered in the mask array
                 offsets = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
                 slices = [slice(np.floor(offset), np.floor(offset)+bm_shape) for offset, bm_shape in
                           zip(offsets, binary_map.shape)]
                 mask = mask[slices]
-            assert binary_map.shape == mask.shape, 'shape of newly created rasterized volume and shape of mask volume ' \
-                                                   'as specified with stay_inside_volumetype need to ' \
+            assert binary_map.shape == mask.shape, 'shape of newly created rasterized array and shape of mask array ' \
+                                                   'as specified with stay_inside_arraytype need to ' \
                                                    'be aligned: %s versus mask shape %s' %(binary_map.shape, mask.shape)
             binary_map_total = np.zeros_like(binary_map)
             object_id_locations = {}
             for loc_id in points.data.keys():
-                if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
+                if request.arrays[array_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                     shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
                     shifted_loc = shifted_loc.astype(np.int32)/voxel_size
 
@@ -127,7 +127,7 @@ class RasterizePoints(BatchFilter):
             binary_map_total[binary_map_total != 0] = 1
         else:
             for loc_id in points.data.keys():
-                if request.volumes[volume_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
+                if request.arrays[array_type].contains(Coordinate(batch.points[points_type].data[loc_id].location)):
                     shifted_loc = batch.points[points_type].data[loc_id].location - np.asarray(offset_bm_phys)
                     shifted_loc = shifted_loc.astype(np.int32)/voxel_size
                     binary_map[[[loc] for loc in shifted_loc]] = 1

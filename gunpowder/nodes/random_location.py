@@ -20,7 +20,7 @@ class RandomLocation(BatchFilter):
 
     If `min_masked` and `mask` are set, only batches are returned that have at
     least the given ratio of masked-in voxels. This is in general faster than
-    using the ``Reject`` node, at the expense of storing an integral volume of
+    using the ``Reject`` node, at the expense of storing an integral array of
     the complete mask.
 
     If 'ensure_nonempty' is set to a :class:``PointsType``, only batches are
@@ -32,7 +32,7 @@ class RandomLocation(BatchFilter):
         min_masked(float, optional): If non-zero, require that the random
             sample contains at least that ratio of masked-in voxels.
 
-        mask(:class:``VolumeType``): The volume type to use for mask checks.
+        mask(:class:``ArrayType``): The array type to use for mask checks.
 
         ensure_nonempty(:class:``PointsType``, optional): Ensures that when
             finding a random location, a request for ``ensure_nonempty`` will
@@ -60,28 +60,28 @@ class RandomLocation(BatchFilter):
         if self.mask and self.min_masked > 0:
 
             assert self.mask in self.upstream_spec, "Upstream provider does not have %s"%self.mask
-            self.mask_spec = self.upstream_spec.volume_specs[self.mask]
+            self.mask_spec = self.upstream_spec.array_specs[self.mask]
 
             logger.info("requesting complete mask...")
 
             mask_request = BatchRequest({self.mask: self.mask_spec})
             mask_batch = self.get_upstream_provider().request_batch(mask_request)
 
-            logger.info("allocating mask integral volume...")
+            logger.info("allocating mask integral array...")
 
-            mask_data = mask_batch.volumes[self.mask].data
+            mask_data = mask_batch.arrays[self.mask].data
             mask_integral_dtype = np.uint64
             logger.debug("mask size is " + str(mask_data.size))
             if mask_data.size < 2**32:
                 mask_integral_dtype = np.uint32
             if mask_data.size < 2**16:
                 mask_integral_dtype = np.uint16
-            logger.debug("chose %s as integral volume dtype"%mask_integral_dtype)
+            logger.debug("chose %s as integral array dtype"%mask_integral_dtype)
 
             self.mask_integral = np.array(mask_data>0, dtype=mask_integral_dtype)
             self.mask_integral = integral_image(self.mask_integral)
 
-        # clear bounding boxes of all provided volumes and points -- 
+        # clear bounding boxes of all provided arrays and points -- 
         # RandomLocation does not have limits (offsets are ignored)
         for identifier, spec in self.spec.items():
             spec.roi = None
@@ -91,12 +91,12 @@ class RandomLocation(BatchFilter):
 
         shift_roi = None
 
-        logger.debug("request: %s", request.volume_specs)
+        logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)
 
-        if request.volume_specs.keys():
+        if request.array_specs.keys():
             lcm_voxel_size = self.spec.get_lcm_voxel_size(
-                    request.volume_specs.keys())
+                    request.array_specs.keys())
             logger.debug(
                 "restricting random locations to multiples of voxel size %s",
                 lcm_voxel_size)
@@ -168,7 +168,7 @@ class RandomLocation(BatchFilter):
                         local_shift = Coordinate(
                                     randint(int(begin), int(end))
                                     for begin, end in zip(local_shift_roi.get_begin(), local_shift_roi.get_end()))
-                        # make sure that new shift matches ROIs of all requested volumes
+                        # make sure that new shift matches ROIs of all requested arrays
                         if shift_roi.contains(initial_random_shift + local_shift):
                             random_shift = initial_random_shift + local_shift
                             assert Roi(offset=random_shift + focused_points_offset,
@@ -187,22 +187,22 @@ class RandomLocation(BatchFilter):
 
             if self.mask and self.min_masked > 0:
                 # get randomly chosen mask ROI
-                request_mask_roi = request.volume_specs[self.mask].roi
+                request_mask_roi = request.array_specs[self.mask].roi
                 request_mask_roi = request_mask_roi.shift(random_shift)
 
-                # get coordinates inside mask volume
+                # get coordinates inside mask array
                 mask_voxel_size = self.spec[self.mask].voxel_size
-                request_mask_roi_in_volume = request_mask_roi/mask_voxel_size
-                request_mask_roi_in_volume -= self.mask_spec.roi.get_offset()/mask_voxel_size
+                request_mask_roi_in_array = request_mask_roi/mask_voxel_size
+                request_mask_roi_in_array -= self.mask_spec.roi.get_offset()/mask_voxel_size
 
                 # get number of masked-in voxels
                 num_masked_in = integrate(
                     self.mask_integral,
-                    [request_mask_roi_in_volume.get_begin()],
-                    [request_mask_roi_in_volume.get_end()-(1,)*self.mask_integral.ndim]
+                    [request_mask_roi_in_array.get_begin()],
+                    [request_mask_roi_in_array.get_end()-(1,)*self.mask_integral.ndim]
                 )[0]
 
-                mask_ratio = float(num_masked_in)/request_mask_roi_in_volume.size()
+                mask_ratio = float(num_masked_in)/request_mask_roi_in_array.size()
                 logger.debug("mask ratio is %f", mask_ratio)
 
                 if mask_ratio >= self.min_masked:
@@ -216,7 +216,7 @@ class RandomLocation(BatchFilter):
 
         # shift request ROIs
         self.random_shift = random_shift
-        for specs_type in [request.volume_specs, request.points_specs]:
+        for specs_type in [request.array_specs, request.points_specs]:
             for (type, spec) in specs_type.items():
                 roi = spec.roi.shift(random_shift)
                 logger.debug("new %s ROI: %s"%(type, roi))
@@ -226,8 +226,8 @@ class RandomLocation(BatchFilter):
 
     def process(self, batch, request):
         # reset ROIs to request
-        for (volume_type, spec) in request.volume_specs.items():
-            batch.volumes[volume_type].spec.roi = spec.roi
+        for (array_type, spec) in request.array_specs.items():
+            batch.arrays[array_type].spec.roi = spec.roi
         for (points_type, spec) in request.points_specs.items():
             batch.points[points_type].spec.roi = spec.roi
 

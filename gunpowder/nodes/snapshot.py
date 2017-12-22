@@ -12,7 +12,7 @@ class Snapshot(BatchFilter):
 
     Args:
 
-        dataset_names (dict): A dictionary from :class:`VolumeType` to names of 
+        dataset_names (dict): A dictionary from :class:`ArrayType` to names of 
             the datasets to store them in.
 
         output_dir (string): The directory to save the snapshots. Will be 
@@ -28,7 +28,7 @@ class Snapshot(BatchFilter):
 
         additional_request (:class:`BatchRequest`): An additional batch request 
             to merge with the passing request, if a snapshot is to be made. If 
-            not given, only the volumes that are in the batch anyway are 
+            not given, only the arrays that are in the batch anyway are 
             recorded.
 
         compression_type (string or int): Compression strategy.  Legal values 
@@ -37,9 +37,9 @@ class Snapshot(BatchFilter):
             the number of a dynamically loaded compression filter. (See 
             h5py.groups.create_dataset())
 
-        dataset_dtypes (dict): A dictionary from :class:`VolumeType` to datatype
-            (eg. np.int8). Volume to store is copied and casted to the specified type.
-             Original volume within the pipeline remains unchanged.
+        dataset_dtypes (dict): A dictionary from :class:`ArrayType` to datatype
+            (eg. np.int8). Array to store is copied and casted to the specified type.
+             Original array within the pipeline remains unchanged.
         '''
 
     def __init__(
@@ -68,10 +68,10 @@ class Snapshot(BatchFilter):
         self.record_snapshot = self.n%self.every == 0
         self.n += 1
 
-        # append additional volume requests, don't overwrite existing ones
-        for volume_type, spec in self.additional_request.volume_specs.items():
-            if volume_type not in request.volume_specs:
-                request.volume_specs[volume_type] = spec
+        # append additional array requests, don't overwrite existing ones
+        for array_type, spec in self.additional_request.array_specs.items():
+            if array_type not in request.array_specs:
+                request.array_specs[array_type] = spec
 
     def process(self, batch, request):
 
@@ -86,25 +86,25 @@ class Snapshot(BatchFilter):
             logger.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
-                for (volume_type, volume) in batch.volumes.items():
+                for (array_type, array) in batch.arrays.items():
 
-                    if volume_type not in self.dataset_names:
+                    if array_type not in self.dataset_names:
                         continue
 
-                    ds_name = self.dataset_names[volume_type]
+                    ds_name = self.dataset_names[array_type]
 
-                    offset = volume.spec.roi.get_offset()
-                    if volume_type in self.dataset_dtypes:
-                        dtype = self.dataset_dtypes[volume_type]
-                        dataset = f.create_dataset(name=ds_name, data=volume.data.astype(dtype), compression=self.compression_type)
+                    offset = array.spec.roi.get_offset()
+                    if array_type in self.dataset_dtypes:
+                        dtype = self.dataset_dtypes[array_type]
+                        dataset = f.create_dataset(name=ds_name, data=array.data.astype(dtype), compression=self.compression_type)
                     else:
-                        dataset = f.create_dataset(name=ds_name, data=volume.data, compression=self.compression_type)
+                        dataset = f.create_dataset(name=ds_name, data=array.data, compression=self.compression_type)
                     
                     dataset.attrs['offset'] = offset
-                    dataset.attrs['resolution'] = self.spec[volume_type].voxel_size
+                    dataset.attrs['resolution'] = self.spec[array_type].voxel_size
 
-                    # if volume has attributes, add them to the dataset
-                    for attribute_name, attribute in volume.attrs.items():
+                    # if array has attributes, add them to the dataset
+                    for attribute_name, attribute in array.attrs.items():
                         dataset.attrs[attribute_name] = attribute
 
                 if batch.loss is not None:

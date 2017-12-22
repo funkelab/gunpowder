@@ -4,7 +4,7 @@ import numpy as np
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.producer_pool import ProducerPool
-from gunpowder.volume import Volume
+from gunpowder.array import Array
 from gunpowder.points import Points
 from .batch_filter import BatchFilter
 
@@ -23,7 +23,7 @@ class Scan(BatchFilter):
 
         reference(:class:`BatchRequest`): A reference :class:`BatchRequest`.
             This request will be shifted in a scanning fashion over the
-            upstream ROIs of the requested volumes or points.
+            upstream ROIs of the requested arrays or points.
 
         num_workers (int, optional): If set to >1, upstream requests are made
             in parallel with that number of workers.
@@ -117,7 +117,7 @@ class Scan(BatchFilter):
         # get the least common multiple of all voxel sizes, we have to stride
         # at least that far
         lcm_voxel_size = self.spec.get_lcm_voxel_size(
-            self.reference.volume_specs.keys())
+            self.reference.array_specs.keys())
 
         # that's just the minimal size in each dimension
         for identifier, reference_spec in self.reference.items():
@@ -243,10 +243,10 @@ class Scan(BatchFilter):
         if self.batch.get_total_roi() is None:
             self.batch = self.__setup_batch(spec, chunk)
 
-        for (volume_type, volume) in chunk.volumes.items():
-            self.__fill(self.batch.volumes[volume_type].data, volume.data,
-                        spec.volume_specs[volume_type].roi, volume.spec.roi,
-                        self.spec[volume_type].voxel_size)
+        for (array_type, array) in chunk.arrays.items():
+            self.__fill(self.batch.arrays[array_type].data, array.data,
+                        spec.array_specs[array_type].roi, array.spec.roi,
+                        self.spec[array_type].voxel_size)
 
         for (points_type, points) in chunk.points.items():
             self.__fill_points(self.batch.points[points_type].data, points.data,
@@ -258,19 +258,19 @@ class Scan(BatchFilter):
 
         batch = Batch()
 
-        for (volume_type, spec) in batch_spec.volume_specs.items():
+        for (array_type, spec) in batch_spec.array_specs.items():
             roi = spec.roi
-            voxel_size = self.spec[volume_type].voxel_size
+            voxel_size = self.spec[array_type].voxel_size
 
             # get the 'non-spatial' shape of the chunk-batch
             # and append the shape of the request to it
-            volume = chunk.volumes[volume_type]
-            shape = volume.data.shape[:-roi.dims()]
+            array = chunk.arrays[array_type]
+            shape = array.data.shape[:-roi.dims()]
             shape += (roi.get_shape() // voxel_size)
 
-            spec = self.spec[volume_type].copy()
+            spec = self.spec[array_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Volume(data=np.zeros(shape),
+            batch.arrays[array_type] = Array(data=np.zeros(shape),
                                                 spec=spec)
 
         for (points_type, spec) in batch_spec.points_specs.items():

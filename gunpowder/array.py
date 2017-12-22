@@ -7,14 +7,14 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class VolumeType(Freezable):
-    '''Describes general properties of a volume type.
+class ArrayType(Freezable):
+    '''Describes general properties of an array type.
 
     Args:
 
         identifier (string):
-            A human readable identifier for this volume type. Will be used as a
-            static attribute in :class:`VolumeTypes`. Should be upper case (like
+            A human readable identifier for this array type. Will be used as a
+            static attribute in :class:`ArrayTypes`. Should be upper case (like
             ``RAW``, ``GT_LABELS``).
     '''
 
@@ -32,15 +32,15 @@ class VolumeType(Freezable):
     def __repr__(self):
         return self.identifier
 
-class VolumeTypes:
-    '''An expandable collection of volume types, which initially contains:
+class ArrayTypes:
+    '''An expandable collection of array types, which initially contains:
 
         =================================  ====================================================
         identifier                         purpose
         =================================  ====================================================
-        ``RAW``                            Raw intensity volumes.
+        ``RAW``                            Raw intensity arrays.
         ``ALPHA_MASK``                     Alpha mask for blending
-                                           raw volumes
+                                           raw arrays
                                            (used in :class:`DefectAugment`).
         ``GT_LABELS``                      Ground-truth object IDs.
         ``GT_MASK``                        Binary mask (1-use, 0-don't use) on ground-truth. No
@@ -67,59 +67,59 @@ class VolumeTypes:
         ``PRED_BM_POSTSYN``                Predicted postsynaptic locations
         =================================  ====================================================
 
-    New volume types can be added with :func:`register_volume_type`.
+    New array types can be added with :func:`register_array_type`.
     '''
     pass
 
-def register_volume_type(identifier):
-    '''Register a new volume type.
+def register_array_type(identifier):
+    '''Register a new array type.
 
     For example, the following call::
 
-            register_volume_type('IDENTIFIER')
+            register_array_type('IDENTIFIER')
 
-    will create a new volume type available as ``VolumeTypes.IDENTIFIER``.
-    ``VolumeTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    will create a new array type available as ``ArrayTypes.IDENTIFIER``.
+    ``ArrayTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
     in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    volume_type = VolumeType(identifier)
-    logger.debug("Registering volume type " + str(volume_type))
-    setattr(VolumeTypes, volume_type.identifier, volume_type)
+    array_type = ArrayType(identifier)
+    logger.debug("Registering array type " + str(array_type))
+    setattr(ArrayTypes, array_type.identifier, array_type)
 
-register_volume_type('RAW')
-register_volume_type('ALPHA_MASK')
-register_volume_type('GT_LABELS')
-register_volume_type('GT_AFFINITIES')
-register_volume_type('GT_AFFINITIES_MASK')
-register_volume_type('GT_MASK')
-register_volume_type('GT_IGNORE')
-register_volume_type('PRED_AFFINITIES')
-register_volume_type('LOSS_SCALE')
-register_volume_type('LOSS_GRADIENT')
-register_volume_type('MALIS_COMP_LABEL')
+register_array_type('RAW')
+register_array_type('ALPHA_MASK')
+register_array_type('GT_LABELS')
+register_array_type('GT_AFFINITIES')
+register_array_type('GT_AFFINITIES_MASK')
+register_array_type('GT_MASK')
+register_array_type('GT_IGNORE')
+register_array_type('PRED_AFFINITIES')
+register_array_type('LOSS_SCALE')
+register_array_type('LOSS_GRADIENT')
+register_array_type('MALIS_COMP_LABEL')
 
-register_volume_type('GT_BM_PRESYN')
-register_volume_type('GT_BM_POSTSYN')
-register_volume_type('GT_MASK_EXCLUSIVEZONE_PRESYN')
-register_volume_type('GT_MASK_EXCLUSIVEZONE_POSTSYN')
-register_volume_type('PRED_BM_PRESYN')
-register_volume_type('PRED_BM_POSTSYN')
-register_volume_type('LOSS_GRADIENT_PRESYN')
-register_volume_type('LOSS_GRADIENT_POSTSYN')
+register_array_type('GT_BM_PRESYN')
+register_array_type('GT_BM_POSTSYN')
+register_array_type('GT_MASK_EXCLUSIVEZONE_PRESYN')
+register_array_type('GT_MASK_EXCLUSIVEZONE_POSTSYN')
+register_array_type('PRED_BM_PRESYN')
+register_array_type('PRED_BM_POSTSYN')
+register_array_type('LOSS_GRADIENT_PRESYN')
+register_array_type('LOSS_GRADIENT_POSTSYN')
 
-register_volume_type('LOSS_SCALE_BM_PRESYN')
-register_volume_type('LOSS_SCALE_BM_POSTSYN')
+register_array_type('LOSS_SCALE_BM_PRESYN')
+register_array_type('LOSS_SCALE_BM_POSTSYN')
 
 
-class Volume(Freezable):
-    '''Represents a volume as an array and a :class:`Roi`.
+class Array(Freezable):
+    '''A numpy array with a specification describing the data.
 
     Args:
 
-        data (array-like): The data to be stored in the volume. Will be
+        data (array-like): The data to be stored in the array. Will be
             converted to an numpy array, if necessary.
 
-        spec (:class:`VolumeSpec`, optional): A spec describing the data.
+        spec (:class:`ArraySpec`, optional): A spec describing the data.
     '''
 
     def __init__(self, data, spec=None, attrs=None):
@@ -139,7 +139,7 @@ class Volume(Freezable):
         self.freeze()
 
     def crop(self, roi, copy=True):
-        '''Create a cropped copy of this Volume.
+        '''Create a cropped copy of this Array.
 
         Args:
 
@@ -148,7 +148,7 @@ class Volume(Freezable):
             copy(bool): Make a copy of the data (default).
         '''
 
-        assert self.spec.roi.contains(roi), "Requested crop ROI (%s) doesn't fit in volume (%s)"\
+        assert self.spec.roi.contains(roi), "Requested crop ROI (%s) doesn't fit in array (%s)"\
         %(roi, self.spec.roi)
 
         voxel_size = self.spec.voxel_size
@@ -165,4 +165,4 @@ class Volume(Freezable):
         spec = deepcopy(self.spec)
         attrs = deepcopy(self.attrs)
         spec.roi = deepcopy(roi)
-        return Volume(data, spec, attrs)
+        return Array(data, spec, attrs)

@@ -14,5 +14,5 @@ class IntensityScaleShift(BatchFilter):
 
     def process(self, batch, request):
 
-        raw = batch.volumes[self.intensities]
+        raw = batch.arrays[self.intensities]
         raw.data = raw.data*self.scale + self.shift

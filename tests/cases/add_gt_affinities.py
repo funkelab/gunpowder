@@ -10,12 +10,12 @@ class TestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            VolumeTypes.GT_LABELS, VolumeSpec(
+            ArrayTypes.GT_LABELS, ArraySpec(
                 roi=Roi((-40, -40, -40), (160, 160, 160)),
                 voxel_size=(20, 4, 8),
                 interpolatable=False))
         self.provides(
-            VolumeTypes.GT_MASK, VolumeSpec(
+            ArrayTypes.GT_MASK, ArraySpec(
                 roi=Roi((-40, -40, -40), (160, 160, 160)),
                 voxel_size=(20, 4, 8),
                 interpolatable=False))
@@ -24,12 +24,12 @@ class TestSource(BatchProvider):
 
         batch = Batch()
 
-        roi = request[VolumeTypes.GT_LABELS].roi
-        shape = (roi/self.spec[VolumeTypes.GT_LABELS].voxel_size).get_shape()
-        spec = self.spec[VolumeTypes.GT_LABELS].copy()
+        roi = request[ArrayTypes.GT_LABELS].roi
+        shape = (roi/self.spec[ArrayTypes.GT_LABELS].voxel_size).get_shape()
+        spec = self.spec[ArrayTypes.GT_LABELS].copy()
         spec.roi = roi
 
-        batch.volumes[VolumeTypes.GT_LABELS] = Volume(
+        batch.arrays[ArrayTypes.GT_LABELS] = Array(
             np.random.randint(
                 0, 2,
                 shape
@@ -37,12 +37,12 @@ class TestSource(BatchProvider):
             spec
         )
 
-        roi = request[VolumeTypes.GT_MASK].roi
-        shape = (roi/self.spec[VolumeTypes.GT_MASK].voxel_size).get_shape()
-        spec = self.spec[VolumeTypes.GT_MASK].copy()
+        roi = request[ArrayTypes.GT_MASK].roi
+        shape = (roi/self.spec[ArrayTypes.GT_MASK].voxel_size).get_shape()
+        spec = self.spec[ArrayTypes.GT_MASK].copy()
         spec.roi = roi
 
-        batch.volumes[VolumeTypes.GT_MASK] = Volume(
+        batch.arrays[ArrayTypes.GT_MASK] = Array(
             np.random.randint(
                 0, 2,
                 shape
@@ -67,16 +67,16 @@ class TestAddGtAffinities(ProviderTest):
                 Coordinate((1,1,1))
         ]
 
-        register_volume_type('GT_AFFINITIES_MASK')
+        register_array_type('GT_AFFINITIES_MASK')
 
         pipeline = (
                 TestSource() +
                 AddGtAffinities(
                     neighborhood,
-                    gt_labels=VolumeTypes.GT_LABELS,
-                    gt_labels_mask=VolumeTypes.GT_MASK,
-                    gt_affinities=VolumeTypes.GT_AFFINITIES,
-                    gt_affinities_mask=VolumeTypes.GT_AFFINITIES_MASK)
+                    gt_labels=ArrayTypes.GT_LABELS,
+                    gt_labels_mask=ArrayTypes.GT_MASK,
+                    gt_affinities=ArrayTypes.GT_AFFINITIES,
+                    gt_affinities_mask=ArrayTypes.GT_AFFINITIES_MASK)
         )
 
         with build(pipeline):
@@ -84,22 +84,22 @@ class TestAddGtAffinities(ProviderTest):
             for i in range(10):
 
                 request = BatchRequest()
-                request.add(VolumeTypes.GT_LABELS, (100,16,64))
-                request.add(VolumeTypes.GT_MASK, (100,16,64))
-                request.add(VolumeTypes.GT_AFFINITIES, (100,16,64))
-                request.add(VolumeTypes.GT_AFFINITIES_MASK, (100,16,64))
+                request.add(ArrayTypes.GT_LABELS, (100,16,64))
+                request.add(ArrayTypes.GT_MASK, (100,16,64))
+                request.add(ArrayTypes.GT_AFFINITIES, (100,16,64))
+                request.add(ArrayTypes.GT_AFFINITIES_MASK, (100,16,64))
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(VolumeTypes.GT_LABELS in batch.volumes)
-                self.assertTrue(VolumeTypes.GT_MASK in batch.volumes)
-                self.assertTrue(VolumeTypes.GT_AFFINITIES in batch.volumes)
-                self.assertTrue(VolumeTypes.GT_AFFINITIES_MASK in batch.volumes)
+                self.assertTrue(ArrayTypes.GT_LABELS in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_MASK in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_AFFINITIES in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_AFFINITIES_MASK in batch.arrays)
 
-                labels = batch.volumes[VolumeTypes.GT_LABELS]
-                labels_mask = batch.volumes[VolumeTypes.GT_MASK]
-                affs = batch.volumes[VolumeTypes.GT_AFFINITIES]
-                affs_mask = batch.volumes[VolumeTypes.GT_AFFINITIES_MASK]
+                labels = batch.arrays[ArrayTypes.GT_LABELS]
+                labels_mask = batch.arrays[ArrayTypes.GT_MASK]
+                affs = batch.arrays[ArrayTypes.GT_AFFINITIES]
+                affs_mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK]
 
                 self.assertTrue((len(neighborhood),) + labels.data.shape == affs.data.shape)
 

@@ -10,7 +10,7 @@ class Reject(BatchFilter):
 
     Args:
 
-        mask(:class:``VolumeType``): The mask to use.
+        mask(:class:``ArrayType``): The mask to use.
 
         min_masked(float, optional): The minimal required ratio of masked-in
             vs. masked-out voxels. Defaults to 0.5.
@@ -38,14 +38,14 @@ class Reject(BatchFilter):
         while not have_good_batch:
 
             batch = self.upstream_provider.request_batch(request)
-            mask_ratio = batch.volumes[self.mask].data.mean()
+            mask_ratio = batch.arrays[self.mask].data.mean()
             have_good_batch = mask_ratio>=self.min_masked
 
             if not have_good_batch:
 
                 logger.debug(
                     "reject batch with mask ratio %f at "%mask_ratio +
-                    str(batch.volumes[self.mask].spec.roi))
+                    str(batch.arrays[self.mask].spec.roi))
                 num_rejected += 1
 
                 if timing.elapsed() > report_next_timeout:
@@ -55,7 +55,7 @@ class Reject(BatchFilter):
 
         logger.debug(
             "good batch with mask ratio %f found at "%mask_ratio +
-            str(batch.volumes[self.mask].spec.roi))
+            str(batch.arrays[self.mask].spec.roi))
 
         timing.stop()
         batch.profiling_stats.add(timing)

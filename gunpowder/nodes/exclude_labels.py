@@ -3,7 +3,7 @@ import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume
+from gunpowder.array import Array
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,11 @@ class ExcludeLabels(BatchFilter):
         '''
         Args:
 
-            labels (:class:``VolumeType``): The volume containing the labels.
+            labels (:class:``ArrayType``): The array containing the labels.
 
             exclude (list of IDs): The labels to exclude from ``labels``.
 
-            ignore_mask (:class:``VolumeType``, optional): The ignore mask to
+            ignore_mask (:class:``ArrayType``, optional): The ignore mask to
                 create.
 
             ignore_mask_erode (float, optional): By how much (in world units) to erode
@@ -52,7 +52,7 @@ class ExcludeLabels(BatchFilter):
 
     def process(self, batch, request):
 
-        gt = batch.volumes[self.labels]
+        gt = batch.arrays[self.labels]
 
         # 0 marks included regions (to be used directly with distance transform
         # later)
@@ -96,4 +96,4 @@ class ExcludeLabels(BatchFilter):
         spec = self.spec[self.labels].copy()
         spec.roi = gt_ignore_roi
         spec.dtype = np.uint8
-        batch.volumes[self.ignore_mask] = Volume(gt_ignore, spec)
+        batch.arrays[self.ignore_mask] = Array(gt_ignore, spec)

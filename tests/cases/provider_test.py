@@ -8,8 +8,8 @@ class TestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            VolumeTypes.RAW,
-            VolumeSpec(
+            ArrayTypes.RAW,
+            ArraySpec(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=Coordinate((1, 1, 1)),
                 dtype=np.uint8,
@@ -18,13 +18,13 @@ class TestSource(BatchProvider):
     def provide(self, request):
 
         data = np.zeros(
-            request[VolumeTypes.RAW].roi.get_shape()/self.spec[VolumeTypes.RAW].voxel_size,
+            request[ArrayTypes.RAW].roi.get_shape()/self.spec[ArrayTypes.RAW].voxel_size,
             dtype=np.uint8)
-        spec = copy.deepcopy(self.spec[VolumeTypes.RAW])
-        spec.roi = request[VolumeTypes.RAW].roi
+        spec = copy.deepcopy(self.spec[ArrayTypes.RAW])
+        spec.roi = request[ArrayTypes.RAW].roi
 
         batch = Batch()
-        batch.volumes[VolumeTypes.RAW] = Volume(data, spec)
+        batch.arrays[ArrayTypes.RAW] = Array(data, spec)
         return batch
 
 
@@ -34,5 +34,5 @@ class ProviderTest(unittest.TestCase):
 
         self.test_source = TestSource()
         self.test_request = BatchRequest()
-        self.test_request[VolumeTypes.RAW] = VolumeSpec(
+        self.test_request[ArrayTypes.RAW] = ArraySpec(
             roi=Roi((20, 20, 20),(10, 10, 10)))

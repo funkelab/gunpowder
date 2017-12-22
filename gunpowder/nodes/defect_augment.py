@@ -33,9 +33,9 @@ class DefectAugment(BatchFilter):
 
         Args:
 
-            intensities(:class:``VolumeType``):
+            intensities(:class:``ArrayType``):
 
-                The volume of intensities to modify.
+                The array of intensities to modify.
 
             prob_missing, prob_low_contrast, prob_artifact, prob_deform:
 
@@ -53,12 +53,12 @@ class DefectAugment(BatchFilter):
                 (``artifacts``) and an alpha mask (``artifacts_mask``), used if
                 prob_artifact > 0.
 
-            artifacts(:class:``VolumeType``, optional):
+            artifacts(:class:``ArrayType``, optional):
 
                 The identifier to query ``artifact_source`` for to get the
                 intensities of the artifacts.
 
-            artifacts_mask(:class:``VolumeType``, optional):
+            artifacts_mask(:class:``ArrayType``, optional):
 
                 The identifier to query ``artifact_source`` for to get the
                 alpha mask of the artifacts to blend them with ``intensities``.
@@ -161,7 +161,7 @@ class DefectAugment(BatchFilter):
 
         assert batch.get_total_roi().dims() == 3, "defectaugment works on 3d batches only"
 
-        raw = batch.volumes[self.intensities]
+        raw = batch.arrays[self.intensities]
         raw_voxel_size = self.spec[self.intensities].voxel_size
 
         for c, augmentation_type in self.slice_to_augmentation.items():
@@ -200,8 +200,8 @@ class DefectAugment(BatchFilter):
                 logger.debug("Requesting artifact batch " + str(artifact_request))
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
-                artifact_alpha = artifact_batch.volumes[self.artifacts_mask].data
-                artifact_raw   = artifact_batch.volumes[self.artifacts].data
+                artifact_alpha = artifact_batch.arrays[self.artifacts_mask].data
+                artifact_raw   = artifact_batch.arrays[self.artifacts].data
 
                 assert artifact_raw.dtype == section.dtype
                 assert artifact_alpha.dtype == np.float32
@@ -235,7 +235,7 @@ class DefectAugment(BatchFilter):
                 raw.data[section_selector] = section
 
         # in case we needed to change the ROI due to a deformation augment,
-        # restore original ROI and crop the volume data
+        # restore original ROI and crop the array data
         if 'deformed_slice' in self.slice_to_augmentation.values():
             old_roi = request[self.intensities].roi
             logger.debug("resetting roi to %s" % old_roi)

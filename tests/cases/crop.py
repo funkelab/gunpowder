@@ -7,8 +7,8 @@ class TestSourceCrop(BatchProvider):
     def setup(self):
 
         self.provides(
-            VolumeTypes.RAW,
-            VolumeSpec(
+            ArrayTypes.RAW,
+            ArraySpec(
                 roi=Roi((200, 20, 20), (1800, 180, 180)),
                 voxel_size=(20, 2, 2)))
 
@@ -30,12 +30,12 @@ class TestCrop(ProviderTest):
         pipeline = (
             TestSourceCrop() +
             Crop(
-                volumes = {VolumeTypes.RAW: cropped_roi_raw},
+                arrays = {ArrayTypes.RAW: cropped_roi_raw},
                 points  = {PointsTypes.PRESYN: cropped_roi_presyn}))
 
         with build(pipeline):
 
             self.assertTrue(
-                pipeline.spec[VolumeTypes.RAW].roi == cropped_roi_raw)
+                pipeline.spec[ArrayTypes.RAW].roi == cropped_roi_raw)
             self.assertTrue(
                 pipeline.spec[PointsTypes.PRESYN].roi == cropped_roi_presyn)
