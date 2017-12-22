@@ -26,7 +26,7 @@ class TestSource(BatchProvider):
         data[shape[0]/2:,:,:] += 2
         data[:,shape[1]/2:,:] += 4
         data[:,:,shape[2]/2:] += 8
-        batch.volumes[ArrayTypes.GT_LABELS] = Array(data, spec)
+        batch.arrays[ArrayTypes.GT_LABELS] = Array(data, spec)
 
         return batch
 
@@ -36,15 +36,15 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
 
         # set_verbose()
 
-        register_volume_type('GT_BOUNDARY_DISTANCES')
-        register_volume_type('GT_BOUNDARY_GRADIENTS')
+        register_array_type('GT_BOUNDARY_DISTANCES')
+        register_array_type('GT_BOUNDARY_GRADIENTS')
 
         pipeline = (
             TestSource() +
             AddBoundaryDistanceGradients(
-                label_volume_type=ArrayTypes.GT_LABELS,
-                distance_volume_type=ArrayTypes.GT_BOUNDARY_DISTANCES,
-                gradient_volume_type=ArrayTypes.GT_BOUNDARY_GRADIENTS)
+                label_array_type=ArrayTypes.GT_LABELS,
+                distance_array_type=ArrayTypes.GT_BOUNDARY_DISTANCES,
+                gradient_array_type=ArrayTypes.GT_BOUNDARY_GRADIENTS)
         )
 
         with build(pipeline):
@@ -56,9 +56,9 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
 
             batch = pipeline.request_batch(request)
 
-            labels = batch.volumes[ArrayTypes.GT_LABELS].data
-            distances = batch.volumes[ArrayTypes.GT_BOUNDARY_DISTANCES].data
-            gradients = batch.volumes[ArrayTypes.GT_BOUNDARY_GRADIENTS].data
+            labels = batch.arrays[ArrayTypes.GT_LABELS].data
+            distances = batch.arrays[ArrayTypes.GT_BOUNDARY_DISTANCES].data
+            gradients = batch.arrays[ArrayTypes.GT_BOUNDARY_GRADIENTS].data
             shape = distances.shape
 
             l_001 = labels[:shape[0]/2,:shape[1]/2,shape[2]/2:]

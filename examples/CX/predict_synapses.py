@@ -13,15 +13,15 @@ def predict():
     roi_synapses  = Roi(offset=(9500, 2500, 8000), shape=(500, 500, 1500))
     shape_input     = roi_synapses.get_shape()
     shape_outputs = roi_synapses.get_shape()
-    request.add_volume_request(ArrayTypes.RAW, shape_input)
+    request.add_array_request(ArrayTypes.RAW, shape_input)
     request.add_points_request(PointsTypes.PRESYN, shape_outputs)
-    request.add_volume_request(ArrayTypes.GT_BM_PRESYN, shape_outputs)
-    request.add_volume_request(ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_outputs)
-    request.add_volume_request(ArrayTypes.PRED_BM_PRESYN, shape_outputs)
+    request.add_array_request(ArrayTypes.GT_BM_PRESYN, shape_outputs)
+    request.add_array_request(ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_outputs)
+    request.add_array_request(ArrayTypes.PRED_BM_PRESYN, shape_outputs)
 
     # shift batch request roi to desired offset
     request_offset = roi_synapses.get_offset()
-    for request_type in [request.volumes, request.points]:
+    for request_type in [request.arrays, request.points]:
         for type in request_type:
             request_type[type] += request_offset
 
@@ -29,11 +29,11 @@ def predict():
     chunk_spec_template   = BatchRequest()
     shape_input_template  = [132, 132, 132]
     shape_output_template = [44, 44, 44]
-    chunk_spec_template.add_volume_request(ArrayTypes.RAW, shape_input_template)
+    chunk_spec_template.add_array_request(ArrayTypes.RAW, shape_input_template)
     chunk_spec_template.add_points_request(PointsTypes.PRESYN, shape_output_template)
-    chunk_spec_template.add_volume_request(ArrayTypes.GT_BM_PRESYN, shape_output_template)
-    chunk_spec_template.add_volume_request(ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_output_template)
-    chunk_spec_template.add_volume_request(ArrayTypes.PRED_BM_PRESYN, shape_output_template)
+    chunk_spec_template.add_array_request(ArrayTypes.GT_BM_PRESYN, shape_output_template)
+    chunk_spec_template.add_array_request(ArrayTypes.GT_MASK_EXCLUSIVEZONE_PRESYN, shape_output_template)
+    chunk_spec_template.add_array_request(ArrayTypes.PRED_BM_PRESYN, shape_output_template)
 
     # define networks input, output names and ArrayTypes
     input_names_to_types  = {'data': ArrayTypes.RAW}
@@ -47,7 +47,7 @@ def predict():
                                 hostname = 'emdata2',
                                 port     = 8000,
                                 uuid     = 'cb7dc',
-                                volume_array_names = {
+                                array_array_names = {
                                                        ArrayTypes.RAW:       'grayscale',
                                                        ArrayTypes.GT_LABELS: 'labels'
                                                      },

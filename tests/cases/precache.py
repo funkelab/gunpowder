@@ -27,7 +27,7 @@ class TestPreCache(ProviderTest):
             for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
                 self.assertTrue(
-                    batch.volumes[ArrayTypes.RAW].spec.roi ==
+                    batch.arrays[ArrayTypes.RAW].spec.roi ==
                     self.test_request[ArrayTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds
@@ -42,7 +42,7 @@ class TestPreCache(ProviderTest):
             for _ in range(100):
                 batch = pipeline.request_batch(self.test_request)
                 self.assertTrue(
-                    batch.volumes[ArrayTypes.RAW].spec.roi ==
+                    batch.arrays[ArrayTypes.RAW].spec.roi ==
                     self.test_request[ArrayTypes.RAW].roi)
 
             # should be done in a bit more than 1 seconds

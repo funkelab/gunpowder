@@ -1,5 +1,5 @@
 from .batch_filter import BatchFilter
-from gunpowder.volume import Array
+from gunpowder.array import Array
 import collections
 import itertools
 import logging
@@ -9,15 +9,15 @@ logger = logging.getLogger(__name__)
 
 
 class BalanceLabels(BatchFilter):
-    '''Creates a scale volume to balance the loss between positive and negative
+    '''Creates a scale array to balance the loss between positive and negative
     labels.
 
     Args:
 
-        labels (:class:``ArrayType``): A volume containing binary labels.
+        labels (:class:``ArrayType``): A array containing binary labels.
 
-        scales (:class:``ArrayType``): A volume with scales to be created. This
-            new volume will have the same ROI and resolution as `labels`.
+        scales (:class:``ArrayType``): A array with scales to be created. This
+            new array will have the same ROI and resolution as `labels`.
 
         mask (:class:``ArrayType``, optional): An optional mask (or list of
             masks) to consider for balancing. Every voxel marked with a 0 will
@@ -26,7 +26,7 @@ class BalanceLabels(BatchFilter):
 
         slab (tuple of int, optional): A shape specification to perform the
             balancing in slabs of this size. -1 can be used to refer to the
-            actual size of the label volume. For example, a slab of::
+            actual size of the label array. For example, a slab of::
 
                 (2, -1, -1, -1)
 
@@ -64,7 +64,7 @@ class BalanceLabels(BatchFilter):
 
     def process(self, batch, request):
 
-        labels = batch.volumes[self.labels]
+        labels = batch.arrays[self.labels]
 
         assert len(np.unique(labels.data)) <= 2, (
             "Found more than two labels in %s."%self.labels)
@@ -78,7 +78,7 @@ class BalanceLabels(BatchFilter):
 
         # set error_scale to 0 in masked-out areas
         for identifier in self.masks:
-            mask = batch.volumes[identifier]
+            mask = batch.arrays[identifier]
             assert labels.data.shape == mask.data.shape, (
                 "Shape of mask %s %s does not match %s %s"%(
                     mask,
@@ -109,7 +109,7 @@ class BalanceLabels(BatchFilter):
 
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
-        batch.volumes[self.scales] = Array(error_scale, spec)
+        batch.arrays[self.scales] = Array(error_scale, spec)
 
     def __balance(self, labels, scale):
 

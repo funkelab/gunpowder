@@ -25,11 +25,11 @@ class Hdf5WriteTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (volume_type, spec) in request.volume_specs.items():
+        for (array_type, spec) in request.array_specs.items():
 
             roi = spec.roi
-            roi_voxel = roi // self.spec[volume_type].voxel_size
-            # print("Hdf5WriteTestSource: Adding " + str(volume_type))
+            roi_voxel = roi // self.spec[array_type].voxel_size
+            # print("Hdf5WriteTestSource: Adding " + str(array_type))
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
@@ -41,9 +41,9 @@ class Hdf5WriteTestSource(BatchProvider):
 
             # print("Roi is: " + str(roi))
 
-            spec = self.spec[volume_type].copy()
+            spec = self.spec[array_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Array(
+            batch.arrays[array_type] = Array(
                     data,
                     spec)
         return batch
@@ -61,7 +61,7 @@ class TestHdf5Write(ProviderTest):
         pipeline = (
             source +
             Hdf5Write({
-                ArrayTypes.RAW: 'volumes/raw'
+                ArrayTypes.RAW: 'arrays/raw'
             },
             output_filename='hdf5_write_test.hdf') +
             Scan(chunk_request))
@@ -79,13 +79,13 @@ class TestHdf5Write(ProviderTest):
 
             batch = pipeline.request_batch(full_request)
 
-        # assert that stored HDF dataset equals batch volume
+        # assert that stored HDF dataset equals batch array
 
         with h5py.File('hdf5_write_test.hdf', 'r') as f:
 
-            ds = f['volumes/raw']
+            ds = f['arrays/raw']
 
-            batch_raw = batch.volumes[ArrayTypes.RAW]
+            batch_raw = batch.arrays[ArrayTypes.RAW]
             stored_raw = np.array(ds)
 
             self.assertEqual(
@@ -93,4 +93,4 @@ class TestHdf5Write(ProviderTest):
                 batch_raw.spec.roi.get_shape()//batch_raw.spec.voxel_size)
             self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.get_offset())
             self.assertEqual(tuple(ds.attrs['resolution']), batch_raw.spec.voxel_size)
-            self.assertTrue((stored_raw == batch.volumes[ArrayTypes.RAW].data).all())
+            self.assertTrue((stored_raw == batch.arrays[ArrayTypes.RAW].data).all())

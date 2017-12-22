@@ -7,10 +7,10 @@ from gunpowder.tensorflow import Train, Predict
 import tensorflow as tf
 from .provider_test import ProviderTest
 
-register_volume_type('A')
-register_volume_type('B')
-register_volume_type('C')
-register_volume_type('GRADIENT_A')
+register_array_type('A')
+register_array_type('B')
+register_array_type('C')
+register_array_type('GRADIENT_A')
 
 class TestTensorflowTrainSource(BatchProvider):
 
@@ -31,14 +31,14 @@ class TestTensorflowTrainSource(BatchProvider):
         spec = self.spec[ArrayTypes.A]
         spec.roi = request[ArrayTypes.A].roi
 
-        batch.volumes[ArrayTypes.A] = Array(
+        batch.arrays[ArrayTypes.A] = Array(
             np.array([[0, 1], [2, 3]], dtype=np.float32),
             spec)
 
         spec = self.spec[ArrayTypes.B]
         spec.roi = request[ArrayTypes.B].roi
 
-        batch.volumes[ArrayTypes.B] = Array(
+        batch.arrays[ArrayTypes.B] = Array(
             np.array([[0, 1], [2, 3]], dtype=np.float32),
             spec)
 
@@ -107,7 +107,7 @@ class TestTensorflowTrain(ProviderTest):
 
             self.assertAlmostEqual(batch.loss, 9.8994951)
 
-            gradient_a = batch.volumes[ArrayTypes.GRADIENT_A].data
+            gradient_a = batch.arrays[ArrayTypes.GRADIENT_A].data
             self.assertTrue(gradient_a[0, 0] < gradient_a[0, 1])
             self.assertTrue(gradient_a[0, 1] < gradient_a[1, 0])
             self.assertTrue(gradient_a[1, 0] < gradient_a[1, 1])
@@ -147,7 +147,7 @@ class TestTensorflowTrain(ProviderTest):
 
             for i in range(100):
                 batch = pipeline.request_batch(request)
-                c = batch.volumes[ArrayTypes.C].data
+                c = batch.arrays[ArrayTypes.C].data
 
                 if prev_c is not None:
                     self.assertTrue(np.equal(c, prev_c))

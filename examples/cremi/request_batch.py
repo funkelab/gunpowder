@@ -12,11 +12,11 @@ def train():
     set_verbose()
 
     affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
-    register_volume_type('GT_LABELS_2')
-    register_volume_type('GT_LABELS_4')
-    register_volume_type('GT_BOUNDARY_GRADIENT')
-    register_volume_type('GT_BOUNDARY_DISTANCE')
-    register_volume_type('GT_BOUNDARY')
+    register_array_type('GT_LABELS_2')
+    register_array_type('GT_LABELS_4')
+    register_array_type('GT_BOUNDARY_GRADIENT')
+    register_array_type('GT_BOUNDARY_DISTANCE')
+    register_array_type('GT_BOUNDARY')
     n = 35
 
     request = BatchRequest()
@@ -51,12 +51,12 @@ def train():
                 ArrayTypes.RAW: 'defect_sections/raw',
                 ArrayTypes.ALPHA_MASK: 'defect_sections/mask',
             },
-            volume_specs = {
+            array_specs = {
                 ArrayTypes.RAW: ArraySpec(voxel_size=(40, 4, 4)),
                 ArrayTypes.ALPHA_MASK: ArraySpec(voxel_size=(40, 4, 4)),
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_volume_type=ArrayTypes.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_array_type=ArrayTypes.ALPHA_MASK) +
         Snapshot(
             {
                 ArrayTypes.RAW: 'volumes/raw',
@@ -96,9 +96,9 @@ def train():
         ) +
         AddGtAffinities(affinity_neighborhood) +
         AddBoundaryDistanceGradients(
-            gradient_volume_type=ArrayTypes.GT_BOUNDARY_GRADIENT,
-            distance_volume_type=ArrayTypes.GT_BOUNDARY_DISTANCE,
-            boundary_volume_type=ArrayTypes.GT_BOUNDARY,
+            gradient_array_type=ArrayTypes.GT_BOUNDARY_GRADIENT,
+            distance_array_type=ArrayTypes.GT_BOUNDARY_DISTANCE,
+            boundary_array_type=ArrayTypes.GT_BOUNDARY,
             normalize='l2') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(

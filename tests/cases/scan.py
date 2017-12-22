@@ -24,11 +24,11 @@ class ScanTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (volume_type, spec) in request.volume_specs.items():
+        for (array_type, spec) in request.array_specs.items():
 
             roi = spec.roi
-            roi_voxel = roi // self.spec[volume_type].voxel_size
-            # print("ScanTestSource: Adding " + str(volume_type))
+            roi_voxel = roi // self.spec[array_type].voxel_size
+            # print("ScanTestSource: Adding " + str(array_type))
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
@@ -39,9 +39,9 @@ class ScanTestSource(BatchProvider):
 
             # print("Roi is: " + str(roi))
 
-            spec = self.spec[volume_type].copy()
+            spec = self.spec[array_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Array(
+            batch.arrays[array_type] = Array(
                     data,
                     spec)
 
@@ -76,19 +76,19 @@ class TestScan(ProviderTest):
             voxel_size = pipeline.spec[ArrayTypes.RAW].voxel_size
 
         # assert that pixels encode their position
-        for (volume_type, volume) in batch.volumes.items():
+        for (array_type, array) in batch.arrays.items():
 
             # the z,y,x coordinates of the ROI
-            roi = volume.spec.roi
+            roi = array.spec.roi
             meshgrids = np.meshgrid(
                     range(roi.get_begin()[0]//voxel_size[0], roi.get_end()[0]//voxel_size[0]),
                     range(roi.get_begin()[1]//voxel_size[1], roi.get_end()[1]//voxel_size[1]),
                     range(roi.get_begin()[2]//voxel_size[2], roi.get_end()[2]//voxel_size[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            self.assertTrue((volume.data == data).all())
+            self.assertTrue((array.data == data).all())
 
-        assert(batch.volumes[ArrayTypes.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
+        assert(batch.arrays[ArrayTypes.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
 
         # test scanning with empty request
 

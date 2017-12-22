@@ -151,7 +151,7 @@ class BatchFilter(BatchProvider):
         Called during initialization of the DAG. Callees can assume that all 
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` or :fun:`updates` to announce the volumes 
+        In setup, call :fun:`provides` or :fun:`updates` to announce the arrays 
         and points provided or changed by this node.
         '''
         pass

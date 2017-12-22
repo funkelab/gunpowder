@@ -24,7 +24,7 @@ class TestSource(BatchProvider):
         spec.roi = request[ArrayTypes.RAW].roi
 
         batch = Batch()
-        batch.volumes[ArrayTypes.RAW] = Array(data, spec)
+        batch.arrays[ArrayTypes.RAW] = Array(data, spec)
         return batch
 
 

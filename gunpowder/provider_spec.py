@@ -2,55 +2,55 @@ import fractions
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import PointsType
 from gunpowder.points_spec import PointsSpec
-from gunpowder.volume import ArrayType
-from gunpowder.volume_spec import ArraySpec
+from gunpowder.array import ArrayType
+from gunpowder.array_spec import ArraySpec
 from .freezable import Freezable
 
 class ProviderSpec(Freezable):
     '''A collection of (possibly partial) :class:`ArraySpec`s and
-    :class:`PointsSpec`s describing a :class:`BatchProvider`'s offered volumes
+    :class:`PointsSpec`s describing a :class:`BatchProvider`'s offered arrays
     and points.
 
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
-        provider_spec[volume_type] = ArraySpec(...)
+        provider_spec[array_type] = ArraySpec(...)
         provider_spec[points_type] = PointsSpec(...)
 
-    Here, ``volume_type`` and ``points_type`` are :class:`ArrayType` and
+    Here, ``array_type`` and ``points_type`` are :class:`ArrayType` and
     :class:`PointsType` instances, previously registered with
-    :fun:`register_volume_type` or :fun:`register_points_type`. The specs can
+    :fun:`register_array_type` or :fun:`register_points_type`. The specs can
     be queried with::
 
-        volume_spec = provider_spec[volume_type]
+        array_spec = provider_spec[array_type]
         points_spec = provider_spec[points_type]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``provider_spec.items()``.
 
-    To access only volume or points specs, use the dictionaries
-    ``provider_spec.volume_specs`` or ``provider_spec.points_specs``,
+    To access only array or points specs, use the dictionaries
+    ``provider_spec.array_specs`` or ``provider_spec.points_specs``,
     respectively.
 
     Args:
 
-        volume_specs (dict): A dictionary from :class:`ArrayType` to
+        array_specs (dict): A dictionary from :class:`ArrayType` to
             :class:`ArraySpec`.
 
         points_specs (dict): A dictionary from :class:`PointsType` to
             :class:`PointsSpec`.
     '''
 
-    def __init__(self, volume_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, points_specs=None):
 
-        self.volume_specs = {}
+        self.array_specs = {}
         self.points_specs = {}
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
         # are run
-        if volume_specs is not None:
-            for identifier, spec in volume_specs.items():
+        if array_specs is not None:
+            for identifier, spec in array_specs.items():
                 self[identifier] = spec
         if points_specs is not None:
             for identifier, spec in points_specs.items():
@@ -63,7 +63,7 @@ class ProviderSpec(Freezable):
             assert isinstance(identifier, ArrayType), ("Only a ArrayType is "
                                                         "allowed as key for a "
                                                         "ArraySpec value.")
-            self.volume_specs[identifier] = spec.copy()
+            self.array_specs[identifier] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
             assert isinstance(identifier, PointsType), ("Only a PointsType is "
@@ -78,7 +78,7 @@ class ProviderSpec(Freezable):
     def __getitem__(self, identifier):
 
         if isinstance(identifier, ArrayType):
-            return self.volume_specs[identifier]
+            return self.array_specs[identifier]
 
         elif isinstance(identifier, PointsType):
             return self.points_specs[identifier]
@@ -89,12 +89,12 @@ class ProviderSpec(Freezable):
 
     def __len__(self):
 
-        return len(self.volume_specs) + len(self.points_specs)
+        return len(self.array_specs) + len(self.points_specs)
 
     def __contains__(self, identifier):
 
         if isinstance(identifier, ArrayType):
-            return identifier in self.volume_specs
+            return identifier in self.array_specs
 
         elif isinstance(identifier, PointsType):
             return identifier in self.points_specs
@@ -106,7 +106,7 @@ class ProviderSpec(Freezable):
     def __delitem__(self, identifier):
 
         if isinstance(identifier, ArrayType):
-            del self.volume_specs[identifier]
+            del self.array_specs[identifier]
 
         elif isinstance(identifier, PointsType):
             del self.points_specs[identifier]
@@ -118,7 +118,7 @@ class ProviderSpec(Freezable):
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
 
-        for (k, v) in self.volume_specs.items():
+        for (k, v) in self.array_specs.items():
             yield k, v
         for (k, v) in self.points_specs.items():
             yield k, v
@@ -127,7 +127,7 @@ class ProviderSpec(Freezable):
         '''Get the union of all the ROIs.'''
 
         total_roi = None
-        for specs_type in [self.volume_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs]:
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
@@ -139,7 +139,7 @@ class ProviderSpec(Freezable):
         '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-        for specs_type in [self.volume_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs]:
             for (_, spec) in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi
@@ -148,29 +148,29 @@ class ProviderSpec(Freezable):
 
         return common_roi
 
-    def get_lcm_voxel_size(self, volume_types=None):
+    def get_lcm_voxel_size(self, array_types=None):
         '''Get the least common multiple of the voxel sizes in this spec.
 
         Args:
 
-            volume_types (list of :class:`ArrayType`, optional): If given,
-                consider only the given volume types.
+            array_types (list of :class:`ArrayType`, optional): If given,
+                consider only the given array types.
         '''
 
-        if volume_types is None:
-            volume_types = self.volume_specs.keys()
+        if array_types is None:
+            array_types = self.array_specs.keys()
 
-        if not volume_types:
+        if not array_types:
             raise RuntimeError("Can not compute lcm voxel size -- there are "
-                               "no volume specs in this provider spec.")
+                               "no array specs in this provider spec.")
         else:
-            if not volume_types:
+            if not array_types:
                 raise RuntimeError("Can not compute lcm voxel size -- list of "
-                                   "given volume specs is empty.")
+                                   "given array specs is empty.")
 
         lcm_voxel_size = None
-        for identifier in volume_types:
-            voxel_size = self.volume_specs[identifier].voxel_size
+        for identifier in array_types:
+            voxel_size = self.array_specs[identifier].voxel_size
             if lcm_voxel_size is None:
                 lcm_voxel_size = voxel_size
             else:

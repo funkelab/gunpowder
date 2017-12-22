@@ -10,7 +10,7 @@ class PointsSpec(Freezable):
 
         roi (:class:`Roi`): The region of interested represented by this set of 
         points. Can be `None` for `BatchProvider`s that allow requests for 
-        volumes everywhere, but will always be set for points specs that are 
+        arrays everywhere, but will always be set for points specs that are 
         part of a :class:`Points` set.
     '''
 

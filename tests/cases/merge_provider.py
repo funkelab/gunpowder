@@ -38,15 +38,15 @@ class ArrayTestSoure(BatchProvider):
                 voxel_size=self.voxel_size))
 
     def provide(self, request):
-        roi_volume = request[ArrayTypes.GT_LABELS].roi
-        print roi_volume
+        roi_array = request[ArrayTypes.GT_LABELS].roi
+        print roi_array
         data = np.zeros(
-            roi_volume.get_shape() /
+            roi_array.get_shape() /
             self.spec[ArrayTypes.GT_LABELS].voxel_size)
         batch = Batch()
         spec = self.spec[ArrayTypes.GT_LABELS].copy()
-        spec.roi = roi_volume
-        batch.volumes[ArrayTypes.GT_LABELS] = Array(
+        spec.roi = roi_array
+        batch.arrays[ArrayTypes.GT_LABELS] = Array(
             data,
             spec)
         return batch
@@ -57,8 +57,8 @@ class TestMergeProvider(unittest.TestCase):
     def test_merge_basics(self):
         voxel_size = (1, 1, 1)
         pointssource = PointTestSource(voxel_size)
-        volumesource = ArrayTestSoure(voxel_size)
-        pipeline = (pointssource, volumesource) + MergeProvider() + RandomLocation()
+        arraysource = ArrayTestSoure(voxel_size)
+        pipeline = (pointssource, arraysource) + MergeProvider() + RandomLocation()
         window_request = Coordinate((50, 50, 50))
         with build(pipeline):
             # Check basic merging.
@@ -66,19 +66,19 @@ class TestMergeProvider(unittest.TestCase):
             request.add((PointsTypes.PRESYN), window_request)
             request.add((ArrayTypes.GT_LABELS), window_request)
             batch_res = pipeline.request_batch(request)
-            self.assertTrue(ArrayTypes.GT_LABELS in batch_res.volumes)
+            self.assertTrue(ArrayTypes.GT_LABELS in batch_res.arrays)
             self.assertTrue(PointsTypes.PRESYN in batch_res.points)
 
             # Check that request of only one source also works.
             request = BatchRequest()
             request.add((PointsTypes.PRESYN), window_request)
             batch_res = pipeline.request_batch(request)
-            self.assertFalse(ArrayTypes.GT_LABELS in batch_res.volumes)
+            self.assertFalse(ArrayTypes.GT_LABELS in batch_res.arrays)
             self.assertTrue(PointsTypes.PRESYN in batch_res.points)
 
         # Check that it fails, when having two sources that provide the same type.
-        volumesource2 = ArrayTestSoure(voxel_size)
-        pipeline_fail = (volumesource, volumesource2) + MergeProvider() + RandomLocation()
+        arraysource2 = ArrayTestSoure(voxel_size)
+        pipeline_fail = (arraysource, arraysource2) + MergeProvider() + RandomLocation()
         with self.assertRaises(AssertionError):
             with build(pipeline_fail):
                 pass

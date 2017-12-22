@@ -4,14 +4,14 @@ import numpy as np
 from scipy import ndimage
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.volume import Array, ArrayTypes
+from gunpowder.array import Array, ArrayTypes
 from gunpowder.points import RasterizationSetting, enlarge_binary_map
 
 logger = logging.getLogger(__name__)
 
 class AddGtMaskExclusiveZone(BatchFilter):
     ''' Create ExclusizeZone mask for a binary map in batch and add it as
-    volume to batch.
+    array to batch.
 
     An ExclusiveZone mask is a bianry mask [0,1] where locations which lie
     within a given distance to the ON (=1) regions (surrounding the ON regions)
@@ -51,8 +51,8 @@ class AddGtMaskExclusiveZone(BatchFilter):
         self.spec = copy.deepcopy(self.upstream_spec)
 
         for EZ_mask_type, binary_map_type in self.EZ_masks_to_binary_map.items():
-            if binary_map_type in self.upstream_spec.volumes:
-                self.spec.volumes[EZ_mask_type] = self.spec.volumes[binary_map_type]
+            if binary_map_type in self.upstream_spec.arrays:
+                self.spec.arrays[EZ_mask_type] = self.spec.arrays[binary_map_type]
 
 
     def get_spec(self):
@@ -64,16 +64,16 @@ class AddGtMaskExclusiveZone(BatchFilter):
         self.EZ_masks_to_create = []
         for EZ_mask_type, binary_map_type in self.EZ_masks_to_binary_map.items():
             # do nothing if binary mask to create EZ mask around is not requested as well
-            if EZ_mask_type in request.volumes:
+            if EZ_mask_type in request.arrays:
                 # assert that binary mask for which EZ mask is created for is requested
-                assert binary_map_type in request.volumes, \
+                assert binary_map_type in request.arrays, \
                     "ExclusiveZone Mask for {}, can only be created if {} also requested.".format(EZ_mask_type, binary_map_type)
                 # assert that ROI of EZ lies within ROI of binary mask
-                assert request.volumes[binary_map_type].contains(request.volumes[EZ_mask_type]),\
+                assert request.arrays[binary_map_type].contains(request.arrays[EZ_mask_type]),\
                     "EZ mask for {} requested for ROI outside of source's ({}) ROI.".format(EZ_mask_type,binary_map_type)
 
                 self.EZ_masks_to_create.append(EZ_mask_type)
-                del request.volumes[EZ_mask_type]
+                del request.arrays[EZ_mask_type]
 
         if len(self.EZ_masks_to_create) == 0:
             logger.warn("no ExclusiveZone Masks requested, will do nothing")
@@ -89,13 +89,13 @@ class AddGtMaskExclusiveZone(BatchFilter):
 
         for EZ_mask_type in self.EZ_masks_to_create:
             binary_map_type = self.EZ_masks_to_binary_map[EZ_mask_type]
-            binary_map = batch.volumes[binary_map_type].data
-            resolution = batch.volumes[binary_map_type].resolution
-            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.volumes[EZ_mask_type].get_shape(),
+            binary_map = batch.arrays[binary_map_type].data
+            resolution = batch.arrays[binary_map_type].resolution
+            EZ_mask = self.__get_exclusivezone_mask(binary_map, shape_EZ_mask=request.arrays[EZ_mask_type].get_shape(),
                                                     resolution=resolution)
 
-            batch.volumes[EZ_mask_type] = Array(data= EZ_mask,
-                                                 roi=request.volumes[EZ_mask_type],
+            batch.arrays[EZ_mask_type] = Array(data= EZ_mask,
+                                                 roi=request.arrays[EZ_mask_type],
                                                  resolution=resolution)
 
     def __get_exclusivezone_mask(self, binary_map, shape_EZ_mask, resolution=None):

@@ -27,21 +27,21 @@ class TestSource(BatchProvider):
         spec = self.spec[ArrayTypes.GT_AFFINITIES].copy()
         spec.roi = roi
 
-        batch.volumes[ArrayTypes.GT_AFFINITIES] = Array(
+        batch.arrays[ArrayTypes.GT_AFFINITIES] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
                 ),
                 spec
         )
-        batch.volumes[ArrayTypes.GT_AFFINITIES_MASK] = Array(
+        batch.arrays[ArrayTypes.GT_AFFINITIES_MASK] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
                 ),
                 spec
         )
-        batch.volumes[ArrayTypes.GT_IGNORE] = Array(
+        batch.arrays[ArrayTypes.GT_IGNORE] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
@@ -71,12 +71,12 @@ class TestBalanceLabels(ProviderTest):
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.volumes)
+                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.arrays)
 
-                affs = batch.volumes[ArrayTypes.GT_AFFINITIES].data
-                scale = batch.volumes[ArrayTypes.LOSS_SCALE].data
-                mask = batch.volumes[ArrayTypes.GT_AFFINITIES_MASK].data
-                ignore = batch.volumes[ArrayTypes.GT_IGNORE].data
+                affs = batch.arrays[ArrayTypes.GT_AFFINITIES].data
+                scale = batch.arrays[ArrayTypes.LOSS_SCALE].data
+                mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK].data
+                ignore = batch.arrays[ArrayTypes.GT_IGNORE].data
 
                 # combine mask and ignore
                 mask *= ignore
@@ -103,7 +103,7 @@ class TestBalanceLabels(ProviderTest):
                 del request[ArrayTypes.LOSS_SCALE]
 
                 batch = pipeline.request_batch(request)
-                self.assertTrue(ArrayTypes.LOSS_SCALE not in batch.volumes)
+                self.assertTrue(ArrayTypes.LOSS_SCALE not in batch.arrays)
 
         # same using a slab for balancing
 
@@ -124,14 +124,14 @@ class TestBalanceLabels(ProviderTest):
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.volumes)
+                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.arrays)
 
                 for c in range(3):
 
-                    affs = batch.volumes[ArrayTypes.GT_AFFINITIES].data[c]
-                    scale = batch.volumes[ArrayTypes.LOSS_SCALE].data[c]
-                    mask = batch.volumes[ArrayTypes.GT_AFFINITIES_MASK].data[c]
-                    ignore = batch.volumes[ArrayTypes.GT_IGNORE].data[c]
+                    affs = batch.arrays[ArrayTypes.GT_AFFINITIES].data[c]
+                    scale = batch.arrays[ArrayTypes.LOSS_SCALE].data[c]
+                    mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK].data[c]
+                    ignore = batch.arrays[ArrayTypes.GT_IGNORE].data[c]
 
                     # combine mask and ignore
                     mask *= ignore

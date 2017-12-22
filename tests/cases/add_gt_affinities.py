@@ -29,7 +29,7 @@ class TestSource(BatchProvider):
         spec = self.spec[ArrayTypes.GT_LABELS].copy()
         spec.roi = roi
 
-        batch.volumes[ArrayTypes.GT_LABELS] = Array(
+        batch.arrays[ArrayTypes.GT_LABELS] = Array(
             np.random.randint(
                 0, 2,
                 shape
@@ -42,7 +42,7 @@ class TestSource(BatchProvider):
         spec = self.spec[ArrayTypes.GT_MASK].copy()
         spec.roi = roi
 
-        batch.volumes[ArrayTypes.GT_MASK] = Array(
+        batch.arrays[ArrayTypes.GT_MASK] = Array(
             np.random.randint(
                 0, 2,
                 shape
@@ -67,7 +67,7 @@ class TestAddGtAffinities(ProviderTest):
                 Coordinate((1,1,1))
         ]
 
-        register_volume_type('GT_AFFINITIES_MASK')
+        register_array_type('GT_AFFINITIES_MASK')
 
         pipeline = (
                 TestSource() +
@@ -91,15 +91,15 @@ class TestAddGtAffinities(ProviderTest):
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayTypes.GT_LABELS in batch.volumes)
-                self.assertTrue(ArrayTypes.GT_MASK in batch.volumes)
-                self.assertTrue(ArrayTypes.GT_AFFINITIES in batch.volumes)
-                self.assertTrue(ArrayTypes.GT_AFFINITIES_MASK in batch.volumes)
+                self.assertTrue(ArrayTypes.GT_LABELS in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_MASK in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_AFFINITIES in batch.arrays)
+                self.assertTrue(ArrayTypes.GT_AFFINITIES_MASK in batch.arrays)
 
-                labels = batch.volumes[ArrayTypes.GT_LABELS]
-                labels_mask = batch.volumes[ArrayTypes.GT_MASK]
-                affs = batch.volumes[ArrayTypes.GT_AFFINITIES]
-                affs_mask = batch.volumes[ArrayTypes.GT_AFFINITIES_MASK]
+                labels = batch.arrays[ArrayTypes.GT_LABELS]
+                labels_mask = batch.arrays[ArrayTypes.GT_MASK]
+                affs = batch.arrays[ArrayTypes.GT_AFFINITIES]
+                affs_mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK]
 
                 self.assertTrue((len(neighborhood),) + labels.data.shape == affs.data.shape)
 

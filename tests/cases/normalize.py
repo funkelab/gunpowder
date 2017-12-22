@@ -10,6 +10,6 @@ class TestNormalize(ProviderTest):
         with build(pipeline):
             batch = pipeline.request_batch(self.test_request)
 
-            raw = batch.volumes[ArrayTypes.RAW]
+            raw = batch.arrays[ArrayTypes.RAW]
             self.assertTrue(raw.data.min() >= 0)
             self.assertTrue(raw.data.max() <= 1)

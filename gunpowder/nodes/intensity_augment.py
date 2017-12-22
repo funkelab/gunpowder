@@ -4,8 +4,8 @@ from .batch_filter import BatchFilter
 
 class IntensityAugment(BatchFilter):
 
-    def __init__(self, volume, scale_min, scale_max, shift_min, shift_max, z_section_wise=False):
-        self.volume = volume
+    def __init__(self, array, scale_min, scale_max, shift_min, shift_max, z_section_wise=False):
+        self.array = array
         self.scale_min = scale_min
         self.scale_max = scale_max
         self.shift_min = shift_min
@@ -14,14 +14,14 @@ class IntensityAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        raw = batch.volumes[self.volume]
+        raw = batch.arrays[self.array]
 
         assert not self.z_section_wise or raw.spec.roi.dims() == 3, "If you specify 'z_section_wise', I expect 3D data."
-        assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw volume (not " + str(raw.data.dtype) + "). Consider using Normalize before."
+        assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw array (not " + str(raw.data.dtype) + "). Consider using Normalize before."
         assert raw.data.min() >= 0 and raw.data.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
 
         if self.z_section_wise:
-            for z in range((raw.spec.roi/self.spec[self.volume].voxel_size).get_shape()[0]):
+            for z in range((raw.spec.roi/self.spec[self.array].voxel_size).get_shape()[0]):
                 raw.data[z] = self.__augment(
                         raw.data[z],
                         np.random.uniform(low=self.scale_min, high=self.scale_max),

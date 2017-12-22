@@ -3,8 +3,8 @@ import logging
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
-from gunpowder.volume import ArrayType
-from gunpowder.volume_spec import ArraySpec
+from gunpowder.array import ArrayType
+from gunpowder.array_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class BatchProvider(object):
         Called during initialization of the DAG. Callees can assume that all
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` to announce the volumes and points
+        In setup, call :fun:`provides` to announce the arrays and points
         provided by this node.
         '''
         raise NotImplementedError("Class %s does not implement 'setup'"%self.name())
@@ -176,29 +176,29 @@ class BatchProvider(object):
 
     def check_batch_consistency(self, batch, request):
 
-        for (volume_type, request_spec) in request.volume_specs.items():
+        for (array_type, request_spec) in request.array_specs.items():
 
-            assert volume_type in batch.volumes, "%s requested, but %s did not provide it."%(volume_type,self.name())
-            volume = batch.volumes[volume_type]
-            assert volume.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                    volume_type,
+            assert array_type in batch.arrays, "%s requested, but %s did not provide it."%(array_type,self.name())
+            array = batch.arrays[array_type]
+            assert array.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                    array_type,
                     request_spec.roi,
-                    volume.spec.roi,
+                    array.spec.roi,
                     self.name()
             )
-            assert volume.spec.voxel_size == self.spec[volume_type].voxel_size, (
+            assert array.spec.voxel_size == self.spec[array_type].voxel_size, (
                 "voxel size of %s announced, but %s "
                 "delivered for %s"%(
-                    self.spec[volume_type].voxel_size,
-                    volume.spec.voxel_size,
-                    volume_type))
+                    self.spec[array_type].voxel_size,
+                    array.spec.voxel_size,
+                    array_type))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             dims = request_spec.roi.dims()
-            data_shape = Coordinate(volume.data.shape[-dims:])
-            voxel_size = self.spec[volume_type].voxel_size
-            assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of volume is %s*%s=%s provided by %s."%(
-                    volume_type,
+            data_shape = Coordinate(array.data.shape[-dims:])
+            voxel_size = self.spec[array_type].voxel_size
+            assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
+                    array_type,
                     request_spec.roi,
                     data_shape,
                     voxel_size,

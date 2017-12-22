@@ -9,14 +9,14 @@ from gunpowder.coordinate import Coordinate
 logger = logging.getLogger(__name__)
 
 class Pad(BatchFilter):
-    '''Add a constant intensity padding around volumes of another batch 
+    '''Add a constant intensity padding around arrays of another batch 
     provider. This is useful if your requested batches can be larger than what 
     your source provides.
 
     Args:
 
         pad_sizes(dict, ArrayType -> [None,Coordinate]): Specifies the padding 
-            to be added to each volume type. If None, an infinite padding is 
+            to be added to each array type. If None, an infinite padding is 
             added. If a Coordinate, this amount will be added to the ROI in the 
             positive and negative direction.
 
@@ -34,17 +34,17 @@ class Pad(BatchFilter):
 
     def setup(self):
 
-        for (volume_type, pad_size) in self.pad_sizes.items():
+        for (array_type, pad_size) in self.pad_sizes.items():
 
-            assert volume_type in self.spec, "Asked to pad %s, but is not provided upstream."%volume_type
-            assert self.spec[volume_type].roi is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%volume_type
+            assert array_type in self.spec, "Asked to pad %s, but is not provided upstream."%array_type
+            assert self.spec[array_type].roi is not None, "Asked to pad %s, but upstream provider doesn't have a ROI for it."%array_type
 
-            spec = self.spec[volume_type].copy()
+            spec = self.spec[array_type].copy()
             if pad_size is not None:
                 spec.roi = spec.roi.grow(pad_size, pad_size)
             else:
                 spec.roi = None
-            self.updates(volume_type, spec)
+            self.updates(array_type, spec)
 
     def prepare(self, request):
 
@@ -53,23 +53,23 @@ class Pad(BatchFilter):
         logger.debug("request: %s"%request)
         logger.debug("upstream spec: %s"%upstream_spec)
 
-        for volume_type in self.pad_sizes.keys():
+        for array_type in self.pad_sizes.keys():
 
-            if volume_type not in request:
+            if array_type not in request:
                 continue
-            roi = request[volume_type].roi
+            roi = request[array_type].roi
 
             # change request to fit into upstream spec
-            request[volume_type].roi = roi.intersect(upstream_spec[volume_type].roi)
+            request[array_type].roi = roi.intersect(upstream_spec[array_type].roi)
 
-            if request[volume_type].roi is None:
+            if request[array_type].roi is None:
 
-                logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%volume_type)
+                logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%array_type)
 
                 # ensure a valid request by asking for empty ROI
-                request[volume_type].roi = Roi(
-                        upstream_spec[volume_type].roi.get_offset(),
-                        (0,)*upstream_spec[volume_type].roi.dims()
+                request[array_type].roi = Roi(
+                        upstream_spec[array_type].roi.get_offset(),
+                        (0,)*upstream_spec[array_type].roi.dims()
                 )
 
         logger.debug("new request: %s"%request)
@@ -77,15 +77,15 @@ class Pad(BatchFilter):
     def process(self, batch, request):
 
         # restore requested batch size and ROI
-        for (volume_type, volume) in batch.volumes.items():
+        for (array_type, array) in batch.arrays.items():
 
-            volume.data = self.__expand(
-                    volume.data,
-                    volume.spec.roi/volume.spec.voxel_size,
-                    request[volume_type].roi/volume.spec.voxel_size,
-                    self.pad_values[volume_type] if volume_type in self.pad_values else 0
+            array.data = self.__expand(
+                    array.data,
+                    array.spec.roi/array.spec.voxel_size,
+                    request[array_type].roi/array.spec.voxel_size,
+                    self.pad_values[array_type] if array_type in self.pad_values else 0
             )
-            volume.spec.roi = request[volume_type].roi
+            array.spec.roi = request[array_type].roi
 
     def __expand(self, a, from_roi, to_roi, value):
         '''from_roi and to_roi should be in voxels.'''

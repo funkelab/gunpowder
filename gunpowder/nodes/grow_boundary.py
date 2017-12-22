@@ -2,14 +2,14 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Array
+from gunpowder.array import Array
 
 class GrowBoundary(BatchFilter):
-    '''Grow a boundary between regions in a label volume. Does not grow at the
+    '''Grow a boundary between regions in a label array. Does not grow at the
     border of the batch or an optionally provided mask.
 
     Args:
-        labels(:class:``ArrayType``): The volume containing labels.
+        labels(:class:``ArrayType``): The array containing labels.
 
         mask(:class:``ArrayType``, optional): A mask indicating unknown
             regions. This is to avoid boundaries to grow between labelled and
@@ -31,8 +31,8 @@ class GrowBoundary(BatchFilter):
 
     def process(self, batch, request):
 
-        gt = batch.volumes[self.labels]
-        gt_mask = None if not self.mask else batch.volumes[self.mask]
+        gt = batch.arrays[self.labels]
+        gt_mask = None if not self.mask else batch.arrays[self.mask]
 
         if gt_mask is not None:
 

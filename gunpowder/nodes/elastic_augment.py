@@ -69,17 +69,17 @@ class ElasticAugment(BatchFilter):
         dims = len(total_roi.get_shape())
 
         self.voxel_size = None
-        prev_volume_type = None
-        for volume_type in request.volume_specs.keys():
+        prev_array_type = None
+        for array_type in request.array_specs.keys():
             if self.voxel_size is None:
-                self.voxel_size = self.spec[volume_type].voxel_size
+                self.voxel_size = self.spec[array_type].voxel_size
             else:
-                assert self.voxel_size == self.spec[volume_type].voxel_size, \
-                        "ElasticAugment can only be used with volumes of same voxel sizes, " \
+                assert self.voxel_size == self.spec[array_type].voxel_size, \
+                        "ElasticAugment can only be used with arrays of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(
-                                volume_type, self.spec[volume_type].voxel_size,
-                                prev_volume_type, self.spec[prev_volume_type].voxel_size)
-            prev_volume_type = volume_type
+                                array_type, self.spec[array_type].voxel_size,
+                                prev_array_type, self.spec[prev_array_type].voxel_size)
+            prev_array_type = array_type
 
         # get total roi in voxels
         total_roi /= self.voxel_size
@@ -109,7 +109,7 @@ class ElasticAugment(BatchFilter):
         if self.prob_slip + self.prob_shift > 0:
             self.__misalign()
 
-        # crop the parts corresponding to the requested volume ROIs
+        # crop the parts corresponding to the requested array ROIs
         self.transformations = {}
         logger.debug("total ROI is %s"%total_roi)
         for identifier, spec in request.items():
@@ -137,29 +137,29 @@ class ElasticAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        for (volume_type, volume) in batch.volumes.items():
+        for (array_type, array) in batch.arrays.items():
 
             # apply transformation
-            volume.data = augment.apply_transformation(
-                    volume.data,
-                    self.transformations[volume_type],
-                    interpolate=self.spec[volume_type].interpolatable)
+            array.data = augment.apply_transformation(
+                    array.data,
+                    self.transformations[array_type],
+                    interpolate=self.spec[array_type].interpolatable)
 
             # restore original ROIs
-            volume.spec.roi = request[volume_type].roi
+            array.spec.roi = request[array_type].roi
 
         for (points_type, points) in batch.points.items():
-            # create map/volume from points and apply tranformation to corresponding map, reconvert map back to points
-            # TODO: How to avoid having to allocate a new volume each time (rather reuse,
+            # create map/array from points and apply tranformation to corresponding map, reconvert map back to points
+            # TODO: How to avoid having to allocate a new array each time (rather reuse,
             # but difficult since shape is alternating)
             trial_nr, max_trials, all_points_mapped = 0, 5, False
             shape_map = points.spec.roi.get_shape()/self.voxel_size
-            id_map_volume = np.zeros(shape_map, dtype=np.int32)
+            id_map_array = np.zeros(shape_map, dtype=np.int32)
 
             # Get all points located in current batch and shift it based on absolute offset. Assign new ids to point
             # ids to have positive consecutive numbers and to account for having multiple points with same location.
             ids_not_mapped = []
-            offset_volume = points.spec.roi.get_offset()
+            offset_array = points.spec.roi.get_offset()
             new_pointid_to_ori_pointid = {} # maps new id to original id(s)
             new_point_id = 1
             relabeled_points_dic = {} # new dictionary including only those points that are relevant for that batch
@@ -167,7 +167,7 @@ class ElasticAugment(BatchFilter):
             for point_id, point in points.data.items():
                 location = point.location
                 if points.spec.roi.contains(Coordinate(location)):
-                    location = location - np.asarray(offset_volume)
+                    location = location - np.asarray(offset_array)
                     if tuple(location) in location_to_pointid_dic.keys():
                         id_with_same_location = location_to_pointid_dic[tuple(location)]
                         new_pointid_to_ori_pointid[id_with_same_location].append(point_id)
@@ -185,7 +185,7 @@ class ElasticAugment(BatchFilter):
             while not all_points_mapped:
                 marker_size = trial_nr # for each trial, the region of the point in the map is increased to increase
                 # the likelihood that the point still exists after transformation
-                id_map = self.__from_points_to_idmap(relabeled_points_dic, id_map_volume,
+                id_map = self.__from_points_to_idmap(relabeled_points_dic, id_map_array,
                                                      ids_not_mapped, marker_size=marker_size)
                 id_map = augment.apply_transformation(
                     id_map,
@@ -210,7 +210,7 @@ class ElasticAugment(BatchFilter):
 
                     all_points_mapped = True
                 else:
-                    id_map_volume.fill(0)
+                    id_map_array.fill(0)
 
             # restore original ROIs
             points.spec.roi = request[points_type].roi
@@ -231,7 +231,7 @@ class ElasticAugment(BatchFilter):
             new_location = locations[0]
             points[point_id] = new_location*np.array(self.voxel_size)
 
-    def __from_points_to_idmap(self, points, id_map_volume, ids_to_map, marker_size=0):
+    def __from_points_to_idmap(self, points, id_map_array, ids_to_map, marker_size=0):
         # TODO: This is partially a duplicate of add_gt_binary_map_points:get_binary_map, refactor!
         relative_voxel_size = 1./(np.array(self.voxel_size)/np.min(np.array(self.voxel_size)))
         for point_id in ids_to_map:
@@ -239,15 +239,15 @@ class ElasticAugment(BatchFilter):
             location /= self.voxel_size # convert locations in world units to voxel units
             if marker_size > 0:
                 marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
-                                          min(id_map_volume.shape[dim] - 1,
+                                          min(id_map_array.shape[dim] - 1,
                                               location[dim] + max(int(np.floor(marker_size*relative_voxel_size[dim])), 1)))
                                     for dim in range(len(location)))
 
             else:
                 marker_locs = [[loc] for loc in location]
 
-            id_map_volume[marker_locs] = point_id
-        return id_map_volume
+            id_map_array[marker_locs] = point_id
+        return id_map_array
 
     def __recompute_roi(self, roi, transformation):
 

@@ -180,7 +180,7 @@ class RasterizationSetting(Freezable):
         physical units. For instance, a points resolution of [20, 10, 10] and marker_size_physical of 10 would create a
         blob with a radius of 1 in x,y-direction and no radius in z-direction.
 
-        stay_inside_volumetype (Array.ArrayType): specified volume is used to mask out created blobs. The volume is
+        stay_inside_arraytype (Array.ArrayType): specified array is used to mask out created blobs. The array is
         assumed to contain discrete objects. The object id at the specific point being rasterized is used to crop the
         blob. Blob regions that are located outside of the object are masked out, such that the blob is only inside the
         specific object.
@@ -195,7 +195,7 @@ class RasterizationSetting(Freezable):
         anistropict blob creations, as expected.
     '''
     def __init__(self, marker_size_voxel=1, marker_size_physical=None,
-                 stay_inside_volumetype=None, donut_inner_radius=None, invert_map=False):
+                 stay_inside_arraytype=None, donut_inner_radius=None, invert_map=False):
         self.thaw()
         if donut_inner_radius is not None:
             if marker_size_physical is not None:
@@ -206,7 +206,7 @@ class RasterizationSetting(Freezable):
                                                               'radius is larger than the donut size'
         self.marker_size_voxel = marker_size_voxel
         self.marker_size_physical = marker_size_physical
-        self.stay_inside_volumetype = stay_inside_volumetype
+        self.stay_inside_arraytype = stay_inside_arraytype
         self.donut_inner_radius = donut_inner_radius
         self.invert_map = invert_map
         self.freeze()

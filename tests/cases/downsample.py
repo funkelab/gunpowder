@@ -24,7 +24,7 @@ class DownSampleTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (volume_type, spec) in request.volume_specs.items():
+        for (array_type, spec) in request.array_specs.items():
 
             roi = spec.roi
 
@@ -40,9 +40,9 @@ class DownSampleTestSource(BatchProvider):
                     range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            spec = self.spec[volume_type].copy()
+            spec = self.spec[array_type].copy()
             spec.roi = roi
-            batch.volumes[volume_type] = Array(
+            batch.arrays[array_type] = Array(
                     data,
                     spec)
         return batch
@@ -57,8 +57,8 @@ class TestDownSample(ProviderTest):
 
         source = DownSampleTestSource()
 
-        register_volume_type('RAW_DOWNSAMPLED')
-        register_volume_type('GT_LABELS_DOWNSAMPLED')
+        register_array_type('RAW_DOWNSAMPLED')
+        register_array_type('GT_LABELS_DOWNSAMPLED')
 
         request = BatchRequest()
         request.add(ArrayTypes.RAW, (200,200,200))
@@ -77,32 +77,32 @@ class TestDownSample(ProviderTest):
         with build(pipeline):
             batch = pipeline.request_batch(request)
 
-        for (volume_type, volume) in batch.volumes.items():
+        for (array_type, array) in batch.arrays.items():
 
             # assert that pixels encode their position for supposedly unaltered 
-            # volumes
-            if volume_type in [ArrayTypes.RAW, ArrayTypes.GT_LABELS]:
+            # arrays
+            if array_type in [ArrayTypes.RAW, ArrayTypes.GT_LABELS]:
 
                 # the z,y,x coordinates of the ROI
-                roi = volume.spec.roi/4
+                roi = array.spec.roi/4
                 meshgrids = np.meshgrid(
                         range(roi.get_begin()[0], roi.get_end()[0]),
                         range(roi.get_begin()[1], roi.get_end()[1]),
                         range(roi.get_begin()[2], roi.get_end()[2]), indexing='ij')
                 data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-                self.assertTrue(np.array_equal(volume.data, data), str(volume_type))
+                self.assertTrue(np.array_equal(array.data, data), str(array_type))
 
-            elif volume_type == ArrayTypes.RAW_DOWNSAMPLED:
+            elif array_type == ArrayTypes.RAW_DOWNSAMPLED:
 
-                self.assertTrue(volume.data[0,0,0] == 30)
-                self.assertTrue(volume.data[1,0,0] == 32)
+                self.assertTrue(array.data[0,0,0] == 30)
+                self.assertTrue(array.data[1,0,0] == 32)
 
-            elif volume_type == ArrayTypes.GT_LABELS_DOWNSAMPLED:
+            elif array_type == ArrayTypes.GT_LABELS_DOWNSAMPLED:
 
-                self.assertTrue(volume.data[0,0,0] == 0)
-                self.assertTrue(volume.data[1,0,0] == 2)
+                self.assertTrue(array.data[0,0,0] == 0)
+                self.assertTrue(array.data[1,0,0] == 2)
 
             else:
 
-                self.assertTrue(False, "unexpected volume type")
+                self.assertTrue(False, "unexpected array type")

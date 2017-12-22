@@ -48,7 +48,7 @@ class AddVectorMapTestSource(BatchProvider):
 
             spec = self.spec[ArrayTypes.RAW].copy()
             spec.roi = roi
-            batch.volumes[ArrayTypes.RAW] = Array(data, spec)
+            batch.arrays[ArrayTypes.RAW] = Array(data, spec)
 
         if ArrayTypes.GT_LABELS in request:
             roi = request[ArrayTypes.GT_LABELS].roi
@@ -58,7 +58,7 @@ class AddVectorMapTestSource(BatchProvider):
             data[roi_voxel_shape[0]//2:, -(roi_voxel_shape[1] // 2):, :] = 3
             spec = self.spec[ArrayTypes.GT_LABELS].copy()
             spec.roi = roi
-            batch.volumes[ArrayTypes.GT_LABELS] = Array(data, spec)
+            batch.arrays[ArrayTypes.GT_LABELS] = Array(data, spec)
 
         if PointsTypes.PRESYN in request:
             data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsTypes.PRESYN].roi)
@@ -129,19 +129,19 @@ class TestAddVectorMap(ProviderTest):
 
         voxel_size = Coordinate((20, 2, 2))
 
-        register_volume_type('GT_VECTORS_MAP_PRESYN')
+        register_array_type('GT_VECTORS_MAP_PRESYN')
 
-        volumetypes_to_source_target_pointstypes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: (PointsTypes.PRESYN, PointsTypes.POSTSYN)}
-        volumetypes_to_stayinside_volumetypes    = {ArrayTypes.GT_VECTORS_MAP_PRESYN: ArrayTypes.GT_LABELS}
+        arraytypes_to_source_target_pointstypes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: (PointsTypes.PRESYN, PointsTypes.POSTSYN)}
+        arraytypes_to_stayinside_arraytypes    = {ArrayTypes.GT_VECTORS_MAP_PRESYN: ArrayTypes.GT_LABELS}
 
         # test for partner criterion 'min_distance'
         radius_phys  = 30
         pipeline_min_distance = AddVectorMapTestSource() +\
-                                AddVectorMap(src_and_trg_points = volumetypes_to_source_target_pointstypes,
+                                AddVectorMap(src_and_trg_points = arraytypes_to_source_target_pointstypes,
                                              voxel_sizes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
                                              radius_phys = radius_phys,
                                              partner_criterion = 'min_distance',
-                                             stayinside_volumetypes = volumetypes_to_stayinside_volumetypes,
+                                             stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
                                              pad_for_partners = (0, 0, 0))
 
         with build(pipeline_min_distance):
@@ -163,7 +163,7 @@ class TestAddVectorMap(ProviderTest):
 
         presyn_locs  = batch.points[PointsTypes.PRESYN].data
         postsyn_locs = batch.points[PointsTypes.POSTSYN].data
-        vector_map_presyn        = batch.volumes[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
+        vector_map_presyn        = batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
@@ -172,7 +172,7 @@ class TestAddVectorMap(ProviderTest):
         for loc_id, point in presyn_locs.items():
 
             if request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
-                self.assertTrue(batch.volumes[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
+                self.assertTrue(batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 dist_to_loc = {}
                 for partner_id in point.partner_ids:
@@ -200,11 +200,11 @@ class TestAddVectorMap(ProviderTest):
 
 
         # test for partner criterion 'all'
-        pipeline_all = AddVectorMapTestSource() + AddVectorMap(src_and_trg_points = volumetypes_to_source_target_pointstypes,
+        pipeline_all = AddVectorMapTestSource() + AddVectorMap(src_and_trg_points = arraytypes_to_source_target_pointstypes,
                                                                voxel_sizes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
                                                                radius_phys = radius_phys,
                                                                partner_criterion = 'all',
-                                                               stayinside_volumetypes = volumetypes_to_stayinside_volumetypes,
+                                                               stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
                                                                pad_for_partners = (0, 0, 0))
 
         with build(pipeline_all):
@@ -212,7 +212,7 @@ class TestAddVectorMap(ProviderTest):
 
         presyn_locs  = batch.points[PointsTypes.PRESYN].data
         postsyn_locs = batch.points[PointsTypes.POSTSYN].data
-        vector_map_presyn        = batch.volumes[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
+        vector_map_presyn        = batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
@@ -221,7 +221,7 @@ class TestAddVectorMap(ProviderTest):
         for loc_id, point in presyn_locs.items():
 
             if request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
-                self.assertTrue(batch.volumes[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
+                self.assertTrue(batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 partner_ids_to_locs_per_src, count_vectors_per_partner = {}, {}
                 for partner_id in point.partner_ids:

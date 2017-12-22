@@ -30,7 +30,7 @@ class TestCrop(ProviderTest):
         pipeline = (
             TestSourceCrop() +
             Crop(
-                volumes = {ArrayTypes.RAW: cropped_roi_raw},
+                arrays = {ArrayTypes.RAW: cropped_roi_raw},
                 points  = {PointsTypes.PRESYN: cropped_roi_presyn}))
 
         with build(pipeline):

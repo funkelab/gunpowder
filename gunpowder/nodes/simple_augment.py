@@ -48,12 +48,12 @@ class SimpleAugment(BatchFilter):
                 slice(None, None, -1 if m else 1)
                 for m in self.mirror
         )
-        # volumes
-        for (volume_type, volume) in batch.volumes.items():
+        # arrays
+        for (array_type, array) in batch.arrays.items():
 
-            volume.data = volume.data[mirror]
+            array.data = array.data[mirror]
             if self.transpose != (0,1,2):
-                volume.data = volume.data.transpose(self.transpose)
+                array.data = array.data.transpose(self.transpose)
         # points
         total_roi_offset = self.total_roi.get_offset()
         for (points_type, points) in batch.points.items():
@@ -66,8 +66,8 @@ class SimpleAugment(BatchFilter):
                 # transpose
                 if self.transpose != (0, 1, 2):
                     syn_point.location = np.asarray([syn_point.location[self.transpose[d]] for d in range(self.dims)])
-        # volumes & points
-        for collection_type in [batch.volumes, batch.points]:
+        # arrays & points
+        for collection_type in [batch.arrays, batch.points]:
             for (type, collector) in collection_type.items():
                 logger.debug("total ROI: %s"%self.total_roi)
                 logger.debug("upstream %s ROI: %s"%(type, collector.spec.roi))

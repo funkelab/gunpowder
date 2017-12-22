@@ -4,22 +4,22 @@ import numpy as np
 from scipy.spatial import KDTree
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.volume import Array
-from gunpowder.volume_spec import ArraySpec
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import enlarge_binary_map
 
 logger = logging.getLogger(__name__)
 
 class AddVectorMap(BatchFilter):
-    def __init__(self, src_and_trg_points, voxel_sizes, radius_phys, partner_criterion, stayinside_volumetypes=None, pad_for_partners=(0,0,0)):
-        ''' Creates a vector map of shape [dim_vector, [shape_of_volume]] (e.g. [3, 50,50,50] for a volume of
+    def __init__(self, src_and_trg_points, voxel_sizes, radius_phys, partner_criterion, stayinside_arraytypes=None, pad_for_partners=(0,0,0)):
+        ''' Creates a vector map of shape [dim_vector, [shape_of_array]] (e.g. [3, 50,50,50] for a array of
             shape (50,50,50)) where every voxel which is close to a any source point location has a vector which points to
             one of the source point location's target location.
             Close to a point location in src_point includes all voxels which 
                 1) lie within distance radius_phys of the considered src point location
-                2) (if stayinside_volumeTypes is not None), lie within the same segment as the src location in the
-                    mask provided in stayinside_volumetype.
+                2) (if stayinside_arrayTypes is not None), lie within the same segment as the src location in the
+                    mask provided in stayinside_arraytype.
             The partner_criterion decides to which target location of the source point location that the vector of a
             voxel points (the different criterions are described below).
         
@@ -31,14 +31,14 @@ class AddVectorMap(BatchFilter):
                                             :class:``ArrayType`` of the vector
                                             map to be created to a
                                             :class:`Coordinate` for the voxel
-                                            size of the volume.
-            stayinside_volumetypes (dict):  Dictionary from :class:``ArrayType`` of the vector map to be created to 
-                                            :class:``ArrayType`` of the stayinside_volume. 
-                                            The stayinside_volume is assumed to contain discrete objects labeled with
+                                            size of the array.
+            stayinside_arraytypes (dict):  Dictionary from :class:``ArrayType`` of the vector map to be created to 
+                                            :class:``ArrayType`` of the stayinside_array. 
+                                            The stayinside_array is assumed to contain discrete objects labeled with
                                             different object ids. The object id at the specific source location is used
                                             to restrict the region where vectors are created around a source location. 
                                             Voxels that are located outside of this object are set to zero.
-                                            If stayinside_volumetypes is None, all the voxels within distance 
+                                            If stayinside_arraytypes is None, all the voxels within distance 
                                             radius_phys to the source location receive a vector.
             pad_for_partners (tuple):       n-dim tuple which defines padding of trg_points request in all dimensions
                                             (in world units).
@@ -56,25 +56,25 @@ class AddVectorMap(BatchFilter):
                                             is the closest.
         '''
 
-        self.volume_to_src_trg_points               = src_and_trg_points
+        self.array_to_src_trg_points               = src_and_trg_points
         self.voxel_sizes                            = voxel_sizes
-        self.volumetypes_to_stayinside_volume_types = stayinside_volumetypes
+        self.arraytypes_to_stayinside_array_types = stayinside_arraytypes
         self.pad_for_partners                       = pad_for_partners
         self.radius_phys                            = radius_phys
         self.partner_criterion                      = partner_criterion
 
     def setup(self):
 
-        for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
+        for (array_type, (src_points_type, trg_points_type)) in self.array_to_src_trg_points.items():
             for points_type in [src_points_type, trg_points_type]:
                 assert points_type in self.spec, "Asked for {} in AddVectorMap from {}, where {} is not provided.".\
-                                                                format(volume_type, points_type, points_type)
+                                                                format(array_type, points_type, points_type)
             neg_pad_for_partners = Coordinate((self.pad_for_partners*np.asarray([-1])).tolist())
-            self.provides(volume_type, ArraySpec(
+            self.provides(array_type, ArraySpec(
                 roi=self.spec[src_points_type].roi.grow(
                     neg_pad_for_partners,
                     neg_pad_for_partners),
-                voxel_size=self.voxel_sizes[volume_type],
+                voxel_size=self.voxel_sizes[array_type],
                 interpolatable=False,
                 dtype=np.float32))
 
@@ -82,16 +82,16 @@ class AddVectorMap(BatchFilter):
 
     def prepare(self, request):
 
-        for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
-            if volume_type in request:
-                # increase or set request for points to be volume roi + padding for partners outside roi for target points
+        for (array_type, (src_points_type, trg_points_type)) in self.array_to_src_trg_points.items():
+            if array_type in request:
+                # increase or set request for points to be array roi + padding for partners outside roi for target points
                 if src_points_type in request:
-                    if not request[src_points_type].roi.contains(request[volume_type].roi):
-                        request[src_points_type] = PointsSpec(roi=request[volume_type].roi)
+                    if not request[src_points_type].roi.contains(request[array_type].roi):
+                        request[src_points_type] = PointsSpec(roi=request[array_type].roi)
                 else:
-                    request[src_points_type] = PointsSpec(request[volume_type].roi)
+                    request[src_points_type] = PointsSpec(request[array_type].roi)
 
-                padded_roi = request[volume_type].roi.grow((self.pad_for_partners), (self.pad_for_partners))
+                padded_roi = request[array_type].roi.grow((self.pad_for_partners), (self.pad_for_partners))
                 if trg_points_type in request:
                     if not request[trg_points_type].roi.contains(padded_roi):
                         request[trg_points_type] = PointsSpec(padded_roi)
@@ -101,16 +101,16 @@ class AddVectorMap(BatchFilter):
     def process(self, batch, request):
 
         # create vector map and add it to batch
-        for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
-            if volume_type in request:
-                vector_map = self.__get_vector_map(batch=batch, request=request, vector_map_volume_type=volume_type)
-                spec = self.spec[volume_type].copy()
-                spec.roi = request[volume_type].roi
-                batch.volumes[volume_type] = Array(data=vector_map, spec=spec)
+        for (array_type, (src_points_type, trg_points_type)) in self.array_to_src_trg_points.items():
+            if array_type in request:
+                vector_map = self.__get_vector_map(batch=batch, request=request, vector_map_array_type=array_type)
+                spec = self.spec[array_type].copy()
+                spec.roi = request[array_type].roi
+                batch.arrays[array_type] = Array(data=vector_map, spec=spec)
 
         # restore request / remove not requested points in padding-for-neighbors region & shrink batch roi
-        for (volume_type, (src_points_type, trg_points_type)) in self.volume_to_src_trg_points.items():
-            if volume_type in request:
+        for (array_type, (src_points_type, trg_points_type)) in self.array_to_src_trg_points.items():
+            if array_type in request:
                 if trg_points_type in request:
                     for loc_id, point in batch.points[trg_points_type].data.items():
                         if not request[trg_points_type].roi.contains(Coordinate(point.location)):
@@ -120,14 +120,14 @@ class AddVectorMap(BatchFilter):
                 elif trg_points_type in batch.points:
                     del batch.points[trg_points_type]
 
-    def __get_vector_map(self, batch, request, vector_map_volume_type):
+    def __get_vector_map(self, batch, request, vector_map_array_type):
 
-        src_points_type, trg_points_type = self.volume_to_src_trg_points[vector_map_volume_type]
-        dim_vectors                      = len(request[vector_map_volume_type].roi.get_shape())
-        voxel_size_vm                    = self.voxel_sizes[vector_map_volume_type]
-        offset_vector_map_phys           = request[vector_map_volume_type].roi.get_offset()
+        src_points_type, trg_points_type = self.array_to_src_trg_points[vector_map_array_type]
+        dim_vectors                      = len(request[vector_map_array_type].roi.get_shape())
+        voxel_size_vm                    = self.voxel_sizes[vector_map_array_type]
+        offset_vector_map_phys           = request[vector_map_array_type].roi.get_offset()
         vector_map_total = np.zeros(
-            (dim_vectors,) + (request[vector_map_volume_type].roi.get_shape()//voxel_size_vm),
+            (dim_vectors,) + (request[vector_map_array_type].roi.get_shape()//voxel_size_vm),
             dtype=np.float32)
 
         if len(batch.points[src_points_type].data.keys()) == 0:
@@ -135,15 +135,15 @@ class AddVectorMap(BatchFilter):
 
         for (loc_id, point) in batch.points[src_points_type].data.items():
 
-            if request[vector_map_volume_type].roi.contains(Coordinate(point.location)):
+            if request[vector_map_array_type].roi.contains(Coordinate(point.location)):
 
                 # get all partner locations which should be considered
                 relevant_partner_loc = self.__get_relevant_partner_locations(batch, point, trg_points_type)
                 if len(relevant_partner_loc) > 0:
 
                     # get locations where to set vectors around source location
-                    # (look only at region close to src location (to avoid np.nonzero() over entire volume))
-                    mask = self.__get_mask(batch, request, vector_map_volume_type, point.location)
+                    # (look only at region close to src location (to avoid np.nonzero() over entire array))
+                    mask = self.__get_mask(batch, request, vector_map_array_type, point.location)
                     offset_vx_considered_mask = [((point.location[dim]-self.radius_phys-offset_vector_map_phys[dim])//voxel_size_vm[dim])
                                                  for dim in range(dim_vectors)]
                     clipped_offset_vx_considered_mask = np.clip(offset_vx_considered_mask, a_min=0, a_max=np.inf)
@@ -213,23 +213,23 @@ class AddVectorMap(BatchFilter):
                     stored_pos   = partner_loc.copy()
             return [stored_pos]
 
-    def __get_mask(self, batch, request, vector_map_volume_type, src_location):
+    def __get_mask(self, batch, request, vector_map_array_type, src_location):
         ''' create binary mask encoding where to place vectors for in region around considered src_location '''
 
-        voxel_size = self.voxel_sizes[vector_map_volume_type]
+        voxel_size = self.voxel_sizes[vector_map_array_type]
 
-        offset_bm_phys     = request[vector_map_volume_type].roi.get_offset()
-        shape_bm_volume_vx = request[vector_map_volume_type].roi.get_shape() // voxel_size
-        binary_map         = np.zeros(shape_bm_volume_vx, dtype='uint8')
+        offset_bm_phys     = request[vector_map_array_type].roi.get_offset()
+        shape_bm_array_vx = request[vector_map_array_type].roi.get_shape() // voxel_size
+        binary_map         = np.zeros(shape_bm_array_vx, dtype='uint8')
 
-        if self.volumetypes_to_stayinside_volume_types is None:
+        if self.arraytypes_to_stayinside_array_types is None:
             mask = np.ones_like(binary_map)
         else:
-            stayinside_volume_type = self.volumetypes_to_stayinside_volume_types[vector_map_volume_type]
-            mask = batch.volumes[stayinside_volume_type].data
+            stayinside_array_type = self.arraytypes_to_stayinside_array_types[vector_map_array_type]
+            mask = batch.arrays[stayinside_array_type].data
 
         if mask.shape > binary_map.shape:
-            # assumption: binary map is centered in the mask volume
+            # assumption: binary map is centered in the mask array
             padding = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
             slices = [slice(np.floor(pad), -np.ceil(pad)) for pad in padding]
             mask = mask[slices]

@@ -2,67 +2,67 @@ import copy
 import logging
 import numpy as np
 
-from gunpowder.volume import Array
+from gunpowder.array import Array
 from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
 class PrepareMalis(BatchFilter):
-    ''' Creates a component label volume needed for two-phase malis training.
+    ''' Creates a component label array needed for two-phase malis training.
 
     Args:
 
-        labels_volume_type(:class:`ArrayType`): The label volume to use.
+        labels_array_type(:class:`ArrayType`): The label array to use.
 
-        malis_comp_volume_type(:class:`ArrayType`): The malis component volume
+        malis_comp_array_type(:class:`ArrayType`): The malis component array
             to generate.
 
-        ignore_volume_type(:class:`ArrayType`, optional): An ignore mask to
+        ignore_array_type(:class:`ArrayType`, optional): An ignore mask to
             use.
     '''
 
     def __init__(
             self,
-            labels_volume_type,
-            malis_comp_volume_type,
-            ignore_volume_type=None):
+            labels_array_type,
+            malis_comp_array_type,
+            ignore_array_type=None):
 
-        self.labels_volume_type = labels_volume_type
-        self.malis_comp_volume_type = malis_comp_volume_type
-        self.ignore_volume_type = ignore_volume_type
+        self.labels_array_type = labels_array_type
+        self.malis_comp_array_type = malis_comp_array_type
+        self.ignore_array_type = ignore_array_type
 
     def setup(self):
 
-        spec = self.spec[self.labels_volume_type].copy()
-        self.provides(self.malis_comp_volume_type, spec)
+        spec = self.spec[self.labels_array_type].copy()
+        self.provides(self.malis_comp_array_type, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
 
-        assert self.labels_volume_type in request, (
+        assert self.labels_array_type in request, (
             "PrepareMalis requires %s, but they are not in request"%
-            self.labels_volume_type)
+            self.labels_array_type)
 
     def process(self, batch, request):
 
-        gt_labels = batch.volumes[self.labels_volume_type]
+        gt_labels = batch.arrays[self.labels_array_type]
         next_id = gt_labels.data.max() + 1
 
         gt_pos_pass = gt_labels.data
 
-        if self.ignore_volume_type and self.ignore_volume_type in batch.volumes:
+        if self.ignore_array_type and self.ignore_array_type in batch.arrays:
 
             gt_neg_pass = np.array(gt_labels.data)
             gt_neg_pass[
-                batch.volumes[self.ignore_volume_type].data == 0] = next_id
+                batch.arrays[self.ignore_array_type].data == 0] = next_id
 
         else:
 
             gt_neg_pass = gt_pos_pass
 
-        spec = self.spec[self.malis_comp_volume_type].copy()
-        spec.roi = request[self.labels_volume_type].roi
-        batch.volumes[self.malis_comp_volume_type] = Array(
+        spec = self.spec[self.malis_comp_array_type].copy()
+        spec.roi = request[self.labels_array_type].roi
+        batch.arrays[self.malis_comp_array_type] = Array(
             np.array([gt_neg_pass, gt_pos_pass]),
             spec)
 

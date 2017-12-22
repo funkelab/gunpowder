@@ -23,7 +23,7 @@ class Batch(Freezable):
 
         self.id = Batch.get_next_id()
         self.profiling_stats = ProfilingStats()
-        self.volumes = {}
+        self.arrays = {}
         self.points  = {}
         self.affinity_neighborhood = None
         self.loss = None
@@ -32,11 +32,11 @@ class Batch(Freezable):
         self.freeze()
 
     def get_total_roi(self):
-        '''Get the union of all the volume ROIs in the batch.'''
+        '''Get the union of all the array ROIs in the batch.'''
 
         total_roi = None
 
-        for collection_type in [self.volumes, self.points]:
+        for collection_type in [self.arrays, self.points]:
             for (type, obj) in collection_type.items():
                 if total_roi is None:
                     total_roi = obj.spec.roi
@@ -48,7 +48,7 @@ class Batch(Freezable):
     def __repr__(self):
 
         r = ""
-        for collection_type in [self.volumes, self.points]:
+        for collection_type in [self.arrays, self.points]:
             for (type, obj) in collection_type.items():
                 r += "%s: %s\n"%(type, obj.spec)
         return r
