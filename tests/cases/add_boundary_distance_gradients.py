@@ -42,9 +42,9 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
         pipeline = (
             TestSource() +
             AddBoundaryDistanceGradients(
-                label_array_type=ArrayKeys.GT_LABELS,
-                distance_array_type=ArrayKeys.GT_BOUNDARY_DISTANCES,
-                gradient_array_type=ArrayKeys.GT_BOUNDARY_GRADIENTS)
+                label_array_key=ArrayKeys.GT_LABELS,
+                distance_array_key=ArrayKeys.GT_BOUNDARY_DISTANCES,
+                gradient_array_key=ArrayKeys.GT_BOUNDARY_GRADIENTS)
         )
 
         with build(pipeline):

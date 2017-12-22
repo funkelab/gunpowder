@@ -37,7 +37,7 @@ class Batch(Freezable):
         total_roi = None
 
         for collection_type in [self.arrays, self.points]:
-            for (type, obj) in collection_type.items():
+            for (key, obj) in collection_type.items():
                 if total_roi is None:
                     total_roi = obj.spec.roi
                 else:
@@ -49,6 +49,6 @@ class Batch(Freezable):
 
         r = ""
         for collection_type in [self.arrays, self.points]:
-            for (type, obj) in collection_type.items():
-                r += "%s: %s\n"%(type, obj.spec)
+            for (key, obj) in collection_type.items():
+                r += "%s: %s\n"%(key, obj.spec)
         return r

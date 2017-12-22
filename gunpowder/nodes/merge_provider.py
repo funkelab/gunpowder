@@ -13,9 +13,10 @@ class MergeProvider(BatchProvider):
 
     def setup(self):
         assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the MergeProvider"
-        # Only allow merging if no two upstream_providers have the same array/points_type
-        error_message = "Type {} provided by more than one upstream provider. Node MergeProvider only allows to merge " \
-                        "providers with different types."
+        # Only allow merging if no two upstream_providers have the same
+        # array/points keys
+        error_message = "Key {} provided by more than one upstream provider. Node MergeProvider only allows to merge " \
+                        "providers with different keys."
         for provider in self.get_upstream_providers():
             for identifier, spec in provider.spec.items():
                 assert self.spec is None or identifier not in self.spec, error_message.format(identifier)

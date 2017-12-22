@@ -69,17 +69,17 @@ class ElasticAugment(BatchFilter):
         dims = len(total_roi.get_shape())
 
         self.voxel_size = None
-        prev_array_type = None
-        for array_type in request.array_specs.keys():
+        prev = None
+        for array_key in request.array_specs.keys():
             if self.voxel_size is None:
-                self.voxel_size = self.spec[array_type].voxel_size
+                self.voxel_size = self.spec[array_key].voxel_size
             else:
-                assert self.voxel_size == self.spec[array_type].voxel_size, \
+                assert self.voxel_size == self.spec[array_key].voxel_size, \
                         "ElasticAugment can only be used with arrays of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(
-                                array_type, self.spec[array_type].voxel_size,
-                                prev_array_type, self.spec[prev_array_type].voxel_size)
-            prev_array_type = array_type
+                                array_key, self.spec[array_key].voxel_size,
+                                prev, self.spec[prev].voxel_size)
+            prev = array_key
 
         # get total roi in voxels
         total_roi /= self.voxel_size
@@ -137,18 +137,18 @@ class ElasticAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        for (array_type, array) in batch.arrays.items():
+        for (array_key, array) in batch.arrays.items():
 
             # apply transformation
             array.data = augment.apply_transformation(
                     array.data,
-                    self.transformations[array_type],
-                    interpolate=self.spec[array_type].interpolatable)
+                    self.transformations[array_key],
+                    interpolate=self.spec[array_key].interpolatable)
 
             # restore original ROIs
-            array.spec.roi = request[array_type].roi
+            array.spec.roi = request[array_key].roi
 
-        for (points_type, points) in batch.points.items():
+        for (points_key, points) in batch.points.items():
             # create map/array from points and apply tranformation to corresponding map, reconvert map back to points
             # TODO: How to avoid having to allocate a new array each time (rather reuse,
             # but difficult since shape is alternating)
@@ -189,7 +189,7 @@ class ElasticAugment(BatchFilter):
                                                      ids_not_mapped, marker_size=marker_size)
                 id_map = augment.apply_transformation(
                     id_map,
-                    self.transformations[points_type],
+                    self.transformations[points_key],
                     interpolate=False)
                 ids_in_map = list(np.unique(id_map))
                 ids_in_map.remove(0)
@@ -213,7 +213,7 @@ class ElasticAugment(BatchFilter):
                     id_map_array.fill(0)
 
             # restore original ROIs
-            points.spec.roi = request[points_type].roi
+            points.spec.roi = request[points_key].roi
 
             # assign new transformed location and map new ids back to original ids.
             for new_point_id, location in relabeled_points_dic.items():

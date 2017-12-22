@@ -146,11 +146,11 @@ class Train(GenericTrain):
         # compute outputs, gradients, and update variables
         outputs = self.session.run(to_compute, feed_dict=inputs)
 
-        for array_type in array_outputs:
-            spec = self.spec[array_type].copy()
-            spec.roi = request[array_type].roi
-            batch.arrays[array_type] = Array(
-                outputs[array_type],
+        for array_key in array_outputs:
+            spec = self.spec[array_key].copy()
+            spec.roi = request[array_key].roi
+            batch.arrays[array_key] = Array(
+                outputs[array_key],
                 spec)
 
         batch.loss = outputs['loss']
@@ -266,13 +266,13 @@ class Train(GenericTrain):
 
         array_outputs = {}
 
-        for output_name, array_type in self.outputs.items():
-            if array_type in request:
-                array_outputs[array_type] = output_name
+        for output_name, array_key in self.outputs.items():
+            if array_key in request:
+                array_outputs[array_key] = output_name
 
-        for output_name, array_type in self.gradients.items():
-            if array_type in request:
-                array_outputs[array_type] = self.tf_gradient[output_name]
+        for output_name, array_key in self.gradients.items():
+            if array_key in request:
+                array_outputs[array_key] = self.tf_gradient[output_name]
 
         return array_outputs
 
@@ -280,20 +280,20 @@ class Train(GenericTrain):
 
         inputs = {}
 
-        for input_name, input_type in self.inputs.items():
-            if isinstance(input_type, ArrayKey):
-                if input_type in batch.arrays:
-                    inputs[input_name] = batch.arrays[input_type].data
+        for input_name, input_key in self.inputs.items():
+            if isinstance(input_key, ArrayKey):
+                if input_key in batch.arrays:
+                    inputs[input_name] = batch.arrays[input_key].data
                 else:
                     logger.warn("batch does not contain %s, input %s will not "
-                                "be set", input_type, input_name)
-            elif isinstance(input_type, np.ndarray):
-                inputs[input_name] = input_type
-            elif isinstance(input_type, str):
-                inputs[input_name] = getattr(batch, input_type)
+                                "be set", input_key, input_name)
+            elif isinstance(input_key, np.ndarray):
+                inputs[input_name] = input_key
+            elif isinstance(input_key, str):
+                inputs[input_name] = getattr(batch, input_key)
             else:
                 raise Exception(
-                    "Unknown network input type {}, can't be given to "
-                    "network".format(input_type))
+                    "Unknown network input key {}, can't be given to "
+                    "network".format(input_key))
 
         return inputs

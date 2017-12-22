@@ -105,36 +105,36 @@ class Train(GenericTrain):
         # self.__consistency_check()
 
         requested_outputs = {
-            name: array_type
-            for name, array_type in self.outputs.items()
-            if array_type in request.array_specs }
+            name: array_key
+            for name, array_key in self.outputs.items()
+            if array_key in request.array_specs }
 
         if requested_outputs:
 
             output = self.net_io.get_outputs()
 
-            for output_name, array_type in requested_outputs.items():
+            for output_name, array_key in requested_outputs.items():
 
-                spec = self.spec[array_type].copy()
-                spec.roi = request[array_type].roi
-                batch.arrays[array_type] = Array(
+                spec = self.spec[array_key].copy()
+                spec.roi = request[array_key].roi
+                batch.arrays[array_key] = Array(
                     output[output_name][0], # strip #batch dimension
                     spec)
 
         requested_gradients = {
-            name: array_type
-            for name, array_type in self.gradients.items()
-            if array_type in request.array_specs }
+            name: array_key
+            for name, array_key in self.gradients.items()
+            if array_key in request.array_specs }
 
         if requested_gradients:
 
             diffs = self.net_io.get_output_diffs()
 
-            for output_name, array_type in requested_gradients.items():
+            for output_name, array_key in requested_gradients.items():
 
-                spec = self.spec[array_type].copy()
-                spec.roi = request[array_type].roi
-                batch.arrays[array_type] = Array(
+                spec = self.spec[array_key].copy()
+                spec.roi = request[array_key].roi
+                batch.arrays[array_key] = Array(
                     diffs[output_name][0], # strip #batch dimension
                     spec)
 

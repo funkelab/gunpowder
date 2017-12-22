@@ -28,16 +28,16 @@ class Crop(BatchFilter):
     def setup(self):
 
         for crop_specs, specs in zip([self.arrays, self.points],[self.spec.array_specs, self.spec.points_specs]):
-            for type, roi in crop_specs.items():
-                assert type in specs, "Asked to crop {} which is not provided".format(type)
-                assert specs[type].roi.contains(roi), "Asked to Crop {} out at {} which is" \
-                                            " not within provided ROI {}".format(type, roi, specs[type].roi)
+            for key, roi in crop_specs.items():
+                assert key in specs, "Asked to crop {} which is not provided".format(key)
+                assert specs[key].roi.contains(roi), "Asked to Crop {} out at {} which is" \
+                                            " not within provided ROI {}".format(key, roi, specs[key].roi)
 
         for crop_specs, specs in zip([self.arrays, self.points], [self.spec.array_specs, self.spec.points_specs]):
-            for type, roi in crop_specs.items():
-                spec = specs[type].copy()
+            for key, roi in crop_specs.items():
+                spec = specs[key].copy()
                 spec.roi = roi
-                self.updates(type, spec)
+                self.updates(key, spec)
 
     def process(self, batch, request):
         pass

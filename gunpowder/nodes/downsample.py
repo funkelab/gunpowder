@@ -12,9 +12,9 @@ class DownSample(BatchFilter):
 
     Args:
 
-        array_factors (dict): Dictionary mapping target :class:`ArrayKey` to 
-            a tuple `(f, array_type)` of downsampling factor `f` and source 
-            :class:`ArrayKey`. `f` can be a single integer or a tuple of 
+        array_factors (dict): Dictionary mapping target :class:`ArrayKey` to
+            a tuple `(f, array_key)` of downsampling factor `f` and source
+            :class:`ArrayKey`. `f` can be a single integer or a tuple of
             integers, one for each dimension of the array to downsample.
     '''
 
@@ -29,7 +29,8 @@ class DownSample(BatchFilter):
             assert len(downsample) == 2
             f, input_array = downsample
             assert isinstance(input_array, ArrayKey)
-            assert isinstance(f, numbers.Number) or isinstance(f, tuple), "Scaling factor should be a number or a tuple of numbers."
+            assert isinstance(f, numbers.Number) or isinstance(f, tuple), (
+                "Scaling factor should be a number or a tuple of numbers.")
 
     def setup(self):
 

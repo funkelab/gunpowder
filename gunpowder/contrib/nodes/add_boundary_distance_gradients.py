@@ -16,18 +16,18 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     Args:
 
-        label_array_type(:class:``ArrayKey``): The array type to read the
-            labels from.
+        label_array_key(:class:``ArrayKey``): The array to read the labels
+            from.
 
-        gradient_array_type(:class:``ArrayKey``): The array type to
-            generate containing the gradients.
+        gradient_array_key(:class:``ArrayKey``): The array to generate
+            containing the gradients.
 
-        distance_array_type(:class:``ArrayKey``, optional): The array type
-            to generate containing the values of the distance transform.
+        distance_array_key(:class:``ArrayKey``, optional): The array to
+            generate containing the values of the distance transform.
 
-        boundary_array_type(:class:``ArrayKey``, optional): The array type
-            to generate containing a boundary labeling. Note this array will
-            be doubled as it encodes boundaries between voxels.
+        boundary_array_key(:class:``ArrayKey``, optional): The array to
+            generate containing a boundary labeling. Note this array will be
+            doubled as it encodes boundaries between voxels.
 
         normalize(string, optional): ``None``, ``'l1'``, or ``'l2'``. Specifies
             if and how to normalize the gradients.
@@ -42,45 +42,45 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     def __init__(
             self,
-            label_array_type,
-            gradient_array_type,
-            distance_array_type=None,
-            boundary_array_type=None,
+            label_array_key,
+            gradient_array_key,
+            distance_array_key=None,
+            boundary_array_key=None,
             normalize=None,
             scale=None,
             scale_args=None):
 
-        self.label_array_type = label_array_type
-        self.gradient_array_type = gradient_array_type
-        self.distance_array_type = distance_array_type
-        self.boundary_array_type = boundary_array_type
+        self.label_array_key = label_array_key
+        self.gradient_array_key = gradient_array_key
+        self.distance_array_key = distance_array_key
+        self.boundary_array_key = boundary_array_key
         self.normalize = normalize
         self.scale = scale
         self.scale_args = scale_args
 
     def setup(self):
 
-        assert self.label_array_type in self.spec, (
+        assert self.label_array_key in self.spec, (
             "Upstream does not provide %s needed by "
-            "AddBoundaryDistanceGradients"%self.label_array_type)
+            "AddBoundaryDistanceGradients"%self.label_array_key)
 
-        spec = self.spec[self.label_array_type].copy()
+        spec = self.spec[self.label_array_key].copy()
         spec.dtype = np.float32
-        self.provides(self.gradient_array_type, spec)
-        if self.distance_array_type is not None:
-            self.provides(self.distance_array_type, spec)
-        if self.boundary_array_type is not None:
+        self.provides(self.gradient_array_key, spec)
+        if self.distance_array_key is not None:
+            self.provides(self.distance_array_key, spec)
+        if self.boundary_array_key is not None:
             spec.voxel_size /= 2
-            self.provides(self.boundary_array_type, spec)
+            self.provides(self.boundary_array_key, spec)
         self.enable_autoskip()
 
     def process(self, batch, request):
 
-        if not self.gradient_array_type in request:
+        if not self.gradient_array_key in request:
             return
 
-        labels = batch.arrays[self.label_array_type].data
-        voxel_size = self.spec[self.label_array_type].voxel_size
+        labels = batch.arrays[self.label_array_key].data
+        voxel_size = self.spec[self.label_array_key].voxel_size
 
         # get boundaries between label regions
         boundaries = self.__find_boundaries(labels)
@@ -120,18 +120,18 @@ class AddBoundaryDistanceGradients(BatchFilter):
         if self.scale is not None:
             self.__scale(gradients, distances, self.scale, self.scale_args)
 
-        spec = self.spec[self.gradient_array_type].copy()
-        spec.roi = request[self.gradient_array_type].roi
-        batch.arrays[self.gradient_array_type] = Array(gradients, spec)
+        spec = self.spec[self.gradient_array_key].copy()
+        spec.roi = request[self.gradient_array_key].roi
+        batch.arrays[self.gradient_array_key] = Array(gradients, spec)
 
         if (
-                self.distance_array_type is not None and
-                self.distance_array_type in request):
-            batch.arrays[self.distance_array_type] = Array(distances, spec)
+                self.distance_array_key is not None and
+                self.distance_array_key in request):
+            batch.arrays[self.distance_array_key] = Array(distances, spec)
 
         if (
-                self.boundary_array_type is not None and
-                self.boundary_array_type in request):
+                self.boundary_array_key is not None and
+                self.boundary_array_key in request):
 
             # add one more face at each dimension, as boundary map has shape
             # 2*s - 1 of original shape s
@@ -139,7 +139,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
             grown[tuple(slice(0, s) for s in boundaries.shape)] = boundaries
             spec.voxel_size = voxel_size/2
             logger.debug("voxel size of boundary array: %s", spec.voxel_size)
-            batch.arrays[self.boundary_array_type] = Array(grown, spec)
+            batch.arrays[self.boundary_array_key] = Array(grown, spec)
 
     def __find_boundaries(self, labels):
 

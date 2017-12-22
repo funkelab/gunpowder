@@ -83,7 +83,7 @@ class ArrayKey(Freezable):
         self.identifier = identifier
         self.hash = hash(identifier)
         self.freeze()
-        logger.debug("Registering array type %s", self)
+        logger.debug("Registering array key %s", self)
         setattr(ArrayKeys, self.identifier, self)
 
     def __eq__(self, other):

@@ -69,9 +69,9 @@ class Snapshot(BatchFilter):
         self.n += 1
 
         # append additional array requests, don't overwrite existing ones
-        for array_type, spec in self.additional_request.array_specs.items():
-            if array_type not in request.array_specs:
-                request.array_specs[array_type] = spec
+        for array_key, spec in self.additional_request.array_specs.items():
+            if array_key not in request.array_specs:
+                request.array_specs[array_key] = spec
 
     def process(self, batch, request):
 
@@ -86,22 +86,22 @@ class Snapshot(BatchFilter):
             logger.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
-                for (array_type, array) in batch.arrays.items():
+                for (array_key, array) in batch.arrays.items():
 
-                    if array_type not in self.dataset_names:
+                    if array_key not in self.dataset_names:
                         continue
 
-                    ds_name = self.dataset_names[array_type]
+                    ds_name = self.dataset_names[array_key]
 
                     offset = array.spec.roi.get_offset()
-                    if array_type in self.dataset_dtypes:
-                        dtype = self.dataset_dtypes[array_type]
+                    if array_key in self.dataset_dtypes:
+                        dtype = self.dataset_dtypes[array_key]
                         dataset = f.create_dataset(name=ds_name, data=array.data.astype(dtype), compression=self.compression_type)
                     else:
                         dataset = f.create_dataset(name=ds_name, data=array.data, compression=self.compression_type)
                     
                     dataset.attrs['offset'] = offset
-                    dataset.attrs['resolution'] = self.spec[array_type].voxel_size
+                    dataset.attrs['resolution'] = self.spec[array_key].voxel_size
 
                     # if array has attributes, add them to the dataset
                     for attribute_name, attribute in array.attrs.items():

@@ -243,14 +243,14 @@ class Scan(BatchFilter):
         if self.batch.get_total_roi() is None:
             self.batch = self.__setup_batch(spec, chunk)
 
-        for (array_type, array) in chunk.arrays.items():
-            self.__fill(self.batch.arrays[array_type].data, array.data,
-                        spec.array_specs[array_type].roi, array.spec.roi,
-                        self.spec[array_type].voxel_size)
+        for (array_key, array) in chunk.arrays.items():
+            self.__fill(self.batch.arrays[array_key].data, array.data,
+                        spec.array_specs[array_key].roi, array.spec.roi,
+                        self.spec[array_key].voxel_size)
 
-        for (points_type, points) in chunk.points.items():
-            self.__fill_points(self.batch.points[points_type].data, points.data,
-                               spec.points_specs[points_type].roi, points.roi)
+        for (points_key, points) in chunk.points.items():
+            self.__fill_points(self.batch.points[points_key].data, points.data,
+                               spec.points_specs[points_key].roi, points.roi)
 
     def __setup_batch(self, batch_spec, chunk):
         '''Allocate a batch matching the sizes of ``batch_spec``, using
@@ -258,26 +258,26 @@ class Scan(BatchFilter):
 
         batch = Batch()
 
-        for (array_type, spec) in batch_spec.array_specs.items():
+        for (array_key, spec) in batch_spec.array_specs.items():
             roi = spec.roi
-            voxel_size = self.spec[array_type].voxel_size
+            voxel_size = self.spec[array_key].voxel_size
 
             # get the 'non-spatial' shape of the chunk-batch
             # and append the shape of the request to it
-            array = chunk.arrays[array_type]
+            array = chunk.arrays[array_key]
             shape = array.data.shape[:-roi.dims()]
             shape += (roi.get_shape() // voxel_size)
 
-            spec = self.spec[array_type].copy()
+            spec = self.spec[array_key].copy()
             spec.roi = roi
-            batch.arrays[array_type] = Array(data=np.zeros(shape),
+            batch.arrays[array_key] = Array(data=np.zeros(shape),
                                                 spec=spec)
 
-        for (points_type, spec) in batch_spec.points_specs.items():
+        for (points_key, spec) in batch_spec.points_specs.items():
             roi = spec.roi
-            spec = self.spec[points_type].copy()
+            spec = self.spec[points_key].copy()
             spec.roi = roi
-            batch.points[points_type] = Points(data={}, spec=spec)
+            batch.points[points_key] = Points(data={}, spec=spec)
 
         logger.debug("setup batch to fill %s", batch)
 

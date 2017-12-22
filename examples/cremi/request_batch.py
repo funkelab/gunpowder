@@ -62,7 +62,7 @@ def train():
                 alpha_mask: ArraySpec(voxel_size=(40, 4, 4)),
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_array_type=alpha_mask) +
+        RandomLocation(min_masked=0.05, mask_array_key=alpha_mask) +
         Snapshot(
             {
                 raw: 'volumes/raw',
@@ -102,9 +102,9 @@ def train():
         ) +
         AddGtAffinities(affinity_neighborhood) +
         AddBoundaryDistanceGradients(
-            gradient_array_type=boundary_gradient,
-            distance_array_type=boundary_distance,
-            boundary_array_type=boundary,
+            gradient_array_key=boundary_gradient,
+            distance_array_key=boundary_distance,
+            boundary_array_key=boundary,
             normalize='l2') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(

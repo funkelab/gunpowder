@@ -18,16 +18,16 @@ def train(max_iteration):
 
     # define networks input, output and groundtruth names and ArrayKeys
     net_inputs =  [
-                    net_input(array_name='data', array_type=ArrayKeys.RAW)
+                    net_input(array_name='data', array_key=ArrayKeys.RAW)
                   ]
 
     net_outputs = [
-                    net_output(array_name='bm_presyn_pred', array_type=ArrayKeys.PRED_BM_PRESYN,
-                               gt_name='bm_presyn_label', loss_array_type=ArrayKeys.LOSS_GRADIENT_PRESYN),
+                    net_output(array_name='bm_presyn_pred', array_key=ArrayKeys.PRED_BM_PRESYN,
+                               gt_name='bm_presyn_label', loss_array_key=ArrayKeys.LOSS_GRADIENT_PRESYN),
                   ]
     net_gts =     [
-                    net_gt(array_name='bm_presyn_label', array_type=ArrayKeys.GT_BM_PRESYN,
-                           scale_name='bm_presyn_scale', mask_array_type=ArrayKeys.GT_MASK_EXCLUSIVEZONE_PRESYN),
+                    net_gt(array_name='bm_presyn_label', array_key=ArrayKeys.GT_BM_PRESYN,
+                           scale_name='bm_presyn_scale', mask_array_key=ArrayKeys.GT_MASK_EXCLUSIVEZONE_PRESYN),
                   ]
 
     # define solver parameters
@@ -66,7 +66,7 @@ def train(max_iteration):
                                                      },
                                 resolution = (8,8,8)
                               ) +
-                    RandomLocation(focus_points_type=PointsKeys.PRESYN) +
+                    RandomLocation(focus_points_key=PointsKeys.PRESYN) +
                     Normalize()
                     )
 

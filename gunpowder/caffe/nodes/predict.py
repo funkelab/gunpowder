@@ -76,17 +76,17 @@ class Predict(GenericPredict):
     def predict(self, batch, request):
 
         self.net_io.set_inputs({
-            input_name: batch.arrays[array_type].data
-            for array_type, input_name in self.inputs.items()
+            input_name: batch.arrays[array_key].data
+            for array_key, input_name in self.inputs.items()
         })
 
         self.net.forward()
         output = self.net_io.get_outputs()
 
-        for array_type, output_name in self.outputs.items():
-            spec = self.spec[array_type].copy()
-            spec.roi = request[array_type].roi
-            batch.arrays[array_type] = Array(
+        for array_key, output_name in self.outputs.items():
+            spec = self.spec[array_key].copy()
+            spec.roi = request[array_key].roi
+            batch.arrays[array_key] = Array(
                     output[output_name][0], # strip #batch dimension
                     spec)
 

@@ -27,7 +27,7 @@ class MaskNotProvidedException(Exception):
 
 class DvidSource(BatchProvider):
 
-    def __init__(self, hostname, port, uuid, array_array_names,
+    def __init__(self, hostname, port, uuid, array_names,
                  points_array_names={}, points_rois={}, points_voxel_size=None):
         """
         :param hostname: hostname for DVID server
@@ -36,7 +36,7 @@ class DvidSource(BatchProvider):
         :type port: int
         :param uuid: UUID of node on DVID server
         :type uuid: str
-        :param array_array_names: dict {ArrayKeys:  DVID data instance for data in ArrayKeys}
+        :param array_names: dict {ArrayKey:  DVID data instance}
         :param points_voxel_size: (dict), :class:``PointsKey`` to its voxel_size (tuple)
         """
         self.hostname = hostname
@@ -44,7 +44,7 @@ class DvidSource(BatchProvider):
         self.url = "http://{}:{}".format(self.hostname, self.port)
         self.uuid = uuid
 
-        self.array_array_names = array_array_names
+        self.array_names = array_names
 
         self.points_array_names = points_array_names
         self.points_rois        = points_rois
@@ -55,11 +55,11 @@ class DvidSource(BatchProvider):
         self.spec = ProviderSpec()
 
     def setup(self):
-        for array_type, array_name in self.array_array_names.items():
-            self.spec.arrays[array_type] = self.__get_roi(array_name, array_type.voxel_size)
+        for array_key, array_name in self.array_names.items():
+            self.spec.arrays[array_key] = self.__get_roi(array_name, array_key.voxel_size)
 
-        for points_type, points_name in self.points_array_names.items():
-            self.spec.points[points_type] = self.points_rois[points_type]
+        for points_key, points_name in self.points_array_names.items():
+            self.spec.points[points_key] = self.points_rois[points_key]
 
         logger.info("DvidSource.spec:\n{}".format(self.spec))
 
@@ -75,22 +75,22 @@ class DvidSource(BatchProvider):
 
         batch = Batch()
 
-        for (array_type, roi) in request.arrays.items():
-            # check if requested arraytype can be provided
-            if array_type not in spec.arrays:
-                raise RuntimeError("Asked for %s which this source does not provide"%array_type)
+        for (array_key, roi) in request.arrays.items():
+            # check if requested array can be provided
+            if array_key not in spec.arrays:
+                raise RuntimeError("Asked for %s which this source does not provide"%array_key)
             # check if request roi lies within provided roi
-            if not spec.arrays[array_type].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(array_type, roi, spec.arrays[array_type]))
+            if not spec.arrays[array_key].contains(roi):
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(array_key, roi, spec.arrays[array_key]))
 
             read = {
                 ArrayKeys.RAW: self.__read_raw,
                 ArrayKeys.GT_LABELS: self.__read_gt,
                 ArrayKeys.GT_MASK: self.__read_gt_mask,
-            }[array_type]
+            }[array_key]
 
-            logger.debug("Reading %s in %s..."%(array_type, roi))
-            batch.arrays[array_type] = Array(
+            logger.debug("Reading %s in %s..."%(array_key, roi))
+            batch.arrays[array_key] = Array(
                     read(roi),
                     roi=roi)
 
@@ -106,18 +106,18 @@ class DvidSource(BatchProvider):
             elif PointsKeys.POSTSYN in request.points:
                 presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsKeys.POSTSYN])
 
-        for (points_type, roi) in request.points.items():
-            # check if requested pointstype can be provided
-            if points_type not in spec.points:
-                raise RuntimeError("Asked for %s which this source does not provide"%points_type)
+        for (points_key, roi) in request.points.items():
+            # check if requested points can be provided
+            if points_key not in spec.points:
+                raise RuntimeError("Asked for %s which this source does not provide"%points_key)
             # check if request roi lies within provided roi
-            if not spec.points[points_type].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_type,roi,spec.points[points_type]))
+            if not spec.points[points_key].contains(roi):
+                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_key,roi,spec.points[points_key]))
 
-            logger.debug("Reading %s in %s..."%(points_type, roi))
+            logger.debug("Reading %s in %s..."%(points_key, roi))
             id_to_point = {PointsKeys.PRESYN: presyn_points,
-                           PointsKeys.POSTSYN: postsyn_points}[points_type]
-            batch.points[points_type] = Points(data=id_to_point, roi=roi, resolution=self.points_voxel_size[points_type])
+                           PointsKeys.POSTSYN: postsyn_points}[points_key]
+            batch.points[points_key] = Points(data=id_to_point, roi=roi, resolution=self.points_voxel_size[points_key])
 
         logger.debug("done")
 
@@ -140,7 +140,7 @@ class DvidSource(BatchProvider):
 
     def __read_raw(self, roi):
         slices = (roi/ArrayKeys.RAW.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_array_names[ArrayKeys.RAW])  # self.raw_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.RAW])  # self.raw_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -150,7 +150,7 @@ class DvidSource(BatchProvider):
 
     def __read_gt(self, roi):
         slices = (roi/ArrayKeys.GT_LABELS.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_array_names[ArrayKeys.GT_LABELS])  # self.gt_array_name)
+        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.GT_LABELS])  # self.gt_array_name)
         try:
             return data_instance[slices]
         except Exception as e:
@@ -166,7 +166,7 @@ class DvidSource(BatchProvider):
         if self.gt_mask_roi_name is None:
             raise MaskNotProvidedException
         slices = (roi/ArrayKeys.GT_MASK.voxel_size).get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.array_array_names[ArrayKeys.GT_MASK])  # self.gt_mask_roi_name)
+        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.GT_MASK])  # self.gt_mask_roi_name)
         try:
             return dvid_roi[slices]
         except Exception as e:
@@ -266,5 +266,5 @@ class DvidSource(BatchProvider):
 
     def __repr__(self):
         return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.array_array_names[ArrayKeys.RAW],
-            self.array_array_names[ArrayKeys.GT_LABELS])
+            self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.RAW],
+            self.array_names[ArrayKeys.GT_LABELS])

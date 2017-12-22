@@ -176,29 +176,29 @@ class BatchProvider(object):
 
     def check_batch_consistency(self, batch, request):
 
-        for (array_type, request_spec) in request.array_specs.items():
+        for (array_key, request_spec) in request.array_specs.items():
 
-            assert array_type in batch.arrays, "%s requested, but %s did not provide it."%(array_type,self.name())
-            array = batch.arrays[array_type]
+            assert array_key in batch.arrays, "%s requested, but %s did not provide it."%(array_key,self.name())
+            array = batch.arrays[array_key]
             assert array.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                    array_type,
+                    array_key,
                     request_spec.roi,
                     array.spec.roi,
                     self.name()
             )
-            assert array.spec.voxel_size == self.spec[array_type].voxel_size, (
+            assert array.spec.voxel_size == self.spec[array_key].voxel_size, (
                 "voxel size of %s announced, but %s "
                 "delivered for %s"%(
-                    self.spec[array_type].voxel_size,
+                    self.spec[array_key].voxel_size,
                     array.spec.voxel_size,
-                    array_type))
+                    array_key))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             dims = request_spec.roi.dims()
             data_shape = Coordinate(array.data.shape[-dims:])
-            voxel_size = self.spec[array_type].voxel_size
+            voxel_size = self.spec[array_key].voxel_size
             assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
-                    array_type,
+                    array_key,
                     request_spec.roi,
                     data_shape,
                     voxel_size,
@@ -206,12 +206,12 @@ class BatchProvider(object):
                     self.name()
             )
 
-        for (points_type, request_spec) in request.points_specs.items():
+        for (points_key, request_spec) in request.points_specs.items():
 
-            assert points_type in batch.points, "%s requested, but %s did not provide it."%(points_type,self.name())
-            points = batch.points[points_type]
+            assert points_key in batch.points, "%s requested, but %s did not provide it."%(points_key,self.name())
+            points = batch.points[points_key]
             assert points.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                                            points_type,
+                                            points_key,
                                             request_spec.roi,
                                             points.spec.roi,
                                             self.name())

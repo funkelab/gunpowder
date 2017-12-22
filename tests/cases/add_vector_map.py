@@ -67,12 +67,12 @@ class AddVectorMapTestSource(BatchProvider):
             data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsKeys.POSTSYN].roi)
 
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
-        for (points_type, spec) in request.points_specs.items():
-            if points_type == PointsKeys.PRESYN:
+        for (points_key, spec) in request.points_specs.items():
+            if points_key == PointsKeys.PRESYN:
                 data = data_presyn
-            if points_type == PointsKeys.POSTSYN:
+            if points_key == PointsKeys.POSTSYN:
                 data = data_postsyn
-            batch.points[points_type] = Points(data, PointsSpec(spec.roi))
+            batch.points[points_key] = Points(data, PointsSpec(spec.roi))
 
         return batch
 

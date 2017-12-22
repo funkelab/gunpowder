@@ -56,7 +56,7 @@ def train():
                 ArrayKeys.ALPHA_MASK: 'defect_sections/mask',
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_array_type=ArrayKeys.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_array_key=ArrayKeys.ALPHA_MASK) +
         Normalize() +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         ElasticAugment([4,40,40], [0,2,2], [0,math.pi/2.0]) +

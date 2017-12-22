@@ -14,14 +14,14 @@ class ProviderSpec(Freezable):
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
-        provider_spec[array_type] = ArraySpec(...)
-        provider_spec[points_type] = PointsSpec(...)
+        provider_spec[array_key] = ArraySpec(...)
+        provider_spec[points_key] = PointsSpec(...)
 
-    Here, ``array_type`` and ``points_type`` are :class:`ArrayKey` and
+    Here, ``array_key`` and ``points_key`` are :class:`ArrayKey` and
     :class:`PointsKey`. The specs can be queried with::
 
-        array_spec = provider_spec[array_type]
-        points_spec = provider_spec[points_type]
+        array_spec = provider_spec[array_key]
+        points_spec = provider_spec[points_key]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``provider_spec.items()``.
@@ -146,28 +146,28 @@ class ProviderSpec(Freezable):
 
         return common_roi
 
-    def get_lcm_voxel_size(self, array_types=None):
+    def get_lcm_voxel_size(self, array_keys=None):
         '''Get the least common multiple of the voxel sizes in this spec.
 
         Args:
 
-            array_types (list of :class:`ArrayKey`, optional): If given,
+            array_keys (list of :class:`ArrayKey`, optional): If given,
                 consider only the given array types.
         '''
 
-        if array_types is None:
-            array_types = self.array_specs.keys()
+        if array_keys is None:
+            array_keys = self.array_specs.keys()
 
-        if not array_types:
+        if not array_keys:
             raise RuntimeError("Can not compute lcm voxel size -- there are "
                                "no array specs in this provider spec.")
         else:
-            if not array_types:
+            if not array_keys:
                 raise RuntimeError("Can not compute lcm voxel size -- list of "
                                    "given array specs is empty.")
 
         lcm_voxel_size = None
-        for identifier in array_types:
+        for identifier in array_keys:
             voxel_size = self.array_specs[identifier].voxel_size
             if lcm_voxel_size is None:
                 lcm_voxel_size = voxel_size

@@ -45,7 +45,7 @@ class Hdf5Source(BatchProvider):
             filename,
             datasets,
             array_specs=None,
-            points_types=None,
+            points_keys=None,
             points_rois=None):
 
         self.filename = filename
@@ -56,7 +56,7 @@ class Hdf5Source(BatchProvider):
         else:
             self.array_specs = array_specs
 
-        self.points_types = points_types
+        self.points_keys = points_keys
         self.points_rois = points_rois
 
         self.ndims = None
@@ -65,22 +65,22 @@ class Hdf5Source(BatchProvider):
 
         hdf_file = h5py.File(self.filename, 'r')
 
-        for (array_type, ds_name) in self.datasets.items():
+        for (array_key, ds_name) in self.datasets.items():
 
             if ds_name not in hdf_file:
                 raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
-            spec = self.__read_spec(array_type, hdf_file, ds_name)
+            spec = self.__read_spec(array_key, hdf_file, ds_name)
 
-            self.provides(array_type, spec)
+            self.provides(array_key, spec)
 
-        if self.points_types is not None:
+        if self.points_keys is not None:
 
-            for points_type in self.points_types:
+            for points_key in self.points_keys:
                 spec = PointsSpec()
-                spec.roi = Roi(self.points_rois[points_type])
+                spec.roi = Roi(self.points_rois[points_key])
 
-                self.provides(points_type, spec)
+                self.provides(points_key, spec)
 
         hdf_file.close()
 
@@ -93,25 +93,25 @@ class Hdf5Source(BatchProvider):
 
         with h5py.File(self.filename, 'r') as hdf_file:
 
-            for (array_type, request_spec) in request.array_specs.items():
+            for (array_key, request_spec) in request.array_specs.items():
 
-                logger.debug("Reading %s in %s...", array_type, request_spec.roi)
+                logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
-                voxel_size = self.spec[array_type].voxel_size
+                voxel_size = self.spec[array_key].voxel_size
 
                 # scale request roi to voxel units
                 dataset_roi = request_spec.roi/voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = dataset_roi - self.spec[array_type].roi.get_offset()/voxel_size
+                dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
 
                 # create array spec
-                array_spec = self.spec[array_type].copy()
+                array_spec = self.spec[array_key].copy()
                 array_spec.roi = request_spec.roi
 
                 # add array to batch
-                batch.arrays[array_type] = Array(
-                    self.__read(hdf_file, self.datasets[array_type], dataset_roi),
+                batch.arrays[array_key] = Array(
+                    self.__read(hdf_file, self.datasets[array_key], dataset_roi),
                     array_spec)
 
             # if pre and postsynaptic locations required, their id
@@ -127,17 +127,17 @@ class Hdf5Source(BatchProvider):
                     syn_file=hdf_file,
                     dataset_offset=dataset_offset)
 
-            for (points_type, request_spec) in request.points_specs.items():
+            for (points_key, request_spec) in request.points_specs.items():
 
-                logger.debug("Reading %s in %s...", points_type, request_spec.roi)
+                logger.debug("Reading %s in %s...", points_key, request_spec.roi)
                 id_to_point = {
                     PointsKeys.PRESYN: presyn_points,
-                    PointsKeys.POSTSYN: postsyn_points}[points_type]
+                    PointsKeys.POSTSYN: postsyn_points}[points_key]
                 # TODO: so far assumed that all points have resolution of raw array
 
-                points_spec = self.spec[points_type].copy()
+                points_spec = self.spec[points_key].copy()
                 points_spec.roi = request_spec.roi
-                batch.points[points_type] = Points(data=id_to_point, spec=points_spec)
+                batch.points[points_key] = Points(data=id_to_point, spec=points_spec)
 
         logger.debug("done")
 
@@ -146,7 +146,7 @@ class Hdf5Source(BatchProvider):
 
         return batch
 
-    def __read_spec(self, array_type, hdf_file, ds_name):
+    def __read_spec(self, array_key, hdf_file, ds_name):
 
         dataset = hdf_file[ds_name]
 
@@ -157,8 +157,8 @@ class Hdf5Source(BatchProvider):
         else:
             assert self.ndims == len(dims)
 
-        if array_type in self.array_specs:
-            spec = self.array_specs[array_type].copy()
+        if array_key in self.array_specs:
+            spec = self.array_specs[array_key].copy()
         else:
             spec = ArraySpec()
 
@@ -171,7 +171,7 @@ class Hdf5Source(BatchProvider):
                 logger.warning("WARNING: File %s does not contain resolution information "
                                "for %s (dataset %s), voxel size has been set to (1,1,1). "
                                "This might not be what you want.",
-                               self.filename, array_type, ds_name)
+                               self.filename, array_key, ds_name)
 
         if spec.roi is None:
 
@@ -185,8 +185,8 @@ class Hdf5Source(BatchProvider):
         if spec.dtype is not None:
             assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
                                                  "but differs from dataset %s dtype %s"%
-                                                 (self.array_specs[array_type].dtype,
-                                                  array_type, ds_name, dataset.dtype))
+                                                 (self.array_specs[array_key].dtype,
+                                                  array_key, ds_name, dataset.dtype))
         else:
             spec.dtype = dataset.dtype
 
@@ -202,7 +202,7 @@ class Hdf5Source(BatchProvider):
             logger.warning("WARNING: You didn't set 'interpolatable' for %s "
                            "(dataset %s). Based on the dtype %s, it has been "
                            "set to %s. This might not be what you want.",
-                           array_type, ds_name, spec.dtype,
+                           array_key, ds_name, spec.dtype,
                            spec.interpolatable)
 
         return spec

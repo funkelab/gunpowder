@@ -139,9 +139,9 @@ class GenericTrain(BatchFilter):
             except WorkersDied:
                 raise TrainProcessDied()
 
-            for array_type in self.provided_arrays:
-                if array_type in request:
-                    batch.arrays[array_type] = out.arrays[array_type]
+            for array_key in self.provided_arrays:
+                if array_key in request:
+                    batch.arrays[array_key] = out.arrays[array_key]
 
             batch.loss = out.loss
             batch.iteration = out.iteration

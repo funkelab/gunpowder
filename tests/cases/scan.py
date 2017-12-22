@@ -24,11 +24,11 @@ class ScanTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        for (array_type, spec) in request.array_specs.items():
+        for (array_key, spec) in request.array_specs.items():
 
             roi = spec.roi
-            roi_voxel = roi // self.spec[array_type].voxel_size
-            # print("ScanTestSource: Adding " + str(array_type))
+            roi_voxel = roi // self.spec[array_key].voxel_size
+            # print("ScanTestSource: Adding " + str(array_key))
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
@@ -39,9 +39,9 @@ class ScanTestSource(BatchProvider):
 
             # print("Roi is: " + str(roi))
 
-            spec = self.spec[array_type].copy()
+            spec = self.spec[array_key].copy()
             spec.roi = roi
-            batch.arrays[array_type] = Array(
+            batch.arrays[array_key] = Array(
                     data,
                     spec)
 
@@ -76,7 +76,7 @@ class TestScan(ProviderTest):
             voxel_size = pipeline.spec[ArrayKeys.RAW].voxel_size
 
         # assert that pixels encode their position
-        for (array_type, array) in batch.arrays.items():
+        for (array_key, array) in batch.arrays.items():
 
             # the z,y,x coordinates of the ROI
             roi = array.spec.roi

@@ -12,57 +12,57 @@ class PrepareMalis(BatchFilter):
 
     Args:
 
-        labels_array_type(:class:`ArrayKey`): The label array to use.
+        labels_array_key(:class:`ArrayKey`): The label array to use.
 
-        malis_comp_array_type(:class:`ArrayKey`): The malis component array
+        malis_comp_array_key(:class:`ArrayKey`): The malis component array
             to generate.
 
-        ignore_array_type(:class:`ArrayKey`, optional): An ignore mask to
+        ignore_array_key(:class:`ArrayKey`, optional): An ignore mask to
             use.
     '''
 
     def __init__(
             self,
-            labels_array_type,
-            malis_comp_array_type,
-            ignore_array_type=None):
+            labels_array_key,
+            malis_comp_array_key,
+            ignore_array_key=None):
 
-        self.labels_array_type = labels_array_type
-        self.malis_comp_array_type = malis_comp_array_type
-        self.ignore_array_type = ignore_array_type
+        self.labels_array_key = labels_array_key
+        self.malis_comp_array_key = malis_comp_array_key
+        self.ignore_array_key = ignore_array_key
 
     def setup(self):
 
-        spec = self.spec[self.labels_array_type].copy()
-        self.provides(self.malis_comp_array_type, spec)
+        spec = self.spec[self.labels_array_key].copy()
+        self.provides(self.malis_comp_array_key, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
 
-        assert self.labels_array_type in request, (
+        assert self.labels_array_key in request, (
             "PrepareMalis requires %s, but they are not in request"%
-            self.labels_array_type)
+            self.labels_array_key)
 
     def process(self, batch, request):
 
-        gt_labels = batch.arrays[self.labels_array_type]
+        gt_labels = batch.arrays[self.labels_array_key]
         next_id = gt_labels.data.max() + 1
 
         gt_pos_pass = gt_labels.data
 
-        if self.ignore_array_type and self.ignore_array_type in batch.arrays:
+        if self.ignore_array_key and self.ignore_array_key in batch.arrays:
 
             gt_neg_pass = np.array(gt_labels.data)
             gt_neg_pass[
-                batch.arrays[self.ignore_array_type].data == 0] = next_id
+                batch.arrays[self.ignore_array_key].data == 0] = next_id
 
         else:
 
             gt_neg_pass = gt_pos_pass
 
-        spec = self.spec[self.malis_comp_array_type].copy()
-        spec.roi = request[self.labels_array_type].roi
-        batch.arrays[self.malis_comp_array_type] = Array(
+        spec = self.spec[self.malis_comp_array_key].copy()
+        spec.roi = request[self.labels_array_key].roi
+        batch.arrays[self.malis_comp_array_key] = Array(
             np.array([gt_neg_pass, gt_pos_pass]),
             spec)
 

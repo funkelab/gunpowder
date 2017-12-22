@@ -62,31 +62,31 @@ class Hdf5Write(BatchFilter):
         self.file = h5py.File(os.path.join(self.output_dir, self.output_filename), 'w')
         self.datasets = {}
 
-        for (array_type, dataset_name) in self.dataset_names.items():
+        for (array_key, dataset_name) in self.dataset_names.items():
 
-            logger.debug("Create dataset for %s", array_type)
+            logger.debug("Create dataset for %s", array_key)
 
-            assert array_type in self.spec, (
-                "Asked to store %s, but is not provided upstream."%array_type)
-            assert array_type in batch.arrays, (
-                "Asked to store %s, but is not part of batch."%array_type)
+            assert array_key in self.spec, (
+                "Asked to store %s, but is not provided upstream."%array_key)
+            assert array_key in batch.arrays, (
+                "Asked to store %s, but is not part of batch."%array_key)
 
-            batch_shape = batch.arrays[array_type].data.shape
+            batch_shape = batch.arrays[array_key].data.shape
 
-            total_roi = self.spec[array_type].roi
+            total_roi = self.spec[array_key].roi
             dims = total_roi.dims()
 
             # extends of spatial dimensions
-            data_shape = total_roi.get_shape()//self.spec[array_type].voxel_size
+            data_shape = total_roi.get_shape()//self.spec[array_key].voxel_size
             logger.debug("Shape in voxels: %s", data_shape)
             # add channel dimensions (if present)
             data_shape = batch_shape[:-dims] + data_shape
             logger.debug("Shape with channel dimensions: %s", data_shape)
 
-            if array_type in self.dataset_dtypes:
-                dtype = self.dataset_dtypes[array_type]
+            if array_key in self.dataset_dtypes:
+                dtype = self.dataset_dtypes[array_key]
             else:
-                dtype = batch.arrays[array_type].data.dtype
+                dtype = batch.arrays[array_key].data.dtype
 
             dataset = self.file.create_dataset(
                     name=dataset_name,
@@ -95,9 +95,9 @@ class Hdf5Write(BatchFilter):
                     dtype=dtype)
 
             dataset.attrs['offset'] = total_roi.get_offset()
-            dataset.attrs['resolution'] = self.spec[array_type].voxel_size
+            dataset.attrs['resolution'] = self.spec[array_key].voxel_size
 
-            self.datasets[array_type] = dataset
+            self.datasets[array_key] = dataset
 
     def process(self, batch, request):
 
@@ -105,20 +105,20 @@ class Hdf5Write(BatchFilter):
             logger.info("Creating HDF file...")
             self.create_output_file(batch)
 
-        for array_type, dataset in self.datasets.items():
+        for array_key, dataset in self.datasets.items():
 
-            roi = batch.arrays[array_type].spec.roi
-            data = batch.arrays[array_type].data
-            total_roi = self.spec[array_type].roi
+            roi = batch.arrays[array_key].spec.roi
+            data = batch.arrays[array_key].data
+            total_roi = self.spec[array_key].roi
 
             assert total_roi.contains(roi), (
                 "ROI %s of %s not in upstream provided ROI %s"%(
-                    roi, array_type, total_roi))
+                    roi, array_key, total_roi))
 
-            data_roi = (roi - total_roi.get_offset())//self.spec[array_type].voxel_size
+            data_roi = (roi - total_roi.get_offset())//self.spec[array_key].voxel_size
             dims = data_roi.dims()
             channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
             voxel_slices = data_roi.get_bounding_box()
 
-            dataset[channel_slices + voxel_slices] = batch.arrays[array_type].data
+            dataset[channel_slices + voxel_slices] = batch.arrays[array_key].data
 

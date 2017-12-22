@@ -66,7 +66,7 @@ class TestPrepareMalis(ProviderTest):
             PrepareMalis(
                 ArrayKeys.GT_LABELS,
                 ArrayKeys.MALIS_COMP_LABEL,
-                ignore_array_type=ArrayKeys.GT_IGNORE)
+                ignore_array_key=ArrayKeys.GT_IGNORE)
         )
 
         # test that MALIS_COMP_LABEL not in batch if not in request
