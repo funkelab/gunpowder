@@ -24,16 +24,16 @@ class AddVectorMap(BatchFilter):
             voxel points (the different criterions are described below).
         
         Args:
-            src_and_trg_points (dict):      Dictionary from :class:``ArrayType`` of the vector map to be created
-                                            to a tuple (:class:``PointsTypes`` of the source points, :class:``PointsTypes``
+            src_and_trg_points (dict):      Dictionary from :class:``ArrayKey`` of the vector map to be created
+                                            to a tuple (:class:``PointsKeys`` of the source points, :class:``PointsKeys``
                                             of the target points) which define the source and target points.
             voxel_sizes (dict):             Dictionary from
-                                            :class:``ArrayType`` of the vector
+                                            :class:``ArrayKey`` of the vector
                                             map to be created to a
                                             :class:`Coordinate` for the voxel
                                             size of the array.
-            stayinside_arraytypes (dict):  Dictionary from :class:``ArrayType`` of the vector map to be created to 
-                                            :class:``ArrayType`` of the stayinside_array. 
+            stayinside_arraytypes (dict):  Dictionary from :class:``ArrayKey`` of the vector map to be created to 
+                                            :class:``ArrayKey`` of the stayinside_array. 
                                             The stayinside_array is assumed to contain discrete objects labeled with
                                             different object ids. The object id at the specific source location is used
                                             to restrict the region where vectors are created around a source location. 

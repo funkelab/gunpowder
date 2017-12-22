@@ -23,7 +23,7 @@ class RandomLocation(BatchFilter):
     using the ``Reject`` node, at the expense of storing an integral array of
     the complete mask.
 
-    If 'ensure_nonempty' is set to a :class:``PointsType``, only batches are
+    If 'ensure_nonempty' is set to a :class:``PointsKey``, only batches are
     returned that have at least one point of this type within the requested
     ROI.
 
@@ -32,9 +32,9 @@ class RandomLocation(BatchFilter):
         min_masked(float, optional): If non-zero, require that the random
             sample contains at least that ratio of masked-in voxels.
 
-        mask(:class:``ArrayType``): The array type to use for mask checks.
+        mask(:class:``ArrayKey``): The array type to use for mask checks.
 
-        ensure_nonempty(:class:``PointsType``, optional): Ensures that when
+        ensure_nonempty(:class:``PointsKey``, optional): Ensures that when
             finding a random location, a request for ``ensure_nonempty`` will
             contain at least one point. This does only work if all upstream
             nodes are deterministic (e.g., there is no

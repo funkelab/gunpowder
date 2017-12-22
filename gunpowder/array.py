@@ -7,14 +7,14 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class ArrayType(Freezable):
+class ArrayKey(Freezable):
     '''Describes general properties of an array type.
 
     Args:
 
         identifier (string):
             A human readable identifier for this array type. Will be used as a
-            static attribute in :class:`ArrayTypes`. Should be upper case (like
+            static attribute in :class:`ArrayKeys`. Should be upper case (like
             ``RAW``, ``GT_LABELS``).
     '''
 
@@ -32,7 +32,7 @@ class ArrayType(Freezable):
     def __repr__(self):
         return self.identifier
 
-class ArrayTypes:
+class ArrayKeys:
     '''An expandable collection of array types, which initially contains:
 
         =================================  ====================================================
@@ -78,13 +78,13 @@ def register_array_type(identifier):
 
             register_array_type('IDENTIFIER')
 
-    will create a new array type available as ``ArrayTypes.IDENTIFIER``.
-    ``ArrayTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    will create a new array type available as ``ArrayKeys.IDENTIFIER``.
+    ``ArrayKeys.IDENTIFIER`` can then be used in dictionaries, as it is done
     in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    array_type = ArrayType(identifier)
+    array_type = ArrayKey(identifier)
     logger.debug("Registering array type " + str(array_type))
-    setattr(ArrayTypes, array_type.identifier, array_type)
+    setattr(ArrayKeys, array_type.identifier, array_type)
 
 register_array_type('RAW')
 register_array_type('ALPHA_MASK')

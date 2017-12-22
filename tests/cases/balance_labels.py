@@ -7,9 +7,9 @@ class TestSource(BatchProvider):
     def setup(self):
 
         for identifier in [
-            ArrayTypes.GT_AFFINITIES,
-            ArrayTypes.GT_AFFINITIES_MASK,
-            ArrayTypes.GT_IGNORE]:
+            ArrayKeys.GT_AFFINITIES,
+            ArrayKeys.GT_AFFINITIES_MASK,
+            ArrayKeys.GT_IGNORE]:
 
             self.provides(
                 identifier,
@@ -21,27 +21,27 @@ class TestSource(BatchProvider):
 
         batch = Batch()
 
-        roi = request[ArrayTypes.GT_AFFINITIES].roi
-        shape_vx = roi.get_shape()//self.spec[ArrayTypes.GT_AFFINITIES].voxel_size
+        roi = request[ArrayKeys.GT_AFFINITIES].roi
+        shape_vx = roi.get_shape()//self.spec[ArrayKeys.GT_AFFINITIES].voxel_size
 
-        spec = self.spec[ArrayTypes.GT_AFFINITIES].copy()
+        spec = self.spec[ArrayKeys.GT_AFFINITIES].copy()
         spec.roi = roi
 
-        batch.arrays[ArrayTypes.GT_AFFINITIES] = Array(
+        batch.arrays[ArrayKeys.GT_AFFINITIES] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
                 ),
                 spec
         )
-        batch.arrays[ArrayTypes.GT_AFFINITIES_MASK] = Array(
+        batch.arrays[ArrayKeys.GT_AFFINITIES_MASK] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
                 ),
                 spec
         )
-        batch.arrays[ArrayTypes.GT_IGNORE] = Array(
+        batch.arrays[ArrayKeys.GT_IGNORE] = Array(
                 np.random.randint(
                     0, 2,
                     (3,) + shape_vx
@@ -56,9 +56,9 @@ class TestBalanceLabels(ProviderTest):
     def test_output(self):
 
         pipeline = TestSource() + BalanceLabels(
-            labels=ArrayTypes.GT_AFFINITIES,
-            scales=ArrayTypes.LOSS_SCALE,
-            mask=[ArrayTypes.GT_AFFINITIES_MASK, ArrayTypes.GT_IGNORE])
+            labels=ArrayKeys.GT_AFFINITIES,
+            scales=ArrayKeys.LOSS_SCALE,
+            mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE])
 
         with build(pipeline):
 
@@ -66,17 +66,17 @@ class TestBalanceLabels(ProviderTest):
             for i in range(10):
 
                 request = BatchRequest()
-                request.add(ArrayTypes.GT_AFFINITIES, (400,30,34))
-                request.add(ArrayTypes.LOSS_SCALE, (400,30,34))
+                request.add(ArrayKeys.GT_AFFINITIES, (400,30,34))
+                request.add(ArrayKeys.LOSS_SCALE, (400,30,34))
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.arrays)
+                self.assertTrue(ArrayKeys.LOSS_SCALE in batch.arrays)
 
-                affs = batch.arrays[ArrayTypes.GT_AFFINITIES].data
-                scale = batch.arrays[ArrayTypes.LOSS_SCALE].data
-                mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK].data
-                ignore = batch.arrays[ArrayTypes.GT_IGNORE].data
+                affs = batch.arrays[ArrayKeys.GT_AFFINITIES].data
+                scale = batch.arrays[ArrayKeys.LOSS_SCALE].data
+                mask = batch.arrays[ArrayKeys.GT_AFFINITIES_MASK].data
+                ignore = batch.arrays[ArrayKeys.GT_IGNORE].data
 
                 # combine mask and ignore
                 mask *= ignore
@@ -100,17 +100,17 @@ class TestBalanceLabels(ProviderTest):
                 self.assertAlmostEqual((scale*mask*(1-affs)).sum(), w_neg*num_neg, 3)
 
                 # check if LOSS_SCALE is omitted if not requested
-                del request[ArrayTypes.LOSS_SCALE]
+                del request[ArrayKeys.LOSS_SCALE]
 
                 batch = pipeline.request_batch(request)
-                self.assertTrue(ArrayTypes.LOSS_SCALE not in batch.arrays)
+                self.assertTrue(ArrayKeys.LOSS_SCALE not in batch.arrays)
 
         # same using a slab for balancing
 
         pipeline = TestSource() + BalanceLabels(
-            labels=ArrayTypes.GT_AFFINITIES,
-            scales=ArrayTypes.LOSS_SCALE,
-            mask=[ArrayTypes.GT_AFFINITIES_MASK, ArrayTypes.GT_IGNORE],
+            labels=ArrayKeys.GT_AFFINITIES,
+            scales=ArrayKeys.LOSS_SCALE,
+            mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE],
             slab=(1,-1,-1,-1)) # every channel individually
 
         with build(pipeline):
@@ -119,19 +119,19 @@ class TestBalanceLabels(ProviderTest):
             for i in range(10):
 
                 request = BatchRequest()
-                request.add(ArrayTypes.GT_AFFINITIES, (400,30,34))
-                request.add(ArrayTypes.LOSS_SCALE, (400,30,34))
+                request.add(ArrayKeys.GT_AFFINITIES, (400,30,34))
+                request.add(ArrayKeys.LOSS_SCALE, (400,30,34))
 
                 batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayTypes.LOSS_SCALE in batch.arrays)
+                self.assertTrue(ArrayKeys.LOSS_SCALE in batch.arrays)
 
                 for c in range(3):
 
-                    affs = batch.arrays[ArrayTypes.GT_AFFINITIES].data[c]
-                    scale = batch.arrays[ArrayTypes.LOSS_SCALE].data[c]
-                    mask = batch.arrays[ArrayTypes.GT_AFFINITIES_MASK].data[c]
-                    ignore = batch.arrays[ArrayTypes.GT_IGNORE].data[c]
+                    affs = batch.arrays[ArrayKeys.GT_AFFINITIES].data[c]
+                    scale = batch.arrays[ArrayKeys.LOSS_SCALE].data[c]
+                    mask = batch.arrays[ArrayKeys.GT_AFFINITIES_MASK].data[c]
+                    ignore = batch.arrays[ArrayKeys.GT_IGNORE].data[c]
 
                     # combine mask and ignore
                     mask *= ignore

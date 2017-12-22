@@ -10,7 +10,7 @@ from .elastic_augment_points import TestElasticAugment
 from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
 from .normalize import TestNormalize
-from .points_types import TestPointsTypes
+from .points_types import TestPointsKeys
 from .precache import TestPreCache
 from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling

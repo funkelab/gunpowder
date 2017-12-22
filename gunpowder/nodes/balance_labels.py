@@ -14,12 +14,12 @@ class BalanceLabels(BatchFilter):
 
     Args:
 
-        labels (:class:``ArrayType``): A array containing binary labels.
+        labels (:class:``ArrayKey``): A array containing binary labels.
 
-        scales (:class:``ArrayType``): A array with scales to be created. This
+        scales (:class:``ArrayKey``): A array with scales to be created. This
             new array will have the same ROI and resolution as `labels`.
 
-        mask (:class:``ArrayType``, optional): An optional mask (or list of
+        mask (:class:``ArrayKey``, optional): An optional mask (or list of
             masks) to consider for balancing. Every voxel marked with a 0 will
             not contribute to the scaling and will have a scale of 0 in
             `scales`.

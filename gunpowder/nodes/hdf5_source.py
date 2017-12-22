@@ -5,7 +5,7 @@ import numpy as np
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
-from gunpowder.points import PointsTypes, Points, PreSynPoint, PostSynPoint
+from gunpowder.points import PointsKeys, Points, PreSynPoint, PostSynPoint
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
@@ -29,10 +29,10 @@ class Hdf5Source(BatchProvider):
 
         filename (string): The HDF5 file.
 
-        datasets (dict): Dictionary of ArrayType -> dataset names that this source offers.
+        datasets (dict): Dictionary of ArrayKey -> dataset names that this source offers.
 
         array_specs (dict, optional): An optional dictionary of 
-            :class:`ArrayType` to :class:`ArraySpec` to overwrite the array 
+            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array 
             specs automatically determined from the HDF5 file. This is useful to 
             set a missing ``voxel_size``, for example. Only fields that are not 
             ``None`` in the given :class:`ArraySpec` will be used.
@@ -115,13 +115,13 @@ class Hdf5Source(BatchProvider):
             # if pre and postsynaptic locations required, their id
             # SynapseLocation dictionaries should be created together s.t. ids
             # are unique and allow to find partner locations
-            if PointsTypes.PRESYN in request.points_specs or PointsTypes.POSTSYN in request.points_specs:
-                assert request.points_specs[PointsTypes.PRESYN].roi == request.points_specs[PointsTypes.POSTSYN].roi
+            if PointsKeys.PRESYN in request.points_specs or PointsKeys.POSTSYN in request.points_specs:
+                assert request.points_specs[PointsKeys.PRESYN].roi == request.points_specs[PointsKeys.POSTSYN].roi
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
-                dataset_offset = self.spec[PointsTypes.PRESYN].roi.get_offset()
+                dataset_offset = self.spec[PointsKeys.PRESYN].roi.get_offset()
                 presyn_points, postsyn_points = self.__get_syn_points(
-                    roi=request.points_specs[PointsTypes.PRESYN].roi,
+                    roi=request.points_specs[PointsKeys.PRESYN].roi,
                     syn_file=hdf_file,
                     dataset_offset=dataset_offset)
 
@@ -129,8 +129,8 @@ class Hdf5Source(BatchProvider):
 
                 logger.debug("Reading %s in %s...", points_type, request_spec.roi)
                 id_to_point = {
-                    PointsTypes.PRESYN: presyn_points,
-                    PointsTypes.POSTSYN: postsyn_points}[points_type]
+                    PointsKeys.PRESYN: presyn_points,
+                    PointsKeys.POSTSYN: postsyn_points}[points_type]
                 # TODO: so far assumed that all points have resolution of raw array
 
                 points_spec = self.spec[points_type].copy()

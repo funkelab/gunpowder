@@ -1,6 +1,6 @@
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
-from gunpowder.array import ArrayType, Array
+from gunpowder.array import ArrayKey, Array
 import logging
 import numbers
 import numpy as np
@@ -12,9 +12,9 @@ class DownSample(BatchFilter):
 
     Args:
 
-        array_factors (dict): Dictionary mapping target :class:`ArrayType` to 
+        array_factors (dict): Dictionary mapping target :class:`ArrayKey` to 
             a tuple `(f, array_type)` of downsampling factor `f` and source 
-            :class:`ArrayType`. `f` can be a single integer or a tuple of 
+            :class:`ArrayKey`. `f` can be a single integer or a tuple of 
             integers, one for each dimension of the array to downsample.
     '''
 
@@ -24,11 +24,11 @@ class DownSample(BatchFilter):
 
         for output_array, downsample in array_factors.items():
 
-            assert isinstance(output_array, ArrayType)
+            assert isinstance(output_array, ArrayKey)
             assert isinstance(downsample, tuple)
             assert len(downsample) == 2
             f, input_array = downsample
-            assert isinstance(input_array, ArrayType)
+            assert isinstance(input_array, ArrayKey)
             assert isinstance(f, numbers.Number) or isinstance(f, tuple), "Scaling factor should be a number or a tuple of numbers."
 
     def setup(self):

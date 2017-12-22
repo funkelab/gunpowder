@@ -10,7 +10,7 @@ class Reject(BatchFilter):
 
     Args:
 
-        mask(:class:``ArrayType``): The mask to use.
+        mask(:class:``ArrayKey``): The mask to use.
 
         min_masked(float, optional): The minimal required ratio of masked-in
             vs. masked-out voxels. Defaults to 0.5.

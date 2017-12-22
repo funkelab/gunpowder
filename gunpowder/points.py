@@ -5,14 +5,14 @@ from scipy.ndimage.morphology import distance_transform_edt
 
 logger = logging.getLogger(__name__)
 
-class PointsType:
+class PointsKey:
     '''Describes general properties of a points type.
 
     Args:
 
         identifier (string):
             A human readable identifier for this points type. Will be used as a 
-            static attribute in :class:`PointsTypes`. Should be upper case (like 
+            static attribute in :class:`PointsKeys`. Should be upper case (like 
             ``PRESYN``, ``POSTSYN``).
 
     '''
@@ -30,7 +30,7 @@ class PointsType:
     def __repr__(self):
         return self.identifier
 
-class PointsTypes:
+class PointsKeys:
     '''An expandable collection of points types, which initially contains:
 
         ===================  ====================================================
@@ -51,13 +51,13 @@ def register_points_type(identifier):
 
             register_points_type('IDENTIFIER')
 
-    will create a new points type available as ``PointsTypes.IDENTIFIER``.
-    ``PointsTypes.IDENTIFIER`` can then be used in dictionaries, as it is done
+    will create a new points type available as ``PointsKeys.IDENTIFIER``.
+    ``PointsKeys.IDENTIFIER`` can then be used in dictionaries, as it is done
     in :class:`BatchRequest` and :class:`ProviderSpec`, for example.
     '''
-    points_type = PointsType(identifier)
+    points_type = PointsKey(identifier)
     logger.debug("Registering points type " + str(points_type))
-    setattr(PointsTypes, points_type.identifier, points_type)
+    setattr(PointsKeys, points_type.identifier, points_type)
 
 register_points_type('PRESYN')
 register_points_type('POSTSYN')
@@ -180,7 +180,7 @@ class RasterizationSetting(Freezable):
         physical units. For instance, a points resolution of [20, 10, 10] and marker_size_physical of 10 would create a
         blob with a radius of 1 in x,y-direction and no radius in z-direction.
 
-        stay_inside_arraytype (Array.ArrayType): specified array is used to mask out created blobs. The array is
+        stay_inside_arraytype (Array.ArrayKey): specified array is used to mask out created blobs. The array is
         assumed to contain discrete objects. The object id at the specific point being rasterized is used to crop the
         blob. Blob regions that are located outside of the object are masked out, such that the blob is only inside the
         specific object.

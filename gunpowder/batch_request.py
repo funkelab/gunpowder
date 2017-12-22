@@ -1,9 +1,9 @@
 import copy
-from .points import PointsType
+from .points import PointsKey
 from .points_spec import PointsSpec
 from .provider_spec import ProviderSpec
 from .roi import Roi
-from .array import ArrayType
+from .array import ArrayKey
 from .array_spec import ArraySpec
 
 class BatchRequest(ProviderSpec):
@@ -22,19 +22,19 @@ class BatchRequest(ProviderSpec):
         the largest one.
 
         Args:
-            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
             shape: A tuple containing the shape of the desired roi
 
             voxel_size: A tuple contening the voxel sizes for each corresponding dimension
         '''
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             spec = ArraySpec()
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             spec = PointsSpec()
         else:
-            raise RuntimeError("Only ArrayType or PointsType can be added.")
+            raise RuntimeError("Only ArrayKey or PointsKey can be added.")
 
         spec.roi = Roi((0,)*len(shape), shape)
 

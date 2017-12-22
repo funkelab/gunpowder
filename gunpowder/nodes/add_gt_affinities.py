@@ -20,23 +20,23 @@ class AddGtAffinities(BatchFilter):
         affinity_neighborhood(list of offsets): List of offsets for the 
             affinities to consider for each voxel.
 
-        gt_labels(:class:``ArrayType``): The array to read the labels from.
+        gt_labels(:class:``ArrayKey``): The array to read the labels from.
 
-        gt_affinities(:class:``ArrayType``): The array type to generate
+        gt_affinities(:class:``ArrayKey``): The array type to generate
             containing the affinities.
 
-        gt_labels_mask(:class:``ArrayType``, optional): The array type to use
+        gt_labels_mask(:class:``ArrayKey``, optional): The array type to use
             as a mask for ``gt_labels``. Affinities connecting at least one
             masked out label will be masked out in ``gt_affinities_mask``. If
             not given, ``gt_affinities_mask`` will contain ones everywhere (if
             requested).
 
-        gt_unlabelled(:class:``ArrayType``, optional): A binary array to
+        gt_unlabelled(:class:``ArrayKey``, optional): A binary array to
             indicate unlabelled areas with 0. Affinities from labelled to
             unlabelled voxels are set to 0, affinities between unlabelled voxels
             are masked out (they will not be used for training).
 
-        gt_affinities_mask(:class:``ArrayType``, optional): The array type to
+        gt_affinities_mask(:class:``ArrayKey``, optional): The array type to
             generate containing the affinitiy mask, as derived from parameter
             ``gt_labels_mask``.
     '''

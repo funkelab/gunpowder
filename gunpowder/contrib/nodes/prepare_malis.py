@@ -12,12 +12,12 @@ class PrepareMalis(BatchFilter):
 
     Args:
 
-        labels_array_type(:class:`ArrayType`): The label array to use.
+        labels_array_type(:class:`ArrayKey`): The label array to use.
 
-        malis_comp_array_type(:class:`ArrayType`): The malis component array
+        malis_comp_array_type(:class:`ArrayKey`): The malis component array
             to generate.
 
-        ignore_array_type(:class:`ArrayType`, optional): An ignore mask to
+        ignore_array_type(:class:`ArrayKey`, optional): An ignore mask to
             use.
     '''
 

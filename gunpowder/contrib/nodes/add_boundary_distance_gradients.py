@@ -16,16 +16,16 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
     Args:
 
-        label_array_type(:class:``ArrayType``): The array type to read the
+        label_array_type(:class:``ArrayKey``): The array type to read the
             labels from.
 
-        gradient_array_type(:class:``ArrayType``): The array type to
+        gradient_array_type(:class:``ArrayKey``): The array type to
             generate containing the gradients.
 
-        distance_array_type(:class:``ArrayType``, optional): The array type
+        distance_array_type(:class:``ArrayKey``, optional): The array type
             to generate containing the values of the distance transform.
 
-        boundary_array_type(:class:``ArrayType``, optional): The array type
+        boundary_array_type(:class:``ArrayKey``, optional): The array type
             to generate containing a boundary labeling. Note this array will
             be doubled as it encodes boundaries between voxels.
 

@@ -12,8 +12,8 @@ class AddVectorMapTestSource(BatchProvider):
     def setup(self):
 
         for identifier in [
-            ArrayTypes.RAW,
-            ArrayTypes.GT_LABELS]:
+            ArrayKeys.RAW,
+            ArrayKeys.GT_LABELS]:
 
             self.provides(
                 identifier,
@@ -22,8 +22,8 @@ class AddVectorMapTestSource(BatchProvider):
                     voxel_size=(20, 2, 2)))
 
         for identifier in [
-            PointsTypes.PRESYN,
-            PointsTypes.POSTSYN]:
+            PointsKeys.PRESYN,
+            PointsKeys.POSTSYN]:
 
             self.provides(
                 identifier,
@@ -35,41 +35,41 @@ class AddVectorMapTestSource(BatchProvider):
         batch = Batch()
 
         # have the pixels encode their position
-        if ArrayTypes.RAW in request:
+        if ArrayKeys.RAW in request:
 
             # the z,y,x coordinates of the ROI
-            roi = request[ArrayTypes.RAW].roi
-            roi_voxel = roi // self.spec[ArrayTypes.RAW].voxel_size
+            roi = request[ArrayKeys.RAW].roi
+            roi_voxel = roi // self.spec[ArrayKeys.RAW].voxel_size
             meshgrids = np.meshgrid(
                     range(roi_voxel.get_begin()[0], roi_voxel.get_end()[0]),
                     range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
                     range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            spec = self.spec[ArrayTypes.RAW].copy()
+            spec = self.spec[ArrayKeys.RAW].copy()
             spec.roi = roi
-            batch.arrays[ArrayTypes.RAW] = Array(data, spec)
+            batch.arrays[ArrayKeys.RAW] = Array(data, spec)
 
-        if ArrayTypes.GT_LABELS in request:
-            roi = request[ArrayTypes.GT_LABELS].roi
-            roi_voxel_shape = (roi // self.spec[ArrayTypes.GT_LABELS].voxel_size).get_shape()
+        if ArrayKeys.GT_LABELS in request:
+            roi = request[ArrayKeys.GT_LABELS].roi
+            roi_voxel_shape = (roi // self.spec[ArrayKeys.GT_LABELS].voxel_size).get_shape()
             data = np.ones(roi_voxel_shape)
             data[roi_voxel_shape[0]//2:,roi_voxel_shape[1]//2:,:] = 2
             data[roi_voxel_shape[0]//2:, -(roi_voxel_shape[1] // 2):, :] = 3
-            spec = self.spec[ArrayTypes.GT_LABELS].copy()
+            spec = self.spec[ArrayKeys.GT_LABELS].copy()
             spec.roi = roi
-            batch.arrays[ArrayTypes.GT_LABELS] = Array(data, spec)
+            batch.arrays[ArrayKeys.GT_LABELS] = Array(data, spec)
 
-        if PointsTypes.PRESYN in request:
-            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsTypes.PRESYN].roi)
-        elif PointsTypes.POSTSYN in request:
-            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsTypes.POSTSYN].roi)
+        if PointsKeys.PRESYN in request:
+            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsKeys.PRESYN].roi)
+        elif PointsKeys.POSTSYN in request:
+            data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(roi=request[PointsKeys.POSTSYN].roi)
 
-        voxel_size_points = self.spec[ArrayTypes.RAW].voxel_size
+        voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
         for (points_type, spec) in request.points_specs.items():
-            if points_type == PointsTypes.PRESYN:
+            if points_type == PointsKeys.PRESYN:
                 data = data_presyn
-            if points_type == PointsTypes.POSTSYN:
+            if points_type == PointsKeys.POSTSYN:
                 data = data_postsyn
             batch.points[points_type] = Points(data, PointsSpec(spec.roi))
 
@@ -79,7 +79,7 @@ class AddVectorMapTestSource(BatchProvider):
 
         presyn_locs, postsyn_locs = {}, {}
         min_dist_between_presyn_locs = 250
-        voxel_size_points = self.spec[ArrayTypes.RAW].voxel_size
+        voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
         min_dist_pre_to_postsyn_loc, max_dist_pre_to_postsyn_loc= 60, 120
         num_presyn_locations  = roi.size() / (np.prod(50*np.asarray(voxel_size_points)))  # 1 synapse per 50vx^3 cube
         num_postsyn_locations = np.random.randint(low=1, high=3)  # 1 to 3 postsyn partners
@@ -131,14 +131,14 @@ class TestAddVectorMap(ProviderTest):
 
         register_array_type('GT_VECTORS_MAP_PRESYN')
 
-        arraytypes_to_source_target_pointstypes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: (PointsTypes.PRESYN, PointsTypes.POSTSYN)}
-        arraytypes_to_stayinside_arraytypes    = {ArrayTypes.GT_VECTORS_MAP_PRESYN: ArrayTypes.GT_LABELS}
+        arraytypes_to_source_target_pointstypes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: (PointsKeys.PRESYN, PointsKeys.POSTSYN)}
+        arraytypes_to_stayinside_arraytypes    = {ArrayKeys.GT_VECTORS_MAP_PRESYN: ArrayKeys.GT_LABELS}
 
         # test for partner criterion 'min_distance'
         radius_phys  = 30
         pipeline_min_distance = AddVectorMapTestSource() +\
                                 AddVectorMap(src_and_trg_points = arraytypes_to_source_target_pointstypes,
-                                             voxel_sizes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
+                                             voxel_sizes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: voxel_size},
                                              radius_phys = radius_phys,
                                              partner_criterion = 'min_distance',
                                              stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
@@ -147,32 +147,32 @@ class TestAddVectorMap(ProviderTest):
         with build(pipeline_min_distance):
 
             request = BatchRequest()
-            raw_roi = pipeline_min_distance.spec[ArrayTypes.RAW].roi
-            gt_labels_roi = pipeline_min_distance.spec[ArrayTypes.GT_LABELS].roi
-            presyn_roi = pipeline_min_distance.spec[PointsTypes.PRESYN].roi
+            raw_roi = pipeline_min_distance.spec[ArrayKeys.RAW].roi
+            gt_labels_roi = pipeline_min_distance.spec[ArrayKeys.GT_LABELS].roi
+            presyn_roi = pipeline_min_distance.spec[PointsKeys.PRESYN].roi
 
-            request.add(ArrayTypes.RAW, raw_roi.get_shape())
-            request.add(ArrayTypes.GT_LABELS, gt_labels_roi.get_shape())
-            request.add(PointsTypes.PRESYN, presyn_roi.get_shape())
-            request.add(PointsTypes.POSTSYN, presyn_roi.get_shape())
-            request.add(ArrayTypes.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
+            request.add(ArrayKeys.RAW, raw_roi.get_shape())
+            request.add(ArrayKeys.GT_LABELS, gt_labels_roi.get_shape())
+            request.add(PointsKeys.PRESYN, presyn_roi.get_shape())
+            request.add(PointsKeys.POSTSYN, presyn_roi.get_shape())
+            request.add(ArrayKeys.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
             for identifier, spec in request.items():
                 spec.roi = spec.roi.shift((1000, 1000, 1000))
 
             batch = pipeline_min_distance.request_batch(request)
 
-        presyn_locs  = batch.points[PointsTypes.PRESYN].data
-        postsyn_locs = batch.points[PointsTypes.POSTSYN].data
-        vector_map_presyn        = batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
+        presyn_locs  = batch.points[PointsKeys.PRESYN].data
+        postsyn_locs = batch.points[PointsKeys.POSTSYN].data
+        vector_map_presyn        = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
+        offset_vector_map_presyn = request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
         self.assertTrue(len(postsyn_locs)>0)
 
         for loc_id, point in presyn_locs.items():
 
-            if request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
-                self.assertTrue(batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
+            if request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
+                self.assertTrue(batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 dist_to_loc = {}
                 for partner_id in point.partner_ids:
@@ -201,7 +201,7 @@ class TestAddVectorMap(ProviderTest):
 
         # test for partner criterion 'all'
         pipeline_all = AddVectorMapTestSource() + AddVectorMap(src_and_trg_points = arraytypes_to_source_target_pointstypes,
-                                                               voxel_sizes = {ArrayTypes.GT_VECTORS_MAP_PRESYN: voxel_size},
+                                                               voxel_sizes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: voxel_size},
                                                                radius_phys = radius_phys,
                                                                partner_criterion = 'all',
                                                                stayinside_arraytypes = arraytypes_to_stayinside_arraytypes,
@@ -210,18 +210,18 @@ class TestAddVectorMap(ProviderTest):
         with build(pipeline_all):
             batch = pipeline_all.request_batch(request)
 
-        presyn_locs  = batch.points[PointsTypes.PRESYN].data
-        postsyn_locs = batch.points[PointsTypes.POSTSYN].data
-        vector_map_presyn        = batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.get_offset()
+        presyn_locs  = batch.points[PointsKeys.PRESYN].data
+        postsyn_locs = batch.points[PointsKeys.POSTSYN].data
+        vector_map_presyn        = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
+        offset_vector_map_presyn = request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.get_offset()
 
         self.assertTrue(len(presyn_locs)>0)
         self.assertTrue(len(postsyn_locs)>0)
 
         for loc_id, point in presyn_locs.items():
 
-            if request[ArrayTypes.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
-                self.assertTrue(batch.arrays[ArrayTypes.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
+            if request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.contains(Coordinate(point.location)):
+                self.assertTrue(batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].spec.roi.contains(Coordinate(point.location)))
 
                 partner_ids_to_locs_per_src, count_vectors_per_partner = {}, {}
                 for partner_id in point.partner_ids:

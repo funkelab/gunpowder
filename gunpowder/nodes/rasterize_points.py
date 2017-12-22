@@ -6,21 +6,21 @@ from scipy import ndimage
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.array import Array
-from gunpowder.points import PointsTypes, RasterizationSetting, enlarge_binary_map
+from gunpowder.points import PointsKeys, RasterizationSetting, enlarge_binary_map
 
 
 logger = logging.getLogger(__name__)
 
 class RasterizePoints(BatchFilter):
-    ''' Create binary map for points of given PointsType in batch and add it as array to batch '''
+    ''' Create binary map for points of given PointsKey in batch and add it as array to batch '''
     def __init__(self, arrays, rastersettings=None):
-        ''' Add binary map of given PointsType as array to batch.
+        ''' Add binary map of given PointsKey as array to batch.
         Args:
-            arrays (dict, :class:``ArrayType`` -> :class:``PointsType``):
+            arrays (dict, :class:``ArrayKey`` -> :class:``PointsKey``):
                 Which arrays to create (keys of the dict) from which points
                 (values of the dict).
 
-            rastersettings (dict, :class:``ArrayType``->:class:``RasterizationSetting``, optional):
+            rastersettings (dict, :class:``ArrayKey``->:class:``RasterizationSetting``, optional):
                 Which settings to use to rasterize the points into arrays.
         '''
         self.arrays = arrays
@@ -53,7 +53,7 @@ class RasterizePoints(BatchFilter):
                 self.skip_next = False
 
         if self.skip_next:
-            logger.warn("no ArrayTypes of BinaryMask ({}) requested, will do nothing".format(self.arrays.values()))
+            logger.warn("no ArrayKeys of BinaryMask ({}) requested, will do nothing".format(self.arrays.values()))
 
         if len(self.arrays) == 0:
             self.skip_next = True

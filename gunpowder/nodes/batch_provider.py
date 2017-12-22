@@ -3,7 +3,7 @@ import logging
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
-from gunpowder.array import ArrayType
+from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class BatchProvider(object):
 
         Args:
 
-            identifier: A :class:`ArrayType` or `PointsType` instance to refer to the output.
+            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
             spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
@@ -157,7 +157,7 @@ class BatchProvider(object):
             if provided_roi is not None:
                 assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), identifier, request_roi, provided_roi)
 
-            if isinstance(identifier, ArrayType):
+            if isinstance(identifier, ArrayKey):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(

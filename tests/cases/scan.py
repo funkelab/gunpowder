@@ -7,12 +7,12 @@ class ScanTestSource(BatchProvider):
     def setup(self):
 
         self.provides(
-            ArrayTypes.RAW,
+            ArrayKeys.RAW,
             ArraySpec(
                 roi=Roi((20000, 2000, 2000), (2000, 200, 200)),
                 voxel_size=(20, 2, 2)))
         self.provides(
-            ArrayTypes.GT_LABELS,
+            ArrayKeys.GT_LABELS,
             ArraySpec(
                 roi=Roi((20100,2010,2010), (1800,180,180)),
                 voxel_size=(20, 2, 2)))
@@ -56,24 +56,24 @@ class TestScan(ProviderTest):
         source = ScanTestSource()
 
         chunk_request = BatchRequest()
-        chunk_request.add(ArrayTypes.RAW, (400,30,34))
-        chunk_request.add(ArrayTypes.GT_LABELS, (200,10,14))
+        chunk_request.add(ArrayKeys.RAW, (400,30,34))
+        chunk_request.add(ArrayKeys.GT_LABELS, (200,10,14))
 
         pipeline = ScanTestSource() + Scan(chunk_request, num_workers=10)
 
         with build(pipeline):
 
-            raw_spec = pipeline.spec[ArrayTypes.RAW]
-            labels_spec = pipeline.spec[ArrayTypes.GT_LABELS]
+            raw_spec = pipeline.spec[ArrayKeys.RAW]
+            labels_spec = pipeline.spec[ArrayKeys.GT_LABELS]
 
             full_request = BatchRequest({
-                    ArrayTypes.RAW: raw_spec,
-                    ArrayTypes.GT_LABELS: labels_spec
+                    ArrayKeys.RAW: raw_spec,
+                    ArrayKeys.GT_LABELS: labels_spec
                 }
             )
 
             batch = pipeline.request_batch(full_request)
-            voxel_size = pipeline.spec[ArrayTypes.RAW].voxel_size
+            voxel_size = pipeline.spec[ArrayKeys.RAW].voxel_size
 
         # assert that pixels encode their position
         for (array_type, array) in batch.arrays.items():
@@ -88,7 +88,7 @@ class TestScan(ProviderTest):
 
             self.assertTrue((array.data == data).all())
 
-        assert(batch.arrays[ArrayTypes.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
+        assert(batch.arrays[ArrayKeys.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
 
         # test scanning with empty request
 

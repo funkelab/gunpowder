@@ -1,8 +1,8 @@
 import fractions
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import PointsType
+from gunpowder.points import PointsKey
 from gunpowder.points_spec import PointsSpec
-from gunpowder.array import ArrayType
+from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from .freezable import Freezable
 
@@ -17,8 +17,8 @@ class ProviderSpec(Freezable):
         provider_spec[array_type] = ArraySpec(...)
         provider_spec[points_type] = PointsSpec(...)
 
-    Here, ``array_type`` and ``points_type`` are :class:`ArrayType` and
-    :class:`PointsType` instances, previously registered with
+    Here, ``array_type`` and ``points_type`` are :class:`ArrayKey` and
+    :class:`PointsKey` instances, previously registered with
     :fun:`register_array_type` or :fun:`register_points_type`. The specs can
     be queried with::
 
@@ -34,10 +34,10 @@ class ProviderSpec(Freezable):
 
     Args:
 
-        array_specs (dict): A dictionary from :class:`ArrayType` to
+        array_specs (dict): A dictionary from :class:`ArrayKey` to
             :class:`ArraySpec`.
 
-        points_specs (dict): A dictionary from :class:`PointsType` to
+        points_specs (dict): A dictionary from :class:`PointsKey` to
             :class:`PointsSpec`.
     '''
 
@@ -60,13 +60,13 @@ class ProviderSpec(Freezable):
     def __setitem__(self, identifier, spec):
 
         if isinstance(spec, ArraySpec):
-            assert isinstance(identifier, ArrayType), ("Only a ArrayType is "
+            assert isinstance(identifier, ArrayKey), ("Only a ArrayKey is "
                                                         "allowed as key for a "
                                                         "ArraySpec value.")
             self.array_specs[identifier] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
-            assert isinstance(identifier, PointsType), ("Only a PointsType is "
+            assert isinstance(identifier, PointsKey), ("Only a PointsKey is "
                                                         "allowed as key for a "
                                                         "PointsSpec value.")
             self.points_specs[identifier] = spec.copy()
@@ -77,10 +77,10 @@ class ProviderSpec(Freezable):
 
     def __getitem__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             return self.array_specs[identifier]
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             return self.points_specs[identifier]
 
         else:
@@ -93,10 +93,10 @@ class ProviderSpec(Freezable):
 
     def __contains__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             return identifier in self.array_specs
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             return identifier in self.points_specs
 
         else:
@@ -105,10 +105,10 @@ class ProviderSpec(Freezable):
 
     def __delitem__(self, identifier):
 
-        if isinstance(identifier, ArrayType):
+        if isinstance(identifier, ArrayKey):
             del self.array_specs[identifier]
 
-        elif isinstance(identifier, PointsType):
+        elif isinstance(identifier, PointsKey):
             del self.points_specs[identifier]
 
         else:
@@ -153,7 +153,7 @@ class ProviderSpec(Freezable):
 
         Args:
 
-            array_types (list of :class:`ArrayType`, optional): If given,
+            array_types (list of :class:`ArrayKey`, optional): If given,
                 consider only the given array types.
         '''
 
