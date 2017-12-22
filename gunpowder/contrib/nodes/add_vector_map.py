@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class AddVectorMap(BatchFilter):
     def __init__(self, src_and_trg_points, voxel_sizes, radius_phys, partner_criterion, stayinside_arraytypes=None, pad_for_partners=(0,0,0)):
-        ''' Creates a vector map of shape [dim_vector, [shape_of_array]] (e.g. [3, 50,50,50] for a array of
+        ''' Creates a vector map of shape [dim_vector, [shape_of_array]] (e.g. [3, 50,50,50] for an array of
             shape (50,50,50)) where every voxel which is close to a any source point location has a vector which points to
             one of the source point location's target location.
             Close to a point location in src_point includes all voxels which 

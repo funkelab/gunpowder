@@ -8,7 +8,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 class ArrayType(Freezable):
-    '''Describes general properties of a array type.
+    '''Describes general properties of an array type.
 
     Args:
 
@@ -112,7 +112,7 @@ register_array_type('LOSS_SCALE_BM_POSTSYN')
 
 
 class Array(Freezable):
-    '''Represents a array as an array and a :class:`Roi`.
+    '''A numpy array with a specification describing the data.
 
     Args:
 

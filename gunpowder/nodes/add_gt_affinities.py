@@ -9,7 +9,7 @@ from gunpowder.array import Array
 logger = logging.getLogger(__name__)
 
 class AddGtAffinities(BatchFilter):
-    '''Add a array with affinities for a given label array and neighborhood to 
+    '''Add an array with affinities for a given label array and neighborhood to 
     the batch. Affinity values are created one for each voxel and entry in the 
     neighborhood list, i.e., for each voxel and each neighbor of this voxel. 
     Values are 1 iff both labels (of the voxel and the neighbor) are equal and 

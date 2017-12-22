@@ -14,7 +14,7 @@ class BatchRequest(ProviderSpec):
     '''
 
     def add(self, identifier, shape, voxel_size=None):
-        '''Convenience method to add a array or point spec by providing only
+        '''Convenience method to add an array or point spec by providing only
         the shape of a ROI (in world units).
 
         A ROI with zero-offset will be generated. If more than one request is

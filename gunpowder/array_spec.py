@@ -3,15 +3,15 @@ from .coordinate import Coordinate
 from .freezable import Freezable
 
 class ArraySpec(Freezable):
-    '''Contains meta-information about a array. This is used by 
-    :class:`BatchProvider`s to communicate the arrays they offer, as well as by 
+    '''Contains meta-information about an array. This is used by
+    :class:`BatchProvider`s to communicate the arrays they offer, as well as by
     :class:`Array`s to describe the data they contain.
 
     Attributes:
 
-        roi (:class:`Roi`): The region of interested represented by this array 
-            spec. Can be `None` for `BatchProvider`s that allow requests for 
-            arrays everywhere, but will always be set for array specs that are 
+        roi (:class:`Roi`): The region of interested represented by this array
+            spec. Can be `None` for `BatchProvider`s that allow requests for
+            arrays everywhere, but will always be set for array specs that are
             part of a :class:`Array`.
 
         voxel_size (Coordinate): The size of the spatial axises in world units.

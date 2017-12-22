@@ -6,7 +6,7 @@ from .batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class Normalize(BatchFilter):
-    '''Normalize the values of a array to be floats between 0 and 1, based on
+    '''Normalize the values of an array to be floats between 0 and 1, based on
     the type of the array.
     '''
 

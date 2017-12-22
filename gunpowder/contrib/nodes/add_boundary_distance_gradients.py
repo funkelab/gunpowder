@@ -9,7 +9,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class AddBoundaryDistanceGradients(BatchFilter):
-    '''Add a array with vectors pointing away from the closest boundary.
+    '''Add an array with vectors pointing away from the closest boundary.
 
     The vectors are the spacial gradients of the distance transform, i.e., the
     distance to the boundary between labels or the background label (0).
