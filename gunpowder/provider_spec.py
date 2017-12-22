@@ -18,9 +18,7 @@ class ProviderSpec(Freezable):
         provider_spec[points_type] = PointsSpec(...)
 
     Here, ``array_type`` and ``points_type`` are :class:`ArrayKey` and
-    :class:`PointsKey` instances, previously registered with
-    :fun:`register_array_type` or :fun:`register_points_type`. The specs can
-    be queried with::
+    :class:`PointsKey`. The specs can be queried with::
 
         array_spec = provider_spec[array_type]
         points_spec = provider_spec[points_type]

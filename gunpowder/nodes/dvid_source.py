@@ -8,11 +8,13 @@ from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.points import PointsKeys, Points, PreSynPoint, PostSynPoint
+from gunpowder.points import PointsKeys, Points
 from gunpowder.profiling import Timing
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 from gunpowder.array import Array, ArrayKeys
+
+from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 
 logger = logging.getLogger(__name__)
 

@@ -5,13 +5,15 @@ import numpy as np
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
-from gunpowder.points import PointsKeys, Points, PreSynPoint, PostSynPoint
+from gunpowder.points import PointsKeys, Points
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
+
+from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 
 logger = logging.getLogger(__name__)
 

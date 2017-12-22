@@ -7,7 +7,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import enlarge_binary_map
+from gunpowder.morphology import enlarge_binary_map
 
 logger = logging.getLogger(__name__)
 

@@ -57,8 +57,8 @@ class TestDownSample(ProviderTest):
 
         source = DownSampleTestSource()
 
-        register_array_type('RAW_DOWNSAMPLED')
-        register_array_type('GT_LABELS_DOWNSAMPLED')
+        ArrayKey('RAW_DOWNSAMPLED')
+        ArrayKey('GT_LABELS_DOWNSAMPLED')
 
         request = BatchRequest()
         request.add(ArrayKeys.RAW, (200,200,200))

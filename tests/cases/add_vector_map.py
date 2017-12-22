@@ -2,6 +2,7 @@ import unittest
 from .provider_test import ProviderTest
 from gunpowder import *
 from gunpowder.contrib import AddVectorMap
+from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 
 from copy import deepcopy
 import itertools
@@ -129,7 +130,9 @@ class TestAddVectorMap(ProviderTest):
 
         voxel_size = Coordinate((20, 2, 2))
 
-        register_array_type('GT_VECTORS_MAP_PRESYN')
+        ArrayKey('GT_VECTORS_MAP_PRESYN')
+        PointsKey('PRESYN')
+        PointsKey('POSTSYN')
 
         arraytypes_to_source_target_pointstypes = {ArrayKeys.GT_VECTORS_MAP_PRESYN: (PointsKeys.PRESYN, PointsKeys.POSTSYN)}
         arraytypes_to_stayinside_arraytypes    = {ArrayKeys.GT_VECTORS_MAP_PRESYN: ArrayKeys.GT_LABELS}

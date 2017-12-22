@@ -27,6 +27,8 @@ class TestCrop(ProviderTest):
         cropped_roi_raw    = Roi((400, 40, 40), (1000, 100, 100))
         cropped_roi_presyn = Roi((800, 80, 80), (800, 80, 80))
 
+        PointsKey('PRESYN')
+
         pipeline = (
             TestSourceCrop() +
             Crop(

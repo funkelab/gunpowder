@@ -56,6 +56,8 @@ class TestElasticAugment(unittest.TestCase):
         # transformed array in which the point is still located within the object.
         voxel_size = Coordinate((2, 1, 1))
 
+        PointsKey('PRESYN')
+
         for i in range(5):
             object_location = tuple([slice(30/voxel_size[0], 40/voxel_size[0]),
                                      slice(30/voxel_size[1], 40/voxel_size[1]),

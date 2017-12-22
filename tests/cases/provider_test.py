@@ -32,6 +32,15 @@ class ProviderTest(unittest.TestCase):
 
     def setUp(self):
 
+        # create some common array keys to be used by concrete tests
+        ArrayKey('RAW')
+        ArrayKey('GT_LABELS')
+        ArrayKey('GT_AFFINITIES')
+        ArrayKey('GT_AFFINITIES_MASK')
+        ArrayKey('GT_MASK')
+        ArrayKey('GT_IGNORE')
+        ArrayKey('LOSS_SCALE')
+
         self.test_source = TestSource()
         self.test_request = BatchRequest()
         self.test_request[ArrayKeys.RAW] = ArraySpec(

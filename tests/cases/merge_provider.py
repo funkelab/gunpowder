@@ -56,6 +56,7 @@ class TestMergeProvider(unittest.TestCase):
 
     def test_merge_basics(self):
         voxel_size = (1, 1, 1)
+        PointsKey('PRESYN')
         pointssource = PointTestSource(voxel_size)
         arraysource = ArrayTestSoure(voxel_size)
         pipeline = (pointssource, arraysource) + MergeProvider() + RandomLocation()

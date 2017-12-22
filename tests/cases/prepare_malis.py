@@ -59,6 +59,8 @@ class TestPrepareMalis(ProviderTest):
 
     def test_output(self):
 
+        ArrayKey('MALIS_COMP_LABEL')
+
         pipeline = (
             TestSourcePrepareMalis() +
             PrepareMalis(

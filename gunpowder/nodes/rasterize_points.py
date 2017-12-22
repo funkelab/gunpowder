@@ -4,10 +4,10 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.coordinate import Coordinate
 from gunpowder.array import Array
-from gunpowder.points import PointsKeys, RasterizationSetting, enlarge_binary_map
-
+from gunpowder.coordinate import Coordinate
+from gunpowder.morphology import enlarge_binary_map
+from gunpowder.points import PointsKeys, RasterizationSetting
 
 logger = logging.getLogger(__name__)
 

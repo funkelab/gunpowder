@@ -12,31 +12,37 @@ def train():
     set_verbose()
 
     affinity_neighborhood = np.array([[-1,0,0],[0,-1,0],[0,0,-1]])
-    register_array_type('GT_LABELS_2')
-    register_array_type('GT_LABELS_4')
-    register_array_type('GT_BOUNDARY_GRADIENT')
-    register_array_type('GT_BOUNDARY_DISTANCE')
-    register_array_type('GT_BOUNDARY')
+    raw = ArrayKey('RAW')
+    labels = ArrayKey('GT_LABELS')
+    labels_2 = ArrayKey('GT_LABELS_2')
+    labels_4 = ArrayKey('GT_LABELS_4')
+    ignore = ArrayKey('GT_IGNORE')
+    affinities = ArrayKey('GT_AFFINITIES')
+    boundary = ArrayKey('GT_BOUNDARY')
+    boundary_gradient = ArrayKey('GT_BOUNDARY_GRADIENT')
+    boundary_distance = ArrayKey('GT_BOUNDARY_DISTANCE')
+    loss_scale = ArrayKey('LOSS_SCALE')
+    alpha_mask = ArrayKey('ALPHA_MASK')
     n = 35
 
     request = BatchRequest()
-    request.add(ArrayKeys.RAW, Coordinate((84,268,268))*(40,4,4))
-    request.add(ArrayKeys.GT_LABELS, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_LABELS_2, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_LABELS_4, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_IGNORE, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_AFFINITIES, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_BOUNDARY_GRADIENT, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_BOUNDARY_DISTANCE, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.GT_BOUNDARY, Coordinate((56,56,56))*(40,4,4))
-    request.add(ArrayKeys.LOSS_SCALE, Coordinate((56,56,56))*(40,4,4))
+    request.add(raw, Coordinate((84,268,268))*(40,4,4))
+    request.add(labels, Coordinate((56,56,56))*(40,4,4))
+    request.add(labels_2, Coordinate((56,56,56))*(40,4,4))
+    request.add(labels_4, Coordinate((56,56,56))*(40,4,4))
+    request.add(ignore, Coordinate((56,56,56))*(40,4,4))
+    request.add(affinities, Coordinate((56,56,56))*(40,4,4))
+    request.add(boundary_gradient, Coordinate((56,56,56))*(40,4,4))
+    request.add(boundary_distance, Coordinate((56,56,56))*(40,4,4))
+    request.add(boundary, Coordinate((56,56,56))*(40,4,4))
+    request.add(loss_scale, Coordinate((56,56,56))*(40,4,4))
 
     data_sources = tuple(
         Hdf5Source(
             sample,
             datasets = {
-                ArrayKeys.RAW: 'volumes/raw',
-                ArrayKeys.GT_LABELS: 'volumes/labels/neuron_ids',
+                raw: 'volumes/raw',
+                labels: 'volumes/labels/neuron_ids',
             }
         ) +
         Normalize() +
@@ -48,18 +54,18 @@ def train():
         Hdf5Source(
             'sample_ABC_padded_20160501.defects.hdf',
             datasets = {
-                ArrayKeys.RAW: 'defect_sections/raw',
-                ArrayKeys.ALPHA_MASK: 'defect_sections/mask',
+                raw: 'defect_sections/raw',
+                alpha_mask: 'defect_sections/mask',
             },
             array_specs = {
-                ArrayKeys.RAW: ArraySpec(voxel_size=(40, 4, 4)),
-                ArrayKeys.ALPHA_MASK: ArraySpec(voxel_size=(40, 4, 4)),
+                raw: ArraySpec(voxel_size=(40, 4, 4)),
+                alpha_mask: ArraySpec(voxel_size=(40, 4, 4)),
             }
         ) +
-        RandomLocation(min_masked=0.05, mask_array_type=ArrayKeys.ALPHA_MASK) +
+        RandomLocation(min_masked=0.05, mask_array_type=alpha_mask) +
         Snapshot(
             {
-                ArrayKeys.RAW: 'volumes/raw',
+                raw: 'volumes/raw',
             },
             every=1,
             output_filename='defect_{id}.hdf') +
@@ -90,15 +96,15 @@ def train():
         GrowBoundary(steps=3, only_xy=True) +
         DownSample(
             {
-                ArrayKeys.GT_LABELS_2: (2, ArrayKeys.GT_LABELS),
-                ArrayKeys.GT_LABELS_4: (4, ArrayKeys.GT_LABELS)
+                labels_2: (2, labels),
+                labels_4: (4, labels)
             }
         ) +
         AddGtAffinities(affinity_neighborhood) +
         AddBoundaryDistanceGradients(
-            gradient_array_type=ArrayKeys.GT_BOUNDARY_GRADIENT,
-            distance_array_type=ArrayKeys.GT_BOUNDARY_DISTANCE,
-            boundary_array_type=ArrayKeys.GT_BOUNDARY,
+            gradient_array_type=boundary_gradient,
+            distance_array_type=boundary_distance,
+            boundary_array_type=boundary,
             normalize='l2') +
         IntensityAugment(0.9, 1.1, -0.1, 0.1, z_section_wise=True) +
         DefectAugment(
@@ -108,24 +114,21 @@ def train():
             artifact_source=artifact_source,
             contrast_scale=0.1) +
         ZeroOutConstSections() +
-        BalanceLabels({ArrayKeys.GT_AFFINITIES: ArrayKeys.LOSS_SCALE}) +
+        BalanceLabels({affinities: loss_scale}) +
         PreCache(
             cache_size=10,
             num_workers=5) +
         Snapshot(
             {
-                ArrayKeys.RAW: 'volumes/raw',
-                ArrayKeys.GT_LABELS: 'volumes/labels/neuron_ids',
-                ArrayKeys.GT_LABELS_2: 'volumes/labels/neuron_ids_2',
-                ArrayKeys.GT_LABELS_4: 'volumes/labels/neuron_ids_4',
-                ArrayKeys.GT_IGNORE: 'volumes/labels/mask',
-                ArrayKeys.GT_AFFINITIES: 'volumes/labels/affinities',
-                ArrayKeys.GT_BOUNDARY_GRADIENT:
-                    'volumes/labels/boundary_gradient',
-                ArrayKeys.GT_BOUNDARY_DISTANCE:
-                    'volumes/labels/boundary_distance',
-                ArrayKeys.GT_BOUNDARY:
-                    'volumes/labels/boundary',
+                raw: 'volumes/raw',
+                labels: 'volumes/labels/neuron_ids',
+                labels_2: 'volumes/labels/neuron_ids_2',
+                labels_4: 'volumes/labels/neuron_ids_4',
+                ignore: 'volumes/labels/mask',
+                affinities: 'volumes/labels/affinities',
+                boundary_gradient: 'volumes/labels/boundary_gradient',
+                boundary_distance: 'volumes/labels/boundary_distance',
+                boundary: 'volumes/labels/boundary',
             },
             every=1,
             output_filename='final_it={iteration}_id={id}.hdf') +

@@ -36,8 +36,8 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
 
         # set_verbose()
 
-        register_array_type('GT_BOUNDARY_DISTANCES')
-        register_array_type('GT_BOUNDARY_GRADIENTS')
+        ArrayKey('GT_BOUNDARY_DISTANCES')
+        ArrayKey('GT_BOUNDARY_GRADIENTS')
 
         pipeline = (
             TestSource() +

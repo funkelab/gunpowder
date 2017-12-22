@@ -67,8 +67,6 @@ class TestAddGtAffinities(ProviderTest):
                 Coordinate((1,1,1))
         ]
 
-        register_array_type('GT_AFFINITIES_MASK')
-
         pipeline = (
                 TestSource() +
                 AddGtAffinities(

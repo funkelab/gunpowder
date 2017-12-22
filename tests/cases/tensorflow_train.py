@@ -7,11 +7,6 @@ from gunpowder.tensorflow import Train, Predict
 import tensorflow as tf
 from .provider_test import ProviderTest
 
-register_array_type('A')
-register_array_type('B')
-register_array_type('C')
-register_array_type('GRADIENT_A')
-
 class TestTensorflowTrainSource(BatchProvider):
 
     def setup(self):
@@ -78,6 +73,11 @@ class TestTensorflowTrain(ProviderTest):
             os.remove('checkpoint')
         except:
             pass
+
+        ArrayKey('A')
+        ArrayKey('B')
+        ArrayKey('C')
+        ArrayKey('GRADIENT_A')
 
         # create model meta graph file and get input/output names
         (a, b, c, optimizer, loss) = self.create_meta_graph()
