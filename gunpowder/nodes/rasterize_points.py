@@ -5,6 +5,7 @@ from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
 from gunpowder.morphology import enlarge_binary_map
 from gunpowder.points import PointsKeys, RasterizationSetting
@@ -12,52 +13,58 @@ from gunpowder.points import PointsKeys, RasterizationSetting
 logger = logging.getLogger(__name__)
 
 class RasterizePoints(BatchFilter):
-    ''' Create binary map for points of given PointsKey in batch and add it as array to batch '''
-    def __init__(self, arrays, rastersettings=None):
-        ''' Add binary map of given PointsKey as array to batch.
-        Args:
-            arrays (dict, :class:``ArrayKey`` -> :class:``PointsKey``):
-                Which arrays to create (keys of the dict) from which points
-                (values of the dict).
+    '''Draw points into a binary array as balls of a given radius.
 
-            rastersettings (dict, :class:``ArrayKey``->:class:``RasterizationSetting``, optional):
-                Which settings to use to rasterize the points into arrays.
-        '''
-        self.arrays = arrays
+    Args:
+
+        points (:class:``PointsKeys``):
+            The key of the points to rasterize.
+
+        array (:class:``ArrayKey``):
+            The key of the binary array to create.
+
+        rastersettings (:class:``RasterizationSetting``, optional):
+            Which settings to use to rasterize the points.
+    '''
+
+    def __init__(self, points, array, rastersettings=None):
+
+        self.points = points
+        self.array = array
         if rastersettings is None:
-            self.rastersettings = {}
+            self.rastersettings = RasterizationSetting()
         else:
             self.rastersettings = rastersettings
+        self.voxel_size = None
         self.skip_next = False
-
 
     def setup(self):
 
-        self.upstream_spec = self.get_upstream_provider().get_spec()
-        self.spec = copy.deepcopy(self.upstream_spec)
+        dims = self.spec[self.points].roi.dims()
+        if self.rastersettings.voxel_size is None:
+            self.voxel_size = Coordinate((1,)*dims)
+        else:
+            assert len(self.rastersettings.voxel_size) == dims, (
+                "Given voxel size in raster settings does not match "
+                "dimensions of provided points.")
+            self.voxel_size = self.rastersettings.voxel_size
 
-        for (array_key, points_key) in self.arrays.items():
-            assert points_key in self.spec.points, "Asked for {} from {}, where {} is not provided.".format(array_key, points_key, points_key)
-            self.spec.arrays[array_key] = self.spec.points[points_key]
-
-    def get_spec(self):
-        return self.spec
+        self.provides(
+            self.array,
+            ArraySpec(
+                roi=self.spec[self.points].roi.copy(),
+                voxel_size=self.voxel_size))
 
     def prepare(self, request):
 
         self.skip_next = True
-        for array_key, points_key in self.arrays.items():
-            if array_key in request.arrays:
-                assert points_key in request.points
-                # if at least one requested array is in self.pointstype_to_arrays, therefore do not skip process
-                self.skip_next = False
 
-        if self.skip_next:
-            logger.warn("no ArrayKeys of BinaryMask ({}) requested, will do nothing".format(self.arrays.values()))
+        if self.array in request:
 
-        if len(self.arrays) == 0:
-            self.skip_next = True
-
+            # TODO: add points request here instead of assert
+            # TODO: optionally add stay_inside_arraytype to request
+            assert self.points in request
+            self.skip_next = False
 
     def process(self, batch, request):
 
@@ -66,28 +73,32 @@ class RasterizePoints(BatchFilter):
             self.skip_next = False
             return
 
-        for nr, (array_key, points_key) in enumerate(self.arrays.items()):
-            if array_key in request.arrays:
-                binary_map = self.__get_binary_map(batch, request, points_key, array_key, points=batch.points[points_key])
-                batch.arrays[array_key] = Array(data=binary_map,
-                                                    roi=request.arrays[array_key])
+        if self.array in request:
+            binary_map = self.__get_binary_map(
+                batch,
+                request,
+                self.points,
+                self.array)
+            spec = self.specs[self.array].copy()
+            spec.roi = request[self.array].copy()
+            batch.arrays[self.array] = Array(
+                data=binary_map,
+                spec=spec)
 
 
-    def __get_binary_map(self, batch, request, points_key, array_key, points):
+    def __get_binary_map(self, batch, request, points_key, array_key):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
 
-        voxel_size = array_key.voxel_size
-        shape_bm_array  = request.arrays[array_key].get_shape()/voxel_size
-        offset_bm_phys= request.arrays[array_key].get_offset()
-        binary_map       = np.zeros(shape_bm_array, dtype='uint8')
+        points = batch.points[points_key]
 
-        if array_key in self.rastersettings:
-            raster_setting = self.rastersettings[array_key]
-        else:
-            raster_setting = RasterizationSetting()
+        voxel_size = self.voxel_size
+        shape_bm_array = request.arrays[array_key].get_shape()/voxel_size
+        offset_bm_phys = request.arrays[array_key].get_offset()
+        binary_map = np.zeros(shape_bm_array, dtype='uint8')
 
-        if raster_setting.stay_inside_arraytype is not None:
-            mask = batch.arrays[raster_setting.stay_inside_arraytype].data
+
+        if self.rastersetting.stay_inside_arraytype is not None:
+            mask = batch.arrays[self.rastersetting.stay_inside_arraytype].data
             if mask.shape>binary_map.shape:
                 # assumption: the binary map is centered in the mask array
                 offsets = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
@@ -117,10 +128,11 @@ class RasterizePoints(BatchFilter):
             for object_id, location_list in object_id_locations.items():
                 for location in location_list:
                     binary_map[[[loc] for loc in location]] = 1
-                binary_map = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
-                       marker_size_physical=raster_setting.marker_size_physical,
+                binary_map = enlarge_binary_map(binary_map,
+                        marker_size_voxel=self.rastersetting.marker_size_voxel,
+                       marker_size_physical=self.rastersetting.marker_size_physical,
                        voxel_size=batch.points[points_key].resolution,
-                                                donut_inner_radius=raster_setting.donut_inner_radius)
+                                                donut_inner_radius=self.rastersetting.donut_inner_radius)
                 binary_map[mask != object_id] = 0
                 binary_map_total += binary_map
                 binary_map.fill(0)
@@ -131,13 +143,14 @@ class RasterizePoints(BatchFilter):
                     shifted_loc = batch.points[points_key].data[loc_id].location - np.asarray(offset_bm_phys)
                     shifted_loc = shifted_loc.astype(np.int32)/voxel_size
                     binary_map[[[loc] for loc in shifted_loc]] = 1
-            binary_map_total = enlarge_binary_map(binary_map, marker_size_voxel=raster_setting.marker_size_voxel,
-                       marker_size_physical=raster_setting.marker_size_physical,
+            binary_map_total = enlarge_binary_map(binary_map,
+                    marker_size_voxel=self.rastersetting.marker_size_voxel,
+                       marker_size_physical=self.rastersetting.marker_size_physical,
                        voxel_size=batch.points[points_key].resolution,
-                                                donut_inner_radius=raster_setting.donut_inner_radius)
+                                                donut_inner_radius=self.rastersetting.donut_inner_radius)
         if len(points.data.keys()) == 0:
             assert np.all(binary_map_total == 0)
-        if raster_setting.invert_map:
+        if self.rastersetting.invert_map:
             binary_map_total = np.logical_not(binary_map_total).astype(np.uint8)
         return binary_map_total
 

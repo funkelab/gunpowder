@@ -104,11 +104,9 @@ class RasterizationSetting(Freezable):
             donut_inner_radius. This parameter has to be provided in the same
             unit as the specified marker_size.
 
-    Notes:
+        voxel_size (:class:``Coordinate``, optional):
 
-        Takes the resolution provided for the respective points into account.
-        Eg. anistropic resolutions result in anistropict blob creations, as
-        expected.
+            The voxel size of the array to create in world units.
     '''
     def __init__(
             self,
@@ -116,6 +114,7 @@ class RasterizationSetting(Freezable):
             marker_size_physical=None,
             stay_inside_arraytype=None,
             donut_inner_radius=None,
+            voxel_size=None,
             invert_map=False):
 
         if donut_inner_radius is not None:
@@ -130,5 +129,6 @@ class RasterizationSetting(Freezable):
         self.marker_size_physical = marker_size_physical
         self.stay_inside_arraytype = stay_inside_arraytype
         self.donut_inner_radius = donut_inner_radius
+        self.voxel_size = voxel_size
         self.invert_map = invert_map
         self.freeze()
