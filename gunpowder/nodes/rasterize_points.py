@@ -36,7 +36,6 @@ class RasterizePoints(BatchFilter):
         else:
             self.rastersettings = rastersettings
         self.voxel_size = None
-        self.skip_next = False
 
     def setup(self):
 
@@ -54,37 +53,26 @@ class RasterizePoints(BatchFilter):
             ArraySpec(
                 roi=self.spec[self.points].roi.copy(),
                 voxel_size=self.voxel_size))
+        self.enable_autoskip()
 
     def prepare(self, request):
 
-        self.skip_next = True
-
-        if self.array in request:
-
-            # TODO: add points request here instead of assert
-            # TODO: optionally add stay_inside_arraytype to request
-            assert self.points in request
-            self.skip_next = False
+        # TODO: add points request here
+        # TODO: optionally add stay_inside_arraytype to request
+        pass
 
     def process(self, batch, request):
 
-        # do nothing if no gt binary maps were requested
-        if self.skip_next:
-            self.skip_next = False
-            return
-
-        if self.array in request:
-            binary_map = self.__get_binary_map(
-                batch,
-                request,
-                self.points,
-                self.array)
-            spec = self.specs[self.array].copy()
-            spec.roi = request[self.array].copy()
-            batch.arrays[self.array] = Array(
-                data=binary_map,
-                spec=spec)
-
+        binary_map = self.__get_binary_map(
+            batch,
+            request,
+            self.points,
+            self.array)
+        spec = self.specs[self.array].copy()
+        spec.roi = request[self.array].copy()
+        batch.arrays[self.array] = Array(
+            data=binary_map,
+            spec=spec)
 
     def __get_binary_map(self, batch, request, points_key, array_key):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
