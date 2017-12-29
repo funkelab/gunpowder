@@ -15,5 +15,6 @@ from .precache import TestPreCache
 from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
+from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
 from .tensorflow_train import TestTensorflowTrain
