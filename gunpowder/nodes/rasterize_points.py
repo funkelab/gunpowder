@@ -7,10 +7,73 @@ from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
+from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map
-from gunpowder.points import PointsKeys, RasterizationSetting
+from gunpowder.points import PointsKeys
 
 logger = logging.getLogger(__name__)
+
+class RasterizationSetting(Freezable):
+    '''Data structure to store parameters for rasterization of points.
+
+    Args:
+
+        ball_radius_voxel (int):
+
+            Parameter only used, when ``ball_radius_physical`` is not set/set
+            to None. Specifies the ball radius in voxel units.
+
+        ball_radius_physical (int):
+
+            If set, overwrites the ``ball_radius_voxel`` parameter. Provides
+            the radius in world units. For instance, if ``voxel_size`` is [20,
+            10, 10], an ``ball_radius_physical`` of 10 would create a ball with
+            a radius of 1 in the x,y-directions and 0 in the z-direction.
+
+        stay_inside_array (:class:``ArrayKey``):
+
+            Used to mask out created balls. The array is assumed to contain
+            discrete labels. The object id at the specific point being
+            rasterized is used to crop the ball. Blob regions that are located
+            outside of the object are masked out, such that the ball is only
+            inside the specific object.
+
+        sphere_inner_radius (int):
+
+            If set, instead of a ball, a hollow sphere is rastered. The radius of
+            the whole sphere corresponds to the radius specified with
+            ``ball_radius_physical`` or ``ball_radius_voxel``. This parameter
+            sets the radius of the hollow area and has to be provided in the
+            same unit as the specified ball radius.
+
+        voxel_size (:class:``Coordinate``, optional):
+
+            The voxel size of the array to create in world units.
+    '''
+    def __init__(
+            self,
+            ball_radius_voxel=1,
+            ball_radius_physical=None,
+            stay_inside_array=None,
+            sphere_inner_radius=None,
+            voxel_size=None,
+            invert_map=False):
+
+        if sphere_inner_radius is not None:
+            if ball_radius_physical is not None:
+                ball_radius_check = ball_radius_physical
+            else:
+                ball_radius_check = ball_radius_voxel
+            assert sphere_inner_radius < ball_radius_check, (
+                "trying to create a sphere in which the inner radius is larger "
+                "than the sphere size")
+        self.ball_radius_voxel = ball_radius_voxel
+        self.ball_radius_physical = ball_radius_physical
+        self.stay_inside_array = stay_inside_array
+        self.sphere_inner_radius = sphere_inner_radius
+        self.voxel_size = voxel_size
+        self.invert_map = invert_map
+        self.freeze()
 
 class RasterizePoints(BatchFilter):
     '''Draw points into a binary array as balls of a given radius.
@@ -58,7 +121,7 @@ class RasterizePoints(BatchFilter):
     def prepare(self, request):
 
         # TODO: add points request here
-        # TODO: optionally add stay_inside_arraytype to request
+        # TODO: optionally add stay_inside_array to request
         pass
 
     def process(self, batch, request):
@@ -85,8 +148,8 @@ class RasterizePoints(BatchFilter):
         binary_map = np.zeros(shape_bm_array, dtype='uint8')
 
 
-        if self.rastersetting.stay_inside_arraytype is not None:
-            mask = batch.arrays[self.rastersetting.stay_inside_arraytype].data
+        if self.rastersetting.stay_inside_array is not None:
+            mask = batch.arrays[self.rastersetting.stay_inside_array].data
             if mask.shape>binary_map.shape:
                 # assumption: the binary map is centered in the mask array
                 offsets = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
@@ -94,7 +157,7 @@ class RasterizePoints(BatchFilter):
                           zip(offsets, binary_map.shape)]
                 mask = mask[slices]
             assert binary_map.shape == mask.shape, 'shape of newly created rasterized array and shape of mask array ' \
-                                                   'as specified with stay_inside_arraytype need to ' \
+                                                   'as specified with stay_inside_array need to ' \
                                                    'be aligned: %s versus mask shape %s' %(binary_map.shape, mask.shape)
             binary_map_total = np.zeros_like(binary_map)
             object_id_locations = {}
@@ -111,16 +174,16 @@ class RasterizePoints(BatchFilter):
                         object_id_locations[object_id] = [shifted_loc]
 
             # Process all points part of the same object together (for efficiency reason, but also because otherwise if
-            # donut flag is set, rasterization would create overlapping rings
+            # sphere flag is set, rasterization would create overlapping rings
 
             for object_id, location_list in object_id_locations.items():
                 for location in location_list:
                     binary_map[[[loc] for loc in location]] = 1
                 binary_map = enlarge_binary_map(binary_map,
-                        marker_size_voxel=self.rastersetting.marker_size_voxel,
-                       marker_size_physical=self.rastersetting.marker_size_physical,
+                        ball_radius_voxel=self.rastersetting.ball_radius_voxel,
+                       ball_radius_physical=self.rastersetting.ball_radius_physical,
                        voxel_size=batch.points[points_key].resolution,
-                                                donut_inner_radius=self.rastersetting.donut_inner_radius)
+                                                sphere_inner_radius=self.rastersetting.sphere_inner_radius)
                 binary_map[mask != object_id] = 0
                 binary_map_total += binary_map
                 binary_map.fill(0)
@@ -132,10 +195,10 @@ class RasterizePoints(BatchFilter):
                     shifted_loc = shifted_loc.astype(np.int32)/voxel_size
                     binary_map[[[loc] for loc in shifted_loc]] = 1
             binary_map_total = enlarge_binary_map(binary_map,
-                    marker_size_voxel=self.rastersetting.marker_size_voxel,
-                       marker_size_physical=self.rastersetting.marker_size_physical,
+                    ball_radius_voxel=self.rastersetting.ball_radius_voxel,
+                       ball_radius_physical=self.rastersetting.ball_radius_physical,
                        voxel_size=batch.points[points_key].resolution,
-                                                donut_inner_radius=self.rastersetting.donut_inner_radius)
+                                                sphere_inner_radius=self.rastersetting.sphere_inner_radius)
         if len(points.data.keys()) == 0:
             assert np.all(binary_map_total == 0)
         if self.rastersetting.invert_map:
