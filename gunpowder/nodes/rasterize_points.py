@@ -131,8 +131,8 @@ class RasterizePoints(BatchFilter):
             request,
             self.points,
             self.array)
-        spec = self.specs[self.array].copy()
-        spec.roi = request[self.array].copy()
+        spec = self.spec[self.array].copy()
+        spec.roi = request[self.array].roi.copy()
         batch.arrays[self.array] = Array(
             data=binary_map,
             spec=spec)
@@ -142,14 +142,16 @@ class RasterizePoints(BatchFilter):
 
         points = batch.points[points_key]
 
+        logger.debug("Rasterizing %d points...", len(points.data))
+
         voxel_size = self.voxel_size
-        shape_bm_array = request.arrays[array_key].get_shape()/voxel_size
-        offset_bm_phys = request.arrays[array_key].get_offset()
+        shape_bm_array = request[array_key].roi.get_shape()/voxel_size
+        offset_bm_phys = request[array_key].roi.get_offset()
         binary_map = np.zeros(shape_bm_array, dtype='uint8')
 
 
-        if self.rastersetting.stay_inside_array is not None:
-            mask = batch.arrays[self.rastersetting.stay_inside_array].data
+        if self.rastersettings.stay_inside_array is not None:
+            mask = batch.arrays[self.rastersettings.stay_inside_array].data
             if mask.shape>binary_map.shape:
                 # assumption: the binary map is centered in the mask array
                 offsets = (np.asarray(mask.shape) - np.asarray(binary_map.shape)) / 2.
@@ -162,9 +164,9 @@ class RasterizePoints(BatchFilter):
             binary_map_total = np.zeros_like(binary_map)
             object_id_locations = {}
             for loc_id in points.data.keys():
-                if request.arrays[array_key].contains(Coordinate(batch.points[points_key].data[loc_id].location)):
-                    shifted_loc = batch.points[points_key].data[loc_id].location - np.asarray(offset_bm_phys)
-                    shifted_loc = shifted_loc.astype(np.int32)/voxel_size
+                if request[array_key].roi.contains(Coordinate(batch.points[points_key].data[loc_id].location)):
+                    shifted_loc = batch.points[points_key].data[loc_id].location - offset_bm_phys
+                    shifted_loc = shifted_loc/voxel_size
 
                     # Get id of this location in the mask
                     object_id = mask[[[loc] for loc in shifted_loc]][0] # 0 index, otherwise numpy array with single number
@@ -179,31 +181,30 @@ class RasterizePoints(BatchFilter):
             for object_id, location_list in object_id_locations.items():
                 for location in location_list:
                     binary_map[[[loc] for loc in location]] = 1
-                binary_map = enlarge_binary_map(binary_map,
-                        ball_radius_voxel=self.rastersetting.ball_radius_voxel,
-                       ball_radius_physical=self.rastersetting.ball_radius_physical,
-                       voxel_size=batch.points[points_key].resolution,
-                                                sphere_inner_radius=self.rastersetting.sphere_inner_radius)
+                binary_map = enlarge_binary_map(
+                    binary_map,
+                    ball_radius_voxel=self.rastersettings.ball_radius_voxel,
+                    ball_radius_physical=self.rastersettings.ball_radius_physical,
+                    voxel_size=voxel_size,
+                    sphere_inner_radius=self.rastersettings.sphere_inner_radius)
                 binary_map[mask != object_id] = 0
                 binary_map_total += binary_map
                 binary_map.fill(0)
             binary_map_total[binary_map_total != 0] = 1
         else:
             for loc_id in points.data.keys():
-                if request.arrays[array_key].contains(Coordinate(batch.points[points_key].data[loc_id].location)):
-                    shifted_loc = batch.points[points_key].data[loc_id].location - np.asarray(offset_bm_phys)
-                    shifted_loc = shifted_loc.astype(np.int32)/voxel_size
+                if request[array_key].roi.contains(Coordinate(points.data[loc_id].location)):
+                    shifted_loc = batch.points[points_key].data[loc_id].location - offset_bm_phys
+                    shifted_loc = shifted_loc/voxel_size
                     binary_map[[[loc] for loc in shifted_loc]] = 1
-            binary_map_total = enlarge_binary_map(binary_map,
-                    ball_radius_voxel=self.rastersetting.ball_radius_voxel,
-                       ball_radius_physical=self.rastersetting.ball_radius_physical,
-                       voxel_size=batch.points[points_key].resolution,
-                                                sphere_inner_radius=self.rastersetting.sphere_inner_radius)
+            binary_map_total = enlarge_binary_map(
+                binary_map,
+                ball_radius_voxel=self.rastersettings.ball_radius_voxel,
+                ball_radius_physical=self.rastersettings.ball_radius_physical,
+                voxel_size=voxel_size,
+                sphere_inner_radius=self.rastersettings.sphere_inner_radius)
         if len(points.data.keys()) == 0:
             assert np.all(binary_map_total == 0)
-        if self.rastersetting.invert_map:
+        if self.rastersettings.invert_map:
             binary_map_total = np.logical_not(binary_map_total).astype(np.uint8)
         return binary_map_total
-
-
-
