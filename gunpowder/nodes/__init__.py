@@ -22,7 +22,7 @@ from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
 from .random_provider import RandomProvider
-from .rasterize_points import RasterizePoints
+from .rasterize_points import RasterizationSetting, RasterizePoints
 from .reject import Reject
 from .scan import Scan
 from .simple_augment import SimpleAugment

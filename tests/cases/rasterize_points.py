@@ -73,6 +73,8 @@ class TestRasterizePoints(ProviderTest):
 
     def test_3d(self):
 
+        set_verbose()
+
         PointsKey('TEST_POINTS')
         ArrayKey('RASTERIZED')
 
@@ -80,7 +82,9 @@ class TestRasterizePoints(ProviderTest):
             PointTestSource3D() +
             RasterizePoints(
                 PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED)
+                ArrayKeys.RASTERIZED,
+                RasterizationSetting(
+                    voxel_size=(40, 4, 4)))
         )
 
         with build(pipeline):
@@ -90,11 +94,40 @@ class TestRasterizePoints(ProviderTest):
 
             request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 
             batch = pipeline.request_batch(request)
 
-            rasterized = batch.arrays[ArrayKeys.GT_LABELS].data
-            print(rasterized)
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
             self.assertEqual(rasterized[0, 0, 0], 1)
             self.assertEqual(rasterized[2, 20, 20], 0)
             self.assertEqual(rasterized[4, 49, 49], 1)
+
+        # same with different foreground/background labels
+
+        pipeline = (
+            PointTestSource3D() +
+            RasterizePoints(
+                PointsKeys.TEST_POINTS,
+                ArrayKeys.RASTERIZED,
+                RasterizationSetting(
+                    voxel_size=(40, 4, 4),
+                    fg_value=0,
+                    bg_value=1))
+        )
+
+        with build(pipeline):
+
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (200, 200, 200))
+
+            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
+            self.assertEqual(rasterized[0, 0, 0], 0)
+            self.assertEqual(rasterized[2, 20, 20], 1)
+            self.assertEqual(rasterized[4, 49, 49], 0)
