@@ -49,6 +49,15 @@ class RasterizationSetting(Freezable):
         voxel_size (:class:``Coordinate``, optional):
 
             The voxel size of the array to create in world units.
+
+        fg_value (int, optional):
+
+            The value to use to rasterize points, defaults to 1.
+
+        bg_value (int, optional):
+
+            The value to use to for the background in the output array,
+            defaults to 0.
     '''
     def __init__(
             self,
@@ -57,7 +66,8 @@ class RasterizationSetting(Freezable):
             stay_inside_array=None,
             sphere_inner_radius=None,
             voxel_size=None,
-            invert_map=False):
+            fg_value=1,
+            bg_value=0):
 
         if sphere_inner_radius is not None:
             if ball_radius_physical is not None:
@@ -72,7 +82,8 @@ class RasterizationSetting(Freezable):
         self.stay_inside_array = stay_inside_array
         self.sphere_inner_radius = sphere_inner_radius
         self.voxel_size = voxel_size
-        self.invert_map = invert_map
+        self.fg_value = fg_value
+        self.bg_value = bg_value
         self.freeze()
 
 class RasterizePoints(BatchFilter):
@@ -149,7 +160,6 @@ class RasterizePoints(BatchFilter):
         offset_bm_phys = request[array_key].roi.get_offset()
         binary_map = np.zeros(shape_bm_array, dtype='uint8')
 
-
         if self.rastersettings.stay_inside_array is not None:
             mask = batch.arrays[self.rastersettings.stay_inside_array].data
             if mask.shape>binary_map.shape:
@@ -187,10 +197,8 @@ class RasterizePoints(BatchFilter):
                     ball_radius_physical=self.rastersettings.ball_radius_physical,
                     voxel_size=voxel_size,
                     sphere_inner_radius=self.rastersettings.sphere_inner_radius)
-                binary_map[mask != object_id] = 0
-                binary_map_total += binary_map
-                binary_map.fill(0)
-            binary_map_total[binary_map_total != 0] = 1
+                binary_map_total[mask == object_id] = binary_map[mask == object_id]
+                binary_map[:] = 0
         else:
             for loc_id in points.data.keys():
                 if request[array_key].roi.contains(Coordinate(points.data[loc_id].location)):
@@ -205,6 +213,19 @@ class RasterizePoints(BatchFilter):
                 sphere_inner_radius=self.rastersettings.sphere_inner_radius)
         if len(points.data.keys()) == 0:
             assert np.all(binary_map_total == 0)
-        if self.rastersettings.invert_map:
-            binary_map_total = np.logical_not(binary_map_total).astype(np.uint8)
+
+        if (self.rastersettings.fg_value is not 1 or
+            self.rastersettings.bg_value is not 0):
+
+            old_values = np.array([0, 1])
+            new_values = np.array([
+                self.rastersettings.bg_value,
+                self.rastersettings.fg_value])
+
+            indices = np.digitize(
+                binary_map_total.ravel(),
+                old_values,
+                right=True)
+            binary_map_total = new_values[indices].reshape(binary_map_total.shape)
+
         return binary_map_total

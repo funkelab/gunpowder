@@ -102,3 +102,32 @@ class TestRasterizePoints(ProviderTest):
             self.assertEqual(rasterized[0, 0, 0], 1)
             self.assertEqual(rasterized[2, 20, 20], 0)
             self.assertEqual(rasterized[4, 49, 49], 1)
+
+        # same with different foreground/background labels
+
+        pipeline = (
+            PointTestSource3D() +
+            RasterizePoints(
+                PointsKeys.TEST_POINTS,
+                ArrayKeys.RASTERIZED,
+                RasterizationSetting(
+                    voxel_size=(40, 4, 4),
+                    fg_value=0,
+                    bg_value=1))
+        )
+
+        with build(pipeline):
+
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (200, 200, 200))
+
+            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
+            self.assertEqual(rasterized[0, 0, 0], 0)
+            self.assertEqual(rasterized[2, 20, 20], 1)
+            self.assertEqual(rasterized[4, 49, 49], 0)
