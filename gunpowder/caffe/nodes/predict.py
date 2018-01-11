@@ -72,19 +72,19 @@ class Predict(GenericPredict):
             caffe.select_device(self.use_gpu, False)
 
         self.net = caffe.Net(self.prototxt, self.weights, caffe.TEST)
-        self.net_io = NetIoWrapper(self.net, self.outputs.values())
+        self.net_io = NetIoWrapper(self.net, self.outputs.keys())
 
     def predict(self, batch, request):
 
         self.net_io.set_inputs({
             input_name: batch.arrays[array_key].data
-            for array_key, input_name in self.inputs.items()
+            for input_name, array_key in self.inputs.items()
         })
 
         self.net.forward()
         output = self.net_io.get_outputs()
 
-        for array_key, output_name in self.outputs.items():
+        for output_name, array_key in self.outputs.items():
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(
