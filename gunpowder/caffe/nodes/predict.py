@@ -57,33 +57,34 @@ class Predict(GenericPredict):
         self.weights = weights
         self.inputs = inputs
         self.outputs = outputs
+	self.use_gpu = use_gpu
 
     def start(self):
 
         logger.info("Initializing solver...")
 
-        if use_gpu is not None:
+        if self.use_gpu is not None:
 
-            logger.debug("Predict process: using GPU %d"%use_gpu)
+            logger.debug("Predict process: using GPU %d"%self.use_gpu)
             caffe.enumerate_devices(False)
-            caffe.set_devices((use_gpu,))
+            caffe.set_devices((self.use_gpu,))
             caffe.set_mode_gpu()
-            caffe.select_device(use_gpu, False)
+            caffe.select_device(self.use_gpu, False)
 
         self.net = caffe.Net(self.prototxt, self.weights, caffe.TEST)
-        self.net_io = NetIoWrapper(self.net, self.outputs.values())
+        self.net_io = NetIoWrapper(self.net, self.outputs.keys())
 
     def predict(self, batch, request):
 
         self.net_io.set_inputs({
             input_name: batch.arrays[array_key].data
-            for array_key, input_name in self.inputs.items()
+            for input_name, array_key in self.inputs.items()
         })
 
         self.net.forward()
         output = self.net_io.get_outputs()
 
-        for array_key, output_name in self.outputs.items():
+        for output_name, array_key in self.outputs.items():
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(
