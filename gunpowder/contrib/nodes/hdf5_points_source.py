@@ -26,9 +26,8 @@ class Hdf5PointsSource(BatchProvider):
         datasets (dict): Dictionary of :class:``PointsKey`` -> dataset names
             that this source offers.
 
-        points_rois (dict): Dictionary of :class:``PointsKey`` ->
-            :class:``Roi`` to set the ROI for each point set provided by this
-            source.
+        rois (dict): Dictionary of :class:``PointsKey`` -> :class:``Roi`` to
+            set the ROI for each point set provided by this source.
 
     '''
 
@@ -36,11 +35,11 @@ class Hdf5PointsSource(BatchProvider):
             self,
             filename,
             datasets,
-            points_rois):
+            rois):
 
         self.filename = filename
         self.datasets = datasets
-        self.points_rois = points_rois
+        self.rois = rois
 
         self.ndims = None
 
@@ -54,7 +53,7 @@ class Hdf5PointsSource(BatchProvider):
                 raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
             spec = PointsSpec()
-            spec.roi = Roi(self.points_rois[points_key])
+            spec.roi = Roi(self.rois[points_key])
 
             self.provides(points_key, spec)
 
