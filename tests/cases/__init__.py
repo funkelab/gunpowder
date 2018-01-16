@@ -7,6 +7,7 @@ from .balance_labels import TestBalanceLabels
 from .crop import TestCrop
 from .downsample import TestDownSample
 from .elastic_augment_points import TestElasticAugment
+from .hdf5_source import TestHdf5Source
 from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
 from .normalize import TestNormalize
