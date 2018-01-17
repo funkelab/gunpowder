@@ -73,8 +73,6 @@ class TestRasterizePoints(ProviderTest):
 
     def test_3d(self):
 
-        set_verbose()
-
         PointsKey('TEST_POINTS')
         ArrayKey('RASTERIZED')
 

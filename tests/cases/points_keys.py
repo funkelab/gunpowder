@@ -8,7 +8,5 @@ class TestPointsKeys(unittest.TestCase):
 
         PointsKey('TEST_POINTS1')
 
-        print("new registered points type:", PointsKeys.TEST_POINTS1)
-
         self.assertTrue(PointsKeys.TEST_POINTS1)
         self.assertRaises(AttributeError, getattr, PointsKeys, "TEST_POINTS2")

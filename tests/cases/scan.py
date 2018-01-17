@@ -51,8 +51,6 @@ class TestScan(ProviderTest):
 
     def test_output(self):
 
-        # set_verbose()
-
         source = ScanTestSource()
 
         chunk_request = BatchRequest()

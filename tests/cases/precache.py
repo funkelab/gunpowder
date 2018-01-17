@@ -1,4 +1,3 @@
-import logging
 import time
 from gunpowder import *
 from .provider_test import ProviderTest
@@ -14,9 +13,6 @@ class Delay(BatchFilter):
 class TestPreCache(ProviderTest):
 
     def test_output(self):
-
-        logger = logging.getLogger('gunpowder.nodes.precache')
-        logger.setLevel(logging.INFO)
 
         pipeline = self.test_source + Delay() + PreCache(num_workers=100, cache_size=100)
 

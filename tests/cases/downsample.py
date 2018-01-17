@@ -1,6 +1,5 @@
 from .provider_test import ProviderTest
 from gunpowder import *
-import logging
 import numpy as np
 
 class DownSampleTestSource(BatchProvider):
@@ -50,10 +49,6 @@ class DownSampleTestSource(BatchProvider):
 class TestDownSample(ProviderTest):
 
     def test_output(self):
-
-        set_verbose(False)
-        logger = logging.getLogger('gunpowder.nodes.downsample')
-        logger.setLevel(logging.DEBUG)
 
         source = DownSampleTestSource()
 

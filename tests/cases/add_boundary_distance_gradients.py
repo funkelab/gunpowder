@@ -34,8 +34,6 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
 
     def test_output(self):
 
-        # set_verbose()
-
         ArrayKey('GT_BOUNDARY_DISTANCES')
         ArrayKey('GT_BOUNDARY_GRADIENTS')
 

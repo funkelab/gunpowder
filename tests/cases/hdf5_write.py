@@ -37,7 +37,6 @@ class Hdf5WriteTestSource(BatchProvider):
                     range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
                     range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]), indexing='ij')
             data = np.array(meshgrids)
-            print(data.shape)
 
             # print("Roi is: " + str(roi))
 

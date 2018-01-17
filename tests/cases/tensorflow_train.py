@@ -62,8 +62,6 @@ class TestTensorflowTrain(ProviderTest):
 
     def test_output(self):
 
-        set_verbose(False)
-
         # start clean
         for filename in glob.glob('tf_graph.*'):
             os.remove(filename)

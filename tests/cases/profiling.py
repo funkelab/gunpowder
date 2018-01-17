@@ -18,8 +18,6 @@ class TestProfiling(ProviderTest):
 
     def test_profiling(self):
 
-        set_verbose(False)
-
         pipeline = (
                 self.test_source +
                 DelayNode(0.1, 0.2) +
