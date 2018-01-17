@@ -28,9 +28,9 @@ class TestDvidSource(ProviderTest):
 
             batch = source.request_batch(
                 BatchRequest({
-                    raw: ArraySpec(roi=Roi((0, 0, 0), (100, 100, 100))),
-                    seg: ArraySpec(roi=Roi((0, 0, 0), (100, 100, 100))),
-                    mask: ArraySpec(roi=Roi((0, 0, 0), (100, 100, 100)))
+                    raw: ArraySpec(roi=Roi((0, 0, 0), (80, 80, 80))),
+                    seg: ArraySpec(roi=Roi((0, 0, 0), (80, 80, 80))),
+                    mask: ArraySpec(roi=Roi((0, 0, 0), (80, 80, 80)))
                 })
             )
 

@@ -61,6 +61,7 @@ class DvidSource(BatchProvider):
         self.array_specs = array_specs if array_specs is not None else {}
 
         self.ndims = None
+        self.voxel_size = None
 
     def setup(self):
 
@@ -169,12 +170,7 @@ class DvidSource(BatchProvider):
             spec = ArraySpec()
 
         if spec.voxel_size is None:
-
-            spec.voxel_size = Coordinate((1,)*self.ndims)
-            logger.warning("WARNING: DVID instances do not contain resolution "
-                           "information. For %s, the voxel size has been set "
-                           "to %s. This might not be what you want.",
-                           array_key, spec.voxel_size)
+            spec.voxel_size = Coordinate(info['Extended']['VoxelSize'])
 
         if spec.roi is None:
             spec.roi = data_roi*spec.voxel_size
