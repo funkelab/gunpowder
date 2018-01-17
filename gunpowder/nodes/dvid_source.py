@@ -1,123 +1,110 @@
-import distutils.util
-import numpy as np
 import logging
-import requests
-from copy import deepcopy
+import numpy as np
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
-from gunpowder.points import PointsKeys, Points
 from gunpowder.profiling import Timing
-from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.array import Array, ArrayKeys
-
-from gunpowder.contrib.points import PreSynPoint, PostSynPoint
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
+from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
-class DvidSourceReadException(Exception):
-    pass
-
-class MaskNotProvidedException(Exception):
-    pass
-
-
 class DvidSource(BatchProvider):
+    '''A DVID array source.
 
-    def __init__(self, hostname, port, uuid, array_names,
-                 points_array_names={}, points_rois={}, points_voxel_size=None):
-        """
-        :param hostname: hostname for DVID server
-        :type hostname: str
-        :param port: port for DVID server
-        :type port: int
-        :param uuid: UUID of node on DVID server
-        :type uuid: str
-        :param array_names: dict {ArrayKey:  DVID data instance}
-        :param points_voxel_size: (dict), :class:``PointsKey`` to its voxel_size (tuple)
-        """
+    Provides arrays from DVID servers for each array key given.
+
+    Args:
+
+        hostname (string): The name of the DVID server.
+
+        port (int): The port of the DVID server.
+
+        uuid (string): The UUID of the DVID node to use.
+
+        datasets (dict): Dictionary of ArrayKey -> DVID data instance names
+            that this source offers.
+
+        masks (dict, optional): Dictionary of ArrayKey -> DVID ROI instance
+            names. This will create binary masks from DVID ROIs.
+
+        array_specs (dict, optional): An optional dictionary of
+            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
+            specs automatically determined from the DVID server. This is useful
+            to set ``voxel_size``, for example. Only fields that are not
+            ``None`` in the given :class:`ArraySpec` will be used.
+    '''
+
+    def __init__(
+            self,
+            hostname,
+            port,
+            uuid,
+            datasets,
+            masks=None,
+            array_specs=None):
+
         self.hostname = hostname
         self.port = port
         self.url = "http://{}:{}".format(self.hostname, self.port)
         self.uuid = uuid
 
-        self.array_names = array_names
+        self.datasets = datasets
+        self.masks = masks if masks is not None else {}
 
-        self.points_array_names = points_array_names
-        self.points_rois        = points_rois
-        self.points_voxel_size  = points_voxel_size
+        self.array_specs = array_specs if array_specs is not None else {}
 
-        self.node_service = None
-        self.dims = 0
-        self.spec = ProviderSpec()
+        self.ndims = None
 
     def setup(self):
-        for array_key, array_name in self.array_names.items():
-            self.spec.arrays[array_key] = self.__get_roi(array_name, array_key.voxel_size)
 
-        for points_key, points_name in self.points_array_names.items():
-            self.spec.points[points_key] = self.points_rois[points_key]
+        for array_key, _ in self.datasets.items():
+            spec = self.__get_spec(array_key)
+            self.provides(array_key, spec)
 
-        logger.info("DvidSource.spec:\n{}".format(self.spec))
+        for array_key, _ in self.masks.items():
+            spec = self.__get_mask_spec(array_key)
+            self.provides(array_key, spec)
 
-    def get_spec(self):
-        return self.spec
+        logger.info("DvidSource.spec:\n%s", self.spec)
 
     def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
-        spec = self.get_spec()
-
         batch = Batch()
 
-        for (array_key, roi) in request.arrays.items():
-            # check if requested array can be provided
-            if array_key not in spec.arrays:
-                raise RuntimeError("Asked for %s which this source does not provide"%array_key)
-            # check if request roi lies within provided roi
-            if not spec.arrays[array_key].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(array_key, roi, spec.arrays[array_key]))
+        for (array_key, request_spec) in request.array_specs.items():
 
-            read = {
-                ArrayKeys.RAW: self.__read_raw,
-                ArrayKeys.GT_LABELS: self.__read_gt,
-                ArrayKeys.GT_MASK: self.__read_gt_mask,
-            }[array_key]
+            logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
-            logger.debug("Reading %s in %s..."%(array_key, roi))
-            batch.arrays[array_key] = Array(
-                    read(roi),
-                    roi=roi)
+            voxel_size = self.spec[array_key].voxel_size
 
-        # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
-        # together s.t. the ids are unique and allow to find partner locations
-        if PointsKeys.PRESYN in request.points or PointsKeys.POSTSYN in request.points:
-            try:  # either both have the same roi, or only one of them is requested
-                assert request.points[PointsKeys.PRESYN] == request.points[PointsKeys.POSTSYN]
-            except:
-                assert PointsKeys.PRESYN not in request.points or PointsKeys.POSTSYN not in request.points
-            if PointsKeys.PRESYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsKeys.PRESYN])
-            elif PointsKeys.POSTSYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsKeys.POSTSYN])
+            # scale request roi to voxel units
+            dataset_roi = request_spec.roi/voxel_size
 
-        for (points_key, roi) in request.points.items():
-            # check if requested points can be provided
-            if points_key not in spec.points:
-                raise RuntimeError("Asked for %s which this source does not provide"%points_key)
-            # check if request roi lies within provided roi
-            if not spec.points[points_key].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_key,roi,spec.points[points_key]))
+            # shift request roi into dataset
+            dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
 
-            logger.debug("Reading %s in %s..."%(points_key, roi))
-            id_to_point = {PointsKeys.PRESYN: presyn_points,
-                           PointsKeys.POSTSYN: postsyn_points}[points_key]
-            batch.points[points_key] = Points(data=id_to_point, roi=roi, resolution=self.points_voxel_size[points_key])
+            # create array spec
+            array_spec = self.spec[array_key].copy()
+            array_spec.roi = request_spec.roi
+
+            # read the data
+            if array_key in self.datasets:
+                data = self.__read_array(self.datasets[array_key], dataset_roi)
+            elif array_key in self.masks:
+                data = self.__read_mask(self.masks[array_key], dataset_roi)
+            else:
+                assert False, ("Encountered a request for %s that is neither a volume "
+                               "nor a mask."%array_key)
+
+            # add array to batch
+            batch.arrays[array_key] = Array(data, array_spec)
 
         logger.debug("done")
 
@@ -126,9 +113,35 @@ class DvidSource(BatchProvider):
 
         return batch
 
-    def __get_roi(self, array_name, voxel_size):
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, array_name)
-        info = data_instance.info
+    def __get_info(self, array_key):
+
+        if array_key in self.datasets:
+
+            data = dvision.DVIDDataInstance(
+                self.hostname,
+                self.port,
+                self.uuid,
+                self.datasets[array_key])
+
+        elif array_key in self.masks:
+
+            data = dvision.DVIDRegionOfInterest(
+                self.hostname,
+                self.port,
+                self.uuid,
+                self.masks[array_key])
+
+        else:
+
+            assert False, ("Encountered a request that is neither a volume "
+                           "nor a mask.")
+
+        return data.info
+
+    def __get_spec(self, array_key):
+
+        info = self.__get_info(array_key)
+
         roi_min = info['Extended']['MinPoint']
         if roi_min is not None:
             roi_min = Coordinate(roi_min[::-1])
@@ -136,135 +149,135 @@ class DvidSource(BatchProvider):
         if roi_max is not None:
             roi_max = Coordinate(roi_max[::-1])
 
-        return Roi(offset=roi_min*voxel_size, shape=(roi_max - roi_min)*voxel_size)
+        data_roi = Roi(
+            offset=roi_min,
+            shape=(roi_max - roi_min))
+        data_dims = Coordinate(data_roi.get_shape())
 
-    def __read_raw(self, roi):
-        slices = (roi/ArrayKeys.RAW.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.RAW])  # self.raw_array_name)
-        try:
-            return data_instance[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading raw at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if self.ndims is None:
+            self.ndims = len(data_dims)
+        else:
+            assert self.ndims == len(data_dims)
 
-    def __read_gt(self, roi):
-        slices = (roi/ArrayKeys.GT_LABELS.voxel_size).get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.GT_LABELS])  # self.gt_array_name)
-        try:
-            return data_instance[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading GT at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if array_key in self.array_specs:
+            spec = self.array_specs[array_key].copy()
+        else:
+            spec = ArraySpec()
 
-    def __read_gt_mask(self, roi):
-        """
-        :param roi: gunpowder.Roi
-        :return: uint8 np.ndarray with roi shape
-        """
-        if self.gt_mask_roi_name is None:
-            raise MaskNotProvidedException
-        slices = (roi/ArrayKeys.GT_MASK.voxel_size).get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.GT_MASK])  # self.gt_mask_roi_name)
-        try:
-            return dvid_roi[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading GT mask at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if spec.voxel_size is None:
+            spec.voxel_size = Coordinate(info['Extended']['VoxelSize'])
 
-    def __load_json_annotations(self, array_shape_voxel, array_offset_voxel, array_name):
-        url = "http://" + str(self.hostname) + ":" + str(self.port)+"/api/node/" + str(self.uuid) + '/' + \
-              str(array_name) + "/elements/{}_{}_{}/{}_{}_{}".format(array_shape_voxel[2], array_shape_voxel[1], array_shape_voxel[0],
-                                                   array_offset_voxel[2], array_offset_voxel[1], array_offset_voxel[0])
-        annotations_file = requests.get(url)
-        json_annotations = annotations_file.json()
-        if json_annotations is None:
-            json_annotations = []  # create empty_dummy_json_annotations
-            # raise Exception ('No synapses found in region defined by array_offset {} and array_shape {}'.format(array_offset, array_shape))
-        return json_annotations
+        if spec.roi is None:
+            spec.roi = data_roi*spec.voxel_size
 
-    def __read_syn_points(self, roi):
-        """ read json file from dvid source, in json format to create a PreSynPoint/PostSynPoint for every location given """
+        data_dtype = dvision.DVIDDataInstance(
+            self.hostname,
+            self.port,
+            self.uuid,
+            self.datasets[array_key]).dtype
 
-        if PointsKeys.PRESYN in self.points_voxel_size:
-            voxel_size = self.points_voxel_size[PointsKeys.PRESYN]
-        elif PointsKeys.POSTSYN in self.points_voxel_size:
-            voxel_size = self.points_voxel_size[PointsKeys.POSTSYN]
+        if spec.dtype is not None:
+            assert spec.dtype == data_dtype, ("dtype %s provided in array_specs for %s, "
+                                              "but differs from instance %s dtype %s"%
+                                              (self.array_specs[array_key].dtype,
+                                               array_key,
+                                               self.datasets[array_key],
+                                               data_dtype))
+        else:
+            spec.dtype = data_dtype
 
-        syn_file_json = self.__load_json_annotations(array_shape_voxel  = roi.get_shape() // voxel_size,
-                                                     array_offset_voxel = roi.get_offset() // voxel_size,
-                                                     array_name    = self.points_array_names[PointsKeys.PRESYN])
+        if spec.interpolatable is None:
 
-        presyn_points_dict, postsyn_points_dict = {}, {}
-        location_to_location_id_dict, location_id_to_partner_locations = {}, {}
-        for node_nr, node in enumerate(syn_file_json):
-            # collect information
-            kind        = str(node['Kind'])
-            location    = np.asarray((node['Pos'][2], node['Pos'][1], node['Pos'][0])) * voxel_size
-            location_id = int(node_nr)
-            # some synapses are wrongly annotated in dvid source, have 'Tag': null ???, they are skipped
-            try:
-                syn_id = int(node['Tags'][0][3:])
-            except:
-                continue
-            location_to_location_id_dict[str(location)] = location_id
+            spec.interpolatable = spec.dtype in [
+                np.float,
+                np.float32,
+                np.float64,
+                np.float128,
+                np.uint8 # assuming this is not used for labels
+            ]
+            logger.warning("WARNING: You didn't set 'interpolatable' for %s. "
+                           "Based on the dtype %s, it has been set to %s. "
+                           "This might not be what you want.",
+                           array_key, spec.dtype, spec.interpolatable)
 
-            partner_locations = []
-            try:
-                for relation in node['Rels']:
-                    partner_locations.append((np.asarray([relation['To'][2], relation['To'][1], relation['To'][0]]))*voxel_size)
-            except:
-                partner_locations = []
-            location_id_to_partner_locations[int(node_nr)] = partner_locations
+        return spec
 
-            # check if property given, not always given
-            props = {}
-            if 'conf' in node['Prop']:
-                props['conf'] = float(node['Prop']['conf'])
-            if 'agent' in node['Prop']:
-                props['agent']  = str(node['Prop']['agent'])
-            if 'flagged' in node['Prop']:
-                str_value_flagged = str(node['Prop']['flagged'])
-                props['flagged']  = bool(distutils.util.strtobool(str_value_flagged))
-            if 'multi' in node['Prop']:
-                str_value_multi = str(node['Prop']['multi'])
-                props['multi']  = bool(distutils.util.strtobool(str_value_multi))
+    def __get_mask_spec(self, mask_key):
 
-            # create synPoint with information collected so far (partner_ids not completed yet)
-            if kind == 'PreSyn':
-                syn_point = PreSynPoint(location=location, location_id=location_id,
-                                     synapse_id=syn_id, partner_ids=[], props=props)
-                presyn_points_dict[int(node_nr)] = deepcopy(syn_point)
-            elif kind == 'PostSyn':
-                syn_point = PostSynPoint(location=location, location_id=location_id,
-                                     synapse_id=syn_id, partner_ids=[], props=props)
-                postsyn_points_dict[int(node_nr)] = deepcopy(syn_point)
+        # create initial array spec
 
-        # add partner ids
-        last_node_nr = len(syn_file_json)-1
-        for current_syn_point_id in location_id_to_partner_locations.keys():
-            all_partner_ids = []
-            for partner_loc in location_id_to_partner_locations[current_syn_point_id]:
-                if location_to_location_id_dict.has_key(str(partner_loc)):
-                    all_partner_ids.append(int(location_to_location_id_dict[str(partner_loc)]))
+        if mask_key in self.array_specs:
+            spec = self.array_specs[mask_key].copy()
+        else:
+            spec = ArraySpec()
+
+        # get voxel size
+
+        if spec.voxel_size is None:
+
+            voxel_size = None
+            for array_key in self.datasets:
+                if voxel_size is None:
+                    voxel_size = self.spec[array_key].voxel_size
                 else:
-                    last_node_nr = last_node_nr + 1
-                    assert not location_to_location_id_dict.has_key(str(partner_loc))
-                    all_partner_ids.append(int(last_node_nr))
+                    assert voxel_size == self.spec[array_key].voxel_size, (
+                        "No voxel size was given for mask %s, and the voxel "
+                        "sizes of the volumes %s are not all the same. I don't "
+                        "know what voxel size to use to create the mask."%(
+                            mask_key, self.datasets.keys()))
 
-            if current_syn_point_id in presyn_points_dict:
-                presyn_points_dict[current_syn_point_id].partner_ids = all_partner_ids
-            elif current_syn_point_id in postsyn_points_dict:
-                postsyn_points_dict[current_syn_point_id].partner_ids = all_partner_ids
-            else:
-                raise Exception("current syn_point id not found in any dictionary")
+            spec.voxel_size = voxel_size
 
-        return presyn_points_dict, postsyn_points_dict
+        # get ROI
 
+        if spec.roi is None:
+
+            for array_key in self.datasets:
+
+                roi = self.spec[array_key].roi
+
+                if spec.roi is None:
+                    spec.roi = roi.copy()
+                else:
+                    spec.roi = roi.union(spec.roi)
+
+        # set interpolatable
+
+        if spec.interpolatable is None:
+            spec.interpolatable = False
+
+        # set datatype
+
+        if spec.dtype is not None and spec.dtype != np.uint8:
+            logger.warn("Ignoring dtype in array_spec for %s, only np.uint8 "
+                        "is allowed for masks.", mask_key)
+        spec.dtype = np.uint8
+
+        return spec
+
+    def __read_array(self, instance, roi):
+
+        data_instance = dvision.DVIDDataInstance(
+            self.hostname,
+            self.port,
+            self.uuid,
+            instance)
+
+        return data_instance[roi.get_bounding_box()]
+
+    def __read_mask(self, instance, roi):
+
+        dvid_roi = dvision.DVIDRegionOfInterest(
+            self.hostname,
+            self.port,
+            self.uuid,
+            instance)
+
+        return dvid_roi[roi.get_bounding_box()]
 
     def __repr__(self):
-        return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.RAW],
-            self.array_names[ArrayKeys.GT_LABELS])
+
+        return "DvidSource(hostname={}, port={}, uuid={}".format(
+            self.hostname,
+            self.port,
+            self.uuid)

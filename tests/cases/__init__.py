@@ -6,7 +6,9 @@ from .add_vector_map import TestAddVectorMap
 from .balance_labels import TestBalanceLabels
 from .crop import TestCrop
 from .downsample import TestDownSample
+from .dvid_source import TestDvidSource
 from .elastic_augment_points import TestElasticAugment
+from .hdf5_source import TestHdf5Source
 from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
 from .normalize import TestNormalize
@@ -15,5 +17,6 @@ from .precache import TestPreCache
 from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
+from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
 from .tensorflow_train import TestTensorflowTrain
