@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
@@ -9,6 +8,7 @@ from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ class DvidSource(BatchProvider):
             port,
             uuid,
             datasets,
-            masks = None,
-            array_specs = None):
+            masks=None,
+            array_specs=None):
 
         self.hostname = hostname
         self.port = port
@@ -55,25 +55,21 @@ class DvidSource(BatchProvider):
         self.datasets = datasets
         self.masks = masks if masks is not None else {}
 
-        print("Datasets: ", self.datasets)
-        print("Masks: ", self.masks)
-
         self.array_specs = array_specs if array_specs is not None else {}
 
         self.ndims = None
-        self.voxel_size = None
 
     def setup(self):
 
-        for array_key, dataset in self.datasets.items():
+        for array_key, _ in self.datasets.items():
             spec = self.__get_spec(array_key)
             self.provides(array_key, spec)
 
-        for array_key, dataset in self.masks.items():
+        for array_key, _ in self.masks.items():
             spec = self.__get_mask_spec(array_key)
             self.provides(array_key, spec)
 
-        logger.info("DvidSource.spec:\n{}".format(self.spec))
+        logger.info("DvidSource.spec:\n%s", self.spec)
 
     def provide(self, request):
 
@@ -84,7 +80,7 @@ class DvidSource(BatchProvider):
 
         for (array_key, request_spec) in request.array_specs.items():
 
-            logger.debug("Reading %s in %s..."%(array_key, request_spec.roi))
+            logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
             voxel_size = self.spec[array_key].voxel_size
 
@@ -145,7 +141,6 @@ class DvidSource(BatchProvider):
     def __get_spec(self, array_key):
 
         info = self.__get_info(array_key)
-        print(info)
 
         roi_min = info['Extended']['MinPoint']
         if roi_min is not None:
@@ -155,8 +150,8 @@ class DvidSource(BatchProvider):
             roi_max = Coordinate(roi_max[::-1])
 
         data_roi = Roi(
-                offset=roi_min,
-                shape=(roi_max - roi_min))
+            offset=roi_min,
+            shape=(roi_max - roi_min))
         data_dims = Coordinate(data_roi.get_shape())
 
         if self.ndims is None:
@@ -175,7 +170,7 @@ class DvidSource(BatchProvider):
         if spec.roi is None:
             spec.roi = data_roi*spec.voxel_size
 
-        data_dtype =  dvision.DVIDDataInstance(
+        data_dtype = dvision.DVIDDataInstance(
             self.hostname,
             self.port,
             self.uuid,
@@ -185,7 +180,9 @@ class DvidSource(BatchProvider):
             assert spec.dtype == data_dtype, ("dtype %s provided in array_specs for %s, "
                                               "but differs from instance %s dtype %s"%
                                               (self.array_specs[array_key].dtype,
-                                              array_key, ds_name, dataset.dtype))
+                                               array_key,
+                                               self.datasets[array_key],
+                                               data_dtype))
         else:
             spec.dtype = data_dtype
 
@@ -205,12 +202,12 @@ class DvidSource(BatchProvider):
 
         return spec
 
-    def __get_mask_spec(self, array_key):
+    def __get_mask_spec(self, mask_key):
 
         # create initial array spec
 
-        if array_key in self.array_specs:
-            spec = self.array_specs[array_key].copy()
+        if mask_key in self.array_specs:
+            spec = self.array_specs[mask_key].copy()
         else:
             spec = ArraySpec()
 
@@ -218,11 +215,18 @@ class DvidSource(BatchProvider):
 
         if spec.voxel_size is None:
 
-            spec.voxel_size = Coordinate((1,)*self.ndims)
-            logger.warning("WARNING: DVID instances do not contain resolution "
-                           "information. For %s, the voxel size has been set "
-                           "to %s. This might not be what you want.",
-                           array_key, spec.voxel_size)
+            voxel_size = None
+            for array_key in self.datasets:
+                if voxel_size is None:
+                    voxel_size = self.spec[array_key].voxel_size
+                else:
+                    assert voxel_size == self.spec[array_key].voxel_size, (
+                        "No voxel size was given for mask %s, and the voxel "
+                        "sizes of the volumes %s are not all the same. I don't "
+                        "know what voxel size to use to create the mask."%(
+                            mask_key, self.datasets.keys()))
+
+            spec.voxel_size = voxel_size
 
         # get ROI
 
@@ -244,15 +248,10 @@ class DvidSource(BatchProvider):
 
         # set datatype
 
-        data_dtype = np.uint8
-
-        if spec.dtype is not None:
-            assert spec.dtype == data_dtype, ("dtype %s provided in array_specs for %s, "
-                                              "but differs from instance %s dtype %s"%
-                                              (self.array_specs[array_key].dtype,
-                                              array_key, ds_name, dataset.dtype))
-        else:
-            spec.dtype = data_dtype
+        if spec.dtype is not None and spec.dtype != np.uint8:
+            logger.warn("Ignoring dtype in array_spec for %s, only np.uint8 "
+                        "is allowed for masks.", mask_key)
+        spec.dtype = np.uint8
 
         return spec
 
