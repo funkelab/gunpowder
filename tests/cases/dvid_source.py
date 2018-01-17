@@ -1,10 +1,20 @@
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
+import socket
 
 class TestDvidSource(ProviderTest):
 
     def test_output_3d(self):
+
+        dvid_server = 'slowpoke1'
+
+        # check if DVID server is available:
+        try:
+            socket.gethostbyname(dvid_server)
+        except:
+            print("DVID server not available, skipping TestDvidSource")
+            return
 
         # create array keys
         raw = ArrayKey('RAW')
@@ -13,7 +23,7 @@ class TestDvidSource(ProviderTest):
 
         pipeline = (
             DvidSource(
-                'slowpoke1',
+                dvid_server,
                 32768,
                 '2ad1d8f0f172425c9f87b60fd97331e6',
                 datasets = {
