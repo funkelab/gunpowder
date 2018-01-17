@@ -55,6 +55,9 @@ class DvidSource(BatchProvider):
         self.datasets = datasets
         self.masks = masks if masks is not None else {}
 
+        print("Datasets: ", self.datasets)
+        print("Masks: ", self.masks)
+
         self.array_specs = array_specs if array_specs is not None else {}
 
         self.ndims = None
@@ -97,11 +100,11 @@ class DvidSource(BatchProvider):
             # read the data
             if array_key in self.datasets:
                 data = self.__read_array(self.datasets[array_key], dataset_roi)
-            elif array_spec in self.masks:
-                data = self.__read_mask(self.datasets[array_key], dataset_roi)
+            elif array_key in self.masks:
+                data = self.__read_mask(self.masks[array_key], dataset_roi)
             else:
-                assert False, ("Encountered a request that is neither a volume "
-                               "nor a mask.")
+                assert False, ("Encountered a request for %s that is neither a volume "
+                               "nor a mask."%array_key)
 
             # add array to batch
             batch.arrays[array_key] = Array(data, array_spec)
