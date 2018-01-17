@@ -4,10 +4,10 @@ import logging
 import requests
 from copy import deepcopy
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
+from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.points import PointsKeys, Points
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
@@ -16,7 +16,7 @@ from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 
 logger = logging.getLogger(__name__)
 
-class DvidSourceReadException(Exception):
+class DvidPartnerAnnoationSourceReadException(Exception):
     pass
 
 class MaskNotProvidedException(Exception):
@@ -25,7 +25,7 @@ class MaskNotProvidedException(Exception):
 
 # TODO: This seems broken. There is code involving a voxel size, but points
 # don't have voxel sizes
-class DvidSource(BatchProvider):
+class DvidPartnerAnnotationSource(BatchProvider):
     '''
         :param hostname: hostname for DVID server
         :type hostname: str
@@ -65,7 +65,7 @@ class DvidSource(BatchProvider):
                 points_key,
                 PointsSpec(roi=self.points_rois[points_key]))
 
-        logger.info("DvidSource.spec:\n{}".format(self.spec))
+        logger.info("DvidPartnerAnnotationSource.spec:\n{}".format(self.spec))
 
     def provide(self, request):
 
@@ -100,7 +100,7 @@ class DvidSource(BatchProvider):
 
             batch.points[points_key] = Points(
                 data=id_to_point,
-                PointsSpec(roi=roi))
+                spec=PointsSpec(roi=roi))
 
         logger.debug("done")
 
@@ -200,6 +200,6 @@ class DvidSource(BatchProvider):
 
 
     def __repr__(self):
-        return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
+        return "DvidPartnerAnnoationSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
             self.hostname, self.port, self.uuid, self.array_names[ArrayKeys.RAW],
             self.array_names[ArrayKeys.GT_LABELS])
