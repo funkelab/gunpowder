@@ -65,6 +65,8 @@ class BatchProvider(object):
             spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
 
+        logger.debug("Current spec of %s:\n%s", self.name(), self.spec)
+
         if self.spec is None:
             self._spec = ProviderSpec()
 
@@ -75,14 +77,19 @@ class BatchProvider(object):
         self.spec[identifier] = copy.deepcopy(spec)
         self.provided_items.append(identifier)
 
-        logger.debug("%s provides %s with spec %s"%(self.name(), identifier, spec))
+        logger.debug("%s provides %s with spec %s", self.name(), identifier, spec)
 
     def _init_spec(self):
         if not hasattr(self, '_spec'):
             self._spec = None
 
-    def _reset_spec(self):
+    def internal_teardown(self):
+
+        logger.debug("Resetting spec of %s", self.name())
         self._spec = None
+        self._provided_items = []
+
+        self.teardown()
 
     @property
     def spec(self):
@@ -125,7 +132,7 @@ class BatchProvider(object):
                 partial) :class:`ArraySpec`s and :class:`PointsSpec`s.
         '''
 
-        logger.debug("%s got request %s"%(self.name(),request))
+        logger.debug("%s got request %s", self.name(), request)
 
         self.check_request_consistency(request)
 
@@ -133,7 +140,7 @@ class BatchProvider(object):
 
         self.check_batch_consistency(batch, request)
 
-        logger.debug("%s provides %s"%(self.name(),batch))
+        logger.debug("%s provides %s", self.name(), batch)
 
         return batch
 
