@@ -78,6 +78,14 @@ class BatchFilter(BatchProvider):
         if not hasattr(self, '_spec') or self._spec is None:
             self._spec = copy.deepcopy(self.get_upstream_provider().spec)
 
+    def internal_teardown(self):
+
+        logger.debug("Resetting spec of %s", self.name())
+        self._spec = None
+        self._updated_items = []
+
+        self.teardown()
+
     @property
     def updated_items(self):
         '''Get a list of the identifiers that are updated by this `BatchFilter`.
