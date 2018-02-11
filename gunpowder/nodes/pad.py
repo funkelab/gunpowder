@@ -43,7 +43,7 @@ class Pad(BatchFilter):
             if pad_size is not None:
                 spec.roi = spec.roi.grow(pad_size, pad_size)
             else:
-                spec.roi = None
+                spec.roi.set_shape(None)
             self.updates(array_key, spec)
 
     def prepare(self, request):
@@ -62,7 +62,7 @@ class Pad(BatchFilter):
             # change request to fit into upstream spec
             request[array_key].roi = roi.intersect(upstream_spec[array_key].roi)
 
-            if request[array_key].roi is None:
+            if request[array_key].roi.empty():
 
                 logger.warning("Requested %s ROI lies entirely outside of upstream ROI."%array_key)
 

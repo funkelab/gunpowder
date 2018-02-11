@@ -52,10 +52,6 @@ class RandomLocation(BatchFilter):
     def setup(self):
 
         self.upstream_spec = self.get_upstream_provider().spec
-        self.upstream_roi = self.upstream_spec.get_total_roi()
-
-        if self.upstream_roi is None:
-            raise RuntimeError("Can not draw random samples from a provider that does not have a bounding box.")
 
         if self.mask and self.min_masked > 0:
 
@@ -84,7 +80,7 @@ class RandomLocation(BatchFilter):
         # clear bounding boxes of all provided arrays and points -- 
         # RandomLocation does not have limits (offsets are ignored)
         for identifier, spec in self.spec.items():
-            spec.roi = None
+            spec.roi.set_shape(None)
             self.updates(identifier, spec)
 
     def prepare(self, request):
@@ -112,6 +108,7 @@ class RandomLocation(BatchFilter):
                 raise Exception(
                     "Requested %s, but upstream does not provide "
                     "it."%identifier)
+
             type_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
 
             if shift_roi is None:
@@ -121,9 +118,12 @@ class RandomLocation(BatchFilter):
 
         logger.debug("valid shifts for request in " + str(shift_roi))
 
-        assert shift_roi is not None and shift_roi.size() > 0, (
-                "Can not satisfy batch request, no location covers all "
-                "requested ROIs.")
+        assert not shift_roi.unbounded(), (
+            "Can not pick a random location, intersection of upstream ROIs is "
+            "unbounded.")
+        assert shift_roi.size() > 0, (
+            "Can not satisfy batch request, no location covers all requested "
+            "ROIs.")
 
         if lcm_voxel_size is not None:
             lcm_shift_roi = shift_roi/lcm_voxel_size
@@ -221,8 +221,6 @@ class RandomLocation(BatchFilter):
                 roi = spec.roi.shift(random_shift)
                 logger.debug("new %s ROI: %s"%(key, roi))
                 specs_type[key].roi = roi
-                assert self.upstream_roi.contains(roi)
-
 
     def process(self, batch, request):
         # reset ROIs to request
