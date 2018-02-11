@@ -77,6 +77,7 @@ class Pad(BatchFilter):
     def process(self, batch, request):
 
         # restore requested batch size and ROI
+
         for (array_key, array) in batch.arrays.items():
 
             array.data = self.__expand(
@@ -86,6 +87,9 @@ class Pad(BatchFilter):
                     self.pad_values[array_key] if array_key in self.pad_values else 0
             )
             array.spec.roi = request[array_key].roi
+
+        for (points_key, points) in batch.points.items():
+            points.spec.roi = request[points_key].roi
 
     def __expand(self, a, from_roi, to_roi, value):
         '''from_roi and to_roi should be in voxels.'''
