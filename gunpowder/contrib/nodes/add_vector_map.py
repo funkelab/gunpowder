@@ -242,7 +242,7 @@ class AddVectorMap(BatchFilter):
         object_id   = mask[[[loc] for loc in shifted_loc]][0]  # 0 index, otherwise numpy array with single number
 
         binary_map[[[loc] for loc in shifted_loc]] = 1
-        binary_map = enlarge_binary_map(binary_map, ball_radius_physical=self.radius_phys, voxel_size=voxel_size)
+        binary_map = enlarge_binary_map(binary_map, radius=self.radius_phys, voxel_size=voxel_size)
         binary_map[mask != object_id] = 0
         binary_map_total += binary_map
         binary_map.fill(0)
