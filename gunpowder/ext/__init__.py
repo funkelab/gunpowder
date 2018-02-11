@@ -17,6 +17,11 @@ except ImportError:
     h5py = NoSuchModule('h5py')
 
 try:
+    import pyklb
+except ImportError:
+    pyklb = NoSuchModule('pyklb')
+
+try:
     import caffe
 except ImportError:
     caffe = NoSuchModule('caffe')
