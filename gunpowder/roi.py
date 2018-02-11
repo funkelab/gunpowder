@@ -144,6 +144,9 @@ class Roi(Freezable):
 
         if isinstance(other, Roi):
 
+            if other.empty():
+                return True
+
             return (
                 self.contains(other.get_begin())
                 and
