@@ -81,7 +81,7 @@ class TestRasterizePoints(ProviderTest):
             RasterizePoints(
                 PointsKeys.TEST_POINTS,
                 ArrayKeys.RASTERIZED,
-                RasterizationSetting(
+                ArraySpec(
                     voxel_size=(40, 4, 4)))
         )
 
@@ -108,8 +108,9 @@ class TestRasterizePoints(ProviderTest):
             RasterizePoints(
                 PointsKeys.TEST_POINTS,
                 ArrayKeys.RASTERIZED,
-                RasterizationSetting(
-                    voxel_size=(40, 4, 4),
+                ArraySpec(voxel_size=(40, 4, 4)),
+                RasterizationSettings(
+                    ball_radius=1,
                     fg_value=0,
                     bg_value=1))
         )
