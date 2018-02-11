@@ -5,7 +5,7 @@ from scipy import ndimage
 
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.array import Array, ArrayKeys
-from gunpowder.nodes.rasterize_points import RasterizationSetting
+from gunpowder.nodes.rasterize_points import RasterizationSettings
 from gunpowder.morphology import enlarge_binary_map
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class AddGtMaskExclusiveZone(BatchFilter):
         gaussian_sigma_for_zone(float, optional): Defines extend of exclusive
             zone around ON region in binary map. Defaults to 1.
 
-        rasterization_setting(:class:``RasterizationSetting``, optional): Which
+        rasterization_setting(:class:``RasterizationSettings``, optional): Which
             rasterization setting to use.
     '''
 
@@ -40,7 +40,7 @@ class AddGtMaskExclusiveZone(BatchFilter):
         self.EZ_masks_to_binary_map = EZ_masks_to_binary_map
         self.gaussian_sigma_for_zone = gaussian_sigma_for_zone
         if rasterization_setting is None:
-            self.rasterization_setting = RasterizationSetting()
+            self.rasterization_setting = RasterizationSettings()
         else:
             self.rasterization_setting = rasterization_setting
         self.skip_next = False
