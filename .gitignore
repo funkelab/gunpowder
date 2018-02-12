@@ -1,6 +1,6 @@
 snapshots
-docker/gunpowder/gunpowder
-docker/gunpowder/requirements.txt
+docker/gunpowder
+docker/requirements.txt
 *.sw[pmno]
 net_iter*
 *.prototxt
