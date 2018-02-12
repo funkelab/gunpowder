@@ -1,10 +1,10 @@
-FROM funkey/caffe
+FROM tensorflow/tensorflow:1.3.0-gpu
 LABEL maintainer jfunke@iri.upc.edu
 
 # install dependencies for gunpowder
 ENV MALIS_ROOT=/src/malis
 ENV MALIS_REPOSITORY=https://github.com/TuragaLab/malis.git
-ENV MALIS_REVISION=e92f758725e0a2067cacd39827fad87f1848a2cb
+ENV MALIS_REVISION=2206fe01bd2d10c3bc6a861897820731d1ae131b
 
 ENV AUGMENT_ROOT=/src/augment
 ENV AUGMENT_REPOSITORY=https://github.com/funkey/augment.git
