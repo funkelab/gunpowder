@@ -6,7 +6,7 @@ default:
 	-rm -rf gunpowder
 	cp -r ../gunpowder .
 	cp ../requirements.txt .
-	docker build -t $(TAG)
+	docker build -t $(TAG) .
 
 push: default
 	docker push $(TAG)
