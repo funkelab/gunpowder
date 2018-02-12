@@ -6,6 +6,7 @@ import numpy as np
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
+from gunpowder.points_spec import PointsSpec
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
@@ -144,13 +145,13 @@ class RandomLocation(BatchFilter):
             good_location_found_for_mask, good_location_found_for_points = False, False
             if self.ensure_nonempty is not None:
 
-                focused_points_roi = request.points_spec[self.ensure_nonempty].roi
+                focused_points_roi = request[self.ensure_nonempty].roi
                 focused_points_offset = focused_points_roi.get_offset()
                 focused_points_shape  = focused_points_roi.get_shape()
 
                 # prefetch points in roi of ensure_nonempty
                 request_for_focused_points = BatchRequest()
-                request_for_focused_points.points_spec[self.ensure_nonempty] = PointsSpec(roi=focused_points_roi.shift(random_shift))
+                request_for_focused_points[self.ensure_nonempty] = PointsSpec(roi=focused_points_roi.shift(random_shift))
                 batch_of_points    = self.get_upstream_provider().request_batch(request_for_focused_points)
                 point_ids_in_batch = batch_of_points.points[self.ensure_nonempty].data.keys()
 
