@@ -22,12 +22,15 @@ class Reject(BatchFilter):
     '''
 
     def __init__(self, mask, min_masked=0.5, reject_probability=1.):
+
         self.mask = mask
         self.min_masked = min_masked
         self.reject_probability = reject_probability
 
     def setup(self):
-        assert self.mask in self.spec, "Reject can only be used if %s is provided"%self.mask
+
+        assert self.mask in self.spec, (
+            "Reject can only be used if %s is provided"%self.mask)
         self.upstream_provider = self.get_upstream_provider()
 
     def provide(self, request):
@@ -38,7 +41,8 @@ class Reject(BatchFilter):
         timing = Timing(self)
         timing.start()
 
-        assert self.mask in request, "Reject can only be used if a GT mask is requested"
+        assert self.mask in request, (
+            "Reject can only be used if a GT mask is requested")
 
         have_good_batch = False
         while not have_good_batch:
@@ -49,25 +53,26 @@ class Reject(BatchFilter):
 
             if not have_good_batch and self.reject_probability < 1.:
                 have_good_batch = random.random() > self.reject_probability
-                logger.debug(
-                    "accepted batch with mask ratio %f at" %mask_ratio +
-                    str(batch.arrays[self.mask].spec.roi))
 
             if not have_good_batch:
 
                 logger.debug(
-                    "reject batch with mask ratio %f at "%mask_ratio +
-                    str(batch.arrays[self.mask].spec.roi))
+                    "reject batch with mask ratio %f at %s",
+                    mask_ratio, batch.arrays[self.mask].spec.roi)
                 num_rejected += 1
 
                 if timing.elapsed() > report_next_timeout:
 
-                    logger.warning("rejected %d batches, been waiting for a good one since %ds"%(num_rejected, report_next_timeout))
+                    logger.warning(
+                        "rejected %d batches, been waiting for a good one "
+                        "since %ds", num_rejected, report_next_timeout)
                     report_next_timeout *= 2
 
-        logger.debug(
-            "good batch with mask ratio %f found at "%mask_ratio +
-            str(batch.arrays[self.mask].spec.roi))
+            else:
+
+                logger.debug(
+                    "accepted batch with mask ratio %f at %s",
+                    mask_ratio, batch.arrays[self.mask].spec.roi)
 
         timing.stop()
         batch.profiling_stats.add(timing)
