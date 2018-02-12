@@ -112,14 +112,15 @@ class RandomLocation(BatchFilter):
 
             lcm_voxel_size = self.spec.get_lcm_voxel_size(
                     request.array_specs.keys())
+            lcm_shift_roi = shift_roi/lcm_voxel_size
+
             logger.debug(
                 "restricting random locations to multiples of voxel size %s",
                 lcm_voxel_size)
 
-            lcm_shift_roi = shift_roi/lcm_voxel_size
-
         else:
 
+            lcm_voxel_size = None
             lcm_shift_roi = shift_roi
 
         random_shift = self.__select_random_shift(
