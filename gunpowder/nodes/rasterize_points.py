@@ -145,11 +145,12 @@ class RasterizePoints(BatchFilter):
             spec=spec)
 
         # restore requested ROI of points
-        request_roi = request[self.points].roi
-        batch.points[self.points].spec.roi = request_roi
-        for i, p in batch.points[self.points].data.items():
-            if not request_roi.contains(p.location):
-                del batch.points[self.points].data[i]
+        if self.points in request:
+            request_roi = request[self.points].roi
+            batch.points[self.points].spec.roi = request_roi
+            for i, p in batch.points[self.points].data.items():
+                if not request_roi.contains(p.location):
+                    del batch.points[self.points].data[i]
 
     def __get_binary_map(self, batch, request, points_key, array_key):
         """ requires given point locations to lie within to current bounding box already, because offset of batch is wrong"""
