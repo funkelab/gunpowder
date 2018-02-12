@@ -18,6 +18,9 @@ class Normalize(BatchFilter):
 
     def process(self, batch, request):
 
+        if self.array not in batch.arrays:
+            return
+
         factor = self.factor
         array = batch.arrays[self.array]
 
