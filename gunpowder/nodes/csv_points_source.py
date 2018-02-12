@@ -61,11 +61,12 @@ class CsvPointsSource(BatchProvider):
             point_filter = np.logical_and(point_filter, self.data[:,d] < max_bb[d])
 
         filtered = self.data[point_filter]
+        ids = np.arange(len(self.data))[point_filter]
 
         points_data = {
 
             i: Point(Coordinate(p))
-            for i, p in enumerate(filtered)
+            for i, p in zip(ids, filtered)
         }
         points_spec = PointsSpec(roi=request[self.points].roi.copy())
 
