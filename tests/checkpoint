@@ -1,2 +1,0 @@
-model_checkpoint_path: "tf_graph_checkpoint_300"
-all_model_checkpoint_paths: "tf_graph_checkpoint_300"
