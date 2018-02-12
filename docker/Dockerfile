@@ -1,10 +1,10 @@
-FROM funkey/caffe
+FROM tensorflow/tensorflow:1.3.0-gpu
 LABEL maintainer jfunke@iri.upc.edu
 
 # install dependencies for gunpowder
 ENV MALIS_ROOT=/src/malis
 ENV MALIS_REPOSITORY=https://github.com/TuragaLab/malis.git
-ENV MALIS_REVISION=e92f758725e0a2067cacd39827fad87f1848a2cb
+ENV MALIS_REVISION=2206fe01bd2d10c3bc6a861897820731d1ae131b
 
 ENV AUGMENT_ROOT=/src/augment
 ENV AUGMENT_REPOSITORY=https://github.com/funkey/augment.git
@@ -18,6 +18,19 @@ ENV WATERZ_ROOT=/src/waterz
 ENV WATERZ_REPOSITORY=https://github.com/funkey/waterz
 ENV WATERZ_REVISION=d2bede846391c56a54365c13d5b2f2f4e6db4ecd
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        libboost-all-dev \
+        python-dev \
+        python-numpy \
+        python-pip \
+        python-setuptools \
+        python-scipy && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install cython
 WORKDIR ${MALIS_ROOT}
 RUN git clone ${MALIS_REPOSITORY} . && \
     git checkout ${MALIS_REVISION}
@@ -38,7 +51,6 @@ ENV PYTHONPATH ${DVISION_ROOT}:$PYTHONPATH
 WORKDIR ${WATERZ_ROOT}
 RUN git clone ${WATERZ_REPOSITORY} . && \
     git checkout ${WATERZ_REVISION}
-RUN pip install cython
 RUN mkdir -p /.cython/inline
 ENV PYTHONPATH ${WATERZ_ROOT}:$PYTHONPATH
 
