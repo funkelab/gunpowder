@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Index &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -50,7 +50,7 @@
 
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
- | <a href="#C"><strong>C</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
@@ -60,8 +60,9 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
- | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -69,13 +70,31 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nodes.html#gunpowder.AddGtAffinities">AddGtAffinities (class in gunpowder)</a>
 </li>
+      <li><a href="arrays.html#gunpowder.Array">Array (class in gunpowder)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="arrays.html#gunpowder.ArrayKey">ArrayKey (class in gunpowder)</a>
+</li>
+      <li><a href="batches.html#gunpowder.Batch.arrays">arrays (gunpowder.Batch attribute)</a>
+</li>
+      <li><a href="arrays.html#gunpowder.ArraySpec">ArraySpec (class in gunpowder)</a>
+</li>
   </ul></td>
 </tr></table>
 
-<h2 id="C">C</h2>
+<h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="nodes.html#gunpowder.Chunk">Chunk (class in gunpowder)</a>
+      <li><a href="batches.html#gunpowder.Batch">Batch (class in gunpowder)</a>
+</li>
+      <li><a href="nodes.html#gunpowder.BatchFilter">BatchFilter (class in gunpowder)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchProvider">BatchProvider (class in gunpowder)</a>
+</li>
+      <li><a href="batches.html#gunpowder.BatchRequest">BatchRequest (class in gunpowder)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -84,6 +103,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nodes.html#gunpowder.DefectAugment">DefectAugment (class in gunpowder)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="arrays.html#gunpowder.ArraySpec.dtype">dtype (gunpowder.ArraySpec attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -95,6 +118,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchFilter.enable_autoskip">enable_autoskip() (gunpowder.BatchFilter method)</a>
+</li>
       <li><a href="nodes.html#gunpowder.ExcludeLabels">ExcludeLabels (class in gunpowder)</a>
 </li>
   </ul></td>
@@ -107,7 +132,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="nodes.html#module-gunpowder">gunpowder (module)</a>, <a href="volumes.html#module-gunpowder">[1]</a>
+      <li><a href="arrays.html#module-gunpowder">gunpowder (module)</a>, <a href="batches.html#module-gunpowder">[1]</a>, <a href="nodes.html#module-gunpowder">[2]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -129,6 +154,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nodes.html#gunpowder.IntensityScaleShift">IntensityScaleShift (class in gunpowder)</a>
 </li>
+      <li><a href="arrays.html#gunpowder.ArraySpec.interpolatable">interpolatable (gunpowder.ArraySpec attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -145,12 +172,28 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nodes.html#gunpowder.Pad">Pad (class in gunpowder)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="batches.html#gunpowder.Batch.points">points (gunpowder.Batch attribute)</a>
+</li>
       <li><a href="nodes.html#gunpowder.PreCache">PreCache (class in gunpowder)</a>
+</li>
+      <li><a href="nodes.html#gunpowder.BatchFilter.prepare">prepare() (gunpowder.BatchFilter method)</a>
 </li>
       <li><a href="nodes.html#gunpowder.PrintProfilingStats">PrintProfilingStats (class in gunpowder)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchFilter.process">process() (gunpowder.BatchFilter method)</a>
+</li>
+      <li><a href="nodes.html#gunpowder.BatchProvider.provide">provide() (gunpowder.BatchProvider method)</a>
+</li>
+      <li><a href="nodes.html#gunpowder.ProviderSpec">ProviderSpec (class in gunpowder)</a>
+</li>
+      <li><a href="nodes.html#gunpowder.BatchFilter.provides">provides() (gunpowder.BatchFilter method)</a>
+
+      <ul>
+        <li><a href="nodes.html#gunpowder.BatchProvider.provides">(gunpowder.BatchProvider method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -161,11 +204,17 @@
 </li>
       <li><a href="nodes.html#gunpowder.RandomProvider">RandomProvider (class in gunpowder)</a>
 </li>
+      <li><a href="nodes.html#gunpowder.Reject">Reject (class in gunpowder)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="volumes.html#gunpowder.register_volume_type">register_volume_type() (in module gunpowder)</a>
+      <li><a href="nodes.html#gunpowder.BatchFilter.request_batch">request_batch() (gunpowder.BatchFilter method)</a>
+
+      <ul>
+        <li><a href="nodes.html#gunpowder.BatchProvider.request_batch">(gunpowder.BatchProvider method)</a>
 </li>
-      <li><a href="nodes.html#gunpowder.Reject">Reject (class in gunpowder)</a>
+      </ul></li>
+      <li><a href="arrays.html#gunpowder.ArraySpec.roi">roi (gunpowder.ArraySpec attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -173,13 +222,45 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchFilter.setup">setup() (gunpowder.BatchFilter method)</a>
+
+      <ul>
+        <li><a href="nodes.html#gunpowder.BatchProvider.setup">(gunpowder.BatchProvider method)</a>
+</li>
+      </ul></li>
       <li><a href="nodes.html#gunpowder.SimpleAugment">SimpleAugment (class in gunpowder)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nodes.html#gunpowder.Snapshot">Snapshot (class in gunpowder)</a>
 </li>
+      <li><a href="nodes.html#gunpowder.BatchFilter.spec">spec (gunpowder.BatchFilter attribute)</a>
+
+      <ul>
+        <li><a href="nodes.html#gunpowder.BatchProvider.spec">(gunpowder.BatchProvider attribute)</a>
+</li>
+      </ul></li>
       <li><a href="nodes.html#gunpowder.SplitAndRenumberSegmentationLabels">SplitAndRenumberSegmentationLabels (class in gunpowder)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchFilter.teardown">teardown() (gunpowder.BatchFilter method)</a>
+
+      <ul>
+        <li><a href="nodes.html#gunpowder.BatchProvider.teardown">(gunpowder.BatchProvider method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="nodes.html#gunpowder.BatchFilter.updates">updates() (gunpowder.BatchFilter method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -187,19 +268,7 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="volumes.html#gunpowder.VolumeType">VolumeType (class in gunpowder)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="volumes.html#gunpowder.VolumeTypes">VolumeTypes (class in gunpowder)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="Z">Z</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="nodes.html#gunpowder.ZeroOutConstSections">ZeroOutConstSections (class in gunpowder)</a>
+      <li><a href="arrays.html#gunpowder.ArraySpec.voxel_size">voxel_size (gunpowder.ArraySpec attribute)</a>
 </li>
   </ul></td>
 </tr></table>

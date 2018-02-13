@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.exclude_labels &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -46,89 +46,105 @@
           <div class="body" role="main">
             
   <h1>Source code for gunpowder.nodes.exclude_labels</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.ndimage.morphology</span> <span class="k">import</span> <span class="n">distance_transform_edt</span>
 
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeTypes</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">Array</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ExcludeLabels"><a class="viewcode-back" href="../../../nodes.html#gunpowder.ExcludeLabels">[docs]</a><span class="k">class</span> <span class="nc">ExcludeLabels</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Excludes several labels from the ground-truth.</span>
 
-<span class="sd">    The labels will be replaced by background_value. The GT_IGNORE mask will be </span>
-<span class="sd">    set to 0 for the excluded locations that are further than ignore_mask_erode </span>
-<span class="sd">    away from not excluded locations.</span>
+<span class="sd">    The labels will be replaced by background_value. An optional ignore mask</span>
+<span class="sd">    will be created and set to 0 for the excluded locations that are further</span>
+<span class="sd">    than a threshold away from not excluded locations.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ignore_mask_erode</span><span class="p">,</span> <span class="n">background_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">labels</span><span class="p">,</span>
+            <span class="n">exclude</span><span class="p">,</span>
+            <span class="n">ignore_mask</span><span class="p">,</span>
+            <span class="n">ignore_mask_erode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">background_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            labels: List of IDs to exclude from the ground-truth.</span>
-<span class="sd">            ignore_mask_erode: By how much (in world units) to erode the ignore mask.</span>
-<span class="sd">            background_value: Value to replace excluded IDs.</span>
+
+<span class="sd">            labels (:class:``ArrayKey``): The array containing the labels.</span>
+
+<span class="sd">            exclude (list of IDs): The labels to exclude from ``labels``.</span>
+
+<span class="sd">            ignore_mask (:class:``ArrayKey``, optional): The ignore mask to</span>
+<span class="sd">                create.</span>
+
+<span class="sd">            ignore_mask_erode (float, optional): By how much (in world units) to erode</span>
+<span class="sd">                the ignore mask.</span>
+
+<span class="sd">            background_value (int, optional): Value to replace excluded IDs,</span>
+<span class="sd">                defaults to 0.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span> <span class="o">=</span> <span class="n">ignore_mask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask_erode</span> <span class="o">=</span> <span class="n">ignore_mask_erode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">background_value</span> <span class="o">=</span> <span class="n">background_value</span>
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="n">upstream_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">upstream_spec</span><span class="p">)</span>
-
-        <span class="k">assert</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;ExcludeLabels can only be used if GT_LABELS is provided upstream.&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
-
-    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-
-        <span class="k">assert</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_IGNORE</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;If you use ExcludeLabels, you need to request VolumeTypes.GT_IGNORE.&quot;</span>
-
-        <span class="c1"># we add it, don&#39;t request upstream</span>
-        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s2">&quot;ExcludeLabels can only be used if GT_LABELS is provided upstream.&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="n">gt</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
+        <span class="n">gt</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
 
-        <span class="c1"># 0 marks included regions (to be used directly with distance transform </span>
+        <span class="c1"># 0 marks included regions (to be used directly with distance transform</span>
         <span class="c1"># later)</span>
         <span class="n">include_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="n">gt_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;batch contains GT labels: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">gt_labels</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;excluding label &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
                 <span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_value</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">include_mask</span><span class="p">[</span><span class="n">gt</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="n">distance_to_include</span> <span class="o">=</span> <span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">include_mask</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="n">gt</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="c1"># if no ignore mask is provided or requested, we are done</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+        <span class="n">distance_to_include</span> <span class="o">=</span> <span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">include_mask</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="n">voxel_size</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;max distance to foreground is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">distance_to_include</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
 
         <span class="c1"># 1 marks included regions, plus a context area around them</span>
         <span class="n">include_mask</span> <span class="o">=</span> <span class="n">distance_to_include</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask_erode</span>
 
-        <span class="c1"># include mask was computed on GT_LABELS ROI, we need to copy it to the </span>
-        <span class="c1"># requested GT_IGNORE ROI</span>
-        <span class="n">gt_ignore_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span>
+        <span class="c1"># include mask was computed on labels ROI, we need to copy it to</span>
+        <span class="c1"># the requested ignore_mask ROI</span>
+        <span class="n">gt_ignore_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
-        <span class="n">intersection</span> <span class="o">=</span> <span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">gt_ignore_roi</span><span class="p">)</span>
-        <span class="n">intersection_in_gt</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span> <span class="o">-</span> <span class="n">gt</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
-        <span class="n">intersection_in_gt_ignore</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span> <span class="o">-</span> <span class="n">gt_ignore_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">gt</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">gt_ignore_roi</span><span class="p">)</span>
+        <span class="n">intersection_in_gt</span> <span class="o">=</span> <span class="n">intersection</span> <span class="o">-</span> <span class="n">gt</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+        <span class="n">intersection_in_gt_ignore</span> <span class="o">=</span> <span class="n">intersection</span> <span class="o">-</span> <span class="n">gt_ignore_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
 
-        <span class="n">gt_ignore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">gt_ignore_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="n">gt_ignore</span><span class="p">[</span><span class="n">intersection_in_gt_ignore</span><span class="p">]</span> <span class="o">=</span> <span class="n">include_mask</span><span class="p">[</span><span class="n">intersection_in_gt</span><span class="p">]</span>
+        <span class="c1"># to voxel coordinates</span>
+        <span class="n">intersection_in_gt</span> <span class="o">//=</span> <span class="n">voxel_size</span>
+        <span class="n">intersection_in_gt_ignore</span> <span class="o">//=</span> <span class="n">voxel_size</span>
 
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_IGNORE</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span><span class="n">gt_ignore</span><span class="p">,</span> <span class="n">gt_ignore_roi</span><span class="p">,</span> <span class="n">gt</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span></div>
+        <span class="n">gt_ignore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">gt_ignore_roi</span><span class="o">//</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">gt_ignore</span><span class="p">[</span><span class="n">intersection_in_gt_ignore</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()]</span> <span class="o">=</span> <span class="n">include_mask</span><span class="p">[</span><span class="n">intersection_in_gt</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()]</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">gt_ignore_roi</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">gt_ignore</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

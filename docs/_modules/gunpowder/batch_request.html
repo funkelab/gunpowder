@@ -1,0 +1,151 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gunpowder.batch_request &#8212; gunpowder 0.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.batch_request</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">.points</span> <span class="k">import</span> <span class="n">PointsKey</span>
+<span class="kn">from</span> <span class="nn">.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
+<span class="kn">from</span> <span class="nn">.provider_spec</span> <span class="k">import</span> <span class="n">ProviderSpec</span>
+<span class="kn">from</span> <span class="nn">.roi</span> <span class="k">import</span> <span class="n">Roi</span>
+<span class="kn">from</span> <span class="nn">.array</span> <span class="k">import</span> <span class="n">ArrayKey</span>
+<span class="kn">from</span> <span class="nn">.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
+
+<div class="viewcode-block" id="BatchRequest"><a class="viewcode-back" href="../../batches.html#gunpowder.BatchRequest">[docs]</a><span class="k">class</span> <span class="nc">BatchRequest</span><span class="p">(</span><span class="n">ProviderSpec</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A collection of (possibly partial) :class:`ArraySpec` and</span>
+<span class="sd">    :class:`PointsSpec` forming a request.</span>
+
+<span class="sd">    For usage, see the documentation of :class:`ProviderSpec`.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">voxel_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Convenience method to add an array or point spec by providing only</span>
+<span class="sd">        the shape of a ROI (in world units).</span>
+
+<span class="sd">        A ROI with zero-offset will be generated. If more than one request is</span>
+<span class="sd">        added, the ROIs with smaller shapes will be shifted to be centered in</span>
+<span class="sd">        the largest one.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.</span>
+
+<span class="sd">            shape: A tuple containing the shape of the desired roi</span>
+
+<span class="sd">            voxel_size: A tuple contening the voxel sizes for each corresponding dimension</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">PointsKey</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Only ArrayKey or PointsKey can be added.&quot;</span><span class="p">)</span>
+
+        <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">voxel_size</span>
+
+        <span class="bp">self</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__center_rois</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Create a copy of this request.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__center_rois</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Ensure that all ROIs are centered around the same location.&#39;&#39;&#39;</span>
+
+        <span class="n">total_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_total_roi</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">total_roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">center</span> <span class="o">=</span> <span class="n">total_roi</span><span class="o">.</span><span class="n">get_center</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">specs_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_specs</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">specs_type</span><span class="p">:</span>
+                <span class="n">roi</span> <span class="o">=</span> <span class="n">specs_type</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+                <span class="n">specs_type</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">center</span> <span class="o">-</span> <span class="n">roi</span><span class="o">.</span><span class="n">get_center</span><span class="p">())</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

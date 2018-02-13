@@ -1,0 +1,192 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Arrays &#8212; gunpowder 0.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Points" href="points.html" />
+    <link rel="prev" title="Batches" href="batches.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="points.html" title="Points"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batches.html" title="Batches"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batches.html" accesskey="U">Batches</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-gunpowder">
+<span id="arrays"></span><h1>Arrays<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gunpowder.Array">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Array</code><span class="sig-paren">(</span><em>data</em>, <em>spec=None</em>, <em>attrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#Array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Array" title="Permalink to this definition">¶</a></dt>
+<dd><p>A numpy array with a specification describing the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>array-like</em>) – The data to be stored in the array. Will be converted to a numpy
+array, if necessary.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – A spec describing the data.</li>
+<li><strong>attrs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional attributes to describe this array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.ArrayKey">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ArrayKey</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#ArrayKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ArrayKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>A key to identify arrays in requests, batches, and across nodes.</p>
+<p>Used as key in <a class="reference internal" href="batches.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> and <a class="reference internal" href="batches.html#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a> to retrieve array
+specs or arrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<em>string</em>) – A unique, human readable identifier for this array key. Will be
+used in log messages and to look up arrays in requests and batches.
+Should be upper case (like <code class="docutils literal"><span class="pre">RAW</span></code>, <code class="docutils literal"><span class="pre">GT_LABELS</span></code>). The identifier
+is unique: Two array keys with the same identifier will refer to
+the same array.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.ArraySpec">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ArraySpec</code><span class="sig-paren">(</span><em>roi=None</em>, <em>voxel_size=None</em>, <em>interpolatable=None</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array_spec.html#ArraySpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ArraySpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains meta-information about an array. This is used by
+:class:<a href="#id1"><span class="problematic" id="id2">`</span></a>BatchProvider`s to communicate the arrays they offer, as well as by
+:class:<a href="#id3"><span class="problematic" id="id4">`</span></a>Array`s to describe the data they contain.</p>
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.roi">
+<code class="descname">roi</code><a class="headerlink" href="#gunpowder.ArraySpec.roi" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code> – The region of interested represented by this array
+spec. Can be <cite>None</cite> for <cite>BatchProvider`s that allow requests for
+arrays everywhere, but will always be set for array specs that are
+part of a :class:`Array</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.voxel_size">
+<code class="descname">voxel_size</code><a class="headerlink" href="#gunpowder.ArraySpec.voxel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Coordinate</em> – The size of the spatial axises in world units.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.interpolatable">
+<code class="descname">interpolatable</code><a class="headerlink" href="#gunpowder.ArraySpec.interpolatable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Whether the values of this array can be interpolated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.dtype">
+<code class="descname">dtype</code><a class="headerlink" href="#gunpowder.ArraySpec.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>np.dtype</em> – The data type of the array.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batches.html"
+                        title="previous chapter">Batches</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="points.html"
+                        title="next chapter">Points</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/arrays.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="points.html" title="Points"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batches.html" title="Batches"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batches.html" >Batches</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

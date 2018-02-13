@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.split_and_renumber_segmentation_labels &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -48,12 +48,14 @@
   <h1>Source code for gunpowder.nodes.split_and_renumber_segmentation_labels</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">malis</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeTypes</span>
 
 <div class="viewcode-block" id="SplitAndRenumberSegmentationLabels"><a class="viewcode-back" href="../../../nodes.html#gunpowder.SplitAndRenumberSegmentationLabels">[docs]</a><span class="k">class</span> <span class="nc">SplitAndRenumberSegmentationLabels</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="n">components</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">components</span><span class="o">.</span><span class="n">dtype</span>
         <span class="n">simple_neighborhood</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">mknhood3d</span><span class="p">()</span>
         <span class="n">affinities_from_components</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
@@ -62,7 +64,7 @@
         <span class="n">components</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">connected_components_affgraph</span><span class="p">(</span>
             <span class="n">affinities_from_components</span><span class="p">,</span>
             <span class="n">simple_neighborhood</span><span class="p">)</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">components</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">components</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

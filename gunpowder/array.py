@@ -12,10 +12,18 @@ class Array(Freezable):
 
     Args:
 
-        data (array-like): The data to be stored in the array. Will be
-            converted to an numpy array, if necessary.
+        data (array-like):
 
-        spec (:class:`ArraySpec`, optional): A spec describing the data.
+            The data to be stored in the array. Will be converted to a numpy
+            array, if necessary.
+
+        spec (:class:`ArraySpec`, optional):
+
+            A spec describing the data.
+
+        attrs (dict, optional):
+
+            Optional attributes to describe this array.
     '''
 
     def __init__(self, data, spec=None, attrs=None):
@@ -66,12 +74,13 @@ class Array(Freezable):
 class ArrayKey(Freezable):
     '''A key to identify arrays in requests, batches, and across nodes.
 
-    Used as key in :class:``BatchRequest`` and :class:``Batch`` to retrieve
-    array specs or arrays.
+    Used as key in :class:`BatchRequest` and :class:`Batch` to retrieve array
+    specs or arrays.
 
     Args:
 
         identifier (string):
+
             A unique, human readable identifier for this array key. Will be
             used in log messages and to look up arrays in requests and batches.
             Should be upper case (like ``RAW``, ``GT_LABELS``). The identifier

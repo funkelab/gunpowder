@@ -1,0 +1,342 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gunpowder.nodes.batch_provider &#8212; gunpowder 0.2 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.nodes.batch_provider</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.provider_spec</span> <span class="k">import</span> <span class="n">ProviderSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">ArrayKey</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BatchProvider"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider">[docs]</a><span class="k">class</span> <span class="nc">BatchProvider</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Superclass for all nodes in a `gunpowder` graph.</span>
+
+<span class="sd">    A :class:`BatchProvider` provides :class:`Batches&lt;Batch&gt;` containing</span>
+<span class="sd">    :class:`Arrays&lt;Array&gt;` and/or :class:`Points`. The available data is</span>
+<span class="sd">    specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.</span>
+
+<span class="sd">    To create a new :mod:`gunpowder` node, subclass this class and implement</span>
+<span class="sd">    (at least) :func:`setup` and :func:`provide`.</span>
+
+<span class="sd">    A :class:`BatchProvider` can be linked to any number of other</span>
+<span class="sd">    :class:`BatchProviders&lt;BatchProvider&gt;` upstream. If your node accepts</span>
+<span class="sd">    exactly one upstream provider, consider subclassing :class:`BatchFilter`</span>
+<span class="sd">    instead.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">add_upstream_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">()</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">provider</span>
+
+    <span class="k">def</span> <span class="nf">get_upstream_providers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;upstream_providers&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upstream_providers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_providers</span>
+
+<div class="viewcode-block" id="BatchProvider.setup"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+
+<span class="sd">        Called during initialization of the DAG. Callees can assume that all</span>
+<span class="sd">        upstream providers are set up already.</span>
+
+<span class="sd">        In setup, call :func:`provides` to announce the arrays and points</span>
+<span class="sd">        provided by this node.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;setup&#39;&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="BatchProvider.teardown"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.teardown">[docs]</a>    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+
+<span class="sd">        Called during destruction of the DAG. Subclasses should use this to</span>
+<span class="sd">        stop worker processes, if they used some.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BatchProvider.provides"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.provides">[docs]</a>    <span class="k">def</span> <span class="nf">provides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Introduce a new output provided by this :class:`BatchProvider`.</span>
+
+<span class="sd">        Implementations should call this in their :func:`setup` method, which</span>
+<span class="sd">        will be called when the pipeline is build.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            identifier:</span>
+
+<span class="sd">                An :class:`ArrayKey` or :class:`PointsKey` instance to refer to</span>
+<span class="sd">                the output.</span>
+
+<span class="sd">            spec:</span>
+
+<span class="sd">                An :class:`ArraySpec` or :class:`PointsSpec` to describe the</span>
+<span class="sd">                output.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Current spec of </span><span class="si">%s</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">ProviderSpec</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Node </span><span class="si">%s</span><span class="s2"> is trying to add spec for </span><span class="si">%s</span><span class="s2">, but is already &quot;</span>
+            <span class="s2">&quot;provided.&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">identifier</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provided_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> provides </span><span class="si">%s</span><span class="s2"> with spec </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_init_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_spec&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">internal_teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Resetting spec of </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_provided_items</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the :class:`ProviderSpec` of this :class:`BatchProvider`.</span>
+
+<span class="sd">        Note that the spec is only available after the pipeline has been build.</span>
+<span class="sd">        Before that, it is ``None``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_spec</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">provided_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get a list of the identifiers provided by this</span>
+<span class="sd">        :class:`BatchProvider`.</span>
+
+<span class="sd">        This list is only available after the pipeline has been build. Before</span>
+<span class="sd">        that, it is empty.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_provided_items&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_provided_items</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provided_items</span>
+
+    <span class="k">def</span> <span class="nf">remove_provided</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Remove identifiers from `request` that are provided by this</span>
+<span class="sd">        :class:`BatchProvider`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">provided_items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">request</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BatchProvider.request_batch"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.request_batch">[docs]</a>    <span class="k">def</span> <span class="nf">request_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Request a batch from this provider.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            request(:class:`BatchRequest`):</span>
+
+<span class="sd">                A request containing (possibly partial) :class:`ArraySpec`s and</span>
+<span class="sd">                :class:`PointsSpec`s.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> got request </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">request</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_request_consistency</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_batch_consistency</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> provides </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">batch</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">batch</span></div>
+
+    <span class="k">def</span> <span class="nf">check_request_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">request_spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">assert</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: Asked for </span><span class="si">%s</span><span class="s2"> which this node does not provide&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">identifier</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">request_spec</span><span class="p">,</span> <span class="n">ArraySpec</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">request_spec</span><span class="p">,</span> <span class="n">PointsSpec</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;spec for </span><span class="si">%s</span><span class="s2"> is of type&quot;</span>
+                                                        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                                                            <span class="n">identifier</span><span class="p">,</span>
+                                                            <span class="nb">type</span><span class="p">(</span><span class="n">request_spec</span><span class="p">)))</span>
+
+            <span class="n">provided_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+            <span class="n">provided_roi</span> <span class="o">=</span> <span class="n">provided_spec</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">request_roi</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span>
+
+            <span class="k">if</span> <span class="n">provided_roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">provided_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">request_roi</span><span class="p">),</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&#39;s ROI </span><span class="si">%s</span><span class="s2"> outside of my ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">request_roi</span><span class="p">,</span> <span class="n">provided_roi</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: voxel size </span><span class="si">%s</span><span class="s2"> requested for </span><span class="si">%s</span><span class="s2">, but this node provides </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                            <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
+                            <span class="n">identifier</span><span class="p">,</span>
+                            <span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">request_roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">request_roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()):</span>
+                        <span class="k">assert</span> <span class="n">request_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="n">d</span><span class="p">]</span><span class="o">%</span><span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> \
+                                <span class="s2">&quot;in request </span><span class="si">%s</span><span class="s2">, dimension </span><span class="si">%d</span><span class="s2"> of request </span><span class="si">%s</span><span class="s2"> is not a multiple of voxel_size </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                                        <span class="n">request</span><span class="p">,</span>
+                                        <span class="n">d</span><span class="p">,</span>
+                                        <span class="n">identifier</span><span class="p">,</span>
+                                        <span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">check_batch_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">request_spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">assert</span> <span class="n">array_key</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> requested, but </span><span class="si">%s</span><span class="s2"> did not provide it.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">array_key</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> requested, but ROI </span><span class="si">%s</span><span class="s2"> provided by </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">array_key</span><span class="p">,</span>
+                    <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;voxel size of </span><span class="si">%s</span><span class="s2"> announced, but </span><span class="si">%s</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;delivered for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
+                    <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
+                    <span class="n">array_key</span><span class="p">))</span>
+            <span class="c1"># ensure that the spatial dimensions are the same (other dimensions </span>
+            <span class="c1"># on top are okay, e.g., for affinities)</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
+            <span class="n">data_shape</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">dims</span><span class="p">:])</span>
+            <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+            <span class="k">assert</span> <span class="n">data_shape</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> requested, but size of array is </span><span class="si">%s</span><span class="s2">*</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2"> provided by </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">array_key</span><span class="p">,</span>
+                    <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">data_shape</span><span class="p">,</span>
+                    <span class="n">voxel_size</span><span class="p">,</span>
+                    <span class="n">data_shape</span><span class="o">*</span><span class="n">voxel_size</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">request_spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">assert</span> <span class="n">points_key</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> requested, but </span><span class="si">%s</span><span class="s2"> did not provide it.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">points_key</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> requested, but ROI </span><span class="si">%s</span><span class="s2"> provided by </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
+                                            <span class="n">points_key</span><span class="p">,</span>
+                                            <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                                            <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+
+<div class="viewcode-block" id="BatchProvider.provide"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.provide">[docs]</a>    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+
+<span class="sd">        This function takes a :class:`BatchRequest` and should return the</span>
+<span class="sd">        corresponding :class:`Batch`.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            request(:class:`BatchRequest`):</span>
+
+<span class="sd">                The request to process.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;provide&#39;&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span></div>
+
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;, providing: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

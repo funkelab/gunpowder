@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.add_gt_affinities &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -46,107 +46,207 @@
           <div class="body" role="main">
             
   <h1>Source code for gunpowder.nodes.add_gt_affinities</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">malis</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeTypes</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">Array</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="AddGtAffinities"><a class="viewcode-back" href="../../../nodes.html#gunpowder.AddGtAffinities">[docs]</a><span class="k">class</span> <span class="nc">AddGtAffinities</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Add an array with affinities for a given label array and neighborhood to </span>
+<span class="sd">    the batch. Affinity values are created one for each voxel and entry in the </span>
+<span class="sd">    neighborhood list, i.e., for each voxel and each neighbor of this voxel. </span>
+<span class="sd">    Values are 1 iff both labels (of the voxel and the neighbor) are equal and </span>
+<span class="sd">    non-zero.</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">affinity_neighborhood</span><span class="p">):</span>
+<span class="sd">    Args:</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="n">affinity_neighborhood</span>
+<span class="sd">        affinity_neighborhood(list of offsets): List of offsets for the </span>
+<span class="sd">            affinities to consider for each voxel.</span>
+
+<span class="sd">        gt_labels(:class:``ArrayKey``): The array to read the labels from.</span>
+
+<span class="sd">        gt_affinities(:class:``ArrayKey``): The array to generate containing</span>
+<span class="sd">            the affinities.</span>
+
+<span class="sd">        gt_labels_mask(:class:``ArrayKey``, optional): The array to use as a</span>
+<span class="sd">            mask for ``gt_labels``. Affinities connecting at least one masked</span>
+<span class="sd">            out label will be masked out in ``gt_affinities_mask``. If not</span>
+<span class="sd">            given, ``gt_affinities_mask`` will contain ones everywhere (if</span>
+<span class="sd">            requested).</span>
+
+<span class="sd">        gt_unlabelled(:class:``ArrayKey``, optional): A binary array to</span>
+<span class="sd">            indicate unlabelled areas with 0. Affinities from labelled to</span>
+<span class="sd">            unlabelled voxels are set to 0, affinities between unlabelled voxels</span>
+<span class="sd">            are masked out (they will not be used for training).</span>
+
+<span class="sd">        gt_affinities_mask(:class:``ArrayKey``, optional): The array to</span>
+<span class="sd">            generate containing the affinitiy mask, as derived from parameter</span>
+<span class="sd">            ``gt_labels_mask``.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">affinity_neighborhood</span><span class="p">,</span>
+            <span class="n">gt_labels</span><span class="p">,</span>
+            <span class="n">gt_affinities</span><span class="p">,</span>
+            <span class="n">gt_labels_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">gt_unlabelled</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">gt_affinities_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span> <span class="o">=</span> <span class="n">gt_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span> <span class="o">=</span> <span class="n">gt_unlabelled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span> <span class="o">=</span> <span class="n">gt_labels_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities</span> <span class="o">=</span> <span class="n">gt_affinities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">gt_affinities_mask</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Upstream does not provide </span><span class="si">%s</span><span class="s2"> needed by &quot;</span>
+            <span class="s2">&quot;AddGtAffinities&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">)</span>
+
+        <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
 
         <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span>
                 <span class="nb">min</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">*</span><span class="n">voxel_size</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span>
                 <span class="nb">max</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">*</span><span class="n">voxel_size</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;padding neg: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;padding pos: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">skip_next</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
 
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">)</span>
-
-        <span class="k">assert</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;AddGtAffinities can only be used if you GT_LABELS provided&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_autoskip</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="c1"># do nothing if no gt affinities were requested</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;no GT_AFFINITIES requested, will do nothing&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">skip_next</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">),(</span>
+                <span class="s2">&quot;requested GT label roi </span><span class="si">%s</span><span class="s2"> and GT label mask roi </span><span class="si">%s</span><span class="s2"> are not &quot;</span>
+                <span class="s2">&quot;the same.&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
 
-        <span class="k">assert</span> <span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;AddGtAffinities can only be used if you request GT_LABELS&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">),(</span>
+                <span class="s2">&quot;requested GT label roi </span><span class="si">%s</span><span class="s2"> and GT unlabelled mask roi </span><span class="si">%s</span><span class="s2"> are not &quot;</span>
+                <span class="s2">&quot;the same.&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
 
-        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span>
+        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;downstream </span><span class="si">%s</span><span class="s2"> request: &quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
 
-        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;downstream GT_LABELS request: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
+        <span class="c1"># grow labels ROI to accomodate padding</span>
+        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span><span class="p">)</span>
+        <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span>
 
-        <span class="c1"># remember requested GT_LABELS ROI</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">)</span>
+        <span class="c1"># same for label mask</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">:</span>
+            <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># and unlabelled mask</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">:</span>
+            <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="c1"># shift GT_LABELS ROI by padding_neg</span>
-        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">)</span>
-        <span class="c1"># increase shape</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span>
-        <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_labels_roi</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream GT_LABELS request: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream </span><span class="si">%s</span><span class="s2"> request: &quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="c1"># do nothing if no gt affinities were requested</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_next</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">skip_next</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">return</span>
+        <span class="n">gt_labels_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;computing ground-truth affinities from labels&quot;</span><span class="p">)</span>
         <span class="n">gt_affinities</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span>
         <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
-        <span class="c1"># crop to original GT_LABELS ROI</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+
+        <span class="c1"># crop affinities to original label ROI</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
         <span class="n">shift</span> <span class="o">=</span> <span class="o">-</span><span class="n">offset</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span>
-        <span class="n">crop_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
+        <span class="n">crop_roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
+        <span class="n">crop_roi</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
         <span class="n">crop</span> <span class="o">=</span> <span class="n">crop_roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;cropping with &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">crop</span><span class="p">))</span>
         <span class="n">gt_affinities</span> <span class="o">=</span> <span class="n">gt_affinities</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reset GT_LABELS ROI to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="p">))</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">crop</span><span class="p">]</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_AFFINITIES</span><span class="p">]</span> <span class="o">=</span> <span class="n">Volume</span><span class="p">(</span>
-                <span class="n">gt_affinities</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_roi</span><span class="p">,</span> 
-                <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">gt_labels_roi</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">gt_affinities</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">:</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;computing ground-truth affinities mask from &quot;</span>
+                             <span class="s2">&quot;labels mask&quot;</span><span class="p">)</span>
+                <span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
+                    <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
+                <span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">gt_affinities_mask</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">gt_affinities</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">:</span>
+
+                <span class="c1"># 1 for all affinities between unlabelled voxels</span>
+                <span class="n">unlabelled</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
+                    <span class="n">unlabelled</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
+                <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="n">unlabelled_mask</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
+
+                <span class="c1"># 0 for all affinities between unlabelled voxels</span>
+                <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">unlabelled_mask</span><span class="p">)</span>
+
+                <span class="c1"># combine with mask</span>
+                <span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">gt_affinities_mask</span><span class="o">*</span><span class="n">unlabelled_mask</span>
+
+            <span class="n">gt_affinities_mask</span> <span class="o">=</span> <span class="n">gt_affinities_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_affinities_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">gt_affinities_mask</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;GT labels does have a mask, but affinities &quot;</span>
+                               <span class="s2">&quot;mask is not requested.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># crop labels to original label ROI</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">)</span>
+
+        <span class="c1"># same for label mask</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">:</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">)</span>
+        <span class="c1"># and unlabelled mask</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">:</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">gt_labels_roi</span><span class="p">)</span>
+
         <span class="n">batch</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span></div>
 </pre></div>
 

@@ -1,0 +1,205 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gunpowder.array &#8212; gunpowder 0.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gunpowder.array</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.freezable</span> <span class="k">import</span> <span class="n">Freezable</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Array"><a class="viewcode-back" href="../../arrays.html#gunpowder.Array">[docs]</a><span class="k">class</span> <span class="nc">Array</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A numpy array with a specification describing the data.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        data (array-like):</span>
+
+<span class="sd">            The data to be stored in the array. Will be converted to a numpy</span>
+<span class="sd">            array, if necessary.</span>
+
+<span class="sd">        spec (:class:`ArraySpec`, optional):</span>
+
+<span class="sd">            A spec describing the data.</span>
+
+<span class="sd">        attrs (dict, optional):</span>
+
+<span class="sd">            Optional attributes to describe this array.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attrs</span>
+
+        <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)):</span>
+                <span class="k">assert</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span><span class="o">+</span><span class="n">d</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="n">d</span><span class="p">],</span> \
+                        <span class="s2">&quot;ROI </span><span class="si">%s</span><span class="s2"> does not align with voxel size </span><span class="si">%s</span><span class="s2"> * data shape </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Create a cropped copy of this Array.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            roi(:class:``Roi``): ROI in world units to crop to.</span>
+
+<span class="sd">            copy(bool): Make a copy of the data (default).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">),</span> <span class="s2">&quot;Requested crop ROI (</span><span class="si">%s</span><span class="s2">) doesn&#39;t fit in array (</span><span class="si">%s</span><span class="s2">)&quot;</span>\
+        <span class="o">%</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+
+        <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span>
+        <span class="n">data_roi</span> <span class="o">=</span> <span class="p">(</span><span class="n">roi</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">/</span><span class="n">voxel_size</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">+</span> <span class="n">slices</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">slices</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrayKey"><a class="viewcode-back" href="../../arrays.html#gunpowder.ArrayKey">[docs]</a><span class="k">class</span> <span class="nc">ArrayKey</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A key to identify arrays in requests, batches, and across nodes.</span>
+
+<span class="sd">    Used as key in :class:`BatchRequest` and :class:`Batch` to retrieve array</span>
+<span class="sd">    specs or arrays.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        identifier (string):</span>
+
+<span class="sd">            A unique, human readable identifier for this array key. Will be</span>
+<span class="sd">            used in log messages and to look up arrays in requests and batches.</span>
+<span class="sd">            Should be upper case (like ``RAW``, ``GT_LABELS``). The identifier</span>
+<span class="sd">            is unique: Two array keys with the same identifier will refer to</span>
+<span class="sd">            the same array.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Registering array key </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">ArrayKeys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;identifier&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">identifier</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span></div>
+
+<span class="k">class</span> <span class="nc">ArrayKeys</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Convenience access to all created :class:``ArrayKey``s. A key generated</span>
+<span class="sd">    with::</span>
+
+<span class="sd">        raw = ArrayKey(&#39;RAW&#39;)</span>
+
+<span class="sd">    can be retrieved as::</span>
+
+<span class="sd">        ArrayKeys.RAW</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">gunpowder 0.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jan Funke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

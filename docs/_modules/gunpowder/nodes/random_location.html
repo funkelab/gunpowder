@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.random_location &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -47,16 +47,16 @@
             
   <h1>Source code for gunpowder.nodes.random_location</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">randint</span>
-<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">integral_image</span><span class="p">,</span> <span class="n">integrate</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">choice</span>
 
-<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">integral_image</span><span class="p">,</span> <span class="n">integrate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="k">import</span> <span class="n">BatchRequest</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeTypes</span>
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -66,194 +66,282 @@
 
 <span class="sd">    The random location is chosen such that the batch request roi lies entirely</span>
 <span class="sd">    inside the provider&#39;s roi.</span>
+
+<span class="sd">    If `min_masked` and `mask` are set, only batches are returned that have at</span>
+<span class="sd">    least the given ratio of masked-in voxels. This is in general faster than</span>
+<span class="sd">    using the ``Reject`` node, at the expense of storing an integral array of</span>
+<span class="sd">    the complete mask.</span>
+
+<span class="sd">    If &#39;ensure_nonempty&#39; is set to a :class:``PointsKey``, only batches are</span>
+<span class="sd">    returned that have at least one point of this point collection within the</span>
+<span class="sd">    requested ROI.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        min_masked(float, optional): If non-zero, require that the random</span>
+<span class="sd">            sample contains at least that ratio of masked-in voxels.</span>
+
+<span class="sd">        mask(:class:``ArrayKey``): The array to use for mask checks.</span>
+
+<span class="sd">        ensure_nonempty(:class:``PointsKey``, optional): Ensures that when</span>
+<span class="sd">            finding a random location, a request for ``ensure_nonempty`` will</span>
+<span class="sd">            contain at least one point. This does only work if all upstream</span>
+<span class="sd">            nodes are deterministic (e.g., there is no</span>
+<span class="sd">            :class:``RandomProvider`` upstream).</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_masked</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mask_volume_type</span><span class="o">=</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">,</span> <span class="n">focus_points_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Create a random location sampler.</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_masked</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ensure_nonempty</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-<span class="sd">        If `min_masked` (and optionally `mask_volume_type`) are set, only</span>
-<span class="sd">        batches are returned that have at least the given ratio of masked-in</span>
-<span class="sd">        voxels. This is in general faster than using the ``Reject`` node, at the</span>
-<span class="sd">        expense of storing an integral volume of the complete mask.</span>
-
-<span class="sd">        If &#39;focus_points_type&#39; is set, only batches are returned that have at least</span>
-<span class="sd">        one point of focus_points_type within the roi of PointsTypes.focus_points_type. </span>
-<span class="sd">        </span>
-<span class="sd">        Remark</span>
-<span class="sd">        ------</span>
-<span class="sd">        focus_point_type does only work if there are only deterministic nodes upstream</span>
-
-<span class="sd">        Args:</span>
-
-<span class="sd">            min_masked: If non-zero, require that the random sample contains at</span>
-<span class="sd">            least that ratio of masked-in voxels.</span>
-
-<span class="sd">            mask_volume_type: The volume type to use for mask checks.</span>
-<span class="sd">            </span>
-<span class="sd">            focus_points_type: gunpowder.PointsTypes, PointsTypes considered when looking for good location of batch</span>
-<span class="sd">                                    s.t. at least one point of this PointsTypes is contained in batch</span>
-<span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">=</span> <span class="n">min_masked</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span> <span class="o">=</span> <span class="n">mask_volume_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span> <span class="o">=</span> <span class="n">focus_points_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_spec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span> <span class="o">=</span> <span class="n">ensure_nonempty</span>
 
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">get_total_roi</span><span class="p">()</span>
+        <span class="n">upstream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">spec</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Can not draw random samples from a provider that does not have a bounding box.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="s2">&quot;Upstream provider does not have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mask_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s2">&quot;Upstream provider does not have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">array_specs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;requesting complete mask...&quot;</span><span class="p">)</span>
 
-            <span class="n">mask_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_roi</span><span class="p">})</span>
-            <span class="n">mask_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">mask_request</span><span class="p">)</span>
+            <span class="n">mask_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_spec</span><span class="p">})</span>
+            <span class="n">mask_batch</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">mask_request</span><span class="p">)</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;allocating mask integral volume...&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;allocating mask integral array...&quot;</span><span class="p">)</span>
 
-            <span class="n">mask_data</span> <span class="o">=</span> <span class="n">mask_batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">mask_data</span> <span class="o">=</span> <span class="n">mask_batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
             <span class="n">mask_integral_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mask size is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mask_data</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">mask_data</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">:</span>
                 <span class="n">mask_integral_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span>
             <span class="k">if</span> <span class="n">mask_data</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">:</span>
                 <span class="n">mask_integral_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;chose </span><span class="si">%s</span><span class="s2"> as integral volume dtype&quot;</span><span class="o">%</span><span class="n">mask_integral_dtype</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;chose </span><span class="si">%s</span><span class="s2"> as integral array dtype&quot;</span><span class="o">%</span><span class="n">mask_integral_dtype</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_data</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">mask_integral_dtype</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span> <span class="o">=</span> <span class="n">integral_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span>
+
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;Upstream provider does not have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">)</span>
+            <span class="n">points_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">points_specs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;requesting all </span><span class="si">%s</span><span class="s2"> points...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">)</span>
+
+            <span class="n">points_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span> <span class="n">points_spec</span><span class="p">})</span>
+            <span class="n">points_batch</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">points_request</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points_batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;retrieved </span><span class="si">%d</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+        <span class="c1"># clear bounding boxes of all provided arrays and points -- </span>
+        <span class="c1"># RandomLocation does not have limits (offsets are ignored)</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="n">shift_roi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;request: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;my spec: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">collection_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="nb">type</span><span class="p">,</span> <span class="n">request_roi</span> <span class="ow">in</span> <span class="n">collection_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="nb">type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
-                    <span class="n">provided_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
-                <span class="k">elif</span> <span class="nb">type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
-                    <span class="n">provided_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Requested </span><span class="si">%s</span><span class="s2">, but source does not provide it.&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">)</span>
-                <span class="n">type_shift_roi</span> <span class="o">=</span> <span class="n">provided_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">request_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span><span class="o">.</span><span class="n">grow</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="o">-</span><span class="n">request_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+        <span class="n">shift_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_possible_shifts</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="n">shift_roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">shift_roi</span> <span class="o">=</span> <span class="n">type_shift_roi</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">type_shift_roi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;valid shifts for request in &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shift_roi</span><span class="p">))</span>
+            <span class="n">lcm_voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">get_lcm_voxel_size</span><span class="p">(</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">lcm_shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span><span class="o">/</span><span class="n">lcm_voxel_size</span>
 
-        <span class="k">assert</span> <span class="n">shift_roi</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Can not satisfy batch request, no location covers all requested ROIs.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;restricting random locations to multiples of voxel size </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">lcm_voxel_size</span><span class="p">)</span>
 
-        <span class="n">good_location_found_for_mask</span><span class="p">,</span> <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
-        <span class="k">while</span> <span class="ow">not</span> <span class="n">good_location_found_for_mask</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">good_location_found_for_points</span><span class="p">:</span>
-            <span class="c1"># select a random point inside ROI</span>
-            <span class="n">random_shift</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span>
-                    <span class="n">randint</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shift_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">(),</span> <span class="n">shift_roi</span><span class="o">.</span><span class="n">get_end</span><span class="p">())</span>
-                                        <span class="p">)</span>
-            <span class="n">initial_random_shift</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;random shift: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">random_shift</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
 
-            <span class="n">good_location_found_for_mask</span><span class="p">,</span> <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">focused_points_offset</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
-                <span class="n">focused_points_shape</span>  <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+            <span class="n">lcm_voxel_size</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">lcm_shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span>
 
-                <span class="c1"># prefetch points in roi of focus_points_type</span>
-                <span class="n">request_for_focused_pointstype</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-                <span class="n">request_for_focused_pointstype</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
-                <span class="n">batch_of_points</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request_for_focused_pointstype</span><span class="p">)</span>
-                <span class="n">point_ids_in_batch</span> <span class="o">=</span> <span class="n">batch_of_points</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point_ids_in_batch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">chosen_point_id</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">point_ids_in_batch</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">chosen_point_location</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">batch_of_points</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_points_type</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">chosen_point_id</span><span class="p">]</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
-                    <span class="n">distance_focused_roi_to_chosen_point</span> <span class="o">=</span> <span class="n">chosen_point_location</span> <span class="o">-</span> <span class="p">(</span><span class="n">initial_random_shift</span> <span class="o">+</span> <span class="n">focused_points_offset</span><span class="p">)</span>
-                    <span class="n">local_shift_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">distance_focused_roi_to_chosen_point</span> <span class="o">-</span> <span class="p">(</span><span class="n">focused_points_shape</span> <span class="o">-</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)))),</span>
-                                          <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">focused_points_shape</span><span class="o">-</span><span class="n">Coordinate</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))))</span>
-
-                    <span class="c1"># set max trials to prevent endless loop and search for suitable local shift in impossible cases</span>
-                    <span class="n">trial_nr</span><span class="p">,</span> <span class="n">max_trials</span><span class="p">,</span> <span class="n">good_local_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="kc">False</span>
-                    <span class="k">while</span> <span class="ow">not</span> <span class="n">good_local_shift</span><span class="p">:</span>
-                        <span class="n">trial_nr</span> <span class="o">+=</span> <span class="mi">1</span>
-                        <span class="n">local_shift</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span>
-                                    <span class="n">randint</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
-                                    <span class="k">for</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">local_shift_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">(),</span> <span class="n">local_shift_roi</span><span class="o">.</span><span class="n">get_end</span><span class="p">()))</span>
-                        <span class="c1"># make sure that new shift matches ROIs of all requested volumes</span>
-                        <span class="k">if</span> <span class="n">shift_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">initial_random_shift</span> <span class="o">+</span> <span class="n">local_shift</span><span class="p">):</span>
-                            <span class="n">random_shift</span> <span class="o">=</span> <span class="n">initial_random_shift</span> <span class="o">+</span> <span class="n">local_shift</span>
-                            <span class="k">assert</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">random_shift</span> <span class="o">+</span> <span class="n">focused_points_offset</span><span class="p">,</span>
-                                        <span class="n">shape</span><span class="o">=</span><span class="n">focused_points_shape</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">chosen_point_location</span><span class="p">)</span>
-                            <span class="n">good_local_shift</span><span class="p">,</span> <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span>
-
-                        <span class="k">if</span> <span class="n">trial_nr</span> <span class="o">==</span> <span class="n">max_trials</span><span class="p">:</span>
-                            <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">False</span>
-                            <span class="k">break</span>
-
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">False</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">good_location_found_for_points</span> <span class="o">=</span> <span class="kc">True</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># get randomly chosen mask ROI</span>
-                <span class="n">request_mask_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_volume_type</span><span class="p">]</span>
-                <span class="n">request_mask_roi</span> <span class="o">=</span> <span class="n">request_mask_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
-
-                <span class="c1"># get coordinates inside mask volume</span>
-                <span class="n">request_mask_roi_in_volume</span> <span class="o">=</span> <span class="n">request_mask_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
-
-                <span class="c1"># get number of masked-in voxels</span>
-                <span class="n">num_masked_in</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span><span class="p">,</span>
-                        <span class="p">[</span><span class="n">request_mask_roi_in_volume</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()],</span>
-                        <span class="p">[</span><span class="n">request_mask_roi_in_volume</span><span class="o">.</span><span class="n">get_end</span><span class="p">()</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
-                <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
-                <span class="n">mask_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_masked_in</span><span class="p">)</span><span class="o">/</span><span class="n">request_mask_roi</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mask ratio is </span><span class="si">%f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mask_ratio</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">mask_ratio</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;good batch found&quot;</span><span class="p">)</span>
-                    <span class="n">good_location_found_for_mask</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;bad batch found&quot;</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">good_location_found_for_mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">random_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__select_random_shift</span><span class="p">(</span>
+            <span class="n">request</span><span class="p">,</span>
+            <span class="n">lcm_shift_roi</span><span class="p">,</span>
+            <span class="n">lcm_voxel_size</span><span class="p">)</span>
 
         <span class="c1"># shift request ROIs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span> <span class="o">=</span> <span class="n">random_shift</span>
-        <span class="k">for</span> <span class="n">collection_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">collection_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;new </span><span class="si">%s</span><span class="s2"> ROI: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">roi</span><span class="p">))</span>
-                <span class="n">collection_type</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">roi</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
-
+        <span class="k">for</span> <span class="n">specs_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">specs_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;new </span><span class="si">%s</span><span class="s2"> ROI: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">roi</span><span class="p">))</span>
+                <span class="n">specs_type</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
         <span class="c1"># reset ROIs to request</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">points_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="c1"># change shift point locations to lie within roi</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">points_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span><span class="o">.</span><span class="n">location</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span></div>
+        <span class="k">for</span> <span class="n">points_key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span><span class="o">.</span><span class="n">location</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span>
 
+    <span class="k">def</span> <span class="nf">__get_possible_shifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="n">total_shift_roi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">request_roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">provided_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+
+            <span class="n">shift_roi</span> <span class="o">=</span> <span class="n">provided_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">request_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span><span class="o">.</span><span class="n">grow</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="o">-</span><span class="n">request_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">total_shift_roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">total_shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">total_shift_roi</span> <span class="o">=</span> <span class="n">total_shift_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">shift_roi</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;valid shifts for request in &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">total_shift_roi</span><span class="p">))</span>
+
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">total_shift_roi</span><span class="o">.</span><span class="n">unbounded</span><span class="p">(),</span> <span class="p">(</span>
+            <span class="s2">&quot;Can not pick a random location, intersection of upstream ROIs is &quot;</span>
+            <span class="s2">&quot;unbounded.&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">total_shift_roi</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Can not satisfy batch request, no location covers all requested &quot;</span>
+            <span class="s2">&quot;ROIs.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">total_shift_roi</span>
+
+    <span class="k">def</span> <span class="nf">__select_random_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">lcm_shift_roi</span><span class="p">,</span> <span class="n">lcm_voxel_size</span><span class="p">):</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span>
+                <span class="n">random_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__select_random_location_with_points</span><span class="p">(</span>
+                    <span class="n">request</span><span class="p">,</span>
+                    <span class="n">lcm_shift_roi</span><span class="p">,</span>
+                    <span class="n">lcm_voxel_size</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">random_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__select_random_location</span><span class="p">(</span>
+                    <span class="n">lcm_shift_roi</span><span class="p">,</span>
+                    <span class="n">lcm_voxel_size</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;random shift: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">random_shift</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_min_masked</span><span class="p">(</span><span class="n">random_shift</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">random_shift</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reject random shift, min_masked not exceeded&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__is_min_masked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_shift</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="c1"># get randomly chosen mask ROI</span>
+            <span class="n">request_mask_roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">request_mask_roi</span> <span class="o">=</span> <span class="n">request_mask_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">)</span>
+
+            <span class="c1"># get coordinates inside mask array</span>
+            <span class="n">mask_voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+            <span class="n">request_mask_roi_in_array</span> <span class="o">=</span> <span class="n">request_mask_roi</span><span class="o">/</span><span class="n">mask_voxel_size</span>
+            <span class="n">request_mask_roi_in_array</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span><span class="o">/</span><span class="n">mask_voxel_size</span>
+
+            <span class="c1"># get number of masked-in voxels</span>
+            <span class="n">num_masked_in</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">request_mask_roi_in_array</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()],</span>
+                <span class="p">[</span><span class="n">request_mask_roi_in_array</span><span class="o">.</span><span class="n">get_end</span><span class="p">()</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_integral</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">mask_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_masked_in</span><span class="p">)</span><span class="o">/</span><span class="n">request_mask_roi_in_array</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mask ratio is </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">mask_ratio</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span>
+
+    <span class="k">def</span> <span class="nf">__select_random_location_with_points</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">request</span><span class="p">,</span>
+            <span class="n">lcm_shift_roi</span><span class="p">,</span>
+            <span class="n">lcm_voxel_size</span><span class="p">):</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="c1"># pick a random point</span>
+            <span class="n">point_id</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span>
+
+            <span class="c1"># get all possible shifts of the request ROI that would contain</span>
+            <span class="c1"># this point</span>
+            <span class="n">request_points_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">request_points_shape</span> <span class="o">=</span> <span class="n">request_points_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+            <span class="n">point_shift_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">.</span><span class="n">location</span> <span class="o">-</span> <span class="n">request_points_shape</span><span class="p">,</span>
+                <span class="n">request_points_shape</span><span class="p">)</span>
+            <span class="n">point_shift_roi</span> <span class="o">=</span> <span class="n">point_shift_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span>
+                <span class="o">-</span><span class="n">request_points_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
+
+            <span class="c1"># align with lcm_voxel_size</span>
+            <span class="k">if</span> <span class="n">lcm_voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lcm_point_shift_roi</span> <span class="o">=</span> <span class="n">point_shift_roi</span><span class="o">/</span><span class="n">lcm_voxel_size</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lcm_point_shift_roi</span> <span class="o">=</span> <span class="n">point_shift_roi</span>
+
+            <span class="c1"># intersect with total shift ROI</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">lcm_point_shift_roi</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">lcm_shift_roi</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;reject random shift, random point </span><span class="si">%s</span><span class="s2"> shift ROI </span><span class="si">%s</span><span class="s2"> does &quot;</span>
+                    <span class="s2">&quot;not intersect total shift ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
+                    <span class="n">lcm_point_shift_roi</span><span class="p">,</span> <span class="n">lcm_shift_roi</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">lcm_point_shift_roi</span> <span class="o">=</span> <span class="n">lcm_point_shift_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">lcm_shift_roi</span><span class="p">)</span>
+
+            <span class="n">random_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__select_random_location</span><span class="p">(</span>
+                <span class="n">lcm_point_shift_roi</span><span class="p">,</span>
+                <span class="n">lcm_voxel_size</span><span class="p">)</span>
+
+            <span class="c1"># count all points inside the shifted ROI</span>
+            <span class="n">points_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
+            <span class="n">points_request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span>
+                    <span class="n">roi</span><span class="o">=</span><span class="n">request_points_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">))</span>
+            <span class="n">points_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">points_request</span><span class="p">)</span>
+
+            <span class="n">point_ids</span> <span class="o">=</span> <span class="n">points_batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">point_ids</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;Requested batch to contain point </span><span class="si">%s</span><span class="s2">, but got points &quot;</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">point_id</span><span class="p">,</span> <span class="n">point_ids</span><span class="p">))</span>
+            <span class="n">num_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">point_ids</span><span class="p">)</span>
+
+            <span class="c1"># accept this shift with p=1/num_points</span>
+            <span class="c1">#</span>
+            <span class="c1"># This is to compensate the bias introduced by close-by points.</span>
+            <span class="n">accept</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">num_points</span>
+            <span class="k">if</span> <span class="n">accept</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">random_shift</span>
+
+    <span class="k">def</span> <span class="nf">__select_random_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lcm_shift_roi</span><span class="p">,</span> <span class="n">lcm_voxel_size</span><span class="p">):</span>
+
+        <span class="c1"># select a random point inside ROI</span>
+        <span class="n">random_shift</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span>
+                <span class="n">randint</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">begin</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">lcm_shift_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">(),</span> <span class="n">lcm_shift_roi</span><span class="o">.</span><span class="n">get_end</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="n">lcm_voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">random_shift</span> <span class="o">*=</span> <span class="n">lcm_voxel_size</span>
+
+        <span class="k">return</span> <span class="n">random_shift</span></div>
 </pre></div>
 
           </div>

@@ -7,8 +7,8 @@ from .array import ArrayKey
 from .array_spec import ArraySpec
 
 class BatchRequest(ProviderSpec):
-    '''A collection of (possibly partial) :class:`ArraySpec`s and
-    :class:`PointsSpec`s forming a request.
+    '''A collection of (possibly partial) :class:`ArraySpec` and
+    :class:`PointsSpec` forming a request.
 
     For usage, see the documentation of :class:`ProviderSpec`.
     '''

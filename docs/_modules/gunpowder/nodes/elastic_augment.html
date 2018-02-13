@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.elastic_augment &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -56,13 +56,40 @@
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">augment</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeTypes</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ElasticAugment"><a class="viewcode-back" href="../../../nodes.html#gunpowder.ElasticAugment">[docs]</a><span class="k">class</span> <span class="nc">ElasticAugment</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Elasticly deform a batch. Requests larger batches upstream to avoid data </span>
-<span class="sd">    loss due to rotation and jitter.&#39;&#39;&#39;</span>
+<span class="sd">    loss due to rotation and jitter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        control_point_spacing (tuple of int): Distance between control points </span>
+<span class="sd">            for the elastic deformation, in voxels per dimension.</span>
+
+<span class="sd">        jitter_sigma (tuple of float): Standard deviation of control point </span>
+<span class="sd">            jitter distribution, in voxels per dimension.</span>
+
+<span class="sd">        rotation_interval (two floats): Interval to randomly sample rotation </span>
+<span class="sd">            angles from (0,2PI).</span>
+
+<span class="sd">        prob_slip (float): Probability of a section to &quot;slip&quot;, i.e., be </span>
+<span class="sd">            independently moved in x-y.</span>
+
+<span class="sd">        prob_shift (float): Probability of a section and all following sections </span>
+<span class="sd">            to move in x-y.</span>
+
+<span class="sd">        max_misalign (int): Maximal voxels to shift in x and y. Samples will be </span>
+<span class="sd">            drawn uniformly.</span>
+
+<span class="sd">        subsample (int): Instead of creating an elastic transformation on the </span>
+<span class="sd">            full resolution, create one subsampled by the given factor, and </span>
+<span class="sd">            linearly interpolate to obtain the full resolution transformation. </span>
+<span class="sd">            This can significantly speed up this node, at the expense of having </span>
+<span class="sd">            visible piecewise linear deformations for large factors. Usually, a </span>
+<span class="sd">            factor of 4 can savely by used without noticable changes. However, </span>
+<span class="sd">            the default is 1 (i.e., no subsampling).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -73,35 +100,6 @@
             <span class="n">prob_shift</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">max_misalign</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Create an elastic deformation augmentation.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            control_point_spacing: Distance between control points for the </span>
-<span class="sd">            elastic deformation, in voxels per dimension.</span>
-
-<span class="sd">            jitter_sigma: Standard deviation of control point jitter </span>
-<span class="sd">            distribution, one value per dimension.</span>
-
-<span class="sd">            rotation_interval: Interval to randomly sample rotation angles from </span>
-<span class="sd">            (0,2PI).</span>
-
-<span class="sd">            prob_slip: Probability of a section to &quot;slip&quot;, i.e., be </span>
-<span class="sd">            independently moved in x-y.</span>
-
-<span class="sd">            prob_shift: Probability of a section and all following sections to </span>
-<span class="sd">            move in x-y.</span>
-
-<span class="sd">            max_misalign: Maximal voxels to shift in x and y. Samples will be </span>
-<span class="sd">            drawn uniformly.</span>
-
-<span class="sd">            subsample: Instead of creating an elastic transformation on the full </span>
-<span class="sd">            resolution, create one subsampled by the given factor, and linearly </span>
-<span class="sd">            interpolate to obtain the full resolution transformation. This can </span>
-<span class="sd">            significantly speed up this node, at the expense of having visible </span>
-<span class="sd">            piecewise linear deformations for large factors. Usually, a factor </span>
-<span class="sd">            of 4 can savely by used without noticable changes. However, the </span>
-<span class="sd">            default is 1 (i.e., no subsampling).</span>
-<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">control_point_spacing</span> <span class="o">=</span> <span class="n">control_point_spacing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">jitter_sigma</span> <span class="o">=</span> <span class="n">jitter_sigma</span>
@@ -118,20 +116,38 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;total ROI is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">total_roi</span><span class="p">)</span>
         <span class="n">dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">array_key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> \
+                        <span class="s2">&quot;ElasticAugment can only be used with arrays of same voxel sizes, &quot;</span> \
+                        <span class="s2">&quot;but </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2">, and </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
+                                <span class="n">array_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
+                                <span class="n">prev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">prev</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="n">array_key</span>
+
+        <span class="c1"># get total roi in voxels</span>
+        <span class="n">total_roi</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
+
         <span class="c1"># create a transformation for the total ROI</span>
-        <span class="n">rotation</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_max_amount</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">=</span> <span class="n">augment</span><span class="o">.</span><span class="n">create_identity_transformation</span><span class="p">(</span>
                 <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
                 <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsample</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">+=</span> <span class="n">augment</span><span class="o">.</span><span class="n">create_elastic_transformation</span><span class="p">(</span>
-                <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">control_point_spacing</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">jitter_sigma</span><span class="p">,</span>
-                <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsample</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">+=</span> <span class="n">augment</span><span class="o">.</span><span class="n">create_rotation_transformation</span><span class="p">(</span>
-                <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
-                <span class="n">rotation</span><span class="p">,</span>
-                <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsample</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jitter_sigma</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">+=</span> <span class="n">augment</span><span class="o">.</span><span class="n">create_elastic_transformation</span><span class="p">(</span>
+                    <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">control_point_spacing</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">jitter_sigma</span><span class="p">,</span>
+                    <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsample</span><span class="p">)</span>
+        <span class="n">rotation</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_max_amount</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_start</span>
+        <span class="k">if</span> <span class="n">rotation</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">+=</span> <span class="n">augment</span><span class="o">.</span><span class="n">create_rotation_transformation</span><span class="p">(</span>
+                    <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                    <span class="n">rotation</span><span class="p">,</span>
+                    <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsample</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span> <span class="o">=</span> <span class="n">augment</span><span class="o">.</span><span class="n">upscale_transformation</span><span class="p">(</span>
@@ -141,40 +157,145 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob_slip</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob_shift</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__misalign</span><span class="p">()</span>
 
-        <span class="c1"># crop the parts corresponding to the requested volume ROIs</span>
+        <span class="c1"># crop the parts corresponding to the requested array ROIs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;total ROI is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">total_roi</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;downstream request ROI for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">))</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;downstream request ROI for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">roi</span><span class="p">))</span>
+
+            <span class="c1"># get roi in voxels</span>
+            <span class="n">roi</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
 
             <span class="n">roi_in_total_roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">total_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
 
             <span class="n">transformation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">roi_in_total_roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">total_transformation</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">+</span> <span class="n">roi_in_total_roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()]</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">transformation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">transformation</span>
 
-            <span class="c1"># update request ROI to get all voxels necessary to perfrom </span>
+            <span class="c1"># update request ROI to get all voxels necessary to perfrom</span>
             <span class="c1"># transformation</span>
-            <span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__recompute_roi</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">transformation</span><span class="p">)</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">roi</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__recompute_roi</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">transformation</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream request roi for </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">volume_type</span><span class="p">,</span><span class="n">roi</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream request roi for </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
 
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="k">for</span> <span class="p">(</span><span class="n">volume_type</span><span class="p">,</span> <span class="n">volume</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
             <span class="c1"># apply transformation</span>
-            <span class="n">volume</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">augment</span><span class="o">.</span><span class="n">apply_transformation</span><span class="p">(</span>
-                    <span class="n">volume</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">[</span><span class="n">volume_type</span><span class="p">],</span>
-                    <span class="n">interpolate</span><span class="o">=</span><span class="n">volume_type</span><span class="o">.</span><span class="n">interpolate</span><span class="p">)</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">augment</span><span class="o">.</span><span class="n">apply_transformation</span><span class="p">(</span>
+                    <span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">[</span><span class="n">array_key</span><span class="p">],</span>
+                    <span class="n">interpolate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">interpolatable</span><span class="p">)</span>
 
             <span class="c1"># restore original ROIs</span>
-            <span class="n">volume</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># create map/array from points and apply tranformation to corresponding map, reconvert map back to points</span>
+            <span class="c1"># TODO: How to avoid having to allocate a new array each time (rather reuse,</span>
+            <span class="c1"># but difficult since shape is alternating)</span>
+            <span class="n">trial_nr</span><span class="p">,</span> <span class="n">max_trials</span><span class="p">,</span> <span class="n">all_points_mapped</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="n">shape_map</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
+            <span class="n">id_map_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape_map</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+            <span class="c1"># Get all points located in current batch and shift it based on absolute offset. Assign new ids to point</span>
+            <span class="c1"># ids to have positive consecutive numbers and to account for having multiple points with same location.</span>
+            <span class="n">ids_not_mapped</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">offset_array</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+            <span class="n">new_pointid_to_ori_pointid</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># maps new id to original id(s)</span>
+            <span class="n">new_point_id</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">relabeled_points_dic</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># new dictionary including only those points that are relevant for that batch</span>
+            <span class="n">location_to_pointid_dic</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span>
+                <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">Coordinate</span><span class="p">(</span><span class="n">location</span><span class="p">)):</span>
+                    <span class="n">location</span> <span class="o">=</span> <span class="n">location</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">offset_array</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">in</span> <span class="n">location_to_pointid_dic</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">id_with_same_location</span> <span class="o">=</span> <span class="n">location_to_pointid_dic</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">location</span><span class="p">)]</span>
+                        <span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">id_with_same_location</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point_id</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;point with id </span><span class="si">%i</span><span class="s2"> has same location as other points eg. point id &quot;</span>
+                                      <span class="s2">&quot;</span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">point_id</span><span class="p">,</span> <span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">id_with_same_location</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">new_point_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">point_id</span><span class="p">]</span>
+                        <span class="n">ids_not_mapped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_point_id</span><span class="p">)</span>
+                        <span class="n">relabeled_points_dic</span><span class="p">[</span><span class="n">new_point_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span>
+                        <span class="n">location_to_pointid_dic</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">location</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_point_id</span>
+                        <span class="n">new_point_id</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span>
+
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">all_points_mapped</span><span class="p">:</span>
+                <span class="n">marker_size</span> <span class="o">=</span> <span class="n">trial_nr</span> <span class="c1"># for each trial, the region of the point in the map is increased to increase</span>
+                <span class="c1"># the likelihood that the point still exists after transformation</span>
+                <span class="n">id_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_points_to_idmap</span><span class="p">(</span><span class="n">relabeled_points_dic</span><span class="p">,</span> <span class="n">id_map_array</span><span class="p">,</span>
+                                                     <span class="n">ids_not_mapped</span><span class="p">,</span> <span class="n">marker_size</span><span class="o">=</span><span class="n">marker_size</span><span class="p">)</span>
+                <span class="n">id_map</span> <span class="o">=</span> <span class="n">augment</span><span class="o">.</span><span class="n">apply_transformation</span><span class="p">(</span>
+                    <span class="n">id_map</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">[</span><span class="n">points_key</span><span class="p">],</span>
+                    <span class="n">interpolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">ids_in_map</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">id_map</span><span class="p">))</span>
+                <span class="n">ids_in_map</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">ids_not_mapped</span> <span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">ids_not_mapped</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ids_in_map</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__from_idmap_to_points</span><span class="p">(</span><span class="n">relabeled_points_dic</span><span class="p">,</span> <span class="n">id_map</span><span class="p">,</span> <span class="n">ids_in_map</span><span class="p">)</span>
+                <span class="n">trial_nr</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids_not_mapped</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">all_points_mapped</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">trial_nr</span> <span class="o">==</span> <span class="n">max_trials</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">ids_not_mapped</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;point </span><span class="si">%i</span><span class="s2"> with location </span><span class="si">%s</span><span class="s2"> was removed during &quot;</span>
+                                     <span class="s2">&quot;elastic augmentation.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">point_id</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                                <span class="n">relabeled_points_dic</span><span class="p">[</span><span class="n">point_id</span><span class="p">]))</span>
+                        <span class="k">for</span> <span class="n">ori_point_id</span> <span class="ow">in</span> <span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">point_id</span><span class="p">]:</span>
+                            <span class="k">del</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ori_point_id</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">relabeled_points_dic</span><span class="p">:</span>
+                                <span class="k">del</span> <span class="n">relabeled_points_dic</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span>
+
+                    <span class="n">all_points_mapped</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">id_map_array</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># restore original ROIs</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+
+            <span class="c1"># assign new transformed location and map new ids back to original ids.</span>
+            <span class="k">for</span> <span class="n">new_point_id</span><span class="p">,</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">relabeled_points_dic</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">ori_point_id</span> <span class="ow">in</span> <span class="n">new_pointid_to_ori_pointid</span><span class="p">[</span><span class="n">new_point_id</span><span class="p">]:</span>
+                    <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ori_point_id</span><span class="p">]</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span> <span class="o">+</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span> <span class="c1"># shift back to original roi.</span>
+
+
+
+    <span class="k">def</span> <span class="nf">__from_idmap_to_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">id_map</span><span class="p">,</span> <span class="n">ids_in_map</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">ids_in_map</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">point_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">id_map</span> <span class="o">==</span> <span class="n">point_id</span><span class="p">))</span>
+            <span class="c1"># If there are more than one locations, heuristically grab the first one</span>
+            <span class="n">new_location</span> <span class="o">=</span> <span class="n">locations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_location</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__from_points_to_idmap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">id_map_array</span><span class="p">,</span> <span class="n">ids_to_map</span><span class="p">,</span> <span class="n">marker_size</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="c1"># TODO: This is partially a duplicate of add_gt_binary_map_points:get_binary_map, refactor!</span>
+        <span class="n">relative_voxel_size</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">ids_to_map</span><span class="p">:</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            <span class="n">location</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="c1"># convert locations in world units to voxel units</span>
+            <span class="k">if</span> <span class="n">marker_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">marker_locs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">location</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">marker_size</span><span class="o">*</span><span class="n">relative_voxel_size</span><span class="p">[</span><span class="n">dim</span><span class="p">]))),</span>
+                                          <span class="nb">min</span><span class="p">(</span><span class="n">id_map_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                              <span class="n">location</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">marker_size</span><span class="o">*</span><span class="n">relative_voxel_size</span><span class="p">[</span><span class="n">dim</span><span class="p">])),</span> <span class="mi">1</span><span class="p">)))</span>
+                                    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">location</span><span class="p">)))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">marker_locs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">loc</span><span class="p">]</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">location</span><span class="p">]</span>
+
+            <span class="n">id_map_array</span><span class="p">[</span><span class="n">marker_locs</span><span class="p">]</span> <span class="o">=</span> <span class="n">point_id</span>
+        <span class="k">return</span> <span class="n">id_map_array</span>
 
     <span class="k">def</span> <span class="nf">__recompute_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">transformation</span><span class="p">):</span>
 

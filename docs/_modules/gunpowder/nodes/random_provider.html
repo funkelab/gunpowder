@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.random_provider &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -57,26 +57,22 @@
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;at least one batch provider needs to be added to the RandomProvider&quot;</span>
 
-        <span class="c1"># advertise volume_types only if all upstream providers have them</span>
+        <span class="n">common_spec</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># advertise outputs only if all upstream providers have them</span>
         <span class="k">for</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">():</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">provider</span><span class="o">.</span><span class="n">get_spec</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">common_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">common_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">provider</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">my_volume_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                <span class="k">for</span> <span class="n">volume_type</span> <span class="ow">in</span> <span class="n">my_volume_types</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">volume_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
-                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">common_spec</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">common_spec</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
 
-                <span class="n">my_points_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                <span class="k">for</span> <span class="n">points_type</span> <span class="ow">in</span> <span class="n">my_points_types</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">points_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
-                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">common_spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>

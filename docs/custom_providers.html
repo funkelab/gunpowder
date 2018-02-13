@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Writing Custom Batch Providers &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Volumes" href="volumes.html" /> 
+    <link rel="prev" title="Points" href="points.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -37,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="volumes.html" title="Volumes"
+          <a href="points.html" title="Points"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
       </ul>
@@ -50,10 +50,10 @@
             
   <div class="section" id="writing-custom-batch-providers">
 <span id="sec-custom-providers"></span><h1>Writing Custom Batch Providers<a class="headerlink" href="#writing-custom-batch-providers" title="Permalink to this headline">¶</a></h1>
-<p>The simplest batch provider is a <code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code>,
+<p>The simplest batch provider is a <a class="reference internal" href="nodes.html#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code></a>,
 which has exactly one upstream provider. To create a new one, subclass it and
-override <code class="xref py py-meth docutils literal"><span class="pre">prepare</span></code> and/or
-<code class="xref py py-meth docutils literal"><span class="pre">process</span></code>:</p>
+override <a class="reference internal" href="nodes.html#gunpowder.BatchFilter.prepare" title="gunpowder.BatchFilter.prepare"><code class="xref py py-meth docutils literal"><span class="pre">prepare</span></code></a> and/or
+<a class="reference internal" href="nodes.html#gunpowder.BatchFilter.process" title="gunpowder.BatchFilter.process"><code class="xref py py-meth docutils literal"><span class="pre">process</span></code></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleFilter</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
 
   <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
@@ -83,8 +83,8 @@ batch going downstream, see <a class="reference internal" href="nodes.html#gunpo
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="volumes.html"
-                        title="previous chapter">Volumes</a></p>
+  <p class="topless"><a href="points.html"
+                        title="previous chapter">Points</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -116,7 +116,7 @@ batch going downstream, see <a class="reference internal" href="nodes.html#gunpo
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="volumes.html" title="Volumes"
+          <a href="points.html" title="Points"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
       </ul>

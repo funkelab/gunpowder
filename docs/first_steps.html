@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>First steps &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="List of All Gunpowder Nodes" href="nodes.html" />
+    <link rel="next" title="Nodes" href="nodes.html" />
     <link rel="prev" title="Welcome to Gunpowder’s Documentation!" href="index.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="nodes.html" title="List of All Gunpowder Nodes"
+          <a href="nodes.html" title="Nodes"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
@@ -56,8 +56,8 @@
 <span id="sec-first-steps"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="creating-a-source">
 <h2>Creating a source<a class="headerlink" href="#creating-a-source" title="Permalink to this headline">¶</a></h2>
-<p>In <a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
-graph (DAG) of <code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code>. The leaves of
+<p>In <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
+graph (DAG) of <a class="reference internal" href="nodes.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>. The leaves of
 your DAG are called sources, i.e., batch provider with no inputs:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gunpowder</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -121,21 +121,21 @@ be</p>
   <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that we use a <code class="xref py py-class docutils literal"><span class="pre">gunpowder.BatchRequest</span></code> object to communicate
+<p>Note that we use a <a class="reference internal" href="batches.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">gunpowder.BatchRequest</span></code></a> object to communicate
 downstream the requirements for a batch. In the example, we are interested in
 batches of certain sizes (fitting the network we want to train) with raw data,
 ground-truth labels, and a mask.</p>
 </div>
 <div class="section" id="going-further">
 <h2>Going Further<a class="headerlink" href="#going-further" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> provides much more nodes to chain together, including
+<p><a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> provides much more nodes to chain together, including
 <a class="reference internal" href="nodes.html#gunpowder.PreCache" title="gunpowder.PreCache"><code class="xref py py-class docutils literal"><span class="pre">a</span> <span class="pre">pre-cache</span> <span class="pre">node</span> <span class="pre">for</span> <span class="pre">easy</span> <span class="pre">parallel</span> <span class="pre">fetching</span> <span class="pre">of</span>
 <span class="pre">batches</span></code></a>, several augmentation nodes, and nodes for
 <a class="reference internal" href="nodes.html#gunpowder.PrintProfilingStats" title="gunpowder.PrintProfilingStats"><code class="xref py py-class docutils literal"><span class="pre">profiling</span></code></a> and
 <a class="reference internal" href="nodes.html#gunpowder.Snapshot" title="gunpowder.Snapshot"><code class="xref py py-class docutils literal"><span class="pre">inspection</span></code></a>. For a complete list see
-<a class="reference internal" href="nodes.html#sec-nodes"><span class="std std-ref">List of All Gunpowder Nodes</span></a></p>
+<span class="xref std std-ref">sec_nodes</span></p>
 <p>Continue reading <a class="reference internal" href="custom_providers.html#sec-custom-providers"><span class="std std-ref">here</span></a> to learn how to write your
-own <a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> batch providers.</p>
+own <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> batch providers.</p>
 <p>Working examples (with many more batch providers) can be found in <a class="reference external" href="https://github.com/funkey/gunpowder/tree/master/examples">the example
 directory</a>.</p>
 </div>
@@ -163,7 +163,7 @@ directory</a>.</p>
                         title="previous chapter">Welcome to Gunpowder’s Documentation!</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="nodes.html"
-                        title="next chapter">List of All Gunpowder Nodes</a></p>
+                        title="next chapter">Nodes</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -195,7 +195,7 @@ directory</a>.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="nodes.html" title="List of All Gunpowder Nodes"
+          <a href="nodes.html" title="Nodes"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome to Gunpowder’s Documentation!"

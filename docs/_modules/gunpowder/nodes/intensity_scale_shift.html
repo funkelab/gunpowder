@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gunpowder.nodes.intensity_scale_shift &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -47,7 +47,6 @@
             
   <h1>Source code for gunpowder.nodes.intensity_scale_shift</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
-<span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">VolumeTypes</span>
 
 <div class="viewcode-block" id="IntensityScaleShift"><a class="viewcode-back" href="../../../nodes.html#gunpowder.IntensityScaleShift">[docs]</a><span class="k">class</span> <span class="nc">IntensityScaleShift</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Scales the intensities of a batch by &#39;scale&#39;, then adds &#39;shift&#39;.</span>
@@ -56,13 +55,14 @@
 <span class="sd">    needed before passing them to the CNN.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intensities</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensities</span> <span class="o">=</span> <span class="n">intensities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="n">raw</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">]</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">intensities</span><span class="p">]</span>
         <span class="n">raw</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span></div>
 </pre></div>
 

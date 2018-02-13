@@ -11,17 +11,17 @@ logger = logging.getLogger(__name__)
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
-    A `BatchProvider` provides :class:`Batch`es containing :class:`Array`s
-    and/or :class:`Points`. The available types and ROIs `Array`s and `Points`
-    are specified in a :class:`ProviderSpec` instance, accessible via
-    `self.spec`.
+    A :class:`BatchProvider` provides :class:`Batches<Batch>` containing
+    :class:`Arrays<Array>` and/or :class:`Points`. The available data is
+    specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.
 
-    To create a new `gunpowder` node, subclass this class and implement (at
-    least) :fun:`setup` and :fun:`provide`.
+    To create a new :mod:`gunpowder` node, subclass this class and implement
+    (at least) :func:`setup` and :func:`provide`.
 
-    A `BatchProvider` can be linked to any number of other `BatchProvider`s
-    upstream. If your node accepts exactly one upstream provider, consider
-    subclassing :class:`BatchFilter` instead.
+    A :class:`BatchProvider` can be linked to any number of other
+    :class:`BatchProviders<BatchProvider>` upstream. If your node accepts
+    exactly one upstream provider, consider subclassing :class:`BatchFilter`
+    instead.
     '''
 
     def add_upstream_provider(self, provider):
@@ -39,7 +39,7 @@ class BatchProvider(object):
         Called during initialization of the DAG. Callees can assume that all
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` to announce the arrays and points
+        In setup, call :func:`provides` to announce the arrays and points
         provided by this node.
         '''
         raise NotImplementedError("Class %s does not implement 'setup'"%self.name())
@@ -53,16 +53,22 @@ class BatchProvider(object):
         pass
 
     def provides(self, identifier, spec):
-        '''Introduce a new output provided by this `BatchProvider`.
+        '''Introduce a new output provided by this :class:`BatchProvider`.
 
-        Implementations should call this in their :fun:`setup` method, which
+        Implementations should call this in their :func:`setup` method, which
         will be called when the pipeline is build.
 
         Args:
 
-            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
+            identifier:
 
-            spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
+                An :class:`ArrayKey` or :class:`PointsKey` instance to refer to
+                the output.
+
+            spec:
+
+                An :class:`ArraySpec` or :class:`PointsSpec` to describe the
+                output.
         '''
 
         logger.debug("Current spec of %s:\n%s", self.name(), self.spec)
@@ -93,17 +99,18 @@ class BatchProvider(object):
 
     @property
     def spec(self):
-        '''Get the :class:`ProviderSpec` of this `BatchProvider`.
+        '''Get the :class:`ProviderSpec` of this :class:`BatchProvider`.
 
         Note that the spec is only available after the pipeline has been build.
-        Before that, it is None.
+        Before that, it is ``None``.
         '''
         self._init_spec()
         return self._spec
 
     @property
     def provided_items(self):
-        '''Get a list of the identifiers provided by this `BatchProvider`.
+        '''Get a list of the identifiers provided by this
+        :class:`BatchProvider`.
 
         This list is only available after the pipeline has been build. Before
         that, it is empty.
@@ -116,7 +123,7 @@ class BatchProvider(object):
 
     def remove_provided(self, request):
         '''Remove identifiers from `request` that are provided by this
-        `BatchProvider`.
+        :class:`BatchProvider`.
         '''
 
         for identifier in self.provided_items:
@@ -128,8 +135,10 @@ class BatchProvider(object):
 
         Args:
 
-            request(:class:`BatchRequest`): A request containing (possibly
-                partial) :class:`ArraySpec`s and :class:`PointsSpec`s.
+            request(:class:`BatchRequest`):
+
+                A request containing (possibly partial) :class:`ArraySpec`s and
+                :class:`PointsSpec`s.
         '''
 
         logger.debug("%s got request %s", self.name(), request)
@@ -226,7 +235,14 @@ class BatchProvider(object):
     def provide(self, request):
         '''To be implemented in subclasses.
 
-        Called with a batch request. Should return the requested batch.
+        This function takes a :class:`BatchRequest` and should return the
+        corresponding :class:`Batch`.
+
+        Args:
+
+            request(:class:`BatchRequest`):
+
+                The request to process.
         '''
         raise NotImplementedError("Class %s does not implement 'provide'"%self.name())
 
