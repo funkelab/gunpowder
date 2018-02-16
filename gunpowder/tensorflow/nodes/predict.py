@@ -37,7 +37,8 @@ class Predict(GenericPredict):
             meta_graph_basename,
             inputs,
             outputs,
-            array_specs=None):
+            array_specs=None,
+            predict_meta_graph=None):
 
         super(Predict, self).__init__(
             inputs,
@@ -47,6 +48,7 @@ class Predict(GenericPredict):
         self.meta_graph_basename = meta_graph_basename
         self.session = None
         self.graph = None
+        self.predict_meta_graph = predict_meta_graph
 
     def start(self):
 
@@ -92,9 +94,15 @@ class Predict(GenericPredict):
         logger.info("Reading meta-graph...")
 
         # read the meta-graph
-        saver = tf.train.import_meta_graph(
-            self.meta_graph_basename + '.meta',
-            clear_devices=True)
+        if self.predict_meta_graph is None:
+            saver = tf.train.import_meta_graph(
+                self.meta_graph_basename + '.meta',
+                clear_devices=True)
+        else:
+            saver = tf.train.import_meta_graph(
+                    self.predict_meta_graph,
+                    clear_devices=True)
+
         # restore variables
         saver.restore(self.session, self.meta_graph_basename)
 
