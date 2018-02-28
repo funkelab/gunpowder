@@ -239,8 +239,9 @@ class RandomLocation(BatchFilter):
             # this point
             request_points_roi = request[self.ensure_nonempty].roi
             request_points_shape = request_points_roi.get_shape()
+            location = Coordinate(np.floor(point.location))
             point_shift_roi = Roi(
-                point.location - request_points_shape,
+                location - request_points_shape + Coordinate((1,)*len(location)),
                 request_points_shape)
             point_shift_roi = point_shift_roi.shift(
                 -request_points_roi.get_offset())
