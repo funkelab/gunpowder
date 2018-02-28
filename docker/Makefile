@@ -1,4 +1,4 @@
-TAG="funkey/gunpowder:v0.3-pre6"
+TAG="funkey/gunpowder:v0.3-pre7"
 
 .PHONY: default push
 default:
