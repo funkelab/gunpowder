@@ -65,7 +65,7 @@ class CsvPointsSource(BatchProvider):
 
         points_data = {
 
-            i: Point(Coordinate(p))
+            i: Point(p)
             for i, p in zip(ids, filtered)
         }
         points_spec = PointsSpec(roi=request[self.points].roi.copy())
