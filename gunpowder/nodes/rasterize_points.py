@@ -9,6 +9,7 @@ from gunpowder.array_spec import ArraySpec
 from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map
+from gunpowder.ndarray import replace
 from gunpowder.points import PointsKeys
 from gunpowder.points_spec import PointsSpec
 from gunpowder.roi import Roi
@@ -176,6 +177,16 @@ class RasterizePoints(BatchFilter):
                 voxel_size,
                 self.spec[self.array].dtype,
                 self.raster_settings)
+
+        # fix bg/fg labelling if requested
+        if (self.raster_settings.bg_value != 0 or
+            self.raster_settings.fg_value != 1):
+
+            replaced = replace(
+                rasterized_points_data,
+                [0, 1],
+                [self.raster_settings.bg_value, self.raster_settings.fg_value])
+            rasterized_points_data = replaced.astype(self.spec[self.array].dtype)
 
         # create array and crop it to requested roi
         spec = self.spec[self.array].copy()
