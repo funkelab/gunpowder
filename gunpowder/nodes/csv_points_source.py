@@ -13,20 +13,33 @@ class CsvPointsSource(BatchProvider):
 
     Args:
 
-        filename (string): The file to read from.
+        filename (string):
 
-        points (:class:`PointsKey`): The key of the points set to create.
+            The file to read from.
 
-        points_spec (PointsSpec, optional): An optional :class:`PointsSpec` to
-            overwrite the points specs automatically determined from the CSV
-            file. This is useful to set the :class:`Roi` manually.
+        points (:class:`PointsKey`):
+
+            The key of the points set to create.
+
+        points_spec (PointsSpec, optional):
+
+            An optional :class:`PointsSpec` to overwrite the points specs
+            automatically determined from the CSV file. This is useful to set
+            the :class:`Roi` manually.
+
+        scale (scalar or array-like):
+
+            An optional scaling to apply to the coordinates of the points read
+            from the CSV file. This is useful if the points refer to voxel
+            positions to convert them to world units.
     '''
 
-    def __init__(self, filename, points, points_spec=None):
+    def __init__(self, filename, points, points_spec=None, scale=None):
 
         self.filename = filename
         self.points = points
         self.points_spec = points_spec
+        self.scale = None
         self.ndims = None
         self.data = None
 
@@ -80,8 +93,13 @@ class CsvPointsSource(BatchProvider):
 
     def read_points(self, filename):
 
-        return np.array(
+        points = np.array(
             [
                 [ float(t.strip(',')) for t in line.split() ]
                 for line in open(filename, 'r')
             ])
+
+        if self.scale is not None:
+            points *= self.scale
+
+        return points
