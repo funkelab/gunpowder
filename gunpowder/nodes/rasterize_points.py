@@ -11,6 +11,7 @@ from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map
 from gunpowder.points import PointsKeys
 from gunpowder.points_spec import PointsSpec
+from gunpowder.roi import Roi
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,15 @@ class RasterizePoints(BatchFilter):
 
     def process(self, batch, request):
 
+        points = batch.points[self.points]
         mask = self.raster_settings.mask
+        voxel_size = self.spec[self.array].voxel_size
+
+        # get the output array shape
+        offset = points.spec.roi.get_begin()/voxel_size
+        shape = -(-points.spec.roi.get_shape()/voxel_size) # ceil division
+        data_roi = Roi(offset, shape)
+
         if mask is not None:
 
             # get all component labels in the mask
@@ -148,8 +157,9 @@ class RasterizePoints(BatchFilter):
                 np.logical_or,
                 [
                     self.__rasterize(
-                        batch.points[self.points],
-                        self.spec[self.array].voxel_size,
+                        points,
+                        data_roi,
+                        voxel_size,
                         self.spec[self.array].dtype,
                         self.raster_settings,
                         Array(data=mask.data==label, spec=mask.spec))
@@ -161,14 +171,15 @@ class RasterizePoints(BatchFilter):
 
             # create data for the whole points ROI without mask
             rasterized_points_data = self.__rasterize(
-                batch.points[self.points],
-                self.spec[self.array].voxel_size,
+                points,
+                data_roi,
+                voxel_size,
                 self.spec[self.array].dtype,
                 self.raster_settings)
 
         # create array and crop it to requested roi
         spec = self.spec[self.array].copy()
-        spec.roi = batch.points[self.points].spec.roi.copy()
+        spec.roi = data_roi*voxel_size
         rasterized_points = Array(
             data=rasterized_points_data,
             spec=spec)
@@ -177,12 +188,12 @@ class RasterizePoints(BatchFilter):
         # restore requested ROI of points
         if self.points in request:
             request_roi = request[self.points].roi
-            batch.points[self.points].spec.roi = request_roi
-            for i, p in batch.points[self.points].data.items():
+            points.spec.roi = request_roi
+            for i, p in points.data.items():
                 if not request_roi.contains(p.location):
-                    del batch.points[self.points].data[i]
+                    del points.data[i]
 
-    def __rasterize(self, points, voxel_size, dtype, settings, mask_array=None):
+    def __rasterize(self, points, data_roi, voxel_size, dtype, settings, mask_array=None):
         '''Rasterize 'points' into an array with the given 'voxel_size'. If a
         mask array is given, it needs to have the same ROI as the points.'''
 
@@ -190,13 +201,10 @@ class RasterizePoints(BatchFilter):
         assert mask_array is None or mmask_array.spec.voxel_size == voxel_size
         mask = mask_array.data if mask_array is not None else None
 
-        print("Rasterizing points in %s"%points.spec.roi)
-
-        # get the output array shape
-        data_roi = points.spec.roi/voxel_size
+        logger.debug("Rasterizing points in %s", points.spec.roi)
 
         # prepare output array
-        rasterized_points = np.zeros(points.spec.roi.get_shape(), dtype=dtype)
+        rasterized_points = np.zeros(data_roi.get_shape(), dtype=dtype)
 
         # mark each point with a single voxel
         for point in points.data.values():
@@ -211,7 +219,9 @@ class RasterizePoints(BatchFilter):
             if mask is not None and not mask[v]:
                 continue
 
-            print("Rasterizing point %s at %s"%(point.location, point.location/voxel_size - data_roi.get_begin()))
+            logger.debug("Rasterizing point %s at %s",(
+                point.location,
+                point.location/voxel_size - data_roi.get_begin()))
 
             # mark the point
             rasterized_points[v] = 1
