@@ -5,7 +5,8 @@ def enlarge_binary_map(
     binary_map,
     radius,
     voxel_size,
-    ring_inner=None):
+    ring_inner=None,
+    in_place=False):
     '''Enlarge existing regions in a binary map.
 
     Args:
@@ -15,13 +16,9 @@ def enlarge_binary_map(
             A matrix with zeros, in which regions to be enlarged are indicated
             with a 1 (regions can already represent larger areas).
 
-        radius (int):
+        radius (float):
 
-            Enlarged region have a marker_size (measured in voxels) margin
-            added to the already existing region (taking into account the
-            provided voxel_size). For instance a radius of 1 and a voxel_size
-            of [2, 1, 1] (z, y, x) would add a voxel margin of 1 in
-            x,y-direction and no margin in z-direction.
+            The amount by which to enlarge forground objects in world units.
 
         voxel_size (tuple, list or numpy array):
 
@@ -33,10 +30,15 @@ def enlarge_binary_map(
             them (and the objects removed). The ring starts at ``ring_inner``
             and goes until ``radius``.
 
+        in_place (bool, optional):
+
+            If set to ``True``, argument ``binary_map`` will be modified
+            directly.
+
     Returns:
 
         A matrix with 0s and 1s of same dimension as input binary_map with
-        enlarged regions (indicated with 1)
+        enlarged regions (indicated with 1), unless ``in_place`` is set.
     '''
 
     if len(np.unique(binary_map)) == 1:
@@ -49,14 +51,23 @@ def enlarge_binary_map(
 
     voxel_size = np.asarray(voxel_size)
 
-    binary_map = np.logical_not(binary_map)
+    if in_place:
+        np.logical_not(binary_map, out=binary_map)
+    else:
+        binary_map = np.logical_not(binary_map)
     edtmap = distance_transform_edt(binary_map, sampling=voxel_size)
 
     # grow objects
-    binary_map = edtmap <= radius
+    if in_place:
+        binary_map[:] = edtmap <= radius
+    else:
+        binary_map = edtmap <= radius
 
     # unmask inner part, if requested
     if ring_inner is not None:
         binary_map[edtmap <= ring_inner] = False
+
+    if in_place:
+        return None
 
     return binary_map
