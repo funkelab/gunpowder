@@ -82,7 +82,11 @@ class Snapshot(BatchFilter):
             except:
                 pass
 
-            snapshot_name = os.path.join(self.output_dir, self.output_filename.format(id=str(batch.id).zfill(8),iteration=batch.iteration))
+            snapshot_name = os.path.join(
+                self.output_dir,
+                self.output_filename.format(
+                    id=str(batch.id).zfill(8),
+                    iteration=int(batch.iteration)))
             logger.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 

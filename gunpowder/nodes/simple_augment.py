@@ -66,6 +66,12 @@ class SimpleAugment(BatchFilter):
                 # transpose
                 if self.transpose != (0, 1, 2):
                     syn_point.location = np.asarray([syn_point.location[self.transpose[d]] for d in range(self.dims)])
+
+                # due to the mirroring, points at the lower boundary of the ROI
+                # could fall on the upper one, which excludes them from the ROI
+                if not points.spec.roi.contains(syn_point.location):
+                    del points.data[loc_id]
+
         # arrays & points
         for collection_type in [batch.arrays, batch.points]:
             for (type, collector) in collection_type.items():

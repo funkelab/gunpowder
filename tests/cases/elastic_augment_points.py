@@ -34,7 +34,8 @@ class PointTestSource3D(BatchProvider):
         id_to_point = {}
         for point_id, location in self.point_dic.items():
             location += roi_points.get_offset()
-            id_to_point[point_id] = Point(location)
+            if roi_points.contains(location):
+                id_to_point[point_id] = Point(location)
 
         batch.points[PointsKeys.PRESYN] = Points(
             id_to_point,

@@ -114,13 +114,15 @@ class RandomLocation(BatchFilter):
                     request.array_specs.keys())
             lcm_shift_roi = shift_roi/lcm_voxel_size
 
+            logger.debug("lcm voxel size: %s", lcm_voxel_size)
+
             logger.debug(
                 "restricting random locations to multiples of voxel size %s",
                 lcm_voxel_size)
 
         else:
 
-            lcm_voxel_size = None
+            lcm_voxel_size = Coordinate((1,)*shift_roi.dims())
             lcm_shift_roi = shift_roi
 
         random_shift = self.__select_random_shift(
@@ -229,28 +231,100 @@ class RandomLocation(BatchFilter):
             lcm_shift_roi,
             lcm_voxel_size):
 
+        request_points_roi = request[self.ensure_nonempty].roi
+
         while True:
+
+            # How to pick shifts that ensure that a randomly chosen point is
+            # contained in the request ROI:
+            #
+            #
+            # request          point
+            # [---------)      .
+            # 0        +10     17
+            #
+            #         least shifted to contain point
+            #         [---------)
+            #         8        +10
+            #         ==
+            #         point-request.begin-request.shape+1
+            #
+            #                  most shifted to contain point:
+            #                  [---------)
+            #                  17       +10
+            #                  ==
+            #                  point-request.begin
+            #
+            #         all possible shifts
+            #         [---------)
+            #         8        +10
+            #         ==
+            #         point-request.begin-request.shape+1
+            #                   ==
+            #                   request.shape
+            #
+            # In the most shifted scenario, it could happen that the point lies
+            # exactly at the lower boundary (17 in the example). This will cause
+            # trouble if later we mirror the batch. The point would end up lying
+            # on the other boundary, which is exclusive and thus not part of the
+            # ROI. Therefore, we have to ensure that the point is well inside
+            # the shifted ROI, not just on the boundary:
+            #
+            #         all possible shifts
+            #         [--------)
+            #         8       +9
+            #                 ==
+            #                 request.shape-1
 
             # pick a random point
             point_id = choice(self.points.data.keys())
             point = self.points.data[point_id]
 
-            # get all possible shifts of the request ROI that would contain
-            # this point
-            request_points_roi = request[self.ensure_nonempty].roi
-            request_points_shape = request_points_roi.get_shape()
-            location = Coordinate(np.floor(point.location))
-            point_shift_roi = Roi(
-                location - request_points_shape + Coordinate((1,)*len(location)),
-                request_points_shape)
-            point_shift_roi = point_shift_roi.shift(
-                -request_points_roi.get_offset())
+            logger.debug(
+                "select random point %d at %s",
+                point_id,
+                point.location)
 
-            # align with lcm_voxel_size
-            if lcm_voxel_size is not None:
-                lcm_point_shift_roi = point_shift_roi/lcm_voxel_size
-            else:
-                lcm_point_shift_roi = point_shift_roi
+            # get the lcm voxel that contains this point
+            lcm_location = Coordinate(point.location/lcm_voxel_size)
+            logger.debug(
+                "belongs to lcm voxel %s",
+                lcm_location)
+
+            # mark all dimensions in which the point lies on the lower boundary
+            # of the lcm voxel
+            on_lower_boundary = lcm_location*lcm_voxel_size == point.location
+            logger.debug(
+                "lies on the lower boundary of the lcm voxel in dimensions %s",
+                on_lower_boundary)
+
+            # for each of these dimensions, we have to change the shape of the
+            # shift ROI using the following correction
+            lower_boundary_correction = Coordinate((
+                -1 if o else 0
+                for o in on_lower_boundary
+            ))
+            logger.debug(
+                "lower bound correction for shape of shift ROI %s",
+                lower_boundary_correction)
+
+            # get the request ROI's shape in lcm
+            lcm_roi_begin = request_points_roi.get_begin()/lcm_voxel_size
+            lcm_roi_shape = request_points_roi.get_shape()/lcm_voxel_size
+            logger.debug("Point request ROI: %s", request_points_roi)
+            logger.debug("Point request lcm ROI shape: %s", lcm_roi_shape)
+
+            # get all possible starting points of lcm_roi_shape that contain
+            # lcm_location
+            lcm_shift_roi_begin = (
+                lcm_location - lcm_roi_begin - lcm_roi_shape +
+                Coordinate((1,)*len(lcm_location))
+            )
+            lcm_shift_roi_shape = (
+                lcm_roi_shape + lower_boundary_correction
+            )
+            lcm_point_shift_roi = Roi(lcm_shift_roi_begin, lcm_shift_roi_shape)
+            logger.debug("lcm point shift roi: %s", lcm_point_shift_roi)
 
             # intersect with total shift ROI
             if not lcm_point_shift_roi.intersects(lcm_shift_roi):
@@ -261,14 +335,17 @@ class RandomLocation(BatchFilter):
                 continue
             lcm_point_shift_roi = lcm_point_shift_roi.intersect(lcm_shift_roi)
 
+            # select a random shift from all possible shifts
             random_shift = self.__select_random_location(
                 lcm_point_shift_roi,
                 lcm_voxel_size)
+            logger.debug("random shift: %s", random_shift)
 
             # count all points inside the shifted ROI
             points_request = BatchRequest()
             points_request[self.ensure_nonempty] = PointsSpec(
                     roi=request_points_roi.shift(random_shift))
+            logger.debug("points request: %s", points_request)
             points_batch = self.get_upstream_provider().request_batch(points_request)
 
             point_ids = points_batch.points[self.ensure_nonempty].data.keys()
@@ -291,7 +368,6 @@ class RandomLocation(BatchFilter):
                 randint(int(begin), int(end-1))
                 for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
 
-        if lcm_voxel_size is not None:
-            random_shift *= lcm_voxel_size
+        random_shift *= lcm_voxel_size
 
         return random_shift
