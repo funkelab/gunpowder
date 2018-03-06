@@ -152,18 +152,12 @@ class Roi(Freezable):
                 and
                 self.contains(other.get_end() - (1,)*other.dims()))
 
-        elif isinstance(other, Coordinate):
-
-            return all([
-                (b is None or p is not None and p >= b)
-                and
-                (e is None or p is not None and p < e)
-                for p, b, e in zip(other, self.get_begin(), self.get_end() )
-            ])
-
-        else:
-
-            raise RuntimeError("contains() can only be applied to Roi and Coordinate")
+        return all([
+            (b is None or p is not None and p >= b)
+            and
+            (e is None or p is not None and p < e)
+            for p, b, e in zip(other, self.get_begin(), self.get_end() )
+        ])
 
     def intersects(self, other):
 
