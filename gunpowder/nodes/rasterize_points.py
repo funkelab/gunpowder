@@ -143,6 +143,12 @@ class RasterizePoints(BatchFilter):
         shape = -(-points.spec.roi.get_shape()/voxel_size) # ceil division
         data_roi = Roi(offset, shape)
 
+        logger.debug("Points in %s", points.spec.roi)
+        for i, point in points.data.items():
+            logger.debug("%d, %s", i, point.location)
+        logger.debug("Data roi in voxels: %s", data_roi)
+        logger.debug("Data roi in world units: %s", data_roi*voxel_size)
+
         if mask is not None:
 
             # get all component labels in the mask
@@ -230,9 +236,10 @@ class RasterizePoints(BatchFilter):
             if mask is not None and not mask[v]:
                 continue
 
-            logger.debug("Rasterizing point %s at %s",(
+            logger.debug(
+                "Rasterizing point %s at %s",
                 point.location,
-                point.location/voxel_size - data_roi.get_begin()))
+                point.location/voxel_size - data_roi.get_begin())
 
             # mark the point
             rasterized_points[v] = 1
