@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.nodes.batch_provider import BatchProvider
@@ -6,6 +7,8 @@ from gunpowder.points import Point, Points
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
+
+logger = logging.getLogger(__name__)
 
 class CsvPointsSource(BatchProvider):
     '''Read a set of points from a comma-separated-values text file. Each line
@@ -39,7 +42,7 @@ class CsvPointsSource(BatchProvider):
         self.filename = filename
         self.points = points
         self.points_spec = points_spec
-        self.scale = None
+        self.scale = scale
         self.ndims = None
         self.data = None
 
@@ -67,6 +70,10 @@ class CsvPointsSource(BatchProvider):
 
         min_bb = request[self.points].roi.get_begin()
         max_bb = request[self.points].roi.get_end()
+
+        logger.debug(
+            "CSV points source got request for %s",
+            request[self.points].roi)
 
         point_filter = np.ones((self.data.shape[0],), dtype=np.bool)
         for d in range(self.ndims):
