@@ -31,9 +31,8 @@ class TestCrop(ProviderTest):
 
         pipeline = (
             TestSourceCrop() +
-            Crop(
-                arrays = {ArrayKeys.RAW: cropped_roi_raw},
-                points  = {PointsKeys.PRESYN: cropped_roi_presyn}))
+            Crop(ArrayKeys.RAW, cropped_roi_raw) +
+            Crop(PointsKeys.PRESYN, cropped_roi_presyn))
 
         with build(pipeline):
 
@@ -41,3 +40,18 @@ class TestCrop(ProviderTest):
                 pipeline.spec[ArrayKeys.RAW].roi == cropped_roi_raw)
             self.assertTrue(
                 pipeline.spec[PointsKeys.PRESYN].roi == cropped_roi_presyn)
+
+        pipeline = (
+            TestSourceCrop() +
+            Crop(
+                ArrayKeys.RAW,
+                fraction_negative=(0.25, 0, 0),
+                fraction_positive=(0.25, 0, 0)))
+        expected_roi_raw = Roi((650, 20, 20), (900, 180, 180))
+
+        with build(pipeline):
+
+            print(pipeline.spec[ArrayKeys.RAW].roi)
+            print(expected_roi_raw)
+            self.assertTrue(
+                pipeline.spec[ArrayKeys.RAW].roi == expected_roi_raw)
