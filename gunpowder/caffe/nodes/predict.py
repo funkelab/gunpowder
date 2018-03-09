@@ -57,7 +57,7 @@ class Predict(GenericPredict):
         self.weights = weights
         self.inputs = inputs
         self.outputs = outputs
-	self.use_gpu = use_gpu
+        self.use_gpu = use_gpu
 
     def start(self):
 
