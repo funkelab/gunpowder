@@ -1,7 +1,7 @@
 import copy
 import logging
 import numpy as np
-from scipy import ndimage
+from scipy.ndimage.filters import gaussian_filter
 
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
@@ -21,47 +21,62 @@ class RasterizationSettings(Freezable):
 
     Args:
 
-        ball_radius (int):
+        radius (int):
 
-            The radius in world units.
+            The radius (for balls) or sigma (for peaks) in world units.
+
+        mode (string):
+
+            One of 'ball' or 'peak'. If 'ball' (the default), a ball with the
+            given ``radius`` will be drawn. If 'peak', the point will be
+            rasterized as a peak with values :math:`exp(-|x-p|^2/sigma)` with
+            sigma set by ``radius``.
 
         mask (:class:``ArrayKey``, optional):
 
-            Used to mask out created balls. The array is assumed to contain
-            discrete labels. The object id at the specific point being
-            rasterized is used to intersect the ball. This keeps the ball
-            inside the specific object.
+            Used to mask the rasterization of points. The array is assumed to
+            contain discrete labels. The object id at the specific point being
+            rasterized is used to intersect the rasterization to keep it inside
+            the specific object.
 
-        sphere_inner_radius (int, optional):
+        inner_radius (int, optional):
 
-            If set, instead of a ball, a hollow sphere is rastered. The radius of
-            the whole sphere corresponds to the radius specified with
-            ``ball_radius``. This parameter sets the radius of the hollow area.
+            Only for mode 'ball'.
+
+            If set, instead of a ball, a hollow sphere is rastered. The radius
+            of the whole sphere corresponds to the radius specified with
+            ``radius``. This parameter sets the radius of the hollow area.
 
         fg_value (int, optional):
+
+            Only for mode 'ball'.
 
             The value to use to rasterize points, defaults to 1.
 
         bg_value (int, optional):
+
+            Only for mode 'ball'.
 
             The value to use to for the background in the output array,
             defaults to 0.
     '''
     def __init__(
             self,
-            ball_radius,
+            radius,
+            mode='ball',
             mask=None,
-            sphere_inner_radius=None,
+            inner_radius=None,
             fg_value=1,
             bg_value=0):
 
-        if sphere_inner_radius is not None:
-            assert ball_radius < sphere_inner_radius, (
+        if inner_radius is not None:
+            assert radius < inner_radius, (
                 "trying to create a sphere in which the inner radius is larger "
                 "or equal than the ball radius")
-        self.ball_radius = ball_radius
+        self.radius = radius
+        self.mode = mode
         self.mask = mask
-        self.sphere_inner_radius = sphere_inner_radius
+        self.inner_radius = inner_radius
         self.fg_value = fg_value
         self.bg_value = bg_value
         self.freeze()
@@ -82,11 +97,11 @@ class RasterizePoints(BatchFilter):
             The spec of the array to create. Use this to set the datatype and
             voxel size.
 
-        raster_settings (:class:``RasterizationSettings``, optional):
+        settings (:class:``RasterizationSettings``, optional):
             Which settings to use to rasterize the points.
     '''
 
-    def __init__(self, points, array, array_spec=None, raster_settings=None):
+    def __init__(self, points, array, array_spec=None, settings=None):
 
         self.points = points
         self.array = array
@@ -94,10 +109,10 @@ class RasterizePoints(BatchFilter):
             self.array_spec = ArraySpec()
         else:
             self.array_spec = array_spec
-        if raster_settings is None:
-            self.raster_settings = RasterizationSettings(1)
+        if settings is None:
+            self.settings = RasterizationSettings(1)
         else:
-            self.raster_settings = raster_settings
+            self.settings = settings
 
     def setup(self):
 
@@ -107,7 +122,10 @@ class RasterizePoints(BatchFilter):
             self.array_spec.voxel_size = Coordinate((1,)*points_roi.dims())
 
         if self.array_spec.dtype is None:
-            self.array_spec.dtype = np.uint8
+            if self.settings.mode == 'ball':
+                self.array_spec.dtype = np.uint8
+            else:
+                self.array_spec.dtype = np.float32
 
         self.array_spec.roi = points_roi.copy()
         self.provides(
@@ -118,24 +136,31 @@ class RasterizePoints(BatchFilter):
 
     def prepare(self, request):
 
+        if self.settings.mode == 'ball':
+            context = self.settings.radius
+        elif self.settings.mode == 'peak':
+            context = 2*self.settings.radius
+        else:
+            raise RuntimeError('unknown raster mode %s'%self.settings.mode)
+
         # request points in a larger area to get rasterization from outside
         # points
         points_roi = request[self.array].roi.grow(
-                Coordinate((self.raster_settings.ball_radius,)*self.array_spec.roi.dims()),
-                Coordinate((self.raster_settings.ball_radius,)*self.array_spec.roi.dims()))
+                Coordinate((context,)*self.array_spec.roi.dims()),
+                Coordinate((context,)*self.array_spec.roi.dims()))
 
         # however, restrict the request to the points actually provided
         points_roi = points_roi.intersect(self.spec[self.points].roi)
 
         request[self.points] = PointsSpec(roi=points_roi)
 
-        if self.raster_settings.mask is not None:
-            request[self.raster_settings.mask] = ArraySpec(roi=points_roi)
+        if self.settings.mask is not None:
+            request[self.settings.mask] = ArraySpec(roi=points_roi)
 
     def process(self, batch, request):
 
         points = batch.points[self.points]
-        mask = self.raster_settings.mask
+        mask = self.settings.mask
         voxel_size = self.spec[self.array].voxel_size
 
         # get the output array shape
@@ -160,19 +185,19 @@ class RasterizePoints(BatchFilter):
 
             # create data for the whole points ROI, "or"ed together over
             # individual object masks
-            rasterized_points_data = reduce(
-                np.logical_or,
+            rasterized_points_data = np.sum(
                 [
                     self.__rasterize(
                         points,
                         data_roi,
                         voxel_size,
                         self.spec[self.array].dtype,
-                        self.raster_settings,
+                        self.settings,
                         Array(data=mask.data==label, spec=mask.spec))
 
                     for label in labels
-                ])
+                ],
+                axis=0)
 
         else:
 
@@ -182,16 +207,16 @@ class RasterizePoints(BatchFilter):
                 data_roi,
                 voxel_size,
                 self.spec[self.array].dtype,
-                self.raster_settings)
+                self.settings)
 
         # fix bg/fg labelling if requested
-        if (self.raster_settings.bg_value != 0 or
-            self.raster_settings.fg_value != 1):
+        if (self.settings.bg_value != 0 or
+            self.settings.fg_value != 1):
 
             replaced = replace(
                 rasterized_points_data,
                 [0, 1],
-                [self.raster_settings.bg_value, self.raster_settings.fg_value])
+                [self.settings.bg_value, self.settings.fg_value])
             rasterized_points_data = replaced.astype(self.spec[self.array].dtype)
 
         # create array and crop it to requested roi
@@ -245,12 +270,26 @@ class RasterizePoints(BatchFilter):
             rasterized_points[v] = 1
 
         # grow points
-        enlarge_binary_map(
-            rasterized_points,
-            settings.ball_radius,
-            voxel_size,
-            settings.sphere_inner_radius,
-            in_place=True)
+        if settings.mode == 'ball':
+            enlarge_binary_map(
+                rasterized_points,
+                settings.radius,
+                voxel_size,
+                settings.inner_radius,
+                in_place=True)
+        else:
+            sigmas = tuple(
+                float(settings.radius)/vs
+                for vs in voxel_size)
+            gaussian_filter(
+                rasterized_points,
+                sigmas,
+                output=rasterized_points,
+                mode='constant')
+            # renormalize to have 1 be the highest value
+            max_value = np.max(rasterized_points)
+            if max_value > 0:
+                rasterized_points /= max_value
 
         if mask_array is not None:
             rasterized_points &= mask
