@@ -1,6 +1,8 @@
-from .batch_filter import BatchFilter
 import copy
 import logging
+
+from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,11 @@ class Crop(BatchFilter):
             raise RuntimeError(
                 "One of 'roi' and 'fraction_...' has to be given")
 
+        if fraction_negative is not None and fraction_positive is None:
+            fraction_positive = (0.0,)*len(fraction_negative)
+        if fraction_positive is not None and fraction_negative is None:
+            fraction_negative = (0.0,)*len(fraction_positive)
+
         self.key = key
         self.roi = roi
         self.fraction_negative = fraction_negative
@@ -62,24 +69,16 @@ class Crop(BatchFilter):
 
         else:
 
-            total_fraction = Coordinate((0,)*len(self.total_fraction))
-            if self.fraction_negative is not None:
-                total_fraction += self.fraction_negative
-            if self.fraction_positive is not None:
-                total_fraction += self.fraction_positive
-            if max(a) >= 1:
+            total_fraction = tuple(
+                n + p
+                for n, p in zip(self.fraction_negative, self.fraction_positive)
+            )
+            if max(total_fraction) >= 1:
                 raise RuntimeError("Sum of crop fractions exeeds 1")
 
-            cropped_roi = spec.roi.copy()
-
-            crop_positive = None
-            if self.fraction_positive is not None:
-                crop_positive = spec.roi.get_shape()*self.fraction_positive
-            crop_negative = None
-            if self.fraction_negative is not None:
-                crop_negative = spec.roi.get_shape()*self.fraction_negative
-
-            cropped_roi.grow(
+            crop_positive = spec.roi.get_shape()*self.fraction_positive
+            crop_negative = spec.roi.get_shape()*self.fraction_negative
+            cropped_roi = spec.roi.grow(
                 -crop_positive,
                 -crop_negative)
 
@@ -88,17 +87,3 @@ class Crop(BatchFilter):
 
     def process(self, batch, request):
         pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
