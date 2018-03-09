@@ -6,9 +6,10 @@ from gunpowder.ext import h5py
 class TestHdf5Source(ProviderTest):
 
     def test_output_2d(self):
+        path = self.path_to('test_hdf_source.hdf')
 
         # create a test file
-        with h5py.File('test_hdf_source.hdf', 'w') as f:
+        with h5py.File(path, 'w') as f:
             f['raw'] = np.zeros((100, 100), dtype=np.float32)
             f['raw_low'] = np.zeros((10, 10), dtype=np.float32)
             f['raw_low'].attrs['resolution'] = (10, 10)
@@ -19,7 +20,7 @@ class TestHdf5Source(ProviderTest):
         raw_low = ArrayKey('RAW_LOW')
         seg = ArrayKey('SEG')
         source = Hdf5Source(
-            'test_hdf_source.hdf',
+            path,
             {
                 raw: 'raw',
                 raw_low: 'raw_low',
@@ -42,9 +43,10 @@ class TestHdf5Source(ProviderTest):
             self.assertFalse(batch.arrays[seg].spec.interpolatable)
 
     def test_output_3d(self):
+        path = self.path_to('test_hdf_source.hdf')
 
         # create a test file
-        with h5py.File('test_hdf_source.hdf', 'w') as f:
+        with h5py.File(path, 'w') as f:
             f['raw'] = np.zeros((100, 100, 100), dtype=np.float32)
             f['raw_low'] = np.zeros((10, 10, 10), dtype=np.float32)
             f['raw_low'].attrs['resolution'] = (10, 10, 10)
@@ -55,7 +57,7 @@ class TestHdf5Source(ProviderTest):
         raw_low = ArrayKey('RAW_LOW')
         seg = ArrayKey('SEG')
         source = Hdf5Source(
-            'test_hdf_source.hdf',
+            path,
             {
                 raw: 'raw',
                 raw_low: 'raw_low',

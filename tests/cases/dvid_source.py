@@ -40,7 +40,7 @@ class TestDvidSource(ProviderTest):
                     seg: '/volumes/labels/neuron_ids',
                     mask: '/volumes/labels/mask'
                 },
-                output_filename = 'dvid_source_test.hdf'
+                output_filename = self.path_to('dvid_source_test.hdf')
             )
         )
 
