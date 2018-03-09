@@ -160,7 +160,12 @@ class RandomLocation(BatchFilter):
             request_roi = spec.roi
             provided_roi = self.upstream_spec[identifier].roi
 
-            shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0,0,0),-request_roi.get_shape())
+            shift_roi = provided_roi.shift(
+                -request_roi.get_begin()
+            ).grow(
+                (0,)*request_roi.dims(),
+                -request_roi.get_shape()
+            )
 
             if total_shift_roi is None:
                 total_shift_roi = shift_roi
