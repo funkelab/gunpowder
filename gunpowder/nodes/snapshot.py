@@ -86,7 +86,7 @@ class Snapshot(BatchFilter):
                 self.output_dir,
                 self.output_filename.format(
                     id=str(batch.id).zfill(8),
-                    iteration=int(batch.iteration)))
+                    iteration=int(batch.iteration or 0)))
             logger.info('saving to %s' %snapshot_name)
             with h5py.File(snapshot_name, 'w') as f:
 
