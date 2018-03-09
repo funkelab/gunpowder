@@ -300,4 +300,15 @@ class Roi(Freezable):
     def __repr__(self):
         if self.empty():
             return "[empty ROI]"
-        return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
+        slices = ", ".join(
+            [
+                (str(b) if b is not None else "") +
+                ":" +
+                (str(e) if e is not None else "")
+                for b, e in zip(self.get_begin(), self.get_end())
+            ])
+        dims = ", ".join(
+            str(a) if a is not None else "inf"
+            for a in self.__shape
+        )
+        return "[" + slices + "] (" + dims + ")"
