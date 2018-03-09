@@ -37,17 +37,22 @@ class RandomLocation(BatchFilter):
 
         ensure_nonempty(:class:``PointsKey``, optional): Ensures that when
             finding a random location, a request for ``ensure_nonempty`` will
-            contain at least one point. This does only work if all upstream
+            one point. This does only work if all upstream
             nodes are deterministic (e.g., there is no
             :class:``RandomProvider`` upstream).
+
+       p_nonempty(float, optional): If  ``ensure_nonempty`` is set, it defines
+            the probability that a request for ``ensure_nonempty`` will
+            contain at least one point. Default value is 1.0.
     '''
 
-    def __init__(self, min_masked=0, mask=None, ensure_nonempty=None):
+    def __init__(self, min_masked=0, mask=None, ensure_nonempty=None, p_nonempty=1.0):
 
         self.min_masked = min_masked
         self.mask = mask
         self.mask_spec = None
         self.ensure_nonempty = ensure_nonempty
+        self.p_nonempty = p_nonempty
 
 
     def setup(self):
@@ -180,9 +185,14 @@ class RandomLocation(BatchFilter):
 
     def __select_random_shift(self, request, lcm_shift_roi, lcm_voxel_size):
 
+        ensure_points = (
+            self.ensure_nonempty is not None
+            and
+            random.random() <= self.p_nonempty)
+
         while True:
 
-            if self.ensure_nonempty:
+            if ensure_points:
                 random_shift = self.__select_random_location_with_points(
                     request,
                     lcm_shift_roi,
