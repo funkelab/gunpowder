@@ -1,6 +1,4 @@
 import numpy as np
-import glob
-import os
 from gunpowder import *
 from gunpowder.tensorflow import Train, Predict
 # from gunpowder.ext import tensorflow as tf
@@ -41,7 +39,12 @@ class TestTensorflowTrainSource(BatchProvider):
 
 class TestTensorflowTrain(ProviderTest):
 
-    def create_meta_graph(self):
+    def create_meta_graph(self, meta_base):
+        """
+
+        :param meta_base: Base name (no extension) for meta graph path
+        :return:
+        """
 
         # create a tf graph
         a = tf.placeholder(tf.float32, shape=(2, 2))
@@ -56,21 +59,12 @@ class TestTensorflowTrain(ProviderTest):
         opt = tf.train.AdamOptimizer()
         optimizer = opt.minimize(loss)
 
-        tf.train.export_meta_graph(filename='tf_graph.meta')
+        tf.train.export_meta_graph(filename=meta_base + '.meta')
 
         return [x.name for x in [a, b, c, optimizer, loss]]
 
     def test_output(self):
-
-        # start clean
-        for filename in glob.glob('tf_graph.*'):
-            os.remove(filename)
-        for filename in glob.glob('tf_graph_checkpoint_*'):
-            os.remove(filename)
-        try:
-            os.remove('checkpoint')
-        except:
-            pass
+        meta_base = self.path_to('tf_graph')
 
         ArrayKey('A')
         ArrayKey('B')
@@ -78,11 +72,11 @@ class TestTensorflowTrain(ProviderTest):
         ArrayKey('GRADIENT_A')
 
         # create model meta graph file and get input/output names
-        (a, b, c, optimizer, loss) = self.create_meta_graph()
+        (a, b, c, optimizer, loss) = self.create_meta_graph(meta_base)
 
         source = TestTensorflowTrainSource()
         train = Train(
-            'tf_graph',
+            meta_base,
             optimizer=optimizer,
             loss=loss,
             inputs={a: ArrayKeys.A, b: ArrayKeys.B},
@@ -128,7 +122,7 @@ class TestTensorflowTrain(ProviderTest):
         # predict
         source = TestTensorflowTrainSource()
         predict = Predict(
-            'tf_graph_checkpoint_300',
+            meta_base + '_checkpoint_300',
             inputs={a: ArrayKeys.A, b: ArrayKeys.B},
             outputs={c: ArrayKeys.C})
         pipeline = source + predict
