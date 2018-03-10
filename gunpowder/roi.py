@@ -227,18 +227,32 @@ class Roi(Freezable):
 
         return Roi(self.__offset + by, self.__shape)
 
-    def snap_to_grid(self, voxel_size, mode='GROW'):
-        shape_in_voxel_fractions = np.asarray(self.get_shape(),dtype='float')/np.asarray(voxel_size)
-        if mode == 'CLOSEST':
+    def snap_to_grid(self, voxel_size, mode='grow'):
+        '''Align a ROI with a given voxel size.
+
+        Args:
+
+            mode (string, optional):
+
+                How to align the ROI if it is not a multiple of the voxel size.
+                Available modes are 'grow', 'shrink', and 'closest'. Defaults to
+                'grow'.
+        '''
+
+        shape_in_voxel_fractions = (
+            np.asarray(self.get_shape(), dtype=np.float32)/
+            np.asarray(voxel_size))
+
+        if mode == 'closest':
             shape_in_voxel = np.round(shape_in_voxel_fractions)
-        elif mode == 'GROW':
+        elif mode == 'grow':
             shape_in_voxel = np.ceil(shape_in_voxel_fractions)
-        elif mode == 'SHRINK':
+        elif mode == 'shrink':
             shape_in_voxel = np.floor(shape_in_voxel_fractions)
         else:
             assert False, 'Unknown mode %s for snap_to_grid'%mode
-        self.set_shape((shape_in_voxel*np.asarray(voxel_size)).astype('int'))
 
+        self.set_shape((shape_in_voxel*np.asarray(voxel_size)).astype('int'))
 
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
