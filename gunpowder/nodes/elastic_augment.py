@@ -64,194 +64,329 @@ class ElasticAugment(BatchFilter):
 
     def prepare(self, request):
 
+        # get the voxel size
+        self.voxel_size = self.__get_common_voxel_size(request)
+
+        # get the total ROI of all requests
         total_roi = request.get_total_roi()
         logger.debug("total ROI is %s"%total_roi)
-        dims = len(total_roi.get_shape())
 
-        self.voxel_size = None
+        # First, get the total ROI of the request in spatial dimensions only.
+        # Channels and time don't matter. This is our master ROI.
+
+        # get master ROI
+        master_roi = Roi(
+            total_roi.get_begin()[-3:],
+            total_roi.get_shape()[-3:])
+        self.spatial_dims = master_roi.dims()
+        logger.debug("master ROI is %s"%master_roi)
+
+        # make sure the master ROI aligns with the voxel size
+        master_roi = master_roi.snap_to_grid(self.voxel_size, mode='grow')
+        logger.debug("master ROI aligned with voxel size is %s"%master_roi)
+
+        # get master roi in voxels
+        master_roi_voxels = master_roi/self.voxel_size
+        logger.debug("master ROI in voxels is %s"%master_roi_voxels)
+
+        # Second, create a master transformation. This is a transformation that
+        # covers all voxels of the all requested ROIs. The master transformation
+        # is zero-based.
+
+        # create a transformation with the size of the master ROI in voxels
+        self.master_transformation = self.__create_transformation(
+            master_roi_voxels.get_shape())
+
+        # Third, crop out parts of the master transformation for each of the
+        # smaller requested ROIs. Since these ROIs now have to align with the
+        # voxel size (which for points does not have to be the case), we also
+        # remember these smaller ROIs as target_rois in global world units.
+
+        # crop the parts corresponding to the requested ROIs
+        self.transformations = {}
+        self.target_rois = {}
+        for key, spec in request.items():
+
+            target_roi = Roi(
+                spec.roi.get_begin()[-3:],
+                spec.roi.get_shape()[-3:])
+            logger.debug(
+                "downstream request spatial ROI for %s is %s", key, target_roi)
+
+            # make sure the target ROI aligns with the voxel grid (which might
+            # not be the case for points)
+            target_roi = target_roi.snap_to_grid(self.voxel_size, mode='grow')
+            logger.debug(
+                "downstream request spatial ROI aligned with voxel grid for %s "
+                "is %s", key, target_roi)
+
+            # remember target ROI (this is where the transformation will project
+            # to)
+            self.target_rois[key] = target_roi
+
+            # get ROI in voxels
+            target_roi_voxels = target_roi/self.voxel_size
+
+            # get ROI relative to master ROI
+            target_roi_in_master_roi_voxels = (
+                target_roi_voxels -
+                master_roi_voxels.get_begin())
+
+            # crop out relevant part of transformation for this request
+            transformation = np.copy(
+                self.master_transformation[
+                    (slice(None),) +
+                    target_roi_in_master_roi_voxels.get_bounding_box()]
+            )
+            self.transformations[key] = transformation
+
+            # get ROI of all voxels necessary to perfrom transformation
+            #
+            # for that we follow the same transformations to get from the
+            # request ROI to the target ROI in master ROI in voxels, just in
+            # reverse
+            source_roi_in_master_roi_voxels = self.__get_source_roi(transformation)
+            source_roi_voxels = (
+                source_roi_in_master_roi_voxels +
+                master_roi_voxels.get_begin())
+            source_roi = source_roi_voxels*self.voxel_size
+
+            # transformation is still defined on voxels relative to master ROI
+            # in voxels (i.e., lowest source coordinate could be 5, but data
+            # array we get later starts at 0).
+            #
+            # shift transformation to be indexed relative to beginning of
+            # source_roi_voxels
+            self.__shift_transformation(
+                -source_roi_in_master_roi_voxels.get_begin(),
+                transformation)
+
+            # update upstream request
+            spec.roi = Roi(
+                spec.roi.get_begin()[:-3] + source_roi.get_begin()[-3:],
+                spec.roi.get_shape()[:-3] + source_roi.get_shape()[-3:])
+
+            logger.debug("upstream request roi for %s = %s" % (key, spec.roi))
+
+    def process(self, batch, request):
+
+        for (array_key, array) in batch.arrays.items():
+
+            # for arrays, the target ROI and the requested ROI should be the
+            # same
+            assert self.target_rois[array_key] == request[array_key].roi
+
+            # reshape array data into (channels,) + spatial dims
+            shape = array.data.shape
+            data = array.data.reshape((-1,) + shape[-self.spatial_dims:])
+
+            # apply transformation on each channel
+            data = np.array([
+                augment.apply_transformation(
+                    data[c],
+                    self.transformations[array_key],
+                    interpolate=self.spec[array_key].interpolatable)
+                for c in range(data.shape[0])
+            ])
+
+            data_roi = request[array_key].roi/self.spec[array_key].voxel_size
+            array.data = data.reshape(data_roi.get_shape())
+
+            # restore original ROIs
+            array.spec.roi = request[array_key].roi
+
+        for (points_key, points) in batch.points.items():
+
+            for point_id, point in points.data.items():
+
+                logger.debug("projecting %s", point.location)
+
+                # get location relative to beginning of upstream ROI
+                location = point.location - points.spec.roi.get_begin()
+                logger.debug("relative to upstream ROI: %s", location)
+
+                # get spatial coordinates of point in voxels
+                location_voxels = location[-3:]/self.voxel_size
+                logger.debug(
+                    "relative to upstream ROI in voxels: %s",
+                    location_voxels)
+
+                # get projected location in transformation data space, this
+                # yields voxel coordinates relative to target ROI
+                projected_voxels = self.__project(
+                    self.transformations[points_key],
+                    location_voxels)
+
+                logger.debug(
+                    "projected in voxels, relative to target ROI: %s",
+                    projected_voxels)
+
+                if projected_voxels is None:
+                    logger.debug("point outside of target, skipping")
+                    del points.data[point_id]
+                    continue
+
+                # convert to world units (now in float again)
+                projected = projected_voxels*np.array(self.voxel_size)
+
+                logger.debug(
+                    "projected in world units, relative to target ROI: %s",
+                    projected)
+
+                # get global coordinates
+                projected += np.array(self.target_rois[points_key].get_begin())
+
+                # update spatial coordinates of point location
+                point.location[-3:] = projected
+
+                logger.debug("final location: %s", point.location)
+
+                # finally, it can happen that a point no longer is contained in
+                # the requested ROI (because larger ROIs than necessary have
+                # been requested upstream)
+                if not request[points_key].roi.contains(point.location):
+                    logger.debug("point outside of target, skipping")
+                    del points.data[point_id]
+                    continue
+
+            # restore original ROIs
+            points.spec.roi = request[points_key].roi
+
+    def __get_common_voxel_size(self, request):
+
+        voxel_size = None
         prev = None
         for array_key in request.array_specs.keys():
-            if self.voxel_size is None:
-                self.voxel_size = self.spec[array_key].voxel_size
+            if voxel_size is None:
+                voxel_size = self.spec[array_key].voxel_size[-3:]
             else:
-                assert self.voxel_size == self.spec[array_key].voxel_size, \
+                assert voxel_size == self.spec[array_key].voxel_size[-3:], \
                         "ElasticAugment can only be used with arrays of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(
                                 array_key, self.spec[array_key].voxel_size,
                                 prev, self.spec[prev].voxel_size)
             prev = array_key
 
-        # get total roi in voxels
-        total_roi /= self.voxel_size
+        return voxel_size
 
-        # create a transformation for the total ROI
-        self.total_transformation = augment.create_identity_transformation(
-                total_roi.get_shape(),
+    def __create_transformation(self, target_shape):
+
+        transformation = augment.create_identity_transformation(
+                target_shape,
                 subsample=self.subsample)
         if sum(self.jitter_sigma) > 0:
-            self.total_transformation += augment.create_elastic_transformation(
-                    total_roi.get_shape(),
+            transformation += augment.create_elastic_transformation(
+                    target_shape,
                     self.control_point_spacing,
                     self.jitter_sigma,
                     subsample=self.subsample)
         rotation = random.random()*self.rotation_max_amount + self.rotation_start
         if rotation != 0:
-            self.total_transformation += augment.create_rotation_transformation(
-                    total_roi.get_shape(),
+            transformation += augment.create_rotation_transformation(
+                    target_shape,
                     rotation,
                     subsample=self.subsample)
 
         if self.subsample > 1:
-            self.total_transformation = augment.upscale_transformation(
-                    self.total_transformation,
-                    total_roi.get_shape())
+            transformation = augment.upscale_transformation(
+                    transformation,
+                    target_shape)
 
         if self.prob_slip + self.prob_shift > 0:
-            self.__misalign()
+            self.__misalign(transformation)
 
-        # crop the parts corresponding to the requested array ROIs
-        self.transformations = {}
-        logger.debug("total ROI is %s"%total_roi)
-        for identifier, spec in request.items():
+        return transformation
 
-            roi = spec.roi
+    def __project(self, transformation, location):
+        '''Find the projection of location using linear interpolation of
+        coordinates given by transformation.'''
 
-            logger.debug("downstream request ROI for %s is %s" % (identifier, roi))
+        dims = len(location)
 
-            # get roi in voxels
-            roi /= self.voxel_size
+        # subtract location from transformation
+        diff = transformation.copy()
+        for d in range(dims):
+            diff[d] -= location[d]
 
-            roi_in_total_roi = roi.shift(-total_roi.get_offset())
+        # square
+        diff2 = diff*diff
 
-            transformation = np.copy(
-                self.total_transformation[(slice(None),) + roi_in_total_roi.get_bounding_box()]
-            )
-            self.transformations[identifier] = transformation
+        # sum
+        dist = diff2.sum(axis=0)
 
-            # update request ROI to get all voxels necessary to perfrom
-            # transformation
-            spec.roi = self.__recompute_roi(roi, transformation)*self.voxel_size
+        # find grid point closes to location
+        center_grid = Coordinate(np.unravel_index(dist.argmin(), dist.shape))
+        center_source = self.__source_at(transformation, center_grid)
 
-            logger.debug("upstream request roi for %s = %s" % (identifier, spec.roi))
+        logger.debug("projecting %s onto grid", location)
+        logger.debug("grid shape: %s", transformation.shape[1:])
+        logger.debug("grid projection: %s", center_grid)
+        logger.debug("dist shape: %s", dist.shape)
+        logger.debug("dist.argmin(): %s", dist.argmin())
+        logger.debug("dist[argmin]: %s", dist[center_grid])
+        logger.debug("transform[argmin]: %s", transformation[:,center_grid[0],center_grid[1],center_grid[2]])
+        logger.debug("min dist: %s", dist.min())
+        logger.debug("center source: %s", center_source)
 
+        # the subgrid offset
+        subgrid_offset = np.zeros((dims))
 
-    def process(self, batch, request):
+        # inspect grid edges incident to center_grid
+        for d in range(dims):
 
-        for (array_key, array) in batch.arrays.items():
+            dim_vector = tuple(1 if dd == d else 0 for dd in range(dims))
+            pos_grid = center_grid + dim_vector
+            neg_grid = center_grid - dim_vector
+            logger.debug("interpolating along %s", dim_vector)
 
-            # apply transformation
-            array.data = augment.apply_transformation(
-                    array.data,
-                    self.transformations[array_key],
-                    interpolate=self.spec[array_key].interpolatable)
+            pos_u = -1
+            neg_u = -1
 
-            # restore original ROIs
-            array.spec.roi = request[array_key].roi
-
-        for (points_key, points) in batch.points.items():
-            # create map/array from points and apply tranformation to corresponding map, reconvert map back to points
-            # TODO: How to avoid having to allocate a new array each time (rather reuse,
-            # but difficult since shape is alternating)
-            trial_nr, max_trials, all_points_mapped = 0, 5, False
-            shape_map = points.spec.roi.get_shape()/self.voxel_size
-            id_map_array = np.zeros(shape_map, dtype=np.int32)
-
-            # Get all points located in current batch and shift it based on absolute offset. Assign new ids to point
-            # ids to have positive consecutive numbers and to account for having multiple points with same location.
-            ids_not_mapped = []
-            offset_array = points.spec.roi.get_offset()
-            new_pointid_to_ori_pointid = {} # maps new id to original id(s)
-            new_point_id = 1
-            relabeled_points_dic = {} # new dictionary including only those points that are relevant for that batch
-            location_to_pointid_dic = {}
-            for point_id, point in points.data.items():
-                location = point.location
-                if points.spec.roi.contains(Coordinate(location)):
-                    location = location - np.asarray(offset_array)
-                    if tuple(location) in location_to_pointid_dic.keys():
-                        id_with_same_location = location_to_pointid_dic[tuple(location)]
-                        new_pointid_to_ori_pointid[id_with_same_location].append(point_id)
-                        logging.debug("point with id %i has same location as other points eg. point id "
-                                      "%i" %(point_id, new_pointid_to_ori_pointid[id_with_same_location][0]))
-                    else:
-                        new_pointid_to_ori_pointid[new_point_id] = [point_id]
-                        ids_not_mapped.append(new_point_id)
-                        relabeled_points_dic[new_point_id] = location
-                        location_to_pointid_dic[tuple(location)] = new_point_id
-                        new_point_id += 1
+            if pos_grid[d] < transformation.shape[1 + d]:
+                pos_source = self.__source_at(transformation, pos_grid)
+                logger.debug("pos source: %s", pos_source)
+                pos_dist = pos_source[d] - center_source[d]
+                loc_dist = location[d] - center_source[d]
+                if pos_dist != 0:
+                    pos_u = loc_dist/pos_dist
                 else:
-                    del points.data[point_id]
+                    pos_u = 0
 
-            while not all_points_mapped:
-                marker_size = trial_nr # for each trial, the region of the point in the map is increased to increase
-                # the likelihood that the point still exists after transformation
-                id_map = self.__from_points_to_idmap(relabeled_points_dic, id_map_array,
-                                                     ids_not_mapped, marker_size=marker_size)
-                id_map = augment.apply_transformation(
-                    id_map,
-                    self.transformations[points_key],
-                    interpolate=False)
-                ids_in_map = list(np.unique(id_map))
-                ids_in_map.remove(0)
-                ids_not_mapped =set(ids_not_mapped) - set(ids_in_map)
-                self.__from_idmap_to_points(relabeled_points_dic, id_map, ids_in_map)
-                trial_nr += 1
-                if len(ids_not_mapped) == 0:
-                    all_points_mapped = True
-                elif trial_nr == max_trials:
-                    for point_id in ids_not_mapped:
-                        logger.debug("point %i with location %s was removed during "
-                                     "elastic augmentation." % (new_pointid_to_ori_pointid[point_id][0],
-                                                                relabeled_points_dic[point_id]))
-                        for ori_point_id in new_pointid_to_ori_pointid[point_id]:
-                            del points.data[ori_point_id]
-                            if point_id in relabeled_points_dic:
-                                del relabeled_points_dic[point_id]
-
-                    all_points_mapped = True
+            if neg_grid[d] >= 0:
+                neg_source = self.__source_at(transformation, neg_grid)
+                logger.debug("neg source: %s", neg_source)
+                neg_dist = neg_source[d] - center_source[d]
+                loc_dist = location[d] - center_source[d]
+                if neg_dist != 0:
+                    neg_u = loc_dist/neg_dist
                 else:
-                    id_map_array.fill(0)
+                    neg_u = 0
 
-            # restore original ROIs
-            points.spec.roi = request[points_key].roi
+            logger.debug("pos u/neg u: %s/%s", pos_u, neg_u)
 
-            # assign new transformed location and map new ids back to original ids.
-            for new_point_id, location in relabeled_points_dic.items():
-                for ori_point_id in new_pointid_to_ori_pointid[new_point_id]:
-                    points.data[ori_point_id].location = location + points.spec.roi.get_offset() # shift back to original roi.
+            # if a point only falls behind edges, it lies outside of the grid
+            if pos_u < 0 and neg_u < 0:
+                return None
 
+            if pos_u >= 0:
+                subgrid_offset[d] = pos_u
+            elif neg_u >= 0:
+                subgrid_offset[d] = -neg_u
 
+        interpolated = subgrid_offset + center_grid
 
-    def __from_idmap_to_points(self, points, id_map, ids_in_map):
-        for point_id in ids_in_map:
-            if point_id == 0:
-                continue
-            locations = zip(*np.where(id_map == point_id))
-            # If there are more than one locations, heuristically grab the first one
-            new_location = locations[0]
-            points[point_id] = new_location*np.array(self.voxel_size)
+        logger.debug("interpolated grid position: %s", interpolated)
+        return interpolated
 
-    def __from_points_to_idmap(self, points, id_map_array, ids_to_map, marker_size=0):
-        # TODO: This is partially a duplicate of add_gt_binary_map_points:get_binary_map, refactor!
-        relative_voxel_size = 1./(np.array(self.voxel_size)/np.min(np.array(self.voxel_size)))
-        for point_id in ids_to_map:
-            location = points[point_id].astype(np.int32)
-            location /= self.voxel_size # convert locations in world units to voxel units
-            if marker_size > 0:
-                marker_locs = tuple(slice(max(0, location[dim] - int(np.floor(marker_size*relative_voxel_size[dim]))),
-                                          min(id_map_array.shape[dim] - 1,
-                                              location[dim] + max(int(np.floor(marker_size*relative_voxel_size[dim])), 1)))
-                                    for dim in range(len(location)))
+    def __source_at(self, transformation, index):
+        '''Read the source point of a transformation at index.'''
 
-            else:
-                marker_locs = [[loc] for loc in location]
+        slices = (slice(None),) + tuple(slice(i, i+1) for i in index)
+        return transformation[slices].flatten()
 
-            id_map_array[marker_locs] = point_id
-        return id_map_array
+    def __get_source_roi(self, transformation):
 
-    def __recompute_roi(self, roi, transformation):
-
-        dims = roi.dims()
+        dims = transformation.shape[0]
 
         # get bounding box of needed data for transformation
         bb_min = Coordinate(int(math.floor(transformation[d].min())) for d in range(dims))
@@ -263,16 +398,16 @@ class ElasticAugment(BatchFilter):
                 bb_max - bb_min
         )
 
-        # shift transformation, such that it can be applied on indices of source 
-        # batch
-        for d in range(dims):
-            transformation[d] -= bb_min[d]
-
         return source_roi
 
-    def __misalign(self):
+    def __shift_transformation(self, shift, transformation):
 
-        num_sections = self.total_transformation[0].shape[0]
+        for d in range(transformation.shape[0]):
+            transformation[d] += shift[d]
+
+    def __misalign(self, transformation):
+
+        num_sections = transformation[0].shape[0]
 
         shifts = [Coordinate((0,0,0))]*num_sections
         for z in range(num_sections):
@@ -292,16 +427,16 @@ class ElasticAugment(BatchFilter):
         logger.debug("misaligning sections with " + str(shifts))
 
         dims = 3
-        bb_min = tuple(int(math.floor(self.total_transformation[d].min())) for d in range(dims))
-        bb_max = tuple(int(math.ceil(self.total_transformation[d].max())) + 1 for d in range(dims))
+        bb_min = tuple(int(math.floor(transformation[d].min())) for d in range(dims))
+        bb_max = tuple(int(math.ceil(transformation[d].max())) + 1 for d in range(dims))
         logger.debug("min/max of transformation: " + str(bb_min) + "/" + str(bb_max))
 
         for z in range(num_sections):
-            self.total_transformation[1][z,:,:] += shifts[z][1]
-            self.total_transformation[2][z,:,:] += shifts[z][2]
+            transformation[1][z,:,:] += shifts[z][1]
+            transformation[2][z,:,:] += shifts[z][2]
 
-        bb_min = tuple(int(math.floor(self.total_transformation[d].min())) for d in range(dims))
-        bb_max = tuple(int(math.ceil(self.total_transformation[d].max())) + 1 for d in range(dims))
+        bb_min = tuple(int(math.floor(transformation[d].min())) for d in range(dims))
+        bb_max = tuple(int(math.ceil(transformation[d].max())) + 1 for d in range(dims))
         logger.debug("min/max of transformation after misalignment: " + str(bb_min) + "/" + str(bb_max))
 
     def __random_offset(self):
