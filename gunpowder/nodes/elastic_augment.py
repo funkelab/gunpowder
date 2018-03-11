@@ -173,8 +173,13 @@ class ElasticAugment(BatchFilter):
         for (array_key, array) in batch.arrays.items():
 
             # for arrays, the target ROI and the requested ROI should be the
-            # same
-            assert self.target_rois[array_key] == request[array_key].roi
+            # same in spatial coordinates
+            assert (
+                self.target_rois[array_key].get_begin() ==
+                request[array_key].roi.get_begin()[-3:])
+            assert (
+                self.target_rois[array_key].get_shape() ==
+                request[array_key].roi.get_shape()[-3:])
 
             # reshape array data into (channels,) + spatial dims
             shape = array.data.shape
