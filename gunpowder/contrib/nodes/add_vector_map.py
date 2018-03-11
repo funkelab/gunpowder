@@ -148,9 +148,9 @@ class AddVectorMap(BatchFilter):
                     offset_vx_considered_mask = [((point.location[dim]-self.radius_phys-offset_vector_map_phys[dim])//voxel_size_vm[dim])
                                                  for dim in range(dim_vectors)]
                     clipped_offset_vx_considered_mask = np.clip(offset_vx_considered_mask, a_min=0, a_max=np.inf)
-                    slices = [slice(np.max((0, offset_vx_considered_mask[dim])),
-                                    np.min((offset_vx_considered_mask[dim] + (2*self.radius_phys//voxel_size_vm[dim]),
-                                            ((mask.shape[dim])))))
+                    slices = [slice(int(np.max((0, offset_vx_considered_mask[dim]))),
+                                    int(np.min((offset_vx_considered_mask[dim] + (2*self.radius_phys//voxel_size_vm[dim]),
+                                            ((mask.shape[dim]))))))
                                     for dim in range(dim_vectors)]
                     considered_region_mask  = mask[slices]
                     locations_to_fill_vx       = np.reshape(np.nonzero(considered_region_mask), [dim_vectors, -1]).T
