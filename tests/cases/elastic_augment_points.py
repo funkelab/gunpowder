@@ -85,8 +85,6 @@ class TestElasticAugment(unittest.TestCase):
         test_points = PointsKey('TEST_POINTS')
         test_raster = ArrayKey('TEST_RASTER')
 
-        set_verbose(True)
-
         pipeline = (
 
             PointTestSource3D() +
