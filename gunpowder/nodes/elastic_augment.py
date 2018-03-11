@@ -298,8 +298,8 @@ class ElasticAugment(BatchFilter):
         return transformation
 
     def __project(self, transformation, location):
-        '''Find the projection of location using linear interpolation of
-        coordinates given by transformation.'''
+        '''Find the projection of location given by transformation. Returns None
+        if projection lies outside of transformation.'''
 
         dims = len(location)
 
@@ -327,9 +327,6 @@ class ElasticAugment(BatchFilter):
         logger.debug("transform[argmin]: %s", transformation[:,center_grid[0],center_grid[1],center_grid[2]])
         logger.debug("min dist: %s", dist.min())
         logger.debug("center source: %s", center_source)
-
-        # the subgrid offset
-        subgrid_offset = np.zeros((dims))
 
         # inspect grid edges incident to center_grid
         for d in range(dims):
@@ -368,15 +365,7 @@ class ElasticAugment(BatchFilter):
             if pos_u < 0 and neg_u < 0:
                 return None
 
-            if pos_u >= 0:
-                subgrid_offset[d] = pos_u
-            elif neg_u >= 0:
-                subgrid_offset[d] = -neg_u
-
-        interpolated = subgrid_offset + center_grid
-
-        logger.debug("interpolated grid position: %s", interpolated)
-        return interpolated
+        return np.array(center_grid, dtype=np.float32)
 
     def __source_at(self, transformation, index):
         '''Read the source point of a transformation at index.'''
