@@ -131,7 +131,7 @@ class ProviderSpec(Freezable):
                     total_roi = spec.roi
                 else:
                     total_roi = total_roi.union(spec.roi)
-            return total_roi
+        return total_roi
 
     def get_common_roi(self):
         '''Get the intersection of all the requested ROIs.'''
