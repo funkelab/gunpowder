@@ -239,20 +239,28 @@ class Roi(Freezable):
                 'grow'.
         '''
 
-        shape_in_voxel_fractions = (
-            np.asarray(self.get_shape(), dtype=np.float32)/
+        begin_in_voxel_fractions = (
+            np.asarray(self.get_begin(), dtype=np.float32)/
+            np.asarray(voxel_size))
+        end_in_voxel_fractions = (
+            np.asarray(self.get_end(), dtype=np.float32)/
             np.asarray(voxel_size))
 
         if mode == 'closest':
-            shape_in_voxel = np.round(shape_in_voxel_fractions)
+            begin_in_voxel = np.round(begin_in_voxel_fractions)
+            end_in_voxel = np.round(end_in_voxel_fractions)
         elif mode == 'grow':
-            shape_in_voxel = np.ceil(shape_in_voxel_fractions)
+            begin_in_voxel = np.floor(begin_in_voxel_fractions)
+            end_in_voxel = np.ceil(end_in_voxel_fractions)
         elif mode == 'shrink':
-            shape_in_voxel = np.floor(shape_in_voxel_fractions)
+            begin_in_voxel = np.ceil(begin_in_voxel_fractions)
+            end_in_voxel = np.floor(end_in_voxel_fractions)
         else:
             assert False, 'Unknown mode %s for snap_to_grid'%mode
 
-        self.set_shape((shape_in_voxel*np.asarray(voxel_size)).astype('int'))
+        return Roi(
+            begin_in_voxel*voxel_size,
+            (end_in_voxel - begin_in_voxel)*voxel_size)
 
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
