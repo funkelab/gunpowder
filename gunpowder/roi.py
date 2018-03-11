@@ -2,6 +2,7 @@ import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
 import numbers
+import numpy as np
 
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
@@ -226,6 +227,41 @@ class Roi(Freezable):
 
         return Roi(self.__offset + by, self.__shape)
 
+    def snap_to_grid(self, voxel_size, mode='grow'):
+        '''Align a ROI with a given voxel size.
+
+        Args:
+
+            mode (string, optional):
+
+                How to align the ROI if it is not a multiple of the voxel size.
+                Available modes are 'grow', 'shrink', and 'closest'. Defaults to
+                'grow'.
+        '''
+
+        begin_in_voxel_fractions = (
+            np.asarray(self.get_begin(), dtype=np.float32)/
+            np.asarray(voxel_size))
+        end_in_voxel_fractions = (
+            np.asarray(self.get_end(), dtype=np.float32)/
+            np.asarray(voxel_size))
+
+        if mode == 'closest':
+            begin_in_voxel = np.round(begin_in_voxel_fractions)
+            end_in_voxel = np.round(end_in_voxel_fractions)
+        elif mode == 'grow':
+            begin_in_voxel = np.floor(begin_in_voxel_fractions)
+            end_in_voxel = np.ceil(end_in_voxel_fractions)
+        elif mode == 'shrink':
+            begin_in_voxel = np.ceil(begin_in_voxel_fractions)
+            end_in_voxel = np.floor(end_in_voxel_fractions)
+        else:
+            assert False, 'Unknown mode %s for snap_to_grid'%mode
+
+        return Roi(
+            begin_in_voxel*voxel_size,
+            (end_in_voxel - begin_in_voxel)*voxel_size)
+
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
 
@@ -300,4 +336,15 @@ class Roi(Freezable):
     def __repr__(self):
         if self.empty():
             return "[empty ROI]"
-        return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
+        slices = ", ".join(
+            [
+                (str(b) if b is not None else "") +
+                ":" +
+                (str(e) if e is not None else "")
+                for b, e in zip(self.get_begin(), self.get_end())
+            ])
+        dims = ", ".join(
+            str(a) if a is not None else "inf"
+            for a in self.__shape
+        )
+        return "[" + slices + "] (" + dims + ")"

@@ -1,6 +1,7 @@
 import copy
 import logging
 import numpy as np
+import glob
 
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
@@ -20,15 +21,25 @@ class KlbSource(BatchProvider):
 
     Args:
 
-        filename (string): The KLB file.
+        filename (string):
 
-        array (ArrayKey): ArrayKey that this source offers.
+            The name of the KLB file. This string can be a glob expression
+            (e.g., ``frame_*.klb``), in which case all files that match are
+            sorted and stacked together to form an additional dimension (like
+            time). The additional dimension will start at 0 and have a default
+            voxel size of 1 (which can be overwritten using the ``array_spec``
+            argument).
 
-        array_spec (ArraySpec, optional): An optional :class:`ArraySpec` to
-            overwrite the array specs automatically determined from the KLB
-            file. This is useful to set ``voxel_size``, for example. Only
-            fields that are not ``None`` in the given :class:`ArraySpec` will
-            be used.
+        array (ArrayKey):
+
+            ArrayKey that this source offers.
+
+        array_spec (ArraySpec, optional):
+
+            An optional :class:`ArraySpec` to overwrite the array specs
+            automatically determined from the KLB file. This is useful to set
+            ``voxel_size``, for example. Only fields that are not ``None`` in
+            the given :class:`ArraySpec` will be used.
     '''
 
     def __init__(
@@ -41,13 +52,18 @@ class KlbSource(BatchProvider):
         self.array = array
         self.array_spec = array_spec
 
+        self.files = None
         self.ndims = None
 
     def setup(self):
 
-        header = pyklb.readheader(self.filename)
+        self.files = glob.glob(self.filename)
+        self.files.sort()
 
-        spec = self.__read_spec(header)
+        logger.info("Reading KLB headers of %d files...", len(self.files))
+        headers = [ pyklb.readheader(f) for f in self.files ]
+        spec = self.__read_spec(headers)
+
         self.provides(self.array, spec)
 
     def provide(self, request):
@@ -85,20 +101,34 @@ class KlbSource(BatchProvider):
 
         return batch
 
-    def __read_spec(self, header):
+    def __read_spec(self, headers):
 
-        size = header['imagesize_tczyx']
+        num_files = len(headers)
+        assert num_files > 0
+        common_header = headers[0]
+        for header in headers:
+            for attr in ['imagesize_tczyx', 'pixelspacing_tczyx']:
+                assert (common_header[attr] == header[attr]).all(), (
+                    "Headers of provided KLB files differ in attribute %s"%attr)
+            assert common_header['datatype'] == header['datatype'], (
+                "Headers of provided KLB files differ in attribute datatype")
+
+        size = Coordinate(common_header['imagesize_tczyx'])
+        voxel_size = Coordinate(common_header['pixelspacing_tczyx'])
+        dtype = common_header['datatype']
 
         # strip leading 1 dimensions
         while size[0] == 1 and len(size) > 1:
             size = size[1:]
+            voxel_size = voxel_size[1:]
+
+        # append num_files dimension
+        if num_files > 1:
+            size = (num_files,) + size
+            voxel_size = (1,) + voxel_size
 
         dims = Coordinate(size)
-
-        if self.ndims is None:
-            self.ndims = len(dims)
-        else:
-            assert self.ndims == len(dims)
+        self.ndims = len(dims)
 
         if self.array_spec is not None:
             spec = self.array_spec
@@ -106,20 +136,20 @@ class KlbSource(BatchProvider):
             spec = ArraySpec()
 
         if spec.voxel_size is None:
-            spec.voxel_size = Coordinate(header['pixelspacing_tczyx'][-self.ndims:])
+            spec.voxel_size = Coordinate(voxel_size)
 
         if spec.roi is None:
             offset = Coordinate((0,)*self.ndims)
             spec.roi = Roi(offset, dims*spec.voxel_size)
 
         if spec.dtype is not None:
-            assert spec.dtype == header['datatype'], (
+            assert spec.dtype == dtype, (
                 "dtype %s provided in array_specs for %s, but differs from "
                 "dataset dtype %s"%(
                     self.array_specs[self.array].dtype, self.array,
                     dataset.dtype))
         else:
-            spec.dtype = header['datatype']
+            spec.dtype = dtype
 
         if spec.interpolatable is None:
 
@@ -139,12 +169,33 @@ class KlbSource(BatchProvider):
 
     def __read(self, roi):
 
+        if len(self.files) == 1:
+
+            return self.__read_file(self.files[0], roi)
+
+        else:
+
+            file_indices = range(
+                roi.get_begin()[0],
+                roi.get_end()[0])
+
+            file_roi = Roi(
+                roi.get_begin()[1:],
+                roi.get_shape()[1:])
+
+            return np.array([
+                    self.__read_file(self.files[i], file_roi)
+                    for i in file_indices
+                ])
+
+    def __read_file(self, filename, roi):
+
         # pyklb reads max-inclusive, gunpowder rois are max exclusive ->
         # subtract (1, 1, ...) from max coordinate
         return pyklb.readroi(
-            self.filename,
+            filename,
             roi.get_begin(),
-            roi.get_end() - (1,)*self.ndims)
+            roi.get_end() - (1,)*roi.dims())
 
     def __repr__(self):
 

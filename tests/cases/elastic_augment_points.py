@@ -8,89 +8,135 @@ from random import randint
 
 class PointTestSource3D(BatchProvider):
 
-    def __init__(self, voxel_size, object_location, point_dic):
-        self.voxel_size = voxel_size
-        self.object_location = object_location
-        self.point_dic = point_dic
-
     def setup(self):
 
+        self.points = {
+            0: Point([0, 0, 0]),
+            1: Point([0, 10, 0]),
+            2: Point([0, 20, 0]),
+            3: Point([0, 30, 0]),
+            4: Point([0, 40, 0]),
+            5: Point([0, 50, 0]),
+        }
+
         self.provides(
-            PointsKeys.PRESYN,
-            PointsSpec(roi=Roi((-100, -100, -100), (200, 200, 200))))
+            PointsKeys.TEST_POINTS,
+            PointsSpec(
+                roi=Roi((-100, -100, -100), (200, 200, 200))
+            ))
+
         self.provides(
-            ArrayKeys.GT_LABELS,
+            ArrayKeys.TEST_LABELS,
             ArraySpec(
                 roi=Roi((-100, -100, -100), (200, 200, 200)),
-                voxel_size=self.voxel_size))
+                voxel_size=Coordinate((4, 1, 1)),
+                interpolatable=False
+            ))
+
+    def point_to_voxel(self, array_roi, location):
+
+        # location is in world units, get it into voxels
+        location = location/self.spec[ArrayKeys.TEST_LABELS].voxel_size
+
+        # shift location relative to beginning of array roi
+        location -= array_roi.get_begin()/self.spec[ArrayKeys.TEST_LABELS].voxel_size
+
+        return tuple(
+            slice(int(l-2), int(l+3))
+            for l in location)
 
     def provide(self, request):
+
         batch = Batch()
-        roi_points = request[PointsKeys.PRESYN].roi
-        roi_array = request[ArrayKeys.GT_LABELS].roi
-        image = np.zeros(roi_array.get_shape()/self.voxel_size)
-        image[self.object_location] = 1
 
-        id_to_point = {}
-        for point_id, location in self.point_dic.items():
-            location += roi_points.get_offset()
-            if roi_points.contains(location):
-                id_to_point[point_id] = Point(location)
+        roi_points = request[PointsKeys.TEST_POINTS].roi
+        roi_array = request[ArrayKeys.TEST_LABELS].roi
+        roi_voxel = roi_array//self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
-        batch.points[PointsKeys.PRESYN] = Points(
-            id_to_point,
-            PointsSpec(roi=roi_points))
-        spec = self.spec[ArrayKeys.GT_LABELS].copy()
+        data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
+        data[:,::2] = 100
+
+        for i, point in self.points.items():
+            loc = self.point_to_voxel(roi_array, point.location)
+            data[loc] = i
+
+        spec = self.spec[ArrayKeys.TEST_LABELS].copy()
         spec.roi = roi_array
-        batch.arrays[ArrayKeys.GT_LABELS] = Array(
-            image,
+        batch.arrays[ArrayKeys.TEST_LABELS] = Array(
+            data,
             spec=spec)
+
+        points = {}
+        for i, point in self.points.items():
+            if roi_points.contains(point.location):
+                points[i] = point
+        batch.points[PointsKeys.TEST_POINTS] = Points(
+            points,
+            PointsSpec(roi=roi_points))
+
         return batch
 
 
 class TestElasticAugment(unittest.TestCase):
 
     def test_3d_basics(self):
-        # Check correct transformation of points for 5 random elastic augmentations. The correct transformation is
-        # tested by also augmenting a array with a specific object/region labeled. The point to test is placed
-        # within the object. Augmenting the array with the object together with the point should result in a
-        # transformed array in which the point is still located within the object.
-        voxel_size = Coordinate((2, 1, 1))
 
-        PointsKey('PRESYN')
+        test_labels = ArrayKey('TEST_LABELS')
+        test_points = PointsKey('TEST_POINTS')
+        test_raster = ArrayKey('TEST_RASTER')
 
-        for i in range(5):
-            object_location = tuple([slice(30/voxel_size[0], 40/voxel_size[0]),
-                                     slice(30/voxel_size[1], 40/voxel_size[1]),
-                                     slice(30/voxel_size[2], 40/voxel_size[2])])
-            points_to_test = {}
-            points_to_test[0] = np.array((35, 35, 35))  # point inside object
-            points_to_test[2] = np.array((20, 20, 20))  # point outside object
-            points_to_test[5] = np.array((35, 35, 35)) # point with different id but same location
-            points_to_test[10] = np.array((150, 150, 150)) # point should disappear because outside of roi
+        pipeline = (
 
-            # Random elastic augmentation hyperparameter
-            subsample = randint(1, 4)
-            control_point_spacing = [randint(1, 20), randint(1, 20), randint(1, 2)]
+            PointTestSource3D() +
+            ElasticAugment(
+                [10, 10, 10],
+                [0.1, 0.1, 0.1],
+                # [0, 0, 0], # no jitter
+                [0, 2.0*math.pi]) + # rotate randomly
+                # [math.pi/4, math.pi/4]) + # rotate by 45 deg
+                # [0, 0]) + # no rotation
+            RasterizePoints(
+                test_points,
+                test_raster,
+                settings=RasterizationSettings(
+                    radius=2,
+                    mode='peak')) +
+            Snapshot({
+                test_labels: 'volumes/labels',
+                test_raster: 'volumes/raster'
+            },
+            dataset_dtypes={
+                test_raster: np.float32})
+        )
 
-            source_node = PointTestSource3D(voxel_size=voxel_size, object_location=object_location,
-                                            point_dic=points_to_test)
-            elastic_augm_node = ElasticAugment(control_point_spacing, [0, 2, 2],
-                                               [0, math.pi / 2.0], subsample=subsample)
-            pipeline = source_node + elastic_augm_node
+        for _ in range(5):
 
             with build(pipeline):
+
+                request_roi = Roi(
+                    (-20, -20, -20),
+                    (40, 40, 40))
+
                 request = BatchRequest()
-                window_request = Coordinate((50, 50, 50))
+                request[test_labels] = ArraySpec(roi=request_roi)
+                # request[test_points] = PointsSpec(roi=request_roi)
+                request[test_raster] = ArraySpec(roi=request_roi)
 
-                request.add(PointsKeys.PRESYN, window_request)
-                request.add(ArrayKeys.GT_LABELS, window_request)
                 batch = pipeline.request_batch(request)
+                labels = batch.arrays[test_labels]
+                points = batch.points[test_points]
 
-                exp_loc_in_object = batch.points[PointsKeys.PRESYN].data[0].location/voxel_size
-                exp_loc_out_object = batch.points[PointsKeys.PRESYN].data[2].location/voxel_size
-                array = batch.arrays[ArrayKeys.GT_LABELS].data
-                self.assertTrue(array[tuple(exp_loc_in_object)] == 1)
-                self.assertTrue(array[tuple(exp_loc_out_object)] == 0)
-                self.assertTrue(5 in batch.points[PointsKeys.PRESYN].data)
-                self.assertFalse(10 in batch.points[PointsKeys.PRESYN].data)
+                # the point at (0, 0, 0) should not have moved
+                self.assertTrue(0 in points.data)
+
+                labels_data_roi = (
+                    labels.spec.roi -
+                    labels.spec.roi.get_begin())/labels.spec.voxel_size
+
+                # points should have moved together with the voxels
+                for i, point in points.data.items():
+                    loc = point.location - labels.spec.roi.get_begin()
+                    loc = loc/labels.spec.voxel_size
+                    loc = Coordinate(int(round(x)) for x in loc)
+                    if labels_data_roi.contains(loc):
+                        self.assertEqual(labels.data[loc], i)
