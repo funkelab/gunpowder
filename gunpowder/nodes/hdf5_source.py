@@ -1,10 +1,11 @@
+import os
 import copy
 import logging
 import numpy as np
 
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import h5py
+from gunpowder.ext import h5py, z5py
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 from gunpowder.array import Array
@@ -13,30 +14,30 @@ from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
-class Hdf5Source(BatchProvider):
-    '''An HDF5 data source.
 
-    Provides arrays from HDF5 datasets for each array key given. If the
-    attribute `resolution` is set in an HDF5 dataset, it will be used as the
-    array's `voxel_size` and a warning issued if they differ. If the attribute
-    `offset` is set in an HDF5 dataset, it will be used as the offset of the
-    :class:`Roi` for this array. It is assumed that the offset is given in
-    world units.
+class Hdf5LikeSource(BatchProvider):
+    '''An HDF5-like data source.
 
-    Args:
+        Provides arrays from datasets accessed with an h5py-like API for each array
+        key given. If the attribute `resolution` is set in an HDF5 dataset, it will
+        be used as the array's `voxel_size` and a warning issued if they differ. If
+        the attribute `offset` is set in a dataset, it will be used as the
+        offset of the :class:`Roi` for this array. It is assumed that the offset
+        is given in world units.
 
-        filename (string): The HDF5 file.
+        Args:
 
-        datasets (dict): Dictionary of ArrayKey -> dataset names that this
-            source offers.
+            filename (string): The file path.
 
-        array_specs (dict, optional): An optional dictionary of
-            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
-            specs automatically determined from the HDF5 file. This is useful
-            to set a missing ``voxel_size``, for example. Only fields that are
-            not ``None`` in the given :class:`ArraySpec` will be used.
-    '''
+            datasets (dict): Dictionary of ArrayKey -> dataset names that this
+                source offers.
 
+            array_specs (dict, optional): An optional dictionary of
+                :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
+                specs automatically determined from the data file. This is useful
+                to set a missing ``voxel_size``, for example. Only fields that are
+                not ``None`` in the given :class:`ArraySpec` will be used.
+        '''
     def __init__(
             self,
             filename,
@@ -52,21 +53,20 @@ class Hdf5Source(BatchProvider):
             self.array_specs = array_specs
 
         self.ndims = None
+    
+    def _open_file(self, filename):
+        raise NotImplementedError('Only implemented in subclasses')
 
     def setup(self):
-
-        hdf_file = h5py.File(self.filename, 'r')
-
-        for (array_key, ds_name) in self.datasets.items():
-
-            if ds_name not in hdf_file:
-                raise RuntimeError("%s not in %s"%(ds_name, self.filename))
-
-            spec = self.__read_spec(array_key, hdf_file, ds_name)
-
-            self.provides(array_key, spec)
-
-        hdf_file.close()
+        with self._open_file(self.filename) as data_file:
+            for (array_key, ds_name) in self.datasets.items():
+        
+                if ds_name not in data_file:
+                    raise RuntimeError("%s not in %s" % (ds_name, self.filename))
+        
+                spec = self.__read_spec(array_key, data_file, ds_name)
+        
+                self.provides(array_key, spec)
 
     def provide(self, request):
 
@@ -75,19 +75,17 @@ class Hdf5Source(BatchProvider):
 
         batch = Batch()
 
-        with h5py.File(self.filename, 'r') as hdf_file:
-
+        with self._open_file(self.filename) as data_file:
             for (array_key, request_spec) in request.array_specs.items():
-
                 logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
                 voxel_size = self.spec[array_key].voxel_size
 
                 # scale request roi to voxel units
-                dataset_roi = request_spec.roi/voxel_size
+                dataset_roi = request_spec.roi / voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
+                dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset() / voxel_size
 
                 # create array spec
                 array_spec = self.spec[array_key].copy()
@@ -95,7 +93,7 @@ class Hdf5Source(BatchProvider):
 
                 # add array to batch
                 batch.arrays[array_key] = Array(
-                    self.__read(hdf_file, self.datasets[array_key], dataset_roi),
+                    self.__read(data_file, self.datasets[array_key], dataset_roi),
                     array_spec)
 
         logger.debug("done")
@@ -105,9 +103,9 @@ class Hdf5Source(BatchProvider):
 
         return batch
 
-    def __read_spec(self, array_key, hdf_file, ds_name):
+    def __read_spec(self, array_key, data_file, ds_name):
 
-        dataset = hdf_file[ds_name]
+        dataset = data_file[ds_name]
 
         dims = Coordinate(dataset.shape)
 
@@ -126,7 +124,7 @@ class Hdf5Source(BatchProvider):
             if 'resolution' in dataset.attrs:
                 spec.voxel_size = Coordinate(dataset.attrs['resolution'])
             else:
-                spec.voxel_size = Coordinate((1,)*self.ndims)
+                spec.voxel_size = Coordinate((1,) * self.ndims)
                 logger.warning("WARNING: File %s does not contain resolution information "
                                "for %s (dataset %s), voxel size has been set to %s. This "
                                "might not be what you want.",
@@ -137,26 +135,25 @@ class Hdf5Source(BatchProvider):
             if 'offset' in dataset.attrs:
                 offset = Coordinate(dataset.attrs['offset'])
             else:
-                offset = Coordinate((0,)*self.ndims)
+                offset = Coordinate((0,) * self.ndims)
 
-            spec.roi = Roi(offset, dims*spec.voxel_size)
+            spec.roi = Roi(offset, dims * spec.voxel_size)
 
         if spec.dtype is not None:
             assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
-                                                 "but differs from dataset %s dtype %s"%
+                                                 "but differs from dataset %s dtype %s" %
                                                  (self.array_specs[array_key].dtype,
                                                   array_key, ds_name, dataset.dtype))
         else:
             spec.dtype = dataset.dtype
 
         if spec.interpolatable is None:
-
             spec.interpolatable = spec.dtype in [
                 np.float,
                 np.float32,
                 np.float64,
                 np.float128,
-                np.uint8 # assuming this is not used for labels
+                np.uint8  # assuming this is not used for labels
             ]
             logger.warning("WARNING: You didn't set 'interpolatable' for %s "
                            "(dataset %s). Based on the dtype %s, it has been "
@@ -166,9 +163,35 @@ class Hdf5Source(BatchProvider):
 
         return spec
 
-    def __read(self, hdf_file, ds_name, roi):
-        return np.array(hdf_file[ds_name][roi.get_bounding_box()])
+    def __read(self, data_file, ds_name, roi):
+        return np.asarray(data_file[ds_name][roi.get_bounding_box()])
 
     def __repr__(self):
 
         return self.filename
+
+    def infer_source_type(self, filename, *args, **kwargs):
+        ext = os.path.splitext(filename)[1].lower()
+        return {
+            '.hdf': Hdf5Source,
+            '.hdf5': Hdf5Source,
+            '.h5': Hdf5Source,
+            '.zarr': ZarrSource,
+            '.zr': ZarrSource,
+            '.n5': N5Source,
+        }[ext](filename, *args, **kwargs)
+
+
+class Hdf5Source(Hdf5LikeSource):
+    def _open_file(self, filename):
+        return h5py.File(filename, 'r')
+
+
+class N5Source(Hdf5LikeSource):
+    def _open_file(self, filename):
+        return z5py.File(filename, use_zarr_format=False)
+
+
+class ZarrSource(Hdf5LikeSource):
+    def _open_file(self, filename):
+        return z5py.File(filename, use_zarr_format=True)

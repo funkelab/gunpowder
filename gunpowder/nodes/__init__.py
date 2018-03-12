@@ -12,7 +12,7 @@ from .dvid_source import DvidSource
 from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
 from .grow_boundary import GrowBoundary
-from .hdf5_source import Hdf5Source
+from .hdf5_source import Hdf5Source, N5Source, ZarrSource
 from .hdf5_write import Hdf5Write
 from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift

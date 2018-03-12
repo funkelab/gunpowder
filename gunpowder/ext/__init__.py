@@ -40,3 +40,8 @@ try:
     import augment
 except ImportError:
     augment = NoSuchModule('augment')
+
+try:
+    import z5py
+except ImportError:
+    z5py = NoSuchModule('z5py')
