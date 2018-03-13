@@ -13,7 +13,3 @@ install-dev:
 .PHONY: test
 test:
 	python tests/test_suite.py
-
-.PHONY: test-all
-test-all:
-	tox
