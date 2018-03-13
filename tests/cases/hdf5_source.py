@@ -19,16 +19,22 @@ class Hdf5LikeSourceTestMixin(object):
     def _open_writable_file(self, path):
         raise NotImplementedError('_open_writable_file should be overridden')
 
+    def _create_dataset(self, data_file, key, data, chunks=None, **kwargs):
+        chunks = chunks or data.shape
+        d = data_file.create_dataset(key, shape=data.shape, dtype=data.dtype, chunks=chunks)
+        d[:] = data
+        for key, value in kwargs.items():
+            d.attrs[key] = value
+
     def test_output_2d(self):
-        path = self.path_to('test_{}_source.' + self.extension)
+        path = self.path_to('test_{0}_source.{0}'.format(self.extension))
 
         with self._open_writable_file(path) as f:
-            f['raw'] = np.zeros((100, 100), dtype=np.float32)
-            f['raw_low'] = np.zeros((10, 10), dtype=np.float32)
-            f['raw_low'].attrs['resolution'] = (10, 10)
-            f['seg'] = np.ones((100, 100), dtype=np.uint64)
+            self._create_dataset(f, 'raw', np.zeros((100, 100), dtype=np.float32))
+            self._create_dataset(f, 'raw_low', np.zeros((10, 10), dtype=np.float32), resolution=(10, 10))
+            self._create_dataset(f, 'seg', np.ones((100, 100), dtype=np.uint64))
 
-            # read arrays
+        # read arrays
         raw = ArrayKey('RAW')
         raw_low = ArrayKey('RAW_LOW')
         seg = ArrayKey('SEG')
@@ -55,14 +61,13 @@ class Hdf5LikeSourceTestMixin(object):
             self.assertFalse(batch.arrays[seg].spec.interpolatable)
 
     def test_output_3d(self):
-        path = self.path_to('test_{}_source.' + self.extension)
+        path = self.path_to('test_{0}_source.{0}'.format(self.extension))
 
         # create a test file
-        with h5py.File(path, 'w') as f:
-            f['raw'] = np.zeros((100, 100, 100), dtype=np.float32)
-            f['raw_low'] = np.zeros((10, 10, 10), dtype=np.float32)
-            f['raw_low'].attrs['resolution'] = (10, 10, 10)
-            f['seg'] = np.ones((100, 100, 100), dtype=np.uint64)
+        with self._open_writable_file(path) as f:
+            self._create_dataset(f, 'raw', np.zeros((100, 100, 100), dtype=np.float32))
+            self._create_dataset(f, 'raw_low', np.zeros((10, 10, 10), dtype=np.float32), resolution=(10, 10, 10))
+            self._create_dataset(f, 'seg', np.ones((100, 100, 100), dtype=np.uint64))
 
         # read arrays
         raw = ArrayKey('RAW')
