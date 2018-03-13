@@ -100,6 +100,18 @@ class Hdf5LikeSource(BatchProvider):
 
         return batch
 
+    def __get_voxel_size(self, dataset):
+        try:
+            return Coordinate(dataset.attrs['resolution'])
+        except Exception:  # todo: make specific when z5py supports it
+            return None
+
+    def __get_offset(self, dataset):
+        try:
+            return Coordinate(dataset.attrs['offset'])
+        except Exception:  # todo: make specific when z5py supports it
+            return None
+
     def __read_spec(self, array_key, data_file, ds_name):
 
         dataset = data_file[ds_name]
@@ -117,21 +129,18 @@ class Hdf5LikeSource(BatchProvider):
             spec = ArraySpec()
 
         if spec.voxel_size is None:
-
-            if 'resolution' in dataset.attrs:
-                spec.voxel_size = Coordinate(dataset.attrs['resolution'])
-            else:
-                spec.voxel_size = Coordinate((1,) * self.ndims)
+            voxel_size = self.__get_voxel_size(dataset)
+            if voxel_size is None:
+                voxel_size = Coordinate((1,) * self.ndims)
                 logger.warning("WARNING: File %s does not contain resolution information "
                                "for %s (dataset %s), voxel size has been set to %s. This "
                                "might not be what you want.",
                                self.filename, array_key, ds_name, spec.voxel_size)
+            spec.voxel_size = voxel_size
 
         if spec.roi is None:
-
-            if 'offset' in dataset.attrs:
-                offset = Coordinate(dataset.attrs['offset'])
-            else:
+            offset = self.__get_offset(dataset)
+            if offset is None:
                 offset = Coordinate((0,) * self.ndims)
 
             spec.roi = Roi(offset, dims * spec.voxel_size)
