@@ -193,7 +193,7 @@ class RandomLocation(BatchFilter):
         ensure_points = (
             self.ensure_nonempty is not None
             and
-            random.random() <= self.p_nonempty)
+            random() <= self.p_nonempty)
 
         while True:
 
