@@ -1,47 +1,60 @@
-class NoSuchModule(object):
+from __future__ import print_function
+import logging
+import traceback
 
+import sys
+
+logger = logging.getLogger(__name__)
+
+
+class NoSuchModule(object):
     def __init__(self, name):
+        logger.warning('Module {} is not accessible, some features may be unavailable'.format(name))
         self.__name = name
+        self.__traceback_str = traceback.format_tb(sys.exc_info()[2])
+        errtype, value = sys.exc_info()[:2]
+        self.__exception = errtype(value)
 
     def __getattr__(self, item):
-        raise ImportError('Module {0} is not installed'.format(self.__name))
+        print(self.__traceback_str, file=sys.stderr)
+        raise self.__exception
 
 try:
     import dvision
-except ImportError:
+except ImportError as e:
     dvision = NoSuchModule('dvision')
 
 try:
     import h5py
-except ImportError:
+except ImportError as e:
     h5py = NoSuchModule('h5py')
 
 try:
     import pyklb
-except ImportError:
+except ImportError as e:
     pyklb = NoSuchModule('pyklb')
 
 try:
     import caffe
-except ImportError:
+except ImportError as e:
     caffe = NoSuchModule('caffe')
 
 try:
     import tensorflow
-except ImportError:
+except ImportError as e:
     tensorflow = NoSuchModule('tensorflow')
 
 try:
     import malis
-except ImportError:
+except ImportError as e:
     malis = NoSuchModule('malis')
 
 try:
     import augment
-except ImportError:
+except ImportError as e:
     augment = NoSuchModule('augment')
 
 try:
     import z5py
-except ImportError:
+except ImportError as e:
     z5py = NoSuchModule('z5py')
