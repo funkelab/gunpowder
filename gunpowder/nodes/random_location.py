@@ -1,4 +1,3 @@
-import copy
 import logging
 from random import random, randint, choice
 
@@ -28,6 +27,12 @@ class RandomLocation(BatchFilter):
     returned that have at least one point of this point collection within the
     requested ROI.
 
+    Additional tests for randomly picked locations can be implemented by
+    subclassing and overwriting of :fun:`accepts`. This method takes the
+    randomly shifted request that meets all previous criteria (like
+    ``min_masked`` and ``ensure_nonempty``) and should return ``True`` if the
+    request is acceptable.
+
     Args:
 
         min_masked(float, optional): If non-zero, require that the random
@@ -53,7 +58,6 @@ class RandomLocation(BatchFilter):
         self.mask_spec = None
         self.ensure_nonempty = ensure_nonempty
         self.p_nonempty = p_nonempty
-
 
     def setup(self):
 
@@ -135,13 +139,8 @@ class RandomLocation(BatchFilter):
             lcm_shift_roi,
             lcm_voxel_size)
 
-        # shift request ROIs
         self.random_shift = random_shift
-        for specs_type in [request.array_specs, request.points_specs]:
-            for (key, spec) in specs_type.items():
-                roi = spec.roi.shift(random_shift)
-                logger.debug("new %s ROI: %s"%(key, roi))
-                specs_type[key].roi = roi
+        self.__shift_request(request, random_shift)
 
     def process(self, batch, request):
 
@@ -155,6 +154,14 @@ class RandomLocation(BatchFilter):
         for points_key in request.points_specs.keys():
             for point_id, point in batch.points[points_key].data.items():
                 batch.points[points_key].data[point_id].location -= self.random_shift
+
+    def accepts(self, request):
+        '''Should return True if the randomly chosen location is acceptable
+        (besided meeting other criteria like ``min_masked`` and/or
+        ``ensure_nonempty``). Subclasses can overwrite this method to implement
+        additional tests for acceptable locations.'''
+
+        return True
 
     def __get_possible_shifts(self, request):
 
@@ -209,10 +216,17 @@ class RandomLocation(BatchFilter):
 
             logger.debug("random shift: " + str(random_shift))
 
-            if self.__is_min_masked(random_shift, request):
-                return random_shift
-            else:
-                logger.debug("reject random shift, min_masked not exceeded")
+            if not self.__is_min_masked(random_shift, request):
+                logger.debug(
+                    "random location does not meet 'min_masked' criterium")
+                continue
+
+            if not self.__accepts(random_shift, request):
+                logger.debug(
+                    "random location does not meet user-provided criterium")
+                continue
+
+            return random_shift
 
     def __is_min_masked(self, random_shift, request):
 
@@ -239,6 +253,22 @@ class RandomLocation(BatchFilter):
             logger.debug("mask ratio is %f", mask_ratio)
 
             return mask_ratio >= self.min_masked
+
+    def __accepts(self, random_shift, request):
+
+        # create a shifted copy of the request
+        shifted_request = request.copy()
+        self.__shift_request(shifted_request, random_shift)
+
+        return self.accepts(shifted_request)
+
+    def __shift_request(self, request, shift):
+
+        # shift request ROIs
+        for specs_type in [request.array_specs, request.points_specs]:
+            for (key, spec) in specs_type.items():
+                roi = spec.roi.shift(shift)
+                specs_type[key].roi = roi
 
     def __select_random_location_with_points(
             self,
