@@ -154,6 +154,8 @@ class Scan(BatchFilter):
         # get individual shift ROIs and intersect them
         for identifier, reference_spec in self.reference.items():
 
+            if identifier not in spec:
+                continue
             if spec[identifier].roi is None:
                 continue
 
@@ -280,11 +282,15 @@ class Scan(BatchFilter):
             self.batch = self.__setup_batch(spec, chunk)
 
         for (array_key, array) in chunk.arrays.items():
+            if array_key not in spec:
+                continue
             self.__fill(self.batch.arrays[array_key].data, array.data,
                         spec.array_specs[array_key].roi, array.spec.roi,
                         self.spec[array_key].voxel_size)
 
         for (points_key, points) in chunk.points.items():
+            if points_key not in spec:
+                continue
             self.__fill_points(self.batch.points[points_key].data, points.data,
                                spec.points_specs[points_key].roi, points.roi)
 
