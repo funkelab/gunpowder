@@ -56,8 +56,12 @@ class RandomLocation(BatchFilter):
         self.min_masked = min_masked
         self.mask = mask
         self.mask_spec = None
+        self.mask_integral = None
         self.ensure_nonempty = ensure_nonempty
+        self.points = None
         self.p_nonempty = p_nonempty
+        self.upstream_spec = None
+        self.random_shift = None
 
     def setup(self):
 
@@ -67,7 +71,7 @@ class RandomLocation(BatchFilter):
         if self.mask and self.min_masked > 0:
 
             assert self.mask in self.upstream_spec, (
-                    "Upstream provider does not have %s"%self.mask)
+                "Upstream provider does not have %s"%self.mask)
             self.mask_spec = self.upstream_spec.array_specs[self.mask]
 
             logger.info("requesting complete mask...")
@@ -79,14 +83,14 @@ class RandomLocation(BatchFilter):
 
             mask_data = mask_batch.arrays[self.mask].data
             mask_integral_dtype = np.uint64
-            logger.debug("mask size is " + str(mask_data.size))
+            logger.debug("mask size is %s", mask_data.size)
             if mask_data.size < 2**32:
                 mask_integral_dtype = np.uint32
             if mask_data.size < 2**16:
                 mask_integral_dtype = np.uint16
-            logger.debug("chose %s as integral array dtype"%mask_integral_dtype)
+            logger.debug("chose %s as integral array dtype", mask_integral_dtype)
 
-            self.mask_integral = np.array(mask_data>0, dtype=mask_integral_dtype)
+            self.mask_integral = np.array(mask_data > 0, dtype=mask_integral_dtype)
             self.mask_integral = integral_image(self.mask_integral)
 
         if self.ensure_nonempty:
@@ -104,7 +108,7 @@ class RandomLocation(BatchFilter):
 
             logger.info("retrieved %d points", len(self.points.data))
 
-        # clear bounding boxes of all provided arrays and points -- 
+        # clear bounding boxes of all provided arrays and points --
         # RandomLocation does not have limits (offsets are ignored)
         for identifier, spec in self.spec.items():
             spec.roi.set_shape(None)
@@ -120,7 +124,7 @@ class RandomLocation(BatchFilter):
         if request.array_specs.keys():
 
             lcm_voxel_size = self.spec.get_lcm_voxel_size(
-                    request.array_specs.keys())
+                request.array_specs.keys())
             lcm_shift_roi = shift_roi/lcm_voxel_size
 
             logger.debug("lcm voxel size: %s", lcm_voxel_size)
@@ -152,7 +156,7 @@ class RandomLocation(BatchFilter):
 
         # change shift point locations to lie within roi
         for points_key in request.points_specs.keys():
-            for point_id, point in batch.points[points_key].data.items():
+            for point_id, _ in batch.points[points_key].data.items():
                 batch.points[points_key].data[point_id].location -= self.random_shift
 
     def accepts(self, request):
@@ -230,29 +234,29 @@ class RandomLocation(BatchFilter):
 
     def __is_min_masked(self, random_shift, request):
 
-            if not self.mask or self.min_masked == 0:
-                return True
+        if not self.mask or self.min_masked == 0:
+            return True
 
-            # get randomly chosen mask ROI
-            request_mask_roi = request.array_specs[self.mask].roi
-            request_mask_roi = request_mask_roi.shift(random_shift)
+        # get randomly chosen mask ROI
+        request_mask_roi = request.array_specs[self.mask].roi
+        request_mask_roi = request_mask_roi.shift(random_shift)
 
-            # get coordinates inside mask array
-            mask_voxel_size = self.spec[self.mask].voxel_size
-            request_mask_roi_in_array = request_mask_roi/mask_voxel_size
-            request_mask_roi_in_array -= self.mask_spec.roi.get_offset()/mask_voxel_size
+        # get coordinates inside mask array
+        mask_voxel_size = self.spec[self.mask].voxel_size
+        request_mask_roi_in_array = request_mask_roi/mask_voxel_size
+        request_mask_roi_in_array -= self.mask_spec.roi.get_offset()/mask_voxel_size
 
-            # get number of masked-in voxels
-            num_masked_in = integrate(
-                self.mask_integral,
-                [request_mask_roi_in_array.get_begin()],
-                [request_mask_roi_in_array.get_end()-(1,)*self.mask_integral.ndim]
-            )[0]
+        # get number of masked-in voxels
+        num_masked_in = integrate(
+            self.mask_integral,
+            [request_mask_roi_in_array.get_begin()],
+            [request_mask_roi_in_array.get_end()-(1,)*self.mask_integral.ndim]
+        )[0]
 
-            mask_ratio = float(num_masked_in)/request_mask_roi_in_array.size()
-            logger.debug("mask ratio is %f", mask_ratio)
+        mask_ratio = float(num_masked_in)/request_mask_roi_in_array.size()
+        logger.debug("mask ratio is %f", mask_ratio)
 
-            return mask_ratio >= self.min_masked
+        return mask_ratio >= self.min_masked
 
     def __accepts(self, random_shift, request):
 
@@ -389,7 +393,7 @@ class RandomLocation(BatchFilter):
             # count all points inside the shifted ROI
             points_request = BatchRequest()
             points_request[self.ensure_nonempty] = PointsSpec(
-                    roi=request_points_roi.shift(random_shift))
+                roi=request_points_roi.shift(random_shift))
             logger.debug("points request: %s", points_request)
             points_batch = self.get_upstream_provider().request_batch(points_request)
 
@@ -410,8 +414,8 @@ class RandomLocation(BatchFilter):
 
         # select a random point inside ROI
         random_shift = Coordinate(
-                randint(int(begin), int(end-1))
-                for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
+            randint(int(begin), int(end-1))
+            for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
 
         random_shift *= lcm_voxel_size
 
