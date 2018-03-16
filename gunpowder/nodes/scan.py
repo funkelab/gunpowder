@@ -120,7 +120,7 @@ class Scan(BatchFilter):
             self.reference.array_specs.keys())
 
         # that's just the minimal size in each dimension
-        for identifier, reference_spec in self.reference.items():
+        for key, reference_spec in self.reference.items():
 
             shape = reference_spec.roi.get_shape()
 
@@ -131,7 +131,7 @@ class Scan(BatchFilter):
                                                        "common multiple of "
                                                        "voxel size "
                                                        "%s"%(reference_spec.roi,
-                                                             identifier,
+                                                             key,
                                                              lcm_voxel_size))
 
             if stride is None:
@@ -151,14 +151,14 @@ class Scan(BatchFilter):
         total_shift_roi = None
 
         # get individual shift ROIs and intersect them
-        for identifier, reference_spec in self.reference.items():
+        for key, reference_spec in self.reference.items():
 
-            if spec[identifier].roi is None:
+            if spec[key].roi is None:
                 continue
 
             # shift the spec roi such that its offset == shift from reference to
             # spec
-            shift_roi = spec[identifier].roi.shift(-reference_spec.roi.get_offset())
+            shift_roi = spec[key].roi.shift(-reference_spec.roi.get_offset())
 
             # shrink by the size of reference at the end
             shift_roi = shift_roi.grow(None, -reference_spec.roi.get_shape())

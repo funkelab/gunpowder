@@ -120,12 +120,12 @@ class SimpleAugment(BatchFilter):
 
     def __mirror_request(self, request, mirror):
 
-        for identifier, spec in request.items():
+        for key, spec in request.items():
             self.__mirror_roi(spec.roi, self.total_roi, mirror)
 
     def __transpose_request(self, request, transpose):
 
-        for identifier, spec in request.items():
+        for key, spec in request.items():
             self.__transpose_roi(spec.roi, transpose)
 
     def __mirror_roi(self, roi, total_roi, mirror):

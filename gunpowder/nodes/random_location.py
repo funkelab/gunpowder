@@ -102,9 +102,9 @@ class RandomLocation(BatchFilter):
 
         # clear bounding boxes of all provided arrays and points -- 
         # RandomLocation does not have limits (offsets are ignored)
-        for identifier, spec in self.spec.items():
+        for key, spec in self.spec.items():
             spec.roi.set_shape(None)
-            self.updates(identifier, spec)
+            self.updates(key, spec)
 
     def prepare(self, request):
 
@@ -160,10 +160,10 @@ class RandomLocation(BatchFilter):
 
         total_shift_roi = None
 
-        for identifier, spec in request.items():
+        for key, spec in request.items():
 
             request_roi = spec.roi
-            provided_roi = self.upstream_spec[identifier].roi
+            provided_roi = self.upstream_spec[key].roi
 
             shift_roi = provided_roi.shift(
                 -request_roi.get_begin()
