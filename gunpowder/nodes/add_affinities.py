@@ -8,7 +8,7 @@ from gunpowder.array import Array
 
 logger = logging.getLogger(__name__)
 
-class AddGtAffinities(BatchFilter):
+class AddAffinities(BatchFilter):
     '''Add an array with affinities for a given label array and neighborhood to 
     the batch. Affinity values are created one for each voxel and entry in the 
     neighborhood list, i.e., for each voxel and each neighbor of this voxel. 
@@ -61,7 +61,7 @@ class AddGtAffinities(BatchFilter):
 
         assert self.gt_labels in self.spec, (
             "Upstream does not provide %s needed by "
-            "AddGtAffinities"%self.gt_labels)
+            "AddAffinities"%self.gt_labels)
 
         voxel_size = self.spec[self.gt_labels].voxel_size
 

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .add_gt_affinities import AddGtAffinities
+from .add_affinities import AddAffinities
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider

@@ -52,7 +52,7 @@ class TestSource(BatchProvider):
 
         return batch
 
-class TestAddGtAffinities(ProviderTest):
+class TestAddAffinities(ProviderTest):
 
     def test_output(self):
 
@@ -69,7 +69,7 @@ class TestAddGtAffinities(ProviderTest):
 
         pipeline = (
                 TestSource() +
-                AddGtAffinities(
+                AddAffinities(
                     neighborhood,
                     gt_labels=ArrayKeys.GT_LABELS,
                     gt_labels_mask=ArrayKeys.GT_MASK,
