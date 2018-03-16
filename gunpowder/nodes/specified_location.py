@@ -59,22 +59,21 @@ class SpecifiedLocation(BatchFilter):
 
         # clear bounding boxes of all provided arrays and points --
         # SpecifiedLocation does know its locations at setup (checks on the fly)
-        for identifier, spec in self.spec.items():
+        for key, spec in self.spec.items():
             spec.roi = None
-            self.updates(identifier, spec)
+            self.updates(key, spec)
 
     def prepare(self, request):
 
         shift_roi = None
 
-        for identifier, spec in request.items():
+        for key, spec in request.items():
             request_roi = spec.roi
-            if identifier in self.upstream_spec:
-                provided_roi = self.upstream_spec[identifier].roi
+            if key in self.upstream_spec:
+                provided_roi = self.upstream_spec[key].roi
             else:
                 raise Exception(
-                    "Requested %s, but upstream does not provide "
-                    "it."%identifier)
+                    "Requested %s, but upstream does not provide it."%key)
             key_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0, 0, 0),
                                                     -request_roi.get_shape())
 

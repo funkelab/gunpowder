@@ -52,7 +52,7 @@ class BatchProvider(object):
         '''
         pass
 
-    def provides(self, identifier, spec):
+    def provides(self, key, spec):
         '''Introduce a new output provided by this `BatchProvider`.
 
         Implementations should call this in their :fun:`setup` method, which
@@ -60,7 +60,7 @@ class BatchProvider(object):
 
         Args:
 
-            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
+            key: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
             spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
         '''
@@ -70,14 +70,14 @@ class BatchProvider(object):
         if self.spec is None:
             self._spec = ProviderSpec()
 
-        assert identifier not in self.spec, (
+        assert key not in self.spec, (
             "Node %s is trying to add spec for %s, but is already "
-            "provided."%(type(self).__name__, identifier))
+            "provided."%(type(self).__name__, key))
 
-        self.spec[identifier] = copy.deepcopy(spec)
-        self.provided_items.append(identifier)
+        self.spec[key] = copy.deepcopy(spec)
+        self.provided_items.append(key)
 
-        logger.debug("%s provides %s with spec %s", self.name(), identifier, spec)
+        logger.debug("%s provides %s with spec %s", self.name(), key, spec)
 
     def _init_spec(self):
         if not hasattr(self, '_spec'):
@@ -103,7 +103,7 @@ class BatchProvider(object):
 
     @property
     def provided_items(self):
-        '''Get a list of the identifiers provided by this `BatchProvider`.
+        '''Get a list of the keys provided by this `BatchProvider`.
 
         This list is only available after the pipeline has been build. Before
         that, it is empty.
@@ -115,13 +115,13 @@ class BatchProvider(object):
         return self._provided_items
 
     def remove_provided(self, request):
-        '''Remove identifiers from `request` that are provided by this
+        '''Remove keys from `request` that are provided by this
         `BatchProvider`.
         '''
 
-        for identifier in self.provided_items:
-            if identifier in request:
-                del request[identifier]
+        for key in self.provided_items:
+            if key in request:
+                del request[key]
 
     def request_batch(self, request):
         '''Request a batch from this provider.
@@ -146,30 +146,30 @@ class BatchProvider(object):
 
     def check_request_consistency(self, request):
 
-        for (identifier, request_spec) in request.items():
+        for (key, request_spec) in request.items():
 
-            assert identifier in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), identifier)
+            assert key in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), key)
             assert (
                 isinstance(request_spec, ArraySpec) or
                 isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
                                                         "%s"%(
-                                                            identifier,
+                                                            key,
                                                             type(request_spec)))
 
-            provided_spec = self.spec[identifier]
+            provided_spec = self.spec[key]
 
             provided_roi = provided_spec.roi
             request_roi = request_spec.roi
 
             if provided_roi is not None:
-                assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), identifier, request_roi, provided_roi)
+                assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), key, request_roi, provided_roi)
 
-            if isinstance(identifier, ArrayKey):
+            if isinstance(key, ArrayKey):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
                             request_spec.voxel_size,
-                            identifier,
+                            key,
                             provided_spec.voxel_size)
 
                 if request_roi is not None:
@@ -178,7 +178,7 @@ class BatchProvider(object):
                                 "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
                                         request,
                                         d,
-                                        identifier,
+                                        key,
                                         provided_spec.voxel_size[d])
 
     def check_batch_consistency(self, batch, request):

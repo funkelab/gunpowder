@@ -71,12 +71,12 @@ class GenericTrain(BatchFilter):
 
         # get common voxel size of inputs, or None if they differ
         common_voxel_size = None
-        for identifier in self.inputs.values():
+        for key in self.inputs.values():
 
-            if not isinstance(identifier, ArrayKey):
+            if not isinstance(key, ArrayKey):
                 continue
 
-            voxel_size = self.spec[identifier].voxel_size
+            voxel_size = self.spec[key].voxel_size
 
             if common_voxel_size is None:
                 common_voxel_size = voxel_size
@@ -85,10 +85,10 @@ class GenericTrain(BatchFilter):
                 break
 
         # announce provided outputs
-        for identifier in self.provided_arrays:
+        for key in self.provided_arrays:
 
-            if identifier in self.array_specs:
-                spec = self.array_specs[identifier].copy()
+            if key in self.array_specs:
+                spec = self.array_specs[key].copy()
             else:
                 spec = ArraySpec()
 
@@ -97,7 +97,7 @@ class GenericTrain(BatchFilter):
                 assert common_voxel_size is not None, (
                     "There is no common voxel size of the inputs, and no "
                     "ArraySpec has been given for %s that defines "
-                    "voxel_size."%identifier)
+                    "voxel_size."%key)
 
                 spec.voxel_size = common_voxel_size
 
@@ -106,7 +106,7 @@ class GenericTrain(BatchFilter):
                 # default for predictions
                 spec.interpolatable = False
 
-            self.provides(identifier, spec)
+            self.provides(key, spec)
 
         if self.spawn_subprocess:
             self.worker.start()

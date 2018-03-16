@@ -55,13 +55,13 @@ class DefectAugment(BatchFilter):
 
             artifacts(:class:``ArrayKey``, optional):
 
-                The identifier to query ``artifact_source`` for to get the
-                intensities of the artifacts.
+                The key to query ``artifact_source`` for to get the intensities
+                of the artifacts.
 
             artifacts_mask(:class:``ArrayKey``, optional):
 
-                The identifier to query ``artifact_source`` for to get the
-                alpha mask of the artifacts to blend them with ``intensities``.
+                The key to query ``artifact_source`` for to get the alpha mask
+                of the artifacts to blend them with ``intensities``.
 
             deformation_strength:
 

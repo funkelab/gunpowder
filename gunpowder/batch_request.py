@@ -13,7 +13,7 @@ class BatchRequest(ProviderSpec):
     For usage, see the documentation of :class:`ProviderSpec`.
     '''
 
-    def add(self, identifier, shape, voxel_size=None):
+    def add(self, key, shape, voxel_size=None):
         '''Convenience method to add an array or point spec by providing only
         the shape of a ROI (in world units).
 
@@ -22,16 +22,16 @@ class BatchRequest(ProviderSpec):
         the largest one.
 
         Args:
-            identifier: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
+            key: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
             shape: A tuple containing the shape of the desired roi
 
             voxel_size: A tuple contening the voxel sizes for each corresponding dimension
         '''
 
-        if isinstance(identifier, ArrayKey):
+        if isinstance(key, ArrayKey):
             spec = ArraySpec()
-        elif isinstance(identifier, PointsKey):
+        elif isinstance(key, PointsKey):
             spec = PointsSpec()
         else:
             raise RuntimeError("Only ArrayKey or PointsKey can be added.")
@@ -41,7 +41,7 @@ class BatchRequest(ProviderSpec):
         if voxel_size is not None:
             spec.voxel_size = voxel_size
 
-        self[identifier] = spec
+        self[key] = spec
         self.__center_rois()
 
     def copy(self):
@@ -58,6 +58,6 @@ class BatchRequest(ProviderSpec):
         center = total_roi.get_center()
 
         for specs_type in [self.array_specs, self.points_specs]:
-            for identifier in specs_type:
-                roi = specs_type[identifier].roi
-                specs_type[identifier].roi = roi.shift(center - roi.get_center())
+            for key in specs_type:
+                roi = specs_type[key].roi
+                specs_type[key].roi = roi.shift(center - roi.get_center())

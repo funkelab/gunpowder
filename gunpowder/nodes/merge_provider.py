@@ -9,7 +9,7 @@ class MergeProvider(BatchProvider):
     '''Merges different providers.
     '''
     def __init__(self):
-        self.identifier_to_provider = {}
+        self.key_to_provider = {}
 
     def setup(self):
         assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the MergeProvider"
@@ -18,32 +18,32 @@ class MergeProvider(BatchProvider):
         error_message = "Key {} provided by more than one upstream provider. Node MergeProvider only allows to merge " \
                         "providers with different keys."
         for provider in self.get_upstream_providers():
-            for identifier, spec in provider.spec.items():
-                assert self.spec is None or identifier not in self.spec, error_message.format(identifier)
-                self.provides(identifier, spec)
-                self.identifier_to_provider[identifier] = provider
+            for key, spec in provider.spec.items():
+                assert self.spec is None or key not in self.spec, error_message.format(key)
+                self.provides(key, spec)
+                self.key_to_provider[key] = provider
 
     def provide(self, request):
 
         # create upstream requests
         upstream_requests = {}
-        for identifier, spec in request.items():
+        for key, spec in request.items():
 
-            provider = self.identifier_to_provider[identifier]
+            provider = self.key_to_provider[key]
             if provider not in upstream_requests:
                 upstream_requests[provider] = BatchRequest()
 
-            upstream_requests[provider][identifier] = spec
+            upstream_requests[provider][key] = spec
 
         # execute requests, merge batches
         merged_batch = Batch()
         for provider, upstream_request in upstream_requests.items():
 
             batch = provider.request_batch(upstream_request)
-            for identifier, array in batch.arrays.items():
-                merged_batch.arrays[identifier] = array
-            for identifier, points in batch.points.items():
-                merged_batch.points[identifier] = points
+            for key, array in batch.arrays.items():
+                merged_batch.arrays[key] = array
+            for key, points in batch.points.items():
+                merged_batch.points[key] = points
 
         return merged_batch
 
