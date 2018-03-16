@@ -39,8 +39,6 @@ class TestRandomLocation(ProviderTest):
 
     def test_output(self):
 
-        set_verbose()
-
         pipeline = (
             TestSourceRandomLocation() +
             CustomRandomLocation()
