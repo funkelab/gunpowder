@@ -26,8 +26,8 @@ from .random_location import RandomLocation
 from .random_provider import RandomProvider
 from .rasterize_points import RasterizationSettings, RasterizePoints
 from .reject import Reject
+from .renumber_connected_components import RenumberConnectedComponents
 from .scan import Scan
 from .simple_augment import SimpleAugment
 from .snapshot import Snapshot
 from .specified_location import SpecifiedLocation
-from .split_and_renumber_segmentation_labels import SplitAndRenumberSegmentationLabels

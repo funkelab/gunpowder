@@ -1,7 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.ext import malis
 
-class SplitAndRenumberSegmentationLabels(BatchFilter):
+class RenumberConnectedComponents(BatchFilter):
 
     def __init__(self, labels):
         self.labels = labels
