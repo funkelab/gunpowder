@@ -189,9 +189,9 @@ class TestAddVectorMap(ProviderTest):
                 radius_vx             = [(radius_phys // vx_dim) for vx_dim in voxel_size]
                 region_to_check       = np.clip([(presyn_loc_shifted_vx - radius_vx), (presyn_loc_shifted_vx+radius_vx)],
                                             a_min=(0,0,0), a_max=vector_map_presyn.shape[-3:])
-                for x,y,z in itertools.product(range(region_to_check[0][0],region_to_check[1][0]),
-                                               range(region_to_check[0][1], region_to_check[1][1]),
-                                               range(region_to_check[0][2], region_to_check[1][2])):
+                for x,y,z in itertools.product(range(int(region_to_check[0][0]), int(region_to_check[1][0])),
+                                               range(int(region_to_check[0][1]), int(region_to_check[1][1])),
+                                               range(int(region_to_check[0][2]), int(region_to_check[1][2]))):
                     if np.linalg.norm((np.array((x,y,z))-np.asarray(point.location))) < radius_phys:
                         vector = [vector_map_presyn[dim][x, y, z] for dim in range(vector_map_presyn.shape[0])]
                         if not np.sum(vector) == 0:
@@ -236,9 +236,9 @@ class TestAddVectorMap(ProviderTest):
                 radius_vx             = [(radius_phys // vx_dim) for vx_dim in voxel_size]
                 region_to_check       = np.clip([(presyn_loc_shifted_vx - radius_vx), (presyn_loc_shifted_vx+radius_vx)],
                                             a_min=(0,0,0), a_max=vector_map_presyn.shape[-3:])
-                for x,y,z in itertools.product(range(region_to_check[0][0],region_to_check[1][0]),
-                                               range(region_to_check[0][1], region_to_check[1][1]),
-                                               range(region_to_check[0][2], region_to_check[1][2])):
+                for x,y,z in itertools.product(range(int(region_to_check[0][0]), int(region_to_check[1][0])),
+                                               range(int(region_to_check[0][1]), int(region_to_check[1][1])),
+                                               range(int(region_to_check[0][2]), int(region_to_check[1][2]))):
                     if np.linalg.norm((np.array((x,y,z))-np.asarray(point.location))) < radius_phys:
                         vector = [vector_map_presyn[dim][x, y, z] for dim in range(vector_map_presyn.shape[0])]
                         if not np.sum(vector) == 0:

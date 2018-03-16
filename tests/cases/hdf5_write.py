@@ -50,6 +50,7 @@ class Hdf5WriteTestSource(BatchProvider):
 class TestHdf5Write(ProviderTest):
 
     def test_output(self):
+        path = self.path_to('hdf5_write_test.hdf')
 
         source = Hdf5WriteTestSource()
 
@@ -62,7 +63,7 @@ class TestHdf5Write(ProviderTest):
             Hdf5Write({
                 ArrayKeys.RAW: 'arrays/raw'
             },
-            output_filename='hdf5_write_test.hdf') +
+            output_filename=path) +
             Scan(chunk_request))
 
         with build(pipeline):
@@ -80,7 +81,7 @@ class TestHdf5Write(ProviderTest):
 
         # assert that stored HDF dataset equals batch array
 
-        with h5py.File('hdf5_write_test.hdf', 'r') as f:
+        with h5py.File(path, 'r') as f:
 
             ds = f['arrays/raw']
 

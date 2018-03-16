@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.nodes.batch_provider import BatchProvider
@@ -7,26 +8,41 @@ from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 
+logger = logging.getLogger(__name__)
+
 class CsvPointsSource(BatchProvider):
     '''Read a set of points from a comma-separated-values text file. Each line
     in the file represents one point.
 
     Args:
 
-        filename (string): The file to read from.
+        filename (string):
 
-        points (:class:`PointsKey`): The key of the points set to create.
+            The file to read from.
 
-        points_spec (PointsSpec, optional): An optional :class:`PointsSpec` to
-            overwrite the points specs automatically determined from the CSV
-            file. This is useful to set the :class:`Roi` manually.
+        points (:class:`PointsKey`):
+
+            The key of the points set to create.
+
+        points_spec (PointsSpec, optional):
+
+            An optional :class:`PointsSpec` to overwrite the points specs
+            automatically determined from the CSV file. This is useful to set
+            the :class:`Roi` manually.
+
+        scale (scalar or array-like):
+
+            An optional scaling to apply to the coordinates of the points read
+            from the CSV file. This is useful if the points refer to voxel
+            positions to convert them to world units.
     '''
 
-    def __init__(self, filename, points, points_spec=None):
+    def __init__(self, filename, points, points_spec=None, scale=None):
 
         self.filename = filename
         self.points = points
         self.points_spec = points_spec
+        self.scale = scale
         self.ndims = None
         self.data = None
 
@@ -55,6 +71,10 @@ class CsvPointsSource(BatchProvider):
         min_bb = request[self.points].roi.get_begin()
         max_bb = request[self.points].roi.get_end()
 
+        logger.debug(
+            "CSV points source got request for %s",
+            request[self.points].roi)
+
         point_filter = np.ones((self.data.shape[0],), dtype=np.bool)
         for d in range(self.ndims):
             point_filter = np.logical_and(point_filter, self.data[:,d] >= min_bb[d])
@@ -65,7 +85,7 @@ class CsvPointsSource(BatchProvider):
 
         points_data = {
 
-            i: Point(Coordinate(p))
+            i: Point(p)
             for i, p in zip(ids, filtered)
         }
         points_spec = PointsSpec(roi=request[self.points].roi.copy())
@@ -80,8 +100,13 @@ class CsvPointsSource(BatchProvider):
 
     def read_points(self, filename):
 
-        return np.array(
+        points = np.array(
             [
                 [ float(t.strip(',')) for t in line.split() ]
                 for line in open(filename, 'r')
             ])
+
+        if self.scale is not None:
+            points *= self.scale
+
+        return points

@@ -21,9 +21,13 @@ class Points(Freezable):
         self.freeze()
 
 class Point(Freezable):
+
     def __init__(self, location):
-        self.location = location
+        self.location = np.array(location, dtype=np.float32)
         self.freeze()
+
+    def __repr__(self):
+        return str(self.location)
 
 class PointsKey(Freezable):
     '''A key to identify lists of points in requests, batches, and across

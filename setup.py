@@ -1,4 +1,26 @@
 from setuptools import setup
+import subprocess
+try:
+    import base_string as string_types
+except ImportError:
+    string_types = str
+
+extras_require = {
+    'tensorflow': ['tensorflow'],
+    'test': ['tox']
+}
+
+
+dep_set = set()
+for value in extras_require.values():
+    if isinstance(value, string_types):
+        dep_set.add(value)
+    else:
+        dep_set.update(value)
+
+extras_require['full'] = list(dep_set)
+
+subprocess.call('pip install git+https://github.com/funkey/augment#egg=augment'.split())
 
 setup(
         name='gunpowder',
@@ -24,8 +46,7 @@ setup(
             "scipy",
             "h5py",
             "scikit-image",
-            "augment",
             "requests"
         ],
-        dependency_links=['git+https://github.com/funkey/augment#egg=augment']
+        extras_require=extras_require,
 )

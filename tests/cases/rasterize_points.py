@@ -110,7 +110,7 @@ class TestRasterizePoints(ProviderTest):
                 ArrayKeys.RASTERIZED,
                 ArraySpec(voxel_size=(40, 4, 4)),
                 RasterizationSettings(
-                    ball_radius=1,
+                    radius=1,
                     fg_value=0,
                     bg_value=1))
         )

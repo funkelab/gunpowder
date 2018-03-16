@@ -8,25 +8,60 @@ from gunpowder.coordinate import Coordinate
 logger = logging.getLogger(__name__)
 
 class SimpleAugment(BatchFilter):
+    '''Randomly mirror and transpose all :class:`Arrays<Array>` and
+    :class:`Points` in a batch.
 
-    def __init__(self, transpose_only_xy=True):
-        self.transpose_only_xy = transpose_only_xy
+    Args:
+
+        mirror_only (list of int, optional):
+
+            If set, only mirror between the given axes. This is useful to
+            exclude channels that have a set direction, like time.
+
+        transpose_only (list of int, optional):
+
+            If set, only transpose between the given axes. This is useful to
+            limit the transpose to axes with the same resolution or to exclude
+            channels representing time.
+    '''
+
+    def __init__(self, mirror_only=None, transpose_only=None):
+
+        self.mirror_only = mirror_only
+        self.transpose_only = transpose_only
+        self.mirror_mask = None
+        self.dims = None
+        self.transpose_dims = None
+
+    def setup(self):
+
+        self.dims = self.spec.get_total_roi().dims()
+
+        if self.mirror_only is None:
+            self.mirror_mask = [ True ]*self.dims
+        else:
+            self.mirror_mask = [ d in self.mirror_only for d in range(self.dims) ]
+
+        if self.transpose_only is None:
+            self.transpose_dims = list(range(self.dims))
+        else:
+            self.transpose_dims = self.transpose_only
 
     def prepare(self, request):
 
         self.total_roi = request.get_total_roi()
-        self.dims = self.total_roi.dims()
 
-        self.mirror = [ random.randint(0,1) for d in range(self.dims) ]
-        if self.transpose_only_xy:
-            assert self.dims==3, "Option transpose_only_xy only makes sense on 3D batches"
-            t = [1,2]
-            random.shuffle(t)
-            self.transpose = (0,) + tuple(t)
-        else:
-            t = list(range(self.dims))
-            random.shuffle(t)
-            self.transpose = tuple(t)
+        self.mirror = [
+            random.randint(0,1)
+            if self.mirror_mask[d] else 0
+            for d in range(self.dims)
+        ]
+
+        t = list(self.transpose_dims)
+        random.shuffle(t)
+        self.transpose = list(range(self.dims))
+        for o, n in zip(self.transpose_dims, t):
+            self.transpose[o] = n
 
         logger.debug("mirror = " + str(self.mirror))
         logger.debug("transpose = " + str(self.transpose))
@@ -66,6 +101,12 @@ class SimpleAugment(BatchFilter):
                 # transpose
                 if self.transpose != (0, 1, 2):
                     syn_point.location = np.asarray([syn_point.location[self.transpose[d]] for d in range(self.dims)])
+
+                # due to the mirroring, points at the lower boundary of the ROI
+                # could fall on the upper one, which excludes them from the ROI
+                if not points.spec.roi.contains(syn_point.location):
+                    del points.data[loc_id]
+
         # arrays & points
         for collection_type in [batch.arrays, batch.points]:
             for (type, collector) in collection_type.items():

@@ -1,11 +1,12 @@
 import logging
 import multiprocessing
 import numpy as np
+from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.producer_pool import ProducerPool
-from gunpowder.array import Array
 from gunpowder.points import Points
+from gunpowder.producer_pool import ProducerPool
+from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -153,16 +154,53 @@ class Scan(BatchFilter):
         # get individual shift ROIs and intersect them
         for identifier, reference_spec in self.reference.items():
 
+            if identifier not in spec:
+                continue
             if spec[identifier].roi is None:
                 continue
 
-            # shift the spec roi such that its offset == shift from reference to
-            # spec
-            shift_roi = spec[identifier].roi.shift(-reference_spec.roi.get_offset())
+            # we have a reference ROI
+            #
+            #    [--------) [9]
+            #    3        12
+            #
+            # and a spec ROI
+            #
+            #                 [---------------) [16]
+            #                 16              32
+            #
+            # min and max shifts of reference are
+            #
+            #                 [--------) [9]
+            #                 16       25
+            #                        [--------) [9]
+            #                        23       32
+            #
+            # therefore, all possible ways to shift the reference such that it
+            # is contained in the spec are at least 16-3=13 and at most 23-3=20
+            # (inclusive)
+            #
+            #              [-------) [8]
+            #              13      21
+            #
+            # 1. the starting point is beginning of spec - beginning of reference
+            # 2. the length is length of spec - length of reference + 1
 
-            # shrink by the size of reference at the end
-            shift_roi = shift_roi.grow(None, -reference_spec.roi.get_shape())
+            # 1. get the starting point of the shift ROI
+            shift_begin = (
+                spec[identifier].roi.get_begin() -
+                reference_spec.roi.get_begin())
 
+            # 2. get the shape of the shift ROI
+            shift_shape = (
+                spec[identifier].roi.get_shape() -
+                reference_spec.roi.get_shape() +
+                (1,)*reference_spec.roi.dims())
+
+            # create a ROI...
+            shift_roi = Roi(shift_begin, shift_shape)
+
+            # ...and intersect it with previous shift ROIs
             if total_shift_roi is None:
                 total_shift_roi = shift_roi
             else:
@@ -187,7 +225,7 @@ class Scan(BatchFilter):
         in this dimension.'''
 
         min_shift = shift_roi.get_offset()
-        max_shift = shift_roi.get_end()
+        max_shift = Coordinate(m - 1 for m in shift_roi.get_end())
 
         shift = np.array(min_shift)
         shifts = []
@@ -244,11 +282,15 @@ class Scan(BatchFilter):
             self.batch = self.__setup_batch(spec, chunk)
 
         for (array_key, array) in chunk.arrays.items():
+            if array_key not in spec:
+                continue
             self.__fill(self.batch.arrays[array_key].data, array.data,
                         spec.array_specs[array_key].roi, array.spec.roi,
                         self.spec[array_key].voxel_size)
 
         for (points_key, points) in chunk.points.items():
+            if points_key not in spec:
+                continue
             self.__fill_points(self.batch.points[points_key].data, points.data,
                                spec.points_specs[points_key].roi, points.roi)
 
@@ -270,6 +312,7 @@ class Scan(BatchFilter):
 
             spec = self.spec[array_key].copy()
             spec.roi = roi
+            logger.info("allocating array of shape %s for %s", shape, array_key)
             batch.arrays[array_key] = Array(data=np.zeros(shape),
                                                 spec=spec)
 
@@ -290,7 +333,7 @@ class Scan(BatchFilter):
         roi_b = roi_b // voxel_size
 
         common_roi = roi_a.intersect(roi_b)
-        if common_roi is None:
+        if common_roi.empty():
             return
 
         common_in_a_roi = common_roi - roi_a.get_offset()

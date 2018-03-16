@@ -232,6 +232,11 @@ class BatchProvider(object):
                                             points.spec.roi,
                                             self.name())
 
+            for _, point in points.data.items():
+                assert points.spec.roi.contains(point.location), (
+                    "points provided by %s with ROI %s contain point at %s"%(
+                        self.name(), points.spec.roi, point.location))
+
     def provide(self, request):
         '''To be implemented in subclasses.
 
