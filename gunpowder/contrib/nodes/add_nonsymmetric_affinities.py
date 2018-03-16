@@ -8,7 +8,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
-class AddLongRangeAffinities(BatchFilter):
+class AddNonsymmetricAffinities(BatchFilter):
 
 
     def __init__(
@@ -27,9 +27,9 @@ class AddLongRangeAffinities(BatchFilter):
 
     def setup(self):
         assert self.array_key_1 in self.spec, "Upstream does not provide %s needed by \
-        AddLongRangeAffinities"%self.array_key_1
+        AddNonsymmetricAffinities"%self.array_key_1
         assert self.array_key_2 in self.spec, "Upstream does not provide %s needed by \
-        AddLongRangeAffinities"%self.array_key_2
+        AddNonsymmetricAffinities"%self.array_key_2
 
         voxel_size = self.spec[self.array_key_1].voxel_size
 
