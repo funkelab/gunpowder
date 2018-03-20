@@ -3,23 +3,45 @@
 First steps
 ===========
 
+Declaring arrays
+----------------
+
+Before you start assembling a training of prediction pipeline, you have to
+create :class:`ArrayKeys<ArrayKey>` for all arrays your pipeline will use.
+These keys are used later to formulate a request for an array or to access the
+actual array associated with that key.
+
+In the example here, we assume we have a raw dataset, together with
+ground-truth labels and a mask which lets us know where ground-truth is
+available.
+
+.. code-block:: python
+
+  import gunpowder as gp
+
+  raw = gp.ArrayKey('RAW')
+  gt = gp.ArrayKey('GT')
+  gt_mask = gp.ArrayKey('MASK')
+
+
 Creating a source
 -----------------
 
 In :mod:`gunpowder`, you assemble a training pipeline as a directed acyclic
 graph (DAG) of :class:`BatchProvider<gunpowder.BatchProvider>`. The leaves of
-your DAG are called sources, i.e., batch provider with no inputs:
+your DAG are called sources, i.e., batch providers with no inputs:
 
 .. code-block:: python
 
-  from gunpowder import *
-
   source =
-      Hdf5Source(
-              'example.hdf',
-              raw_dataset='volumes/raw',
-              gt_dataset='volumes/labels/neuron_ids',
-              gt_mask_dataset='volumes/labels/mask')
+      gp.Hdf5Source(
+          'example.hdf',
+          {
+              raw: 'volumes/raw',
+              gt: 'volumes/labels/neuron_ids',
+              gt_mask_dataset: 'volumes/labels/mask'
+          }
+      )
 
 Chaining batch providers
 ------------------------
@@ -37,10 +59,10 @@ as a batch provider:
 .. code-block:: python
 
   augment =
-      ElasticAugment(
-          control_point_spacing=[4,40,40],
-          jitter_sigma=[0,2,2],
-          rotation_interval=[0,math.pi/2.0])
+      gp.ElasticAugment(
+          control_point_spacing=[4, 40, 40],
+          jitter_sigma=[0, 2, 2],
+          rotation_interval=[0, math.pi/2.0])
 
 When :class:`gunpowder.ElasticAugment` is asked for a batch via a request, the
 request is automatically changed to request an upstream batch large enough to
@@ -51,22 +73,20 @@ Another example is the random selection of locations inside a source:
 .. code-block:: python
 
   random =
-      RandomLocation()
+      gp.RandomLocation()
 
 :class:`RandomLocation` does only modify the request (by changing the offset).
 
 Training
 --------
 
-Training itself is modelled as a batch provider. It takes a batch, performs one
-training iteration, and adds the current prediction and loss to the batch:
+:class:`Training<tensorflow.Train>` itself is modelled as a batch provider. It
+takes a batch and performs one training iteration:
 
 .. code-block:: python
 
-  solver_parameters = SolverParameters()
-  # set solver parameters (network, learning rate, optimizer, etc.)
   train =
-      Train(solver_parameters, use_gpu=0)
+      gp.tensorflow.Train(...)
 
 Putting it together, a very simple pipeline for training 1000 iterations would
 be
@@ -75,14 +95,14 @@ be
 
   pipeline = source + random + augment + train
 
-  request = BatchRequest()
-  request.add_volume_request(VolumeType.RAW, (84,268,268))
-  request.add_volume_request(VolumeType.GT_LABELS, (56,56,56))
-  request.add_volume_request(VolumeType.GT_MASK, (56,56,56))
+  request = gp.BatchRequest()
+  request.add(raw, (84, 268, 268))
+  request.add(gt, (56, 56, 56))
+  request.add(gt_mask, (56, 56, 56))
 
-  with build(pipeline) as p:
-    for i in range(1000):
-    p.request_batch(request)
+  with gp.build(pipeline) as p:
+      for i in range(1000):
+      p.request_batch(request)
 
 Note that we use a :class:`gunpowder.BatchRequest` object to communicate
 downstream the requirements for a batch. In the example, we are interested in

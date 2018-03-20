@@ -88,6 +88,7 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-source">Creating a source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#chaining-batch-providers">Chaining batch providers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
@@ -165,19 +166,37 @@
             
   <div class="section" id="first-steps">
 <span id="sec-first-steps"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="declaring-arrays">
+<h2>Declaring arrays<a class="headerlink" href="#declaring-arrays" title="Permalink to this headline">¶</a></h2>
+<p>Before you start assembling a training of prediction pipeline, you have to
+create <code class="xref py py-class docutils literal"><span class="pre">ArrayKeys</span></code> for all arrays your pipeline will use.
+These keys are used later to formulate a request for an array or to access the
+actual array associated with that key.</p>
+<p>In the example here, we assume we have a raw dataset, together with
+ground-truth labels and a mask which lets us know where ground-truth is
+available.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gunpowder</span> <span class="kn">as</span> <span class="nn">gp</span>
+
+<span class="n">raw</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;RAW&#39;</span><span class="p">)</span>
+<span class="n">gt</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
+<span class="n">gt_mask</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;MASK&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="creating-a-source">
 <h2>Creating a source<a class="headerlink" href="#creating-a-source" title="Permalink to this headline">¶</a></h2>
 <p>In <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
 graph (DAG) of <a class="reference internal" href="nodes.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>. The leaves of
-your DAG are called sources, i.e., batch provider with no inputs:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gunpowder</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="n">source</span> <span class="o">=</span>
-    <span class="n">Hdf5Source</span><span class="p">(</span>
-            <span class="s1">&#39;example.hdf&#39;</span><span class="p">,</span>
-            <span class="n">raw_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/raw&#39;</span><span class="p">,</span>
-            <span class="n">gt_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/labels/neuron_ids&#39;</span><span class="p">,</span>
-            <span class="n">gt_mask_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/labels/mask&#39;</span><span class="p">)</span>
+your DAG are called sources, i.e., batch providers with no inputs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">=</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">Hdf5Source</span><span class="p">(</span>
+        <span class="s1">&#39;example.hdf&#39;</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="n">raw</span><span class="p">:</span> <span class="s1">&#39;volumes/raw&#39;</span><span class="p">,</span>
+            <span class="n">gt</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/neuron_ids&#39;</span><span class="p">,</span>
+            <span class="n">gt_mask_dataset</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/mask&#39;</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -192,10 +211,10 @@ a batch, possibly modifies it, and passes the batch on <em>downstream</em>.</p>
 <p>As an example, this scheme allows the modelling of on-the-fly data augmentation
 as a batch provider:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">augment</span> <span class="o">=</span>
-    <span class="n">ElasticAugment</span><span class="p">(</span>
-        <span class="n">control_point_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="p">],</span>
-        <span class="n">jitter_sigma</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
-        <span class="n">rotation_interval</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">ElasticAugment</span><span class="p">(</span>
+        <span class="n">control_point_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span>
+        <span class="n">jitter_sigma</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">rotation_interval</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>When <a class="reference internal" href="nodes.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal"><span class="pre">gunpowder.ElasticAugment</span></code></a> is asked for a batch via a request, the
@@ -203,33 +222,31 @@ request is automatically changed to request an upstream batch large enough to
 perform the elastic augmentation seamlessly.</p>
 <p>Another example is the random selection of locations inside a source:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">random</span> <span class="o">=</span>
-    <span class="n">RandomLocation</span><span class="p">()</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">RandomLocation</span><span class="p">()</span>
 </pre></div>
 </div>
 <p><code class="xref py py-class docutils literal"><span class="pre">RandomLocation</span></code> does only modify the request (by changing the offset).</p>
 </div>
 <div class="section" id="training">
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
-<p>Training itself is modelled as a batch provider. It takes a batch, performs one
-training iteration, and adds the current prediction and loss to the batch:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">solver_parameters</span> <span class="o">=</span> <span class="n">SolverParameters</span><span class="p">()</span>
-<span class="c1"># set solver parameters (network, learning rate, optimizer, etc.)</span>
-<span class="n">train</span> <span class="o">=</span>
-    <span class="n">Train</span><span class="p">(</span><span class="n">solver_parameters</span><span class="p">,</span> <span class="n">use_gpu</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<p><code class="xref py py-class docutils literal"><span class="pre">Training</span></code> itself is modelled as a batch provider. It
+takes a batch and performs one training iteration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">train</span> <span class="o">=</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">tensorflow</span><span class="o">.</span><span class="n">Train</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Putting it together, a very simple pipeline for training 1000 iterations would
 be</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">source</span> <span class="o">+</span> <span class="n">random</span> <span class="o">+</span> <span class="n">augment</span> <span class="o">+</span> <span class="n">train</span>
 
-<span class="n">request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">RAW</span><span class="p">,</span> <span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">268</span><span class="p">,</span><span class="mi">268</span><span class="p">))</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">))</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">))</span>
+<span class="n">request</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">BatchRequest</span><span class="p">()</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">268</span><span class="p">,</span> <span class="mi">268</span><span class="p">))</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gt_mask</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
 
-<span class="k">with</span> <span class="n">build</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
-  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
-  <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">gp</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that we use a <code class="xref py py-class docutils literal"><span class="pre">gunpowder.BatchRequest</span></code> object to communicate
