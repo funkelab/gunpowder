@@ -77,8 +77,8 @@ class BalanceLabels(BatchFilter):
         error_scale = np.ones(labels.data.shape, dtype=np.float32)
 
         # set error_scale to 0 in masked-out areas
-        for identifier in self.masks:
-            mask = batch.arrays[identifier]
+        for key in self.masks:
+            mask = batch.arrays[key]
             assert labels.data.shape == mask.data.shape, (
                 "Shape of mask %s %s does not match %s %s"%(
                     mask,

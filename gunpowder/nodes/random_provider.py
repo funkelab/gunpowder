@@ -19,12 +19,12 @@ class RandomProvider(BatchProvider):
             if common_spec is None:
                 common_spec = copy.deepcopy(provider.spec)
             else:
-                for identifier, spec in provider.spec.items():
-                    if identifier not in common_spec:
-                        del common_spec[identifier]
+                for key, spec in provider.spec.items():
+                    if key not in common_spec:
+                        del common_spec[key]
 
-        for identifier, spec in common_spec.items():
-            self.provides(identifier, spec)
+        for key, spec in common_spec.items():
+            self.provides(key, spec)
 
     def provide(self, request):
         return random.choice(self.get_upstream_providers()).request_batch(request)

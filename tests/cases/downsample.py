@@ -63,10 +63,8 @@ class TestDownSample(ProviderTest):
 
         pipeline = (
                 DownSampleTestSource() +
-                DownSample({
-                        ArrayKeys.RAW_DOWNSAMPLED: (2, ArrayKeys.RAW),
-                        ArrayKeys.GT_LABELS_DOWNSAMPLED: (2, ArrayKeys.GT_LABELS),
-                })
+                DownSample(ArrayKeys.RAW, 2, ArrayKeys.RAW_DOWNSAMPLED) +
+                DownSample(ArrayKeys.GT_LABELS, 2, ArrayKeys.GT_LABELS_DOWNSAMPLED)
         )
 
         with build(pipeline):

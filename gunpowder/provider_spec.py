@@ -48,70 +48,73 @@ class ProviderSpec(Freezable):
         # use __setitem__ instead of copying the dicts, this ensures type tests
         # are run
         if array_specs is not None:
-            for identifier, spec in array_specs.items():
-                self[identifier] = spec
+            for key, spec in array_specs.items():
+                self[key] = spec
         if points_specs is not None:
-            for identifier, spec in points_specs.items():
-                self[identifier] = spec
+            for key, spec in points_specs.items():
+                self[key] = spec
 
 
-    def __setitem__(self, identifier, spec):
+    def __setitem__(self, key, spec):
 
         if isinstance(spec, ArraySpec):
-            assert isinstance(identifier, ArrayKey), ("Only a ArrayKey is "
+            assert isinstance(key, ArrayKey), ("Only a ArrayKey is "
                                                         "allowed as key for a "
                                                         "ArraySpec value.")
-            self.array_specs[identifier] = spec.copy()
+            self.array_specs[key] = spec.copy()
 
         elif isinstance(spec, PointsSpec):
-            assert isinstance(identifier, PointsKey), ("Only a PointsKey is "
+            assert isinstance(key, PointsKey), ("Only a PointsKey is "
                                                         "allowed as key for a "
                                                         "PointsSpec value.")
-            self.points_specs[identifier] = spec.copy()
+            self.points_specs[key] = spec.copy()
 
         else:
             raise RuntimeError("Only ArraySpec or PointsSpec can be set in a "
                                "%s."%type(self).__name__)
 
-    def __getitem__(self, identifier):
+    def __getitem__(self, key):
 
-        if isinstance(identifier, ArrayKey):
-            return self.array_specs[identifier]
+        if isinstance(key, ArrayKey):
+            return self.array_specs[key]
 
-        elif isinstance(identifier, PointsKey):
-            return self.points_specs[identifier]
+        elif isinstance(key, PointsKey):
+            return self.points_specs[key]
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
 
     def __len__(self):
 
         return len(self.array_specs) + len(self.points_specs)
 
-    def __contains__(self, identifier):
+    def __contains__(self, key):
 
-        if isinstance(identifier, ArrayKey):
-            return identifier in self.array_specs
+        if isinstance(key, ArrayKey):
+            return key in self.array_specs
 
-        elif isinstance(identifier, PointsKey):
-            return identifier in self.points_specs
-
-        else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
-
-    def __delitem__(self, identifier):
-
-        if isinstance(identifier, ArrayKey):
-            del self.array_specs[identifier]
-
-        elif isinstance(identifier, PointsKey):
-            del self.points_specs[identifier]
+        elif isinstance(key, PointsKey):
+            return key in self.points_specs
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
+
+    def __delitem__(self, key):
+
+        if isinstance(key, ArrayKey):
+            del self.array_specs[key]
+
+        elif isinstance(key, PointsKey):
+            del self.points_specs[key]
+
+        else:
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
 
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
@@ -167,8 +170,8 @@ class ProviderSpec(Freezable):
                                    "given array specs is empty.")
 
         lcm_voxel_size = None
-        for identifier in array_keys:
-            voxel_size = self.array_specs[identifier].voxel_size
+        for key in array_keys:
+            voxel_size = self.array_specs[key].voxel_size
             if lcm_voxel_size is None:
                 lcm_voxel_size = voxel_size
             else:
@@ -193,6 +196,6 @@ class ProviderSpec(Freezable):
     def __repr__(self):
 
         r = "\n"
-        for (identifier, spec) in self.items():
-            r += "\t%s: %s\n"%(identifier, spec)
+        for (key, spec) in self.items():
+            r += "\t%s: %s\n"%(key, spec)
         return r

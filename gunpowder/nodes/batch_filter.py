@@ -37,7 +37,7 @@ class BatchFilter(BatchProvider):
         assert len(self.get_upstream_providers()) == 1, "BatchFilters need to have exactly one upstream provider"
         return self.get_upstream_providers()[0]
 
-    def updates(self, identifier, spec):
+    def updates(self, key, spec):
         '''Update an output provided by this :class:`BatchFilter`.
 
         Implementations should call this in their :func:`setup` method, which
@@ -45,7 +45,7 @@ class BatchFilter(BatchProvider):
 
         Args:
 
-            identifier:
+            key:
 
                 A :class:`ArrayKey` or :class:`PointsKey` instance to refer to
                 the output.
@@ -55,11 +55,11 @@ class BatchFilter(BatchProvider):
                 A :class:`ArraySpec` or :class:`PointsSpec` to describe the output.
         '''
 
-        assert identifier in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, identifier)
-        self.spec[identifier] = copy.deepcopy(spec)
-        self.updated_items.append(identifier)
+        assert key in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, key)
+        self.spec[key] = copy.deepcopy(spec)
+        self.updated_items.append(key)
 
-        logger.debug("%s updates %s with %s"%(self.name(), identifier, spec))
+        logger.debug("%s updates %s with %s"%(self.name(), key, spec))
 
     def enable_autoskip(self, skip=True):
         '''Enable automatic skipping of this :class:`BatchFilter`, based on
@@ -69,7 +69,7 @@ class BatchFilter(BatchProvider):
         By default, :class:`BatchFilters<BatchFilter>` are not skipped
         automatically, regardless of what they update or provide. If autskip is
         enabled, :class:`BatchFilters<BatchFilter>` will only be run if the
-        request contains at least one identifier reported earlier with
+        request contains at least one key reported earlier with
         :func:`updates` or :func:`provides`.
         '''
 
@@ -90,7 +90,7 @@ class BatchFilter(BatchProvider):
 
     @property
     def updated_items(self):
-        '''Get a list of the identifiers that are updated by this `BatchFilter`.
+        '''Get a list of the keys that are updated by this `BatchFilter`.
 
         This list is only available after the pipeline has been build. Before
         that, it is empty.
@@ -147,10 +147,10 @@ class BatchFilter(BatchProvider):
         if not self.autoskip_enabled:
             return False
 
-        for identifier, _ in request.items():
-            if identifier in self.provided_items:
+        for key, _ in request.items():
+            if key in self.provided_items:
                 return False
-            if identifier in self.updated_items:
+            if key in self.updated_items:
                 return False
 
         return True

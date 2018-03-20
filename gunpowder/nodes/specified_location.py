@@ -21,7 +21,7 @@ class SpecifiedLocation(BatchFilter):
 
     Args:
 
-        specified_coordinates: list, array, A list of locations to center batches. Should be given
+        locations: list, array, A list of locations to center batches. Should be given
         physical dimensions and with respect to (0,0,0)
 
         choose_randomly: bool, defines whether locations should be picked in order or at random from
@@ -32,9 +32,9 @@ class SpecifiedLocation(BatchFilter):
         be a data format compatible with hdf5.
     '''
 
-    def __init__(self, specified_coordinates, choose_randomly=False, extra_data=None):
+    def __init__(self, locations, choose_randomly=False, extra_data=None):
 
-        self.coordinates = specified_coordinates
+        self.coordinates = locations
         self.choose_randomly = choose_randomly
         self.loc_i = 0
         self.upstream_spec = None
@@ -42,9 +42,9 @@ class SpecifiedLocation(BatchFilter):
         self.specified_shift = None
 
         if extra_data is not None:
-            assert len(extra_data) == len(specified_coordinates),\
+            assert len(extra_data) == len(locations),\
                 "extra_data (%d) should match the length of specified locations (%d)"%(len(extra_data),\
-                len(specified_coordinates))
+                len(locations))
 
         self.extra_data = extra_data
 
@@ -59,22 +59,21 @@ class SpecifiedLocation(BatchFilter):
 
         # clear bounding boxes of all provided arrays and points --
         # SpecifiedLocation does know its locations at setup (checks on the fly)
-        for identifier, spec in self.spec.items():
+        for key, spec in self.spec.items():
             spec.roi = None
-            self.updates(identifier, spec)
+            self.updates(key, spec)
 
     def prepare(self, request):
 
         shift_roi = None
 
-        for identifier, spec in request.items():
+        for key, spec in request.items():
             request_roi = spec.roi
-            if identifier in self.upstream_spec:
-                provided_roi = self.upstream_spec[identifier].roi
+            if key in self.upstream_spec:
+                provided_roi = self.upstream_spec[key].roi
             else:
                 raise Exception(
-                    "Requested %s, but upstream does not provide "
-                    "it."%identifier)
+                    "Requested %s, but upstream does not provide it."%key)
             key_shift_roi = provided_roi.shift(-request_roi.get_begin()).grow((0, 0, 0),
                                                     -request_roi.get_shape())
 

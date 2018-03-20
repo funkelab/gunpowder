@@ -24,7 +24,7 @@ subprocess.call('pip install git+https://github.com/funkey/augment#egg=augment'.
 
 setup(
         name='gunpowder',
-        version='0.2',
+        version='0.3',
         description='Data loading DAG for Greentea.',
         url='https://github.com/funkey/gunpowder',
         author='Jan Funke',
