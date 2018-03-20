@@ -1,8 +1,0 @@
-Arrays
-======
-
-.. automodule:: gunpowder
-
-  .. autoclass:: Array
-  .. autoclass:: ArrayKey
-  .. autoclass:: ArraySpec

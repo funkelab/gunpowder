@@ -16,7 +16,10 @@ default:
 	-rm -r ../_sources
 	-rm -r ../_modules
 	-rm -r ../_static
+	-rm -r ../_downloads
+	-rm -r ../_images
 	cp -r _build/html/* ..
+	-rm -r ../_themes
 
 clean:
 	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
