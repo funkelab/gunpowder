@@ -13,7 +13,7 @@ class Train(GenericTrain):
 
     Args:
 
-        meta_graph_filename: Filename of a tensorflow meta-graph storing the
+        graph: Filename of a tensorflow meta-graph storing the
             tensorflow graph containing an optimizer. A meta-graph file can be
             created by running::
 
@@ -21,7 +21,7 @@ class Train(GenericTrain):
                 ...
 
                 # store it
-                tf.train.export_meta_graph(filename=meta_graph_filename)
+                tf.train.export_meta_graph(filename='...')
 
         optimizer (string or function): Either the name of the tensorflow
             operator performing a training iteration, or a function that, given
@@ -81,7 +81,7 @@ class Train(GenericTrain):
 
     def __init__(
             self,
-            meta_graph_filename,
+            graph,
             optimizer,
             loss,
             inputs,
@@ -98,7 +98,7 @@ class Train(GenericTrain):
             gradients,
             array_specs,
             spawn_subprocess=False)
-        self.meta_graph_filename = meta_graph_filename
+        self.meta_graph_filename = graph
         self.optimizer_func = None
         self.optimizer_loss_names = None
         self.optimizer = None
