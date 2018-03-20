@@ -28,7 +28,7 @@ class InputSpec(object):
         self.memory_layer = memory_layer
         self.blob = blob
         self.shape = shape
-        self.phase = phase # only added to the network  
+        self.phase = phase # only added to the network
 
 class OutputSpec(object):
 
@@ -37,14 +37,18 @@ class OutputSpec(object):
         self.blob = blob
         self.shape = shape
 
-# Wrapper around a networks set_input_arrays to prevent memory leaks of locked 
+# Wrapper around a networks set_input_arrays to prevent memory leaks of locked
 # up arrays
 class NetIoWrapper:
 
-    def __init__(self, net):
+    def __init__(self, net, names_net_outputs):
+        '''
+        :param net:                network prototxt file
+        :param names_net_outputs:  list, names of network outputs
+        '''
         self.net = net
         self.input_specs = get_net_input_specs(net)
-        self.output_specs = get_net_output_specs(net, ['aff_pred'])
+        self.output_specs = get_net_output_specs(net, names_net_outputs)
         self.inputs = {}
 
         for set_key in self.input_specs.keys():

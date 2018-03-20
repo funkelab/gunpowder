@@ -54,6 +54,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">h5py</span>
 <span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">PointsTypes</span><span class="p">,</span> <span class="n">PointsOfType</span><span class="p">,</span> <span class="n">SynPoint</span>
 <span class="kn">from</span> <span class="nn">gunpowder.provider_spec</span> <span class="k">import</span> <span class="n">ProviderSpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 <span class="kn">from</span> <span class="nn">gunpowder.volume</span> <span class="k">import</span> <span class="n">Volume</span><span class="p">,</span> <span class="n">VolumeTypes</span>
@@ -66,7 +67,7 @@
 <span class="sd">    Provides volumes from HDF5 datasets for each volume type given. If the </span>
 <span class="sd">    attribute ``resolution`` is set in an HDF5 dataset, it will be used for the </span>
 <span class="sd">    resolution of the volume. If the attribute ``offset`` is set in an HDF5 </span>
-<span class="sd">    dataset, it will be used as the offset of the :class:`ROI` provided by this </span>
+<span class="sd">    dataset, it will be used as the offset of the :class:`Roi` provided by this </span>
 <span class="sd">    node. It is assumed that the offset is given in world units. Since </span>
 <span class="sd">    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided </span>
 <span class="sd">    by the ``resolution``.</span>
@@ -84,10 +85,16 @@
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">filename</span><span class="p">,</span>
             <span class="n">datasets</span><span class="p">,</span>
+            <span class="n">points_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">points_rois</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">resolution</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_types</span>      <span class="o">=</span> <span class="n">points_types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_rois</span> <span class="o">=</span> <span class="n">points_rois</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">specified_resolution</span> <span class="o">=</span> <span class="n">resolution</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -129,6 +136,10 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">volume_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_types</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">points_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_types</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_rois</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span>
+
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -163,6 +174,30 @@
                         <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
                         <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">volume_type</span><span class="p">])</span>
 
+            <span class="c1"># if pre and postsynaptic locations required, their id : SynapseLocation dictionaries should be created</span>
+            <span class="c1"># together s.t. ids are unique and allow to find partner locations</span>
+            <span class="k">if</span> <span class="n">PointsTypes</span><span class="o">.</span><span class="n">PRESYN</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span> <span class="ow">or</span> <span class="n">PointsTypes</span><span class="o">.</span><span class="n">POSTSYN</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">PointsTypes</span><span class="o">.</span><span class="n">PRESYN</span><span class="p">]</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">PointsTypes</span><span class="o">.</span><span class="n">POSTSYN</span><span class="p">]</span>
+                <span class="c1"># Cremi specific, ROI offset corresponds to offset present in the</span>
+                <span class="c1"># synapse location relative to the raw data.</span>
+                <span class="n">dataset_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">PointsTypes</span><span class="o">.</span><span class="n">PRESYN</span><span class="p">]</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+                <span class="n">presyn_points</span><span class="p">,</span> <span class="n">postsyn_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_syn_points</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">PointsTypes</span><span class="o">.</span><span class="n">PRESYN</span><span class="p">],</span>
+                                                                      <span class="n">syn_file</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+                                                                      <span class="n">dataset_offset</span><span class="o">=</span><span class="n">dataset_offset</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="p">(</span><span class="n">points_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                <span class="k">if</span> <span class="n">points_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Asked for </span><span class="si">%s</span><span class="s2"> which this source does not provide&quot;</span><span class="o">%</span><span class="n">points_type</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&#39;s ROI </span><span class="si">%s</span><span class="s2"> outside of my ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">points_type</span><span class="p">,</span><span class="n">roi</span><span class="p">,</span><span class="n">spec</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]))</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">points_type</span><span class="p">,</span> <span class="n">roi</span><span class="p">))</span>
+                <span class="n">id_to_point</span> <span class="o">=</span> <span class="p">{</span><span class="n">PointsTypes</span><span class="o">.</span><span class="n">PRESYN</span><span class="p">:</span> <span class="n">presyn_points</span><span class="p">,</span> <span class="n">PointsTypes</span><span class="o">.</span><span class="n">POSTSYN</span><span class="p">:</span> <span class="n">postsyn_points</span><span class="p">}[</span><span class="n">points_type</span><span class="p">]</span>
+                <span class="c1"># TODO: so far assumed that all points have resolution of raw volume</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsOfType</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">id_to_point</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">])</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">)</span>
 
         <span class="n">timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
@@ -171,8 +206,72 @@
         <span class="k">return</span> <span class="n">batch</span>
 
     <span class="k">def</span> <span class="nf">__read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
-
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ds</span><span class="p">][</span><span class="n">roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()])</span>
+
+
+    <span class="k">def</span> <span class="nf">__is_inside_bb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">bb_shape</span><span class="p">,</span> <span class="n">bb_offset</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">margin</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bb_shape</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">margin</span> <span class="o">=</span> <span class="p">(</span><span class="n">margin</span><span class="p">,)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">bb_shape</span><span class="p">)</span>
+
+        <span class="n">inside_bb</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">location</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bb_offset</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bb_shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">location</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">margin</span><span class="p">[</span><span class="n">dim</span><span class="p">]:</span>
+                <span class="n">inside_bb</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">location</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">size</span> <span class="o">-</span> <span class="n">margin</span><span class="p">[</span><span class="n">dim</span><span class="p">]:</span>
+                <span class="n">inside_bb</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">inside_bb</span>
+
+
+    <span class="k">def</span> <span class="nf">__get_syn_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">syn_file</span><span class="p">,</span> <span class="n">dataset_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">bb_shape</span><span class="p">,</span> <span class="n">bb_offset</span>  <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+        <span class="n">presyn_points_dict</span><span class="p">,</span> <span class="n">postsyn_points_dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+        <span class="n">presyn_node_ids</span>  <span class="o">=</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/presynaptic_site/partners&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">postsyn_node_ids</span> <span class="o">=</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/presynaptic_site/partners&#39;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">node_nr</span><span class="p">,</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/ids&#39;</span><span class="p">]):</span>
+            <span class="n">location</span>     <span class="o">=</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/locations&#39;</span><span class="p">][</span><span class="n">node_nr</span><span class="p">]</span>
+            <span class="n">location</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">VolumeTypes</span><span class="o">.</span><span class="n">RAW</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">dataset_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;adding global offset to points </span><span class="si">%i</span><span class="s1"> </span><span class="si">%i</span><span class="s1"> </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">dataset_offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                          <span class="n">dataset_offset</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dataset_offset</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                <span class="n">location</span> <span class="o">+=</span> <span class="n">dataset_offset</span>
+
+
+            <span class="c1"># cremi synapse locations are in physical space</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_inside_bb</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">bb_shape</span><span class="o">=</span><span class="n">bb_shape</span><span class="p">,</span> <span class="n">bb_offset</span><span class="o">=</span><span class="n">bb_offset</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">presyn_node_ids</span><span class="p">:</span>
+                    <span class="n">kind</span> <span class="o">=</span> <span class="s1">&#39;PreSyn&#39;</span>
+                    <span class="k">assert</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/types&#39;</span><span class="p">][</span><span class="n">node_nr</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;presynaptic_site&#39;</span>
+                    <span class="n">syn_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">presyn_node_ids</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">partner_node_id</span> <span class="o">=</span> <span class="n">postsyn_node_ids</span><span class="p">[</span><span class="n">syn_id</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">postsyn_node_ids</span><span class="p">:</span>
+                    <span class="n">kind</span> <span class="o">=</span> <span class="s1">&#39;PostSyn&#39;</span>
+                    <span class="k">assert</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/types&#39;</span><span class="p">][</span><span class="n">node_nr</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;postsynaptic_site&#39;</span>
+                    <span class="n">syn_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">postsyn_node_ids</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">partner_node_id</span> <span class="o">=</span> <span class="n">presyn_node_ids</span><span class="p">[</span><span class="n">syn_id</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Node id neither pre- no post-synaptic&#39;</span><span class="p">)</span>
+
+                <span class="n">partners_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">partner_node_id</span><span class="p">)]</span>
+                <span class="n">location_id</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+
+                <span class="n">props</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">syn_file</span><span class="p">[</span><span class="s1">&#39;annotations/comments/target_ids&#39;</span><span class="p">]:</span>
+                    <span class="n">props</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;unsure&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+                <span class="c1"># create synpaseLocation &amp; add to dict</span>
+                <span class="n">syn_point</span> <span class="o">=</span> <span class="n">SynPoint</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">location_id</span><span class="o">=</span><span class="n">location_id</span><span class="p">,</span>
+                                     <span class="n">synapse_id</span><span class="o">=</span><span class="n">syn_id</span><span class="p">,</span> <span class="n">partner_ids</span><span class="o">=</span><span class="n">partners_ids</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="n">props</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;PreSyn&#39;</span><span class="p">:</span>
+                    <span class="n">presyn_points_dict</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">node_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">syn_point</span><span class="o">.</span><span class="n">get_copy</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;PostSyn&#39;</span><span class="p">:</span>
+                    <span class="n">postsyn_points_dict</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">node_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">syn_point</span><span class="o">.</span><span class="n">get_copy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">presyn_points_dict</span><span class="p">,</span> <span class="n">postsyn_points_dict</span>
+
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 

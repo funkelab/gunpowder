@@ -19,7 +19,7 @@ class BatchProviderTree(BatchProvider):
         else:
             logger.warning("batch provider setup() called more than once")
 
-    def teardown(self):
+    def internal_teardown(self):
         self.__rec_teardown(self.output)
         self.initialized = False
 
@@ -33,8 +33,9 @@ class BatchProviderTree(BatchProvider):
             upstream_providers += input.get_upstream_providers()
         return upstream_providers
 
-    def get_spec(self):
-        return self.output.get_spec()
+    @property
+    def spec(self):
+        return self.output.spec
 
     def provide(self, request):
 
@@ -75,11 +76,11 @@ class BatchProviderTree(BatchProvider):
             self.__rec_teardown(upstream_provider)
 
         try:
-            provider.teardown()
+            provider.internal_teardown()
         except Exception as e:
-            # don't stop on exceptions, try to tear down as much as possible of 
+            # don't stop on exceptions, try to tear down as much as possible of
             # the DAG
-            logger.error("encountered exception during teardown: " + str(e))
+            logger.error("encountered exception during internal teardown: " + str(e))
             traceback.print_exc()
 
 def batch_provider_add(self, batch_provider):

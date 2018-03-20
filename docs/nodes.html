@@ -61,7 +61,7 @@
 
 <dl class="class">
 <dt id="gunpowder.Chunk">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Chunk</code><span class="sig-paren">(</span><em>chunk_spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/chunk.html#Chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Chunk" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Chunk</code><span class="sig-paren">(</span><em>request</em>, <em>chunk_spec</em>, <em>cache_size=50</em>, <em>num_workers=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/chunk.html#Chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assemble a large batch by requesting smaller chunks upstream.</p>
 </dd></dl>
 
@@ -95,12 +95,12 @@ or the mask (if provided).</p>
 
 <dl class="class">
 <dt id="gunpowder.Hdf5Source">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_source.html#Hdf5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Source" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>points_types=None</em>, <em>points_rois=None</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_source.html#Hdf5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Source" title="Permalink to this definition">¶</a></dt>
 <dd><p>An HDF5 data source.</p>
 <p>Provides volumes from HDF5 datasets for each volume type given. If the
 attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set in an HDF5 dataset, it will be used for the
 resolution of the volume. If the attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in an HDF5
-dataset, it will be used as the offset of the <code class="xref py py-class docutils literal"><span class="pre">ROI</span></code> provided by this
+dataset, it will be used as the offset of the <code class="xref py py-class docutils literal"><span class="pre">Roi</span></code> provided by this
 node. It is assumed that the offset is given in world units. Since
 <code class="docutils literal"><span class="pre">gunpowder</span></code> ROIs are in voxels, the <code class="docutils literal"><span class="pre">offset</span></code> attribute will be divided
 by the <code class="docutils literal"><span class="pre">resolution</span></code>.</p>
@@ -154,11 +154,25 @@ your source provides.</p>
 <dl class="class">
 <dt id="gunpowder.PrintProfilingStats">
 <em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PrintProfilingStats</code><span class="sig-paren">(</span><em>every=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/print_profiling_stats.html#PrintProfilingStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PrintProfilingStats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Print profiling information about nodes upstream of this node in the DAG.</p>
+<p>The output also includes a <code class="docutils literal"><span class="pre">TOTAL</span></code> section, which shows the wall-time
+spent in the upstream and downstream passes. For the downstream pass, this
+information is not available in the first iteration, since the request-batch
+cycle is not completed, yet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>every</strong> (<em>int</em>) – Collect statistics about that many batch requests and show
+min, max, mean, and median runtimes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="class">
 <dt id="gunpowder.RandomLocation">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask_volume_type=GT_MASK</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask_volume_type=GT_MASK</em>, <em>focus_points_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Choses a batch at a random location in the bounding box of the upstream
 provider.</p>
 <p>The random location is chosen such that the batch request roi lies entirely
@@ -183,7 +197,7 @@ inside the provider’s roi.</p>
 
 <dl class="class">
 <dt id="gunpowder.Snapshot">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>output_dir='snapshots'</em>, <em>output_filename='{id}.hdf'</em>, <em>every=1</em>, <em>additional_request=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>output_dir='snapshots'</em>, <em>output_filename='{id}.hdf'</em>, <em>every=1</em>, <em>additional_request=None</em>, <em>compression_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a passing batch in an HDF file.</p>
 </dd></dl>
 

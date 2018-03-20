@@ -1,109 +1,110 @@
 import logging
+import numpy as np
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import dvision
 from gunpowder.profiling import Timing
-from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
+from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
-class DvidSourceReadException(Exception):
-    pass
-
-class MaskNotProvidedException(Exception):
-    pass
-
-
 class DvidSource(BatchProvider):
+    '''A DVID array source.
 
-    def __init__(self, hostname, port, uuid, raw_array_name, gt_array_name=None, gt_mask_roi_name=None, resolution=None):
-        """
-        :param hostname: hostname for DVID server
-        :type hostname: str
-        :param port: port for DVID server
-        :type port: int
-        :param uuid: UUID of node on DVID server
-        :type uuid: str
-        :param raw_array_name: DVID data instance for image data
-        :type raw_array_name: str
-        :param gt_array_name: DVID data instance for segmentation label data
-        :type gt_array_name: str
-        :param gt_mask_roi_name: DVID region of interest for masking the segmentation
-        :type gt_mask_roi_name: str
-        :param resolution: resolution of source voxels in nanometers
-        :type resolution: tuple
-        """
+    Provides arrays from DVID servers for each array key given.
+
+    Args:
+
+        hostname (string): The name of the DVID server.
+
+        port (int): The port of the DVID server.
+
+        uuid (string): The UUID of the DVID node to use.
+
+        datasets (dict): Dictionary of ArrayKey -> DVID data instance names
+            that this source offers.
+
+        masks (dict, optional): Dictionary of ArrayKey -> DVID ROI instance
+            names. This will create binary masks from DVID ROIs.
+
+        array_specs (dict, optional): An optional dictionary of
+            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
+            specs automatically determined from the DVID server. This is useful
+            to set ``voxel_size``, for example. Only fields that are not
+            ``None`` in the given :class:`ArraySpec` will be used.
+    '''
+
+    def __init__(
+            self,
+            hostname,
+            port,
+            uuid,
+            datasets,
+            masks=None,
+            array_specs=None):
+
         self.hostname = hostname
         self.port = port
         self.url = "http://{}:{}".format(self.hostname, self.port)
         self.uuid = uuid
-        self.raw_array_name = raw_array_name
-        self.gt_array_name = gt_array_name
-        self.gt_mask_roi_name = gt_mask_roi_name
-        self.specified_resolution = resolution
-        self.node_service = None
-        self.dims = 0
-        self.spec = ProviderSpec()
+
+        self.datasets = datasets
+        self.masks = masks if masks is not None else {}
+
+        self.array_specs = array_specs if array_specs is not None else {}
+
+        self.ndims = None
 
     def setup(self):
-        self.spec.roi = self.__get_roi(self.raw_array_name)
-        if self.gt_array_name is not None:
-            self.spec.gt_roi = self.__get_roi(self.gt_array_name)
-            self.spec.has_gt = True
-        else:
-            self.spec.has_gt = False
-        self.spec.has_gt_mask = self.gt_mask_roi_name is not None
 
-        logger.info("DvidSource.spec:\n{}".format(self.spec))
+        for array_key, _ in self.datasets.items():
+            spec = self.__get_spec(array_key)
+            self.provides(array_key, spec)
 
-    def get_spec(self):
-        return self.spec
+        for array_key, _ in self.masks.items():
+            spec = self.__get_mask_spec(array_key)
+            self.provides(array_key, spec)
 
-    @property
-    def resolution(self):
-        if self.specified_resolution is not None:
-            return self.specified_resolution
-        else:
-            fib25_resolution = (8, 8, 8)
-            logger.warning("WARNING: your source does not contain resolution information. "
-                           "I will assume {}. "
-                           "This might not be what you want.".format(fib25_resolution))
-            return fib25_resolution
+        logger.info("DvidSource.spec:\n%s", self.spec)
 
     def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
-        spec = self.get_spec()
-
         batch = Batch()
-        logger.debug("providing batch with resolution of {}".format(self.resolution))
 
-        for (volume_type, roi) in request.volumes.items():
+        for (array_key, request_spec) in request.array_specs.items():
 
-            if volume_type not in spec.volumes:
-                raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
+            logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
-            if not spec.volumes[volume_type].contains(roi):
-                raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
+            voxel_size = self.spec[array_key].voxel_size
 
-            read = {
-                VolumeTypes.RAW: self.__read_raw,
-                VolumeTypes.GT_LABELS: self.__read_gt,
-                VolumeTypes.GT_MASK: self.__read_gt_mask,
-            }[volume_type]
+            # scale request roi to voxel units
+            dataset_roi = request_spec.roi/voxel_size
 
-            logger.debug("Reading %s in %s..."%(volume_type,roi))
-            batch.volumes[volume_type] = Volume(
-                    read(roi),
-                    roi=roi,
-                    # TODO: get resolution from repository
-                    resolution=self.resolution)
+            # shift request roi into dataset
+            dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
+
+            # create array spec
+            array_spec = self.spec[array_key].copy()
+            array_spec.roi = request_spec.roi
+
+            # read the data
+            if array_key in self.datasets:
+                data = self.__read_array(self.datasets[array_key], dataset_roi)
+            elif array_key in self.masks:
+                data = self.__read_mask(self.masks[array_key], dataset_roi)
+            else:
+                assert False, ("Encountered a request for %s that is neither a volume "
+                               "nor a mask."%array_key)
+
+            # add array to batch
+            batch.arrays[array_key] = Array(data, array_spec)
 
         logger.debug("done")
 
@@ -112,9 +113,35 @@ class DvidSource(BatchProvider):
 
         return batch
 
-    def __get_roi(self, array_name):
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, array_name)
-        info = data_instance.info
+    def __get_info(self, array_key):
+
+        if array_key in self.datasets:
+
+            data = dvision.DVIDDataInstance(
+                self.hostname,
+                self.port,
+                self.uuid,
+                self.datasets[array_key])
+
+        elif array_key in self.masks:
+
+            data = dvision.DVIDRegionOfInterest(
+                self.hostname,
+                self.port,
+                self.uuid,
+                self.masks[array_key])
+
+        else:
+
+            assert False, ("Encountered a request that is neither a volume "
+                           "nor a mask.")
+
+        return data.info
+
+    def __get_spec(self, array_key):
+
+        info = self.__get_info(array_key)
+
         roi_min = info['Extended']['MinPoint']
         if roi_min is not None:
             roi_min = Coordinate(roi_min[::-1])
@@ -122,45 +149,135 @@ class DvidSource(BatchProvider):
         if roi_max is not None:
             roi_max = Coordinate(roi_max[::-1])
 
-        return Roi(offset=roi_min, shape=roi_max - roi_min)
+        data_roi = Roi(
+            offset=roi_min,
+            shape=(roi_max - roi_min))
+        data_dims = Coordinate(data_roi.get_shape())
 
-    def __read_raw(self, roi):
-        slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.raw_array_name)
-        try:
-            return data_instance[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading raw at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if self.ndims is None:
+            self.ndims = len(data_dims)
+        else:
+            assert self.ndims == len(data_dims)
 
-    def __read_gt(self, roi):
-        slices = roi.get_bounding_box()
-        data_instance = dvision.DVIDDataInstance(self.hostname, self.port, self.uuid, self.gt_array_name)
-        try:
-            return data_instance[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading GT at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if array_key in self.array_specs:
+            spec = self.array_specs[array_key].copy()
+        else:
+            spec = ArraySpec()
 
-    def __read_gt_mask(self, roi):
-        """
-        :param roi: gunpowder.Roi
-        :return: uint8 np.ndarray with roi shape
-        """
-        if self.gt_mask_roi_name is None:
-            raise MaskNotProvidedException
-        slices = roi.get_bounding_box()
-        dvid_roi = dvision.DVIDRegionOfInterest(self.hostname, self.port, self.uuid, self.gt_mask_roi_name)
-        try:
-            return dvid_roi[slices]
-        except Exception as e:
-            print(e)
-            msg = "Failure reading GT mask at slices {} with {}".format(slices, repr(self))
-            raise DvidSourceReadException(msg)
+        if spec.voxel_size is None:
+            spec.voxel_size = Coordinate(info['Extended']['VoxelSize'])
+
+        if spec.roi is None:
+            spec.roi = data_roi*spec.voxel_size
+
+        data_dtype = dvision.DVIDDataInstance(
+            self.hostname,
+            self.port,
+            self.uuid,
+            self.datasets[array_key]).dtype
+
+        if spec.dtype is not None:
+            assert spec.dtype == data_dtype, ("dtype %s provided in array_specs for %s, "
+                                              "but differs from instance %s dtype %s"%
+                                              (self.array_specs[array_key].dtype,
+                                               array_key,
+                                               self.datasets[array_key],
+                                               data_dtype))
+        else:
+            spec.dtype = data_dtype
+
+        if spec.interpolatable is None:
+
+            spec.interpolatable = spec.dtype in [
+                np.float,
+                np.float32,
+                np.float64,
+                np.float128,
+                np.uint8 # assuming this is not used for labels
+            ]
+            logger.warning("WARNING: You didn't set 'interpolatable' for %s. "
+                           "Based on the dtype %s, it has been set to %s. "
+                           "This might not be what you want.",
+                           array_key, spec.dtype, spec.interpolatable)
+
+        return spec
+
+    def __get_mask_spec(self, mask_key):
+
+        # create initial array spec
+
+        if mask_key in self.array_specs:
+            spec = self.array_specs[mask_key].copy()
+        else:
+            spec = ArraySpec()
+
+        # get voxel size
+
+        if spec.voxel_size is None:
+
+            voxel_size = None
+            for array_key in self.datasets:
+                if voxel_size is None:
+                    voxel_size = self.spec[array_key].voxel_size
+                else:
+                    assert voxel_size == self.spec[array_key].voxel_size, (
+                        "No voxel size was given for mask %s, and the voxel "
+                        "sizes of the volumes %s are not all the same. I don't "
+                        "know what voxel size to use to create the mask."%(
+                            mask_key, self.datasets.keys()))
+
+            spec.voxel_size = voxel_size
+
+        # get ROI
+
+        if spec.roi is None:
+
+            for array_key in self.datasets:
+
+                roi = self.spec[array_key].roi
+
+                if spec.roi is None:
+                    spec.roi = roi.copy()
+                else:
+                    spec.roi = roi.union(spec.roi)
+
+        # set interpolatable
+
+        if spec.interpolatable is None:
+            spec.interpolatable = False
+
+        # set datatype
+
+        if spec.dtype is not None and spec.dtype != np.uint8:
+            logger.warn("Ignoring dtype in array_spec for %s, only np.uint8 "
+                        "is allowed for masks.", mask_key)
+        spec.dtype = np.uint8
+
+        return spec
+
+    def __read_array(self, instance, roi):
+
+        data_instance = dvision.DVIDDataInstance(
+            self.hostname,
+            self.port,
+            self.uuid,
+            instance)
+
+        return data_instance[roi.get_bounding_box()]
+
+    def __read_mask(self, instance, roi):
+
+        dvid_roi = dvision.DVIDRegionOfInterest(
+            self.hostname,
+            self.port,
+            self.uuid,
+            instance)
+
+        return dvid_roi[roi.get_bounding_box()]
 
     def __repr__(self):
-        return "DvidSource(hostname={}, port={}, uuid={}, raw_array_name={}, gt_array_name={}".format(
-            self.hostname, self.port, self.uuid, self.raw_array_name, self.gt_array_name
-        )
+
+        return "DvidSource(hostname={}, port={}, uuid={}".format(
+            self.hostname,
+            self.port,
+            self.uuid)

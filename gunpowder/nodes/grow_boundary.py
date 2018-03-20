@@ -2,32 +2,48 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.array import Array
 
 class GrowBoundary(BatchFilter):
-    '''Grow a boundary between regions. Does not grow at the border of the batch 
-    or the mask (if provided).
+    '''Grow a boundary between regions in a label array. Does not grow at the
+    border of the batch or an optionally provided mask.
+
+    Args:
+        labels(:class:``ArrayKey``): The array containing labels.
+
+        mask(:class:``ArrayKey``, optional): A mask indicating unknown
+            regions. This is to avoid boundaries to grow between labelled and
+            unknown regions.
+
+        steps(int): Number of voxels (not world units!) to grow.
+
+        background(int): The label to assign to the boundary voxels.
+
+        only_xy(bool): Do not grow a boundary in the z direction.
     '''
 
-    def __init__(self, steps=1, background=0, only_xy=False):
+    def __init__(self, labels, mask, steps=1, background=0, only_xy=False):
+        self.labels = labels
+        self.mask = mask
         self.steps = steps
         self.background = background
         self.only_xy = only_xy
 
     def process(self, batch, request):
 
-        gt = batch.volumes[VolumeTypes.GT_LABELS]
-        gt_mask = None if VolumeTypes.GT_MASK not in batch.volumes else batch.volumes[VolumeTypes.GT_MASK]
+        gt = batch.arrays[self.labels]
+        gt_mask = None if not self.mask else batch.arrays[self.mask]
 
         if gt_mask is not None:
 
             # grow only in area where mask and gt are defined
-            crop = gt_mask.roi.intersect(gt.roi)
+            crop = gt_mask.spec.roi.intersect(gt.spec.roi)
 
             if crop is None:
-                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.roi,gt_mask.roi))
-            crop_in_gt = crop.shift(-gt.roi.get_offset()).get_bounding_box()
-            crop_in_gt_mask = crop.shift(-gt_mask.roi.get_offset()).get_bounding_box()
+                raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.spec.roi,gt_mask.spec.roi))
+            voxel_size = self.spec[self.labels].voxel_size
+            crop_in_gt = (crop.shift(-gt.spec.roi.get_offset())/voxel_size).get_bounding_box()
+            crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.get_offset())/voxel_size).get_bounding_box()
 
             self.__grow(gt.data[crop_in_gt], gt_mask.data[crop_in_gt_mask], self.only_xy)
 

@@ -1,23 +1,84 @@
+import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
+import numbers
+import numpy as np
 
 class Roi(Freezable):
-    '''A rectengular region of interest, defined by an offset and a shape.
+    '''A rectangular region of interest, defined by an offset and a shape.
+
+    Args:
+
+        offset (array-like of int, optional): The starting point (inclusive) of
+            the ROI. Can be `None` (default) if the ROI only characterizes a
+            shape.
+
+        shape (array-like): The shape of the ROI. Entries can be `None` to
+            undicate unbounded dimensions.
     '''
 
     def __init__(self, offset=None, shape=None):
-        self.__offset = None if offset is None else Coordinate(offset)
-        self.__shape = None if shape is None else Coordinate(shape)
+
+        self.__offset = None
+        self.__shape = None
         self.freeze()
 
-        if self.__offset is not None and self.__shape is not None:
-            assert self.__offset.dims() == self.__shape.dims(), "offset dimension %d != shape dimension %d"%(self.__offset.dims(),self.__shape.dims())
+        self.set_shape(shape)
+        if offset is not None:
+            self.set_offset(offset)
 
     def set_offset(self, offset):
+
         self.__offset = Coordinate(offset)
+        self.__consolidate_offset()
 
     def set_shape(self, shape):
-        self.__shape = Coordinate(shape)
+        '''Set the shape of this ROI.
+
+        Args:
+
+            shape (tuple or None): The new shape. Entries can be `None` to
+                indicate unboundedness. If `None` is passed instead of a tuple,
+                all dimensions are set to `None`, if the number of dimensions
+                can be inferred from an existing offset or previous shape.
+        '''
+
+        if shape is None:
+
+            if self.__shape is not None:
+
+                dims = self.__shape.dims()
+
+            else:
+
+                assert self.__offset is not None, (
+                    "Can not infer dimension of ROI (there is no offset or "
+                    "previous shape). Call set_shape with a tuple.")
+
+                dims = self.__offset.dims()
+
+            self.__shape = Coordinate((None,)*dims)
+
+        else:
+
+            self.__shape = Coordinate(shape)
+
+        self.__consolidate_offset()
+
+    def __consolidate_offset(self):
+        '''Ensure that offsets for unbound dimensions are None.'''
+
+        if self.__offset is not None:
+
+            assert self.__offset.dims() == self.__shape.dims(), (
+                "offset dimension %d != shape dimension %d"%(
+                    self.__offset.dims(),
+                    self.__shape.dims()))
+
+            self.__offset = Coordinate((
+                o
+                if s is not None else None
+                for o, s in zip(self.__offset, self.__shape)))
 
     def get_offset(self):
         return self.__offset
@@ -28,6 +89,9 @@ class Roi(Freezable):
 
     def get_end(self):
         '''Smallest coordinate which is component-wise larger than any inside ROI.'''
+        if not self.__shape:
+            return self.__offset
+
         return self.__offset + self.__shape
 
     def get_shape(self):
@@ -39,11 +103,17 @@ class Roi(Freezable):
 
     def get_bounding_box(self):
 
-        if self.__offset is None or self.__shape is None:
+        if self.__offset is None:
             return None
 
         return tuple(
-                slice(int(self.__offset[d]), int(self.__shape[d] + self.__offset[d]))
+                slice(
+                    int(self.__offset[d])
+                    if self.__shape[d] is not None
+                    else None,
+                    int(self.__offset[d] + self.__shape[d])
+                    if self.__shape[d] is not None
+                    else None)
                 for d in range(self.dims())
         )
 
@@ -55,80 +125,142 @@ class Roi(Freezable):
 
     def size(self):
 
-        if self.__shape is None:
-            return 0
+        if self.unbounded():
+            return None
 
         size = 1
         for d in self.__shape:
             size *= d
         return size
 
+    def empty(self):
+
+        return self.size() == 0
+
+    def unbounded(self):
+
+        return None in self.__shape
+
     def contains(self, other):
 
         if isinstance(other, Roi):
 
-            bb1 = self.get_bounding_box()
-            bb2 = other.get_bounding_box()
-            contained = [
-                    bb1[d].start <= bb2[d].start and bb1[d].stop >= bb2[d].stop
-                    for d in range(self.dims())
-            ]
-            return all(contained)
+            if other.empty():
+                return True
 
-        elif isinstance(other, Coordinate):
+            return (
+                self.contains(other.get_begin())
+                and
+                self.contains(other.get_end() - (1,)*other.dims()))
 
-            return all([ p >= b and p < e for p, b, e in zip(other, self.get_begin(), self.get_end() )])
-
-        else:
-
-            raise RuntimeError("contains() can only be applied to Roi and Coordinate")
+        return all([
+            (b is None or p is not None and p >= b)
+            and
+            (e is None or p is not None and p < e)
+            for p, b, e in zip(other, self.get_begin(), self.get_end() )
+        ])
 
     def intersects(self, other):
 
-        bb1 = self.get_bounding_box()
-        bb2 = other.get_bounding_box()
-        separated = [
-                bb1[d].start >= bb2[d].stop or bb2[d].start >= bb1[d].stop
-                for d in range(self.dims())
-        ]
-        return not any(separated)
+        assert self.dims() == other.dims()
+
+        if self.empty() or other.empty():
+            return False
+
+        # separated if at least one dimension is separated
+        separated = any([
+            # a dimension is separated if:
+            # none of the shapes is unbounded
+            (None not in [b1, b2, e1, e2])
+            and
+            (
+                # either b1 starts after e2
+                (b1 >= e2)
+                or
+                # or b2 starts after e1
+                (b2 >= e1)
+            )
+            for b1, b2, e1, e2 in zip(
+                self.get_begin(),
+                other.get_begin(),
+                self.get_end(),
+                other.get_end())
+        ])
+
+        return not separated
 
     def intersect(self, other):
 
         if not self.intersects(other):
-            return None
+            return Roi(shape=(0,)*self.dims()) # empty ROI
 
-        assert self.dims() == other.dims()
+        begin = Coordinate((
+            max(b1, b2) # max(x, None) is x, so this does the right thing
+            for b1, b2 in zip(self.get_begin(), other.get_begin())
+        ))
+        end = Coordinate((
+            min(e1, e2) # min(x, None) is min, but we want x
+            if e1 is not None and e2 is not None
+            else max(e1, e2) # so we just take the other value or None if both
+                             # are None
+            for e1, e2 in zip(self.get_end(), other.get_end())
+        ))
 
-        offset = Coordinate(
-                max(self.__offset[d], other.__offset[d])
-                for d in range(self.dims())
-        )
-        shape = Coordinate(
-                min(self.__offset[d] + self.__shape[d], other.__offset[d] + other.__shape[d]) - offset[d]
-                for d in range(self.dims())
-        )
-
-        return Roi(offset, shape)
+        return Roi(begin, end - begin)
 
     def union(self, other):
 
-        assert self.dims() == other.dims(), "Can not compute union of ROI with dim %d and %d"%(self.dims(), other.dims())
+        begin = Coordinate((
+            min(b1, b2) # min(x, None) is None, so this does the right thing
+            for b1, b2 in zip(self.get_begin(), other.get_begin())
+        ))
+        end = Coordinate((
+            max(e1, e2) # max(x, None) is x, but we want None
+            if e1 is not None and e2 is not None
+            else None
+            for e1, e2 in zip(self.get_end(), other.get_end())
+        ))
 
-        offset = Coordinate(
-                min(self.__offset[d], other.__offset[d])
-                for d in range(self.dims())
-        )
-        shape = Coordinate(
-                max(self.__offset[d] + self.__shape[d], other.__offset[d] + other.__shape[d]) - offset[d]
-                for d in range(self.dims())
-        )
-
-        return Roi(offset, shape)
+        return Roi(begin, end - begin)
 
     def shift(self, by):
 
         return Roi(self.__offset + by, self.__shape)
+
+    def snap_to_grid(self, voxel_size, mode='grow'):
+        '''Align a ROI with a given voxel size.
+
+        Args:
+
+            mode (string, optional):
+
+                How to align the ROI if it is not a multiple of the voxel size.
+                Available modes are 'grow', 'shrink', and 'closest'. Defaults to
+                'grow'.
+        '''
+
+        begin_in_voxel_fractions = (
+            np.asarray(self.get_begin(), dtype=np.float32)/
+            np.asarray(voxel_size))
+        end_in_voxel_fractions = (
+            np.asarray(self.get_end(), dtype=np.float32)/
+            np.asarray(voxel_size))
+
+        if mode == 'closest':
+            begin_in_voxel = np.round(begin_in_voxel_fractions)
+            end_in_voxel = np.round(end_in_voxel_fractions)
+        elif mode == 'grow':
+            begin_in_voxel = np.floor(begin_in_voxel_fractions)
+            end_in_voxel = np.ceil(end_in_voxel_fractions)
+        elif mode == 'shrink':
+            begin_in_voxel = np.ceil(begin_in_voxel_fractions)
+            end_in_voxel = np.floor(end_in_voxel_fractions)
+        else:
+            assert False, 'Unknown mode %s for snap_to_grid'%mode
+
+        return Roi(
+            begin_in_voxel*voxel_size,
+            (end_in_voxel - begin_in_voxel)*voxel_size)
 
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
@@ -155,6 +287,10 @@ class Roi(Freezable):
 
         return Roi(offset, shape)
 
+    def copy(self):
+        '''Create a copy of this ROI.'''
+        return copy.deepcopy(self)
+
     def __add__(self, other):
 
         assert isinstance(other, tuple), "can only add Coordinate or tuples to Roi"
@@ -164,6 +300,26 @@ class Roi(Freezable):
 
         assert isinstance(other, Coordinate), "can only subtract Coordinate from Roi"
         return self.shift(-other)
+
+    def __mul__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only multiply with a number or tuple of numbers"
+        return Roi(self.__offset*other, self.__shape*other)
+
+    def __div__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset/other, self.__shape/other)
+
+    def __truediv__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset/other, self.__shape/other)
+
+    def __floordiv__(self, other):
+
+        assert isinstance(other, tuple) or isinstance(other, numbers.Number), "can only divide by a number or tuple of numbers"
+        return Roi(self.__offset//other, self.__shape//other)
 
     def __eq__(self, other):
 
@@ -178,4 +334,17 @@ class Roi(Freezable):
         return NotImplemented
 
     def __repr__(self):
-        return str(self.get_begin()) + "--" + str(self.get_end()) + " [" + "x".join(str(a) for a in self.__shape) + "]"
+        if self.empty():
+            return "[empty ROI]"
+        slices = ", ".join(
+            [
+                (str(b) if b is not None else "") +
+                ":" +
+                (str(e) if e is not None else "")
+                for b, e in zip(self.get_begin(), self.get_end())
+            ])
+        dims = ", ".join(
+            str(a) if a is not None else "inf"
+            for a in self.__shape
+        )
+        return "[" + slices + "] (" + dims + ")"

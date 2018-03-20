@@ -1,119 +1,102 @@
+import copy
 import logging
 import numpy as np
 
-from .batch_provider import BatchProvider
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
 from gunpowder.profiling import Timing
-from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
-from gunpowder.volume import Volume, VolumeTypes
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
+from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
 class Hdf5Source(BatchProvider):
     '''An HDF5 data source.
 
-    Provides volumes from HDF5 datasets for each volume type given. If the 
-    attribute ``resolution`` is set in an HDF5 dataset, it will be used for the 
-    resolution of the volume. If the attribute ``offset`` is set in an HDF5 
-    dataset, it will be used as the offset of the :class:`Roi` provided by this 
-    node. It is assumed that the offset is given in world units. Since 
-    ``gunpowder`` ROIs are in voxels, the ``offset`` attribute will be divided 
-    by the ``resolution``.
+    Provides arrays from HDF5 datasets for each array key given. If the
+    attribute `resolution` is set in an HDF5 dataset, it will be used as the
+    array's `voxel_size` and a warning issued if they differ. If the attribute
+    `offset` is set in an HDF5 dataset, it will be used as the offset of the
+    :class:`Roi` for this array. It is assumed that the offset is given in
+    world units.
 
     Args:
 
         filename (string): The HDF5 file.
 
-        datasets (dict): Dictionary of VolumeType -> dataset names that this source offers.
+        datasets (dict): Dictionary of ArrayKey -> dataset names that this
+            source offers.
 
-        resolution (tuple): Overwrite the resolution stored in the HDF5 datasets.
+        array_specs (dict, optional): An optional dictionary of
+            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
+            specs automatically determined from the HDF5 file. This is useful
+            to set a missing ``voxel_size``, for example. Only fields that are
+            not ``None`` in the given :class:`ArraySpec` will be used.
     '''
 
     def __init__(
             self,
             filename,
             datasets,
-            resolution=None):
+            array_specs=None):
 
         self.filename = filename
         self.datasets = datasets
-        self.specified_resolution = resolution
-        self.resolutions = {}
+
+        if array_specs is None:
+            self.array_specs = {}
+        else:
+            self.array_specs = array_specs
+
+        self.ndims = None
 
     def setup(self):
 
-        f = h5py.File(self.filename, 'r')
+        hdf_file = h5py.File(self.filename, 'r')
 
-        self.spec = ProviderSpec()
-        self.ndims = None
-        for (volume_type, ds) in self.datasets.items():
+        for (array_key, ds_name) in self.datasets.items():
 
-            if ds not in f:
-                raise RuntimeError("%s not in %s"%(ds,self.filename))
+            if ds_name not in hdf_file:
+                raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
-            dims = f[ds].shape
+            spec = self.__read_spec(array_key, hdf_file, ds_name)
 
-            if self.ndims is None:
-                self.ndims = len(dims)
-            else:
-                assert self.ndims == len(dims)
+            self.provides(array_key, spec)
 
-            if self.specified_resolution is None:
-                if 'resolution' in f[ds].attrs:
-                    self.resolutions[volume_type] = Coordinate(f[ds].attrs['resolution'])
-                else:
-                    default_resolution = Coordinate((1,)*self.ndims)
-                    logger.warning("WARNING: your source does not contain resolution information"
-                                   " (no attribute 'resolution' in {} dataset). I will assume {}. "
-                                   "This might not be what you want.".format(ds,default_resolution))
-                    self.resolutions[volume_type] = default_resolution
-            else:
-                self.resolutions[volume_type] = self.specified_resolution
-
-            if 'offset' in f[ds].attrs:
-                offset = Coordinate(f[ds].attrs['offset'])
-                offset /= self.resolutions[volume_type]
-            else:
-                offset = Coordinate((0,)*self.ndims)
-
-            self.spec.volumes[volume_type] = Roi(offset, dims)
-
-        f.close()
-
-    def get_spec(self):
-        return self.spec
+        hdf_file.close()
 
     def provide(self, request):
 
         timing = Timing(self)
         timing.start()
 
-        spec = self.get_spec()
-
         batch = Batch()
 
-        with h5py.File(self.filename, 'r') as f:
+        with h5py.File(self.filename, 'r') as hdf_file:
 
-            for (volume_type, roi) in request.volumes.items():
+            for (array_key, request_spec) in request.array_specs.items():
 
-                if volume_type not in spec.volumes:
-                    raise RuntimeError("Asked for %s which this source does not provide"%volume_type)
+                logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
-                if not spec.volumes[volume_type].contains(roi):
-                    raise RuntimeError("%s's ROI %s outside of my ROI %s"%(volume_type,roi,spec.volumes[volume_type]))
+                voxel_size = self.spec[array_key].voxel_size
 
-                logger.debug("Reading %s in %s..."%(volume_type,roi))
+                # scale request roi to voxel units
+                dataset_roi = request_spec.roi/voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = roi.shift(-spec.volumes[volume_type].get_offset())
+                dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
 
-                batch.volumes[volume_type] = Volume(
-                        self.__read(f, self.datasets[volume_type], dataset_roi),
-                        roi=roi,
-                        resolution=self.resolutions[volume_type])
+                # create array spec
+                array_spec = self.spec[array_key].copy()
+                array_spec.roi = request_spec.roi
+
+                # add array to batch
+                batch.arrays[array_key] = Array(
+                    self.__read(hdf_file, self.datasets[array_key], dataset_roi),
+                    array_spec)
 
         logger.debug("done")
 
@@ -122,9 +105,69 @@ class Hdf5Source(BatchProvider):
 
         return batch
 
-    def __read(self, f, ds, roi):
+    def __read_spec(self, array_key, hdf_file, ds_name):
 
-        return np.array(f[ds][roi.get_bounding_box()])
+        dataset = hdf_file[ds_name]
+
+        dims = Coordinate(dataset.shape)
+
+        if self.ndims is None:
+            self.ndims = len(dims)
+        else:
+            assert self.ndims == len(dims)
+
+        if array_key in self.array_specs:
+            spec = self.array_specs[array_key].copy()
+        else:
+            spec = ArraySpec()
+
+        if spec.voxel_size is None:
+
+            if 'resolution' in dataset.attrs:
+                spec.voxel_size = Coordinate(dataset.attrs['resolution'])
+            else:
+                spec.voxel_size = Coordinate((1,)*self.ndims)
+                logger.warning("WARNING: File %s does not contain resolution information "
+                               "for %s (dataset %s), voxel size has been set to %s. This "
+                               "might not be what you want.",
+                               self.filename, array_key, ds_name, spec.voxel_size)
+
+        if spec.roi is None:
+
+            if 'offset' in dataset.attrs:
+                offset = Coordinate(dataset.attrs['offset'])
+            else:
+                offset = Coordinate((0,)*self.ndims)
+
+            spec.roi = Roi(offset, dims*spec.voxel_size)
+
+        if spec.dtype is not None:
+            assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
+                                                 "but differs from dataset %s dtype %s"%
+                                                 (self.array_specs[array_key].dtype,
+                                                  array_key, ds_name, dataset.dtype))
+        else:
+            spec.dtype = dataset.dtype
+
+        if spec.interpolatable is None:
+
+            spec.interpolatable = spec.dtype in [
+                np.float,
+                np.float32,
+                np.float64,
+                np.float128,
+                np.uint8 # assuming this is not used for labels
+            ]
+            logger.warning("WARNING: You didn't set 'interpolatable' for %s "
+                           "(dataset %s). Based on the dtype %s, it has been "
+                           "set to %s. This might not be what you want.",
+                           array_key, ds_name, spec.dtype,
+                           spec.interpolatable)
+
+        return spec
+
+    def __read(self, hdf_file, ds_name, roi):
+        return np.array(hdf_file[ds_name][roi.get_bounding_box()])
 
     def __repr__(self):
 
