@@ -19,7 +19,7 @@ class ExcludeLabels(BatchFilter):
             self,
             labels,
             exclude,
-            ignore_mask,
+            ignore_mask=None,
             ignore_mask_erode=0,
             background_value=0):
         '''

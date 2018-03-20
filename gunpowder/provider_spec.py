@@ -82,8 +82,9 @@ class ProviderSpec(Freezable):
             return self.points_specs[key]
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
 
     def __len__(self):
 
@@ -98,8 +99,9 @@ class ProviderSpec(Freezable):
             return key in self.points_specs
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
 
     def __delitem__(self, key):
 
@@ -110,8 +112,9 @@ class ProviderSpec(Freezable):
             del self.points_specs[key]
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be used as "
-                               "keys in a %s."%type(self).__name__)
+            raise RuntimeError(
+                "Only ArrayKey or PointsKey can be used as keys in a "
+                "%s."%type(self).__name__)
 
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
