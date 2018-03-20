@@ -13,9 +13,8 @@ class Predict(GenericPredict):
 
     Args:
 
-        model_name: Basename of a tensorflow model storing (minimally) the
-            tensorflow graph as model_name.meta and possibly associated tensor metadata as 
-            model_name.index and saved tensor values as model_name.data (aka a checkpoint), 
+        checkpoint: Basename of a tensorflow checkpoint storing the
+            tensorflow graph and associated tensor values and metadata, 
             as created by :class:`gunpowder.nodes.Train`, for example. 
 
         inputs (dict): Dictionary from the names of input tensors in the
@@ -32,30 +31,30 @@ class Predict(GenericPredict):
             the input arrays. Only fields that are not ``None`` in the given
             :class:`ArraySpec` will be used.
 
-        meta_graph: (str, optional): An optional path to a custom meta graph
-            that should be used for prediction. The checkpoint associated to
-            the model_name is used to restore the values of matching variable
-            names in the meta_graph. Note that the computation graph specified
-            here can differ from the one associated to model_name.
+        graph: (str, optional): An optional path to a tensorflow computation graph
+            that should be used for prediction. The checkpoint is used to restore 
+            the values of matching variable names in the graph. Note that 
+            the graph specified here can differ from the one associated 
+            to the checkpoint.
     '''
 
     def __init__(
             self,
-            model_name,
+            checkpoint,
             inputs,
             outputs,
             array_specs=None,
-            meta_graph=None):
+            graph=None):
 
         super(Predict, self).__init__(
             inputs,
             outputs,
             array_specs,
             spawn_subprocess=False)
-        self.model_name = model_name
+        self.checkpoint = checkpoint
+        self.meta_graph = graph
         self.session = None
         self.graph = None
-        self.meta_graph = meta_graph
 
     def start(self):
 
@@ -68,7 +67,7 @@ class Predict(GenericPredict):
             graph=self.graph)
 
         with self.graph.as_default():
-            self.__read_model()
+            self.__read_checkpoint()
 
     def predict(self, batch, request):
 
@@ -96,23 +95,23 @@ class Predict(GenericPredict):
             self.graph = None
             self.session = None
 
-    def __read_model(self):
+    def __read_checkpoint(self):
 
-        logger.info("Reading model...")
+        logger.info("Reading checkpoint...")
 
-        # read the meta-graph associated to the model/checkpoint
+        # read the graph associated to the checkpoint
         if self.meta_graph is None:
             saver = tf.train.import_meta_graph(
-                self.model_name + '.meta',
+                self.checkpoint + '.meta',
                 clear_devices=True)
-        # read alternative, custom meta-graph
+        # read alternative, custom graph
         else:
             saver = tf.train.import_meta_graph(
                     self.meta_graph,
                     clear_devices=True)
 
-        # restore variables
-        saver.restore(self.session, self.model_name)
+        # restore variables from checkpoint
+        saver.restore(self.session, self.checkpoint)
 
     def __collect_requested_outputs(self, request):
 
