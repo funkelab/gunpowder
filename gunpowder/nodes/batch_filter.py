@@ -7,33 +7,29 @@ from gunpowder.profiling import Timing
 logger = logging.getLogger(__name__)
 
 class BatchFilter(BatchProvider):
-    '''Convenience wrapper for BatchProviders with exactly one input provider.
+    '''Convenience wrapper for :class:`BatchProviders<BatchProvider>` with
+    exactly one input provider.
 
     By default, a node of this class will expose the same :class:`ProviderSpec`
     as the upstream provider. You can modify the provider spec by calling
-    :fun:`provides` and :fun:`updates` in :fun:`setup`.
+    :func:`provides` and :func:`updates` in :func:`setup`.
 
-    Subclasses need to implement at least 'process' to modify a passed batch
-    (downstream). Optionally, the following methods can be implemented:
+    Subclasses need to implement at least :func:`process` to modify a passed
+    batch (downstream). Optionally, the following methods can be implemented:
 
-        setup
+        :func:`setup`
 
             Initialize this filter. Called after setup of the DAG. All upstream 
             providers will be set up already.
 
-        teardown
+        :func:`teardown`
 
             Destruct this filter, free resources, stop worker processes.
 
-        get_spec
-
-            Get the spec of this provider. If not implemented, the upstream 
-            provider spec is used.
-
-        prepare
+        :func:`prepare`
 
             Prepare for a batch request. Always called before each 
-            'process'. Use it to modify a batch request to be passed 
+            :func:`process`. Use it to modify a batch request to be passed
             upstream.
     '''
 
@@ -42,16 +38,21 @@ class BatchFilter(BatchProvider):
         return self.get_upstream_providers()[0]
 
     def updates(self, key, spec):
-        '''Update an output provided by this `BatchFilter`.
+        '''Update an output provided by this :class:`BatchFilter`.
 
-        Implementations should call this in their :fun:`setup` method, which
+        Implementations should call this in their :func:`setup` method, which
         will be called when the pipeline is build.
 
         Args:
 
-            key: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
+            key:
 
-            spec: A :class:`ArraySpec` or `PointsSpec` to describe the output.
+                A :class:`ArrayKey` or :class:`PointsKey` instance to refer to
+                the output.
+
+            spec:
+
+                A :class:`ArraySpec` or :class:`PointsSpec` to describe the output.
         '''
 
         assert key in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, key)
@@ -61,14 +62,15 @@ class BatchFilter(BatchProvider):
         logger.debug("%s updates %s with %s"%(self.name(), key, spec))
 
     def enable_autoskip(self, skip=True):
-        '''Enable automatic skipping of this `BatchFilter`, based on given
-        :fun:`updates` and :fun:`provides` calls. Has to be called in
-        :fun:`setup`.
+        '''Enable automatic skipping of this :class:`BatchFilter`, based on
+        given :func:`updates` and :func:`provides` calls. Has to be called in
+        :func:`setup`.
 
-        By default, `BatchFilter`s are not skipped automatically, regardless of
-        what they update or provide. If autskip is enabled, `BatchFilter`s will
-        only be run if the request contains at least one key reported
-        earlier with :fun:`udpates` or :fun:`provides`.
+        By default, :class:`BatchFilters<BatchFilter>` are not skipped
+        automatically, regardless of what they update or provide. If autskip is
+        enabled, :class:`BatchFilters<BatchFilter>` will only be run if the
+        request contains at least one key reported earlier with
+        :func:`updates` or :func:`provides`.
         '''
 
         self._autoskip_enabled = skip
@@ -156,18 +158,18 @@ class BatchFilter(BatchProvider):
     def setup(self):
         '''To be implemented in subclasses.
 
-        Called during initialization of the DAG. Callees can assume that all 
+        Called during initialization of the DAG. Callees can assume that all
         upstream providers are set up already.
 
-        In setup, call :fun:`provides` or :fun:`updates` to announce the arrays 
-        and points provided or changed by this node.
+        In setup, call :func:`provides` or :func:`updates` to announce the
+        arrays and points provided or changed by this node.
         '''
         pass
 
     def prepare(self, request):
         '''To be implemented in subclasses.
 
-        Prepare for a batch request. Change the request as needed, it will be 
+        Prepare for a batch request. Change the request as needed, it will be
         passed on upstream.
         '''
         pass
@@ -175,8 +177,19 @@ class BatchFilter(BatchProvider):
     def process(self, batch, request):
         '''To be implemented in subclasses.
 
-        Filter a batch, will be called after 'prepare'. Change batch as needed, 
-        it will be passed downstream. 'request' is the same as passed to 
-        'prepare', provided for convenience.
+        Filter a batch, will be called after :func:`prepare`. Change batch as
+        needed, it will be passed downstream. :arg:`request` is the same as
+        passed to :func:`prepare`, provided for convenience.
+
+        Args:
+
+            batch(:class:`Batch`):
+
+                The batch received from upstream to be modified by this node.
+
+            request(:class:`BatchRequest`):
+
+                The request this node received. The updated batch should meet
+                this request.
         '''
         raise RuntimeError("Class %s does not implement 'process'"%type(self).__name__)

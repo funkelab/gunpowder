@@ -1,72 +1,202 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>First steps &#8212; gunpowder 0.2 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>First steps &mdash; gunpowder 0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="List of All Gunpowder Nodes" href="nodes.html" />
+    <link rel="next" title="Nodes" href="nodes.html" />
     <link rel="prev" title="Welcome to Gunpowder’s Documentation!" href="index.html" /> 
-  </head>
-  <body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="nodes.html" title="List of All Gunpowder Nodes"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/gunpowder.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#declaring-arrays">Declaring arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-source">Creating a source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#chaining-batch-providers">Chaining batch providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#going-further">Going Further</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nodes.html">Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gunpowder</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>First steps</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/first_steps.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="first-steps">
 <span id="sec-first-steps"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="declaring-arrays">
+<h2>Declaring arrays<a class="headerlink" href="#declaring-arrays" title="Permalink to this headline">¶</a></h2>
+<p>Before you start assembling a training of prediction pipeline, you have to
+create <code class="xref py py-class docutils literal"><span class="pre">ArrayKeys</span></code> for all arrays your pipeline will use.
+These keys are used later to formulate a request for an array or to access the
+actual array associated with that key.</p>
+<p>In the example here, we assume we have a raw dataset, together with
+ground-truth labels and a mask which lets us know where ground-truth is
+available.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gunpowder</span> <span class="kn">as</span> <span class="nn">gp</span>
+
+<span class="n">raw</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;RAW&#39;</span><span class="p">)</span>
+<span class="n">gt</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
+<span class="n">gt_mask</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">ArrayKey</span><span class="p">(</span><span class="s1">&#39;MASK&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="creating-a-source">
 <h2>Creating a source<a class="headerlink" href="#creating-a-source" title="Permalink to this headline">¶</a></h2>
-<p>In <a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
-graph (DAG) of <code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code>. The leaves of
-your DAG are called sources, i.e., batch provider with no inputs:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gunpowder</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="n">source</span> <span class="o">=</span>
-    <span class="n">Hdf5Source</span><span class="p">(</span>
-            <span class="s1">&#39;example.hdf&#39;</span><span class="p">,</span>
-            <span class="n">raw_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/raw&#39;</span><span class="p">,</span>
-            <span class="n">gt_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/labels/neuron_ids&#39;</span><span class="p">,</span>
-            <span class="n">gt_mask_dataset</span><span class="o">=</span><span class="s1">&#39;volumes/labels/mask&#39;</span><span class="p">)</span>
+<p>In <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
+graph (DAG) of <a class="reference internal" href="nodes.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>. The leaves of
+your DAG are called sources, i.e., batch providers with no inputs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">=</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">Hdf5Source</span><span class="p">(</span>
+        <span class="s1">&#39;example.hdf&#39;</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="n">raw</span><span class="p">:</span> <span class="s1">&#39;volumes/raw&#39;</span><span class="p">,</span>
+            <span class="n">gt</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/neuron_ids&#39;</span><span class="p">,</span>
+            <span class="n">gt_mask_dataset</span><span class="p">:</span> <span class="s1">&#39;volumes/labels/mask&#39;</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -81,10 +211,10 @@ a batch, possibly modifies it, and passes the batch on <em>downstream</em>.</p>
 <p>As an example, this scheme allows the modelling of on-the-fly data augmentation
 as a batch provider:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">augment</span> <span class="o">=</span>
-    <span class="n">ElasticAugment</span><span class="p">(</span>
-        <span class="n">control_point_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="p">],</span>
-        <span class="n">jitter_sigma</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
-        <span class="n">rotation_interval</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">ElasticAugment</span><span class="p">(</span>
+        <span class="n">control_point_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span>
+        <span class="n">jitter_sigma</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">rotation_interval</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>When <a class="reference internal" href="nodes.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal"><span class="pre">gunpowder.ElasticAugment</span></code></a> is asked for a batch via a request, the
@@ -92,33 +222,31 @@ request is automatically changed to request an upstream batch large enough to
 perform the elastic augmentation seamlessly.</p>
 <p>Another example is the random selection of locations inside a source:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">random</span> <span class="o">=</span>
-    <span class="n">RandomLocation</span><span class="p">()</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">RandomLocation</span><span class="p">()</span>
 </pre></div>
 </div>
 <p><code class="xref py py-class docutils literal"><span class="pre">RandomLocation</span></code> does only modify the request (by changing the offset).</p>
 </div>
 <div class="section" id="training">
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
-<p>Training itself is modelled as a batch provider. It takes a batch, performs one
-training iteration, and adds the current prediction and loss to the batch:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">solver_parameters</span> <span class="o">=</span> <span class="n">SolverParameters</span><span class="p">()</span>
-<span class="c1"># set solver parameters (network, learning rate, optimizer, etc.)</span>
-<span class="n">train</span> <span class="o">=</span>
-    <span class="n">Train</span><span class="p">(</span><span class="n">solver_parameters</span><span class="p">,</span> <span class="n">use_gpu</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<p><code class="xref py py-class docutils literal"><span class="pre">Training</span></code> itself is modelled as a batch provider. It
+takes a batch and performs one training iteration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">train</span> <span class="o">=</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">tensorflow</span><span class="o">.</span><span class="n">Train</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Putting it together, a very simple pipeline for training 1000 iterations would
 be</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">source</span> <span class="o">+</span> <span class="n">random</span> <span class="o">+</span> <span class="n">augment</span> <span class="o">+</span> <span class="n">train</span>
 
-<span class="n">request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">RAW</span><span class="p">,</span> <span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">268</span><span class="p">,</span><span class="mi">268</span><span class="p">))</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_LABELS</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">))</span>
-<span class="n">request</span><span class="o">.</span><span class="n">add_volume_request</span><span class="p">(</span><span class="n">VolumeType</span><span class="o">.</span><span class="n">GT_MASK</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">))</span>
+<span class="n">request</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">BatchRequest</span><span class="p">()</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">268</span><span class="p">,</span> <span class="mi">268</span><span class="p">))</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+<span class="n">request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gt_mask</span><span class="p">,</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
 
-<span class="k">with</span> <span class="n">build</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
-  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
-  <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">gp</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that we use a <code class="xref py py-class docutils literal"><span class="pre">gunpowder.BatchRequest</span></code> object to communicate
@@ -128,84 +256,88 @@ ground-truth labels, and a mask.</p>
 </div>
 <div class="section" id="going-further">
 <h2>Going Further<a class="headerlink" href="#going-further" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> provides much more nodes to chain together, including
+<p><a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> provides much more nodes to chain together, including
 <a class="reference internal" href="nodes.html#gunpowder.PreCache" title="gunpowder.PreCache"><code class="xref py py-class docutils literal"><span class="pre">a</span> <span class="pre">pre-cache</span> <span class="pre">node</span> <span class="pre">for</span> <span class="pre">easy</span> <span class="pre">parallel</span> <span class="pre">fetching</span> <span class="pre">of</span>
 <span class="pre">batches</span></code></a>, several augmentation nodes, and nodes for
 <a class="reference internal" href="nodes.html#gunpowder.PrintProfilingStats" title="gunpowder.PrintProfilingStats"><code class="xref py py-class docutils literal"><span class="pre">profiling</span></code></a> and
 <a class="reference internal" href="nodes.html#gunpowder.Snapshot" title="gunpowder.Snapshot"><code class="xref py py-class docutils literal"><span class="pre">inspection</span></code></a>. For a complete list see
-<a class="reference internal" href="nodes.html#sec-nodes"><span class="std std-ref">List of All Gunpowder Nodes</span></a></p>
+<span class="xref std std-ref">sec_nodes</span></p>
 <p>Continue reading <a class="reference internal" href="custom_providers.html#sec-custom-providers"><span class="std std-ref">here</span></a> to learn how to write your
-own <a class="reference internal" href="volumes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> batch providers.</p>
+own <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> batch providers.</p>
 <p>Working examples (with many more batch providers) can be found in <a class="reference external" href="https://github.com/funkey/gunpowder/tree/master/examples">the example
 directory</a>.</p>
 </div>
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">First steps</a><ul>
-<li><a class="reference internal" href="#creating-a-source">Creating a source</a></li>
-<li><a class="reference internal" href="#chaining-batch-providers">Chaining batch providers</a></li>
-<li><a class="reference internal" href="#training">Training</a></li>
-<li><a class="reference internal" href="#going-further">Going Further</a></li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="nodes.html" class="btn btn-neutral float-right" title="Nodes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to Gunpowder’s Documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to Gunpowder’s Documentation!</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="nodes.html"
-                        title="next chapter">List of All Gunpowder Nodes</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/first_steps.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Jan Funke.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="nodes.html" title="List of All Gunpowder Nodes"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="index.html" title="Welcome to Gunpowder’s Documentation!"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">gunpowder 0.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, Jan Funke.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script> 
+
+</body>
 </html>

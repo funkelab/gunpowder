@@ -9,7 +9,7 @@ Welcome to Gunpowder's Documentation!
 
   first_steps
   nodes
-  volumes
+  batches
   custom_providers
 
 Indices and tables
