@@ -21,7 +21,7 @@ class SpecifiedLocation(BatchFilter):
 
     Args:
 
-        specified_coordinates: list, array, A list of locations to center batches. Should be given
+        locations: list, array, A list of locations to center batches. Should be given
         physical dimensions and with respect to (0,0,0)
 
         choose_randomly: bool, defines whether locations should be picked in order or at random from
@@ -32,9 +32,9 @@ class SpecifiedLocation(BatchFilter):
         be a data format compatible with hdf5.
     '''
 
-    def __init__(self, specified_coordinates, choose_randomly=False, extra_data=None):
+    def __init__(self, locations, choose_randomly=False, extra_data=None):
 
-        self.coordinates = specified_coordinates
+        self.coordinates = locations
         self.choose_randomly = choose_randomly
         self.loc_i = 0
         self.upstream_spec = None
@@ -42,9 +42,9 @@ class SpecifiedLocation(BatchFilter):
         self.specified_shift = None
 
         if extra_data is not None:
-            assert len(extra_data) == len(specified_coordinates),\
+            assert len(extra_data) == len(locations),\
                 "extra_data (%d) should match the length of specified locations (%d)"%(len(extra_data),\
-                len(specified_coordinates))
+                len(locations))
 
         self.extra_data = extra_data
 
