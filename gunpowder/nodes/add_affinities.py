@@ -20,50 +20,50 @@ class AddAffinities(BatchFilter):
         affinity_neighborhood(list of offsets): List of offsets for the 
             affinities to consider for each voxel.
 
-        gt_labels(:class:``ArrayKey``): The array to read the labels from.
+        labels(:class:``ArrayKey``): The array to read the labels from.
 
-        gt_affinities(:class:``ArrayKey``): The array to generate containing
+        affinities(:class:``ArrayKey``): The array to generate containing
             the affinities.
 
-        gt_labels_mask(:class:``ArrayKey``, optional): The array to use as a
-            mask for ``gt_labels``. Affinities connecting at least one masked
-            out label will be masked out in ``gt_affinities_mask``. If not
-            given, ``gt_affinities_mask`` will contain ones everywhere (if
+        labels_mask(:class:``ArrayKey``, optional): The array to use as a
+            mask for ``labels``. Affinities connecting at least one masked
+            out label will be masked out in ``affinities_mask``. If not
+            given, ``affinities_mask`` will contain ones everywhere (if
             requested).
 
-        gt_unlabelled(:class:``ArrayKey``, optional): A binary array to
+        unlabelled(:class:``ArrayKey``, optional): A binary array to
             indicate unlabelled areas with 0. Affinities from labelled to
             unlabelled voxels are set to 0, affinities between unlabelled voxels
             are masked out (they will not be used for training).
 
-        gt_affinities_mask(:class:``ArrayKey``, optional): The array to
+        affinities_mask(:class:``ArrayKey``, optional): The array to
             generate containing the affinitiy mask, as derived from parameter
-            ``gt_labels_mask``.
+            ``labels_mask``.
     '''
 
     def __init__(
             self,
             affinity_neighborhood,
-            gt_labels,
-            gt_affinities,
-            gt_labels_mask=None,
-            gt_unlabelled=None,
-            gt_affinities_mask=None):
+            labels,
+            affinities,
+            labels_mask=None,
+            unlabelled=None,
+            affinities_mask=None):
 
         self.affinity_neighborhood = np.array(affinity_neighborhood)
-        self.gt_labels = gt_labels
-        self.gt_unlabelled = gt_unlabelled
-        self.gt_labels_mask = gt_labels_mask
-        self.gt_affinities = gt_affinities
-        self.gt_affinities_mask = gt_affinities_mask
+        self.labels = labels
+        self.unlabelled = unlabelled
+        self.labels_mask = labels_mask
+        self.affinities = affinities
+        self.affinities_mask = affinities_mask
 
     def setup(self):
 
-        assert self.gt_labels in self.spec, (
+        assert self.labels in self.spec, (
             "Upstream does not provide %s needed by "
-            "AddAffinities"%self.gt_labels)
+            "AddAffinities"%self.labels)
 
-        voxel_size = self.spec[self.gt_labels].voxel_size
+        voxel_size = self.spec[self.labels].voxel_size
 
         dims = self.affinity_neighborhood.shape[1]
         self.padding_neg = Coordinate(
@@ -79,96 +79,96 @@ class AddAffinities(BatchFilter):
         logger.debug("padding neg: " + str(self.padding_neg))
         logger.debug("padding pos: " + str(self.padding_pos))
 
-        spec = self.spec[self.gt_labels].copy()
+        spec = self.spec[self.labels].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
         spec.dtype = np.float32
 
-        self.provides(self.gt_affinities, spec)
-        if self.gt_affinities_mask:
-            self.provides(self.gt_affinities_mask, spec)
+        self.provides(self.affinities, spec)
+        if self.affinities_mask:
+            self.provides(self.affinities_mask, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
 
-        if self.gt_labels_mask:
+        if self.labels_mask:
             assert (
-                request[self.gt_labels].roi ==
-                request[self.gt_labels_mask].roi),(
+                request[self.labels].roi ==
+                request[self.labels_mask].roi),(
                 "requested GT label roi %s and GT label mask roi %s are not "
                 "the same."%(
-                    request[self.gt_labels].roi,
-                    request[self.gt_labels_mask].roi))
+                    request[self.labels].roi,
+                    request[self.labels_mask].roi))
 
-        if self.gt_unlabelled:
+        if self.unlabelled:
             assert (
-                request[self.gt_labels].roi ==
-                request[self.gt_unlabelled].roi),(
+                request[self.labels].roi ==
+                request[self.unlabelled].roi),(
                 "requested GT label roi %s and GT unlabelled mask roi %s are not "
                 "the same."%(
-                    request[self.gt_labels].roi,
-                    request[self.gt_unlabelled].roi))
+                    request[self.labels].roi,
+                    request[self.unlabelled].roi))
 
-        gt_labels_roi = request[self.gt_labels].roi
-        logger.debug("downstream %s request: "%self.gt_labels + str(gt_labels_roi))
+        labels_roi = request[self.labels].roi
+        logger.debug("downstream %s request: "%self.labels + str(labels_roi))
 
         # grow labels ROI to accomodate padding
-        gt_labels_roi = gt_labels_roi.grow(-self.padding_neg, self.padding_pos)
-        request[self.gt_labels].roi = gt_labels_roi
+        labels_roi = labels_roi.grow(-self.padding_neg, self.padding_pos)
+        request[self.labels].roi = labels_roi
 
         # same for label mask
-        if self.gt_labels_mask:
-            request[self.gt_labels_mask].roi = gt_labels_roi.copy()
+        if self.labels_mask:
+            request[self.labels_mask].roi = labels_roi.copy()
         # and unlabelled mask
-        if self.gt_unlabelled:
-            request[self.gt_unlabelled].roi = gt_labels_roi.copy()
+        if self.unlabelled:
+            request[self.unlabelled].roi = labels_roi.copy()
 
-        logger.debug("upstream %s request: "%self.gt_labels + str(gt_labels_roi))
+        logger.debug("upstream %s request: "%self.labels + str(labels_roi))
 
     def process(self, batch, request):
 
-        gt_labels_roi = request[self.gt_labels].roi
+        labels_roi = request[self.labels].roi
 
         logger.debug("computing ground-truth affinities from labels")
-        gt_affinities = malis.seg_to_affgraph(
-                batch.arrays[self.gt_labels].data.astype(np.int32),
+        affinities = malis.seg_to_affgraph(
+                batch.arrays[self.labels].data.astype(np.int32),
                 self.affinity_neighborhood
         ).astype(np.float32)
 
 
         # crop affinities to original label ROI
-        offset = gt_labels_roi.get_offset()
+        offset = labels_roi.get_offset()
         shift = -offset - self.padding_neg
-        crop_roi = gt_labels_roi.shift(shift)
-        crop_roi /= self.spec[self.gt_labels].voxel_size
+        crop_roi = labels_roi.shift(shift)
+        crop_roi /= self.spec[self.labels].voxel_size
         crop = crop_roi.get_bounding_box()
 
         logger.debug("cropping with " + str(crop))
-        gt_affinities = gt_affinities[(slice(None),)+crop]
+        affinities = affinities[(slice(None),)+crop]
 
-        spec = self.spec[self.gt_affinities].copy()
-        spec.roi = gt_labels_roi
-        batch.arrays[self.gt_affinities] = Array(gt_affinities, spec)
+        spec = self.spec[self.affinities].copy()
+        spec.roi = labels_roi
+        batch.arrays[self.affinities] = Array(affinities, spec)
 
-        if self.gt_affinities_mask and self.gt_affinities_mask in request:
+        if self.affinities_mask and self.affinities_mask in request:
 
-            if self.gt_labels_mask:
+            if self.labels_mask:
 
                 logger.debug("computing ground-truth affinities mask from "
                              "labels mask")
-                gt_affinities_mask = malis.seg_to_affgraph(
-                    batch.arrays[self.gt_labels_mask].data.astype(np.int32),
+                affinities_mask = malis.seg_to_affgraph(
+                    batch.arrays[self.labels_mask].data.astype(np.int32),
                     self.affinity_neighborhood)
-                gt_affinities_mask = gt_affinities_mask[(slice(None),)+crop]
+                affinities_mask = affinities_mask[(slice(None),)+crop]
 
             else:
 
-                gt_affinities_mask = np.ones_like(gt_affinities)
+                affinities_mask = np.ones_like(affinities)
 
-            if self.gt_unlabelled:
+            if self.unlabelled:
 
                 # 1 for all affinities between unlabelled voxels
-                unlabelled = (1 - batch.arrays[self.gt_unlabelled].data)
+                unlabelled = (1 - batch.arrays[self.unlabelled].data)
                 unlabelled_mask = malis.seg_to_affgraph(
                     unlabelled.astype(np.int32),
                     self.affinity_neighborhood)
@@ -178,25 +178,25 @@ class AddAffinities(BatchFilter):
                 unlabelled_mask = (1 - unlabelled_mask)
 
                 # combine with mask
-                gt_affinities_mask = gt_affinities_mask*unlabelled_mask
+                affinities_mask = affinities_mask*unlabelled_mask
 
-            gt_affinities_mask = gt_affinities_mask.astype(np.float32)
-            batch.arrays[self.gt_affinities_mask] = Array(gt_affinities_mask, spec)
+            affinities_mask = affinities_mask.astype(np.float32)
+            batch.arrays[self.affinities_mask] = Array(affinities_mask, spec)
 
         else:
 
-            if self.gt_labels_mask is not None:
+            if self.labels_mask is not None:
                 logger.warning("GT labels does have a mask, but affinities "
                                "mask is not requested.")
 
         # crop labels to original label ROI
-        batch.arrays[self.gt_labels] = batch.arrays[self.gt_labels].crop(gt_labels_roi)
+        batch.arrays[self.labels] = batch.arrays[self.labels].crop(labels_roi)
 
         # same for label mask
-        if self.gt_labels_mask:
-            batch.arrays[self.gt_labels_mask] = batch.arrays[self.gt_labels_mask].crop(gt_labels_roi)
+        if self.labels_mask:
+            batch.arrays[self.labels_mask] = batch.arrays[self.labels_mask].crop(labels_roi)
         # and unlabelled mask
-        if self.gt_unlabelled:
-            batch.arrays[self.gt_unlabelled] = batch.arrays[self.gt_unlabelled].crop(gt_labels_roi)
+        if self.unlabelled:
+            batch.arrays[self.unlabelled] = batch.arrays[self.unlabelled].crop(labels_roi)
 
         batch.affinity_neighborhood = self.affinity_neighborhood
