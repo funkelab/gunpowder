@@ -53,7 +53,7 @@ class Hdf5PointsSource(BatchProvider):
                 raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
             spec = PointsSpec()
-            spec.roi = Roi(self.rois[points_key][0], self.rois[points_key][1])
+            spec.roi = self.rois[points_key]
 
             self.provides(points_key, spec)
 
