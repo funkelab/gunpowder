@@ -155,7 +155,9 @@ class RasterizePoints(BatchFilter):
         request[self.points] = PointsSpec(roi=points_roi)
 
         if self.settings.mask is not None:
-            request[self.settings.mask] = ArraySpec(roi=points_roi)
+            mask_voxel_size = self.spec[self.settings.mask].voxel_size
+            request[self.settings.mask] = \
+                ArraySpec(roi=points_roi.snap_to_grid(mask_voxel_size))
 
     def process(self, batch, request):
 
@@ -176,8 +178,9 @@ class RasterizePoints(BatchFilter):
 
         if mask is not None:
 
+            mask_array = batch.arrays[mask]
             # get all component labels in the mask
-            labels = list(np.unique(batch.arrays[mask].data))
+            labels = list(np.unique(mask_array.data))
 
             # zero label should be ignored
             if 0 in labels:
@@ -193,7 +196,7 @@ class RasterizePoints(BatchFilter):
                         voxel_size,
                         self.spec[self.array].dtype,
                         self.settings,
-                        Array(data=mask.data==label, spec=mask.spec))
+                        Array(data=mask_array.data==label, spec=mask_array.spec))
 
                     for label in labels
                 ],
@@ -234,6 +237,10 @@ class RasterizePoints(BatchFilter):
             for i, p in points.data.items():
                 if not request_roi.contains(p.location):
                     del points.data[i]
+
+        # restore requested mask
+        if mask is not None:
+            batch.arrays[mask] = mask_array.crop(request[mask].roi)
 
     def __rasterize(self, points, data_roi, voxel_size, dtype, settings, mask_array=None):
         '''Rasterize 'points' into an array with the given 'voxel_size'. If a
