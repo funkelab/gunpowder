@@ -240,7 +240,7 @@ class RasterizePoints(BatchFilter):
         mask array is given, it needs to have the same ROI as the points.'''
 
         assert mask_array is None or mask_array.spec.roi == points.spec.roi
-        assert mask_array is None or mmask_array.spec.voxel_size == voxel_size
+        assert mask_array is None or mask_array.spec.voxel_size == voxel_size
         mask = mask_array.data if mask_array is not None else None
 
         logger.debug("Rasterizing points in %s", points.spec.roi)
