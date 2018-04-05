@@ -165,9 +165,11 @@ class RasterizePoints(BatchFilter):
         mask = self.settings.mask
         voxel_size = self.spec[self.array].voxel_size
 
-        # get the output array shape
-        offset = points.spec.roi.get_begin()/voxel_size
-        shape = -(-points.spec.roi.get_shape()/voxel_size) # ceil division
+        # get roi used for creating the new array (points_roi does no
+        # necessarily align with voxel size)
+        enlarged_vol_roi = points.spec.roi.snap_to_grid(voxel_size)
+        offset = enlarged_vol_roi.get_begin() / voxel_size
+        shape = enlarged_vol_roi.get_shape() / voxel_size
         data_roi = Roi(offset, shape)
 
         logger.debug("Points in %s", points.spec.roi)
