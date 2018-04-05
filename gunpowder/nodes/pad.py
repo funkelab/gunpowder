@@ -103,7 +103,7 @@ class Pad(BatchFilter):
         else:
 
             points = batch.points[self.key]
-            points.spec.roi = request[points_key].roi
+            points.spec.roi = request[self.key].roi
 
     def __expand(self, a, from_roi, to_roi, value):
         '''from_roi and to_roi should be in voxels.'''
