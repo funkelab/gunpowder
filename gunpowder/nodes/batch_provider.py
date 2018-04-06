@@ -136,8 +136,9 @@ class BatchProvider(object):
 
             request(:class:`BatchRequest`):
 
-                A request containing (possibly partial) :class:`ArraySpec`s and
-                :class:`PointsSpec`s.
+                A request containing (possibly partial)
+                :class:`ArraySpecs<ArraySpec>` and
+                :class:`PointSpecs<PointsSpec>`.
         '''
 
         logger.debug("%s got request %s", self.name(), request)

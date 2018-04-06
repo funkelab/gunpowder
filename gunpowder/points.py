@@ -5,14 +5,18 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 class Points(Freezable):
-    '''A list of :class:``Point``s with a specification describing the data.
+    '''A list of :class:`Points<Point>` with a specification describing the
+    data.
 
     Args:
 
-        data (dict, int->Point): A dictionary of IDs mapping to
-            :class:``Point``s.
+        data (``dict``, ``int`` -> :class:`Point`):
 
-        spec (:class:`PointsSpec`): A spec describing the data.
+            A dictionary of IDs mapping to :class:`Points<Point>`.
+
+        spec (:class:`PointsSpec`):
+
+            A spec describing the data.
     '''
 
     def __init__(self, data, spec):
@@ -21,6 +25,14 @@ class Points(Freezable):
         self.freeze()
 
 class Point(Freezable):
+    '''A point with a location, as stored in :class:`Points`.
+
+    Args:
+
+        location (array-like of ``float``):
+
+            The location of this point.
+    '''
 
     def __init__(self, location):
         self.location = np.array(location, dtype=np.float32)
@@ -33,12 +45,13 @@ class PointsKey(Freezable):
     '''A key to identify lists of points in requests, batches, and across
     nodes.
 
-    Used as key in :class:``BatchRequest`` and :class:``Batch`` to retrieve
-    specs or lists of points.
+    Used as key in :class:`BatchRequest` and :class:`Batch` to retrieve specs
+    or lists of points.
 
     Args:
 
-        identifier (string):
+        identifier (``string``):
+
             A unique, human readable identifier for this points key. Will be
             used in log messages and to look up points in requests and batches.
             Should be upper case (like ``CENTER_POINTS``). The identifier is
@@ -63,7 +76,7 @@ class PointsKey(Freezable):
         return self.identifier
 
 class PointsKeys:
-    '''Convenience access to all created :class:``PointsKey``s. A key generated
+    '''Convenience access to all created :class:`PointsKey`s. A key generated
     with::
 
         centers = PointsKey('CENTER_POINTS')

@@ -21,7 +21,7 @@ class Array(Freezable):
 
             A spec describing the data.
 
-        attrs (dict, optional):
+        attrs (``dict``, optional):
 
             Optional attributes to describe this array.
     '''
@@ -47,9 +47,13 @@ class Array(Freezable):
 
         Args:
 
-            roi(:class:``Roi``): ROI in world units to crop to.
+            roi(:class:`Roi`):
 
-            copy(bool): Make a copy of the data (default).
+                ROI in world units to crop to.
+
+            copy(``bool``):
+
+                Make a copy of the data (default).
         '''
 
         assert self.spec.roi.contains(roi), "Requested crop ROI (%s) doesn't fit in array (%s)"\
@@ -79,7 +83,7 @@ class ArrayKey(Freezable):
 
     Args:
 
-        identifier (string):
+        identifier (``string``):
 
             A unique, human readable identifier for this array key. Will be
             used in log messages and to look up arrays in requests and batches.
