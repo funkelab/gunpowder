@@ -41,6 +41,15 @@ class ElasticAugment(BatchFilter):
             visible piecewise linear deformations for large factors. Usually, a 
             factor of 4 can savely by used without noticable changes. However, 
             the default is 1 (i.e., no subsampling).
+
+        spatial_dims (int):
+
+            The number of spacial dimensions in arrays. Spatial dimensions are
+            assumed to be the last ones and cannot be more than 3 (default).
+            Set this value here to avoid treating channels as spacial
+            dimension. If, for example, your array is indexed as ``(c,y,x)``
+            (2D plus channels), you would want to set ``spatial_dims=2`` to
+            perform the elastic deformation only on x and y.
     '''
 
     def __init__(
@@ -51,7 +60,8 @@ class ElasticAugment(BatchFilter):
             prob_slip=0,
             prob_shift=0,
             max_misalign=0,
-            subsample=1):
+            subsample=1,
+            spatial_dims=3):
 
         self.control_point_spacing = control_point_spacing
         self.jitter_sigma = jitter_sigma
@@ -61,6 +71,7 @@ class ElasticAugment(BatchFilter):
         self.prob_shift = prob_shift
         self.max_misalign = max_misalign
         self.subsample = subsample
+        self.spatial_dims = spatial_dims
 
     def prepare(self, request):
 
@@ -76,8 +87,8 @@ class ElasticAugment(BatchFilter):
 
         # get master ROI
         master_roi = Roi(
-            total_roi.get_begin()[-3:],
-            total_roi.get_shape()[-3:])
+            total_roi.get_begin()[-self.spatial_dims:],
+            total_roi.get_shape()[-self.spatial_dims:])
         self.spatial_dims = master_roi.dims()
         logger.debug("master ROI is %s"%master_roi)
 
@@ -108,8 +119,8 @@ class ElasticAugment(BatchFilter):
         for key, spec in request.items():
 
             target_roi = Roi(
-                spec.roi.get_begin()[-3:],
-                spec.roi.get_shape()[-3:])
+                spec.roi.get_begin()[-self.spatial_dims:],
+                spec.roi.get_shape()[-self.spatial_dims:])
             logger.debug(
                 "downstream request spatial ROI for %s is %s", key, target_roi)
 
@@ -163,8 +174,8 @@ class ElasticAugment(BatchFilter):
 
             # update upstream request
             spec.roi = Roi(
-                spec.roi.get_begin()[:-3] + source_roi.get_begin()[-3:],
-                spec.roi.get_shape()[:-3] + source_roi.get_shape()[-3:])
+                spec.roi.get_begin()[:-self.spatial_dims] + source_roi.get_begin()[-self.spatial_dims:],
+                spec.roi.get_shape()[:-self.spatial_dims] + source_roi.get_shape()[-self.spatial_dims:])
 
             logger.debug("upstream request roi for %s = %s" % (key, spec.roi))
 
@@ -176,10 +187,10 @@ class ElasticAugment(BatchFilter):
             # same in spatial coordinates
             assert (
                 self.target_rois[array_key].get_begin() ==
-                request[array_key].roi.get_begin()[-3:])
+                request[array_key].roi.get_begin()[-self.spatial_dims:])
             assert (
                 self.target_rois[array_key].get_shape() ==
-                request[array_key].roi.get_shape()[-3:])
+                request[array_key].roi.get_shape()[-self.spatial_dims:])
 
             # reshape array data into (channels,) + spatial dims
             shape = array.data.shape
@@ -211,7 +222,7 @@ class ElasticAugment(BatchFilter):
                 logger.debug("relative to upstream ROI: %s", location)
 
                 # get spatial coordinates of point in voxels
-                location_voxels = location[-3:]/self.voxel_size
+                location_voxels = location[-self.spatial_dims:]/self.voxel_size
                 logger.debug(
                     "relative to upstream ROI in voxels: %s",
                     location_voxels)
@@ -242,7 +253,7 @@ class ElasticAugment(BatchFilter):
                 projected += np.array(self.target_rois[points_key].get_begin())
 
                 # update spatial coordinates of point location
-                point.location[-3:] = projected
+                point.location[-self.spatial_dims:] = projected
 
                 logger.debug("final location: %s", point.location)
 
@@ -263,9 +274,9 @@ class ElasticAugment(BatchFilter):
         prev = None
         for array_key in request.array_specs.keys():
             if voxel_size is None:
-                voxel_size = self.spec[array_key].voxel_size[-3:]
+                voxel_size = self.spec[array_key].voxel_size[-self.spatial_dims:]
             else:
-                assert voxel_size == self.spec[array_key].voxel_size[-3:], \
+                assert voxel_size == self.spec[array_key].voxel_size[-self.spatial_dims:], \
                         "ElasticAugment can only be used with arrays of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(
                                 array_key, self.spec[array_key].voxel_size,
@@ -400,6 +411,9 @@ class ElasticAugment(BatchFilter):
             transformation[d] += shift[d]
 
     def __misalign(self, transformation):
+
+        assert transformation.shape(0) == 3, (
+            "misalign can only be applied to 3D volumes")
 
         num_sections = transformation[0].shape[0]
 
