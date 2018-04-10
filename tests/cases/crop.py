@@ -1,6 +1,10 @@
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class TestSourceCrop(BatchProvider):
 
@@ -19,6 +23,7 @@ class TestSourceCrop(BatchProvider):
 
     def provide(self, request):
         pass
+
 
 class TestCrop(ProviderTest):
 
@@ -51,7 +56,7 @@ class TestCrop(ProviderTest):
 
         with build(pipeline):
 
-            print(pipeline.spec[ArrayKeys.RAW].roi)
-            print(expected_roi_raw)
+            logger.info(pipeline.spec[ArrayKeys.RAW].roi)
+            logger.info(expected_roi_raw)
             self.assertTrue(
                 pipeline.spec[ArrayKeys.RAW].roi == expected_roi_raw)
