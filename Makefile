@@ -12,4 +12,4 @@ install-dev:
 
 .PHONY: test
 test:
-	python tests/test_suite.py
+	python -m tests -v

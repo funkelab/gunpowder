@@ -11,9 +11,10 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     log_level = {
         0: logging.CRITICAL,
-        1: logging.WARNING,
-        2: logging.INFO,
-        3: logging.DEBUG
+        1: logging.CRITICAL,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG
     }.get(parsed_args.verbose, logging.DEBUG)
 
     kwargs = {'level': log_level}
