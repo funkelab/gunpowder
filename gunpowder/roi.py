@@ -7,14 +7,25 @@ import numpy as np
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
 
+    Similar to :class:`Coordinate`, supports simple arithmetics, e.g.::
+
+        roi = Roi((1, 1, 1), (10, 10, 10))
+        voxel_size = Coordinate((10, 5, 1))
+        scale_shift = roi*voxel_size + 1 # == Roi((11, 6, 2), (101, 51, 11))
+
     Args:
 
-        offset (array-like of int, optional): The starting point (inclusive) of
-            the ROI. Can be `None` (default) if the ROI only characterizes a
-            shape.
+        offset (array-like of ``int``, optional):
 
-        shape (array-like): The shape of the ROI. Entries can be `None` to
-            undicate unbounded dimensions.
+            The starting point (inclusive) of the ROI. Can be ``None``
+            (default) if the ROI only characterizes a shape.
+
+        shape (array-like):
+
+            The shape of the ROI. Entries can be ``None`` to indicate
+            unboundedness. If ``None`` is passed instead of a tuple, all
+            dimensions are set to ``None``, if the number of dimensions can be
+            inferred from ``offset``.
     '''
 
     def __init__(self, offset=None, shape=None):
@@ -37,10 +48,12 @@ class Roi(Freezable):
 
         Args:
 
-            shape (tuple or None): The new shape. Entries can be `None` to
-                indicate unboundedness. If `None` is passed instead of a tuple,
-                all dimensions are set to `None`, if the number of dimensions
-                can be inferred from an existing offset or previous shape.
+            shape (array-like or ``None``):
+
+                The new shape. Entries can be ``None`` to indicate
+                unboundedness. If ``None`` is passed instead of a tuple, all
+                dimensions are set to ``None``, if the number of dimensions can
+                be inferred from an existing offset or previous shape.
         '''
 
         if shape is None:
@@ -102,6 +115,8 @@ class Roi(Freezable):
         return self.__offset + self.__shape/2
 
     def get_bounding_box(self):
+        '''Get a ``tuple`` of ``slice`` that represent this ROI and can be used
+        to index arrays.'''
 
         if self.__offset is None:
             return None
@@ -118,12 +133,15 @@ class Roi(Freezable):
         )
 
     def dims(self):
+        '''The the number of dimensions of this ROI.'''
 
         if self.__shape is None:
             return 0
         return self.__shape.dims()
 
     def size(self):
+        '''Get the volume of this ROI. Returns ``None`` if the ROI is
+        unbounded.'''
 
         if self.unbounded():
             return None
@@ -134,14 +152,18 @@ class Roi(Freezable):
         return size
 
     def empty(self):
+        '''Test if this ROI is empty.'''
 
         return self.size() == 0
 
     def unbounded(self):
+        '''Test if this ROI is unbounded.'''
 
         return None in self.__shape
 
     def contains(self, other):
+        '''Test if this ROI contains ``other``, which can be another
+        :class:`Roi` or a :class:`Coordinate`.'''
 
         if isinstance(other, Roi):
 
@@ -161,6 +183,7 @@ class Roi(Freezable):
         ])
 
     def intersects(self, other):
+        '''Test if this ROI intersects with another :class:`Roi`.'''
 
         assert self.dims() == other.dims()
 
@@ -190,6 +213,7 @@ class Roi(Freezable):
         return not separated
 
     def intersect(self, other):
+        '''Get the intersection of this ROI with another :class:`Roi`.'''
 
         if not self.intersects(other):
             return Roi(shape=(0,)*self.dims()) # empty ROI
@@ -209,6 +233,7 @@ class Roi(Freezable):
         return Roi(begin, end - begin)
 
     def union(self, other):
+        '''Get the union of this ROI with another :class:`Roi`.'''
 
         begin = Coordinate((
             min(b1, b2) # min(x, None) is None, so this does the right thing
@@ -224,6 +249,7 @@ class Roi(Freezable):
         return Roi(begin, end - begin)
 
     def shift(self, by):
+        '''Shift this ROI.'''
 
         return Roi(self.__offset + by, self.__shape)
 
@@ -231,6 +257,10 @@ class Roi(Freezable):
         '''Align a ROI with a given voxel size.
 
         Args:
+
+            voxel_size (:class:`Coordinate`):
+
+                The voxel size of the grid to snap to.
 
             mode (string, optional):
 
@@ -265,13 +295,15 @@ class Roi(Freezable):
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
 
-        amount_neg: Coordinate or None
+        Args:
 
-            Amount (per dimension) to grow into the negative direction.
+            amount_neg (:class:`Coordinate` or ``None``):
 
-        amount_pos: Coordinate or None
+                Amount (per dimension) to grow into the negative direction.
 
-            Amount (per dimension) to grow into the positive direction.
+            amount_pos (:class:`Coordinate` or ``None``):
+
+                Amount (per dimension) to grow into the positive direction.
         '''
 
         if amount_neg is None:

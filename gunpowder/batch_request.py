@@ -10,7 +10,10 @@ class BatchRequest(ProviderSpec):
     '''A collection of (possibly partial) :class:`ArraySpec` and
     :class:`PointsSpec` forming a request.
 
-    For usage, see the documentation of :class:`ProviderSpec`.
+    Inherits from :class:`ProviderSpec`.
+
+    See :ref:`sec_requests_batches` for how to use a batch request to obtain a
+    batch.
     '''
 
     def add(self, key, shape, voxel_size=None):
@@ -22,11 +25,19 @@ class BatchRequest(ProviderSpec):
         the largest one.
 
         Args:
-            key: A :class:`ArrayKey` or `PointsKey` instance to refer to the output.
 
-            shape: A tuple containing the shape of the desired roi
+            key (:class:`ArrayKey` or :class:`PointsKey`):
 
-            voxel_size: A tuple contening the voxel sizes for each corresponding dimension
+                The key for which to add a spec.
+
+            shape (:class:`Coordinate`):
+
+                A tuple containing the shape of the desired roi
+
+            voxel_size (:class:`Coordinate`):
+
+                A tuple contening the voxel sizes for each corresponding
+                dimension
         '''
 
         if isinstance(key, ArrayKey):

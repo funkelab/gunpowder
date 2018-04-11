@@ -17,24 +17,28 @@ class Hdf5Source(BatchProvider):
     '''An HDF5 data source.
 
     Provides arrays from HDF5 datasets for each array key given. If the
-    attribute `resolution` is set in an HDF5 dataset, it will be used as the
-    array's `voxel_size` and a warning issued if they differ. If the attribute
-    `offset` is set in an HDF5 dataset, it will be used as the offset of the
-    :class:`Roi` for this array. It is assumed that the offset is given in
-    world units.
+    attribute ``resolution`` is set in an HDF5 dataset, it will be used as the
+    array's ``voxel_size``. If the attribute ``offset`` is set in an HDF5
+    dataset, it will be used as the offset of the :class:`Roi` for this array.
+    It is assumed that the offset is given in world units.
 
     Args:
 
-        filename (string): The HDF5 file.
+        filename (``string``):
 
-        datasets (dict): Dictionary of ArrayKey -> dataset names that this
-            source offers.
+            The HDF5 file.
 
-        array_specs (dict, optional): An optional dictionary of
-            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
-            specs automatically determined from the HDF5 file. This is useful
-            to set a missing ``voxel_size``, for example. Only fields that are
-            not ``None`` in the given :class:`ArraySpec` will be used.
+        datasets (``dict``, :class:`ArrayKey` -> ``string``):
+
+            Dictionary of array keys to HDF5 dataset names that this source
+            offers.
+
+        array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`, optional):
+
+            An optional dictionary of array keys to array specs to overwrite
+            the array specs automatically determined from the HDF5 file. This
+            is useful to set a missing ``voxel_size``, for example. Only fields
+            that are not ``None`` in the given :class:`ArraySpec` will be used.
     '''
 
     def __init__(

@@ -20,17 +20,24 @@ class Scan(BatchFilter):
     upstream requests will be contained in the downstream requested ROI or
     upstream ROIs.
 
+    See also :class:`Hdf5Write`.
+
     Args:
 
-        reference(:class:`BatchRequest`): A reference :class:`BatchRequest`.
-            This request will be shifted in a scanning fashion over the
-            upstream ROIs of the requested arrays or points.
+        reference (:class:`BatchRequest`):
 
-        num_workers (int, optional): If set to >1, upstream requests are made
-            in parallel with that number of workers.
+            A reference :class:`BatchRequest`. This request will be shifted in
+            a scanning fashion over the upstream ROIs of the requested arrays
+            or points.
 
-        cache_size (int, optional): If multiple workers are used, how many
-            batches to hold at most.
+        num_workers (``int``, optional):
+
+            If set to >1, upstream requests are made in parallel with that
+            number of workers.
+
+        cache_size (``int``, optional):
+
+            If multiple workers are used, how many batches to hold at most.
     '''
 
     def __init__(self, reference, num_workers=1, cache_size=50):

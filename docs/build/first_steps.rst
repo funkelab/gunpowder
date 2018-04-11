@@ -116,8 +116,8 @@ Going Further
 :class:`a pre-cache node for easy parallel fetching of
 batches<gunpowder.PreCache>`, several augmentation nodes, and nodes for
 :class:`profiling<gunpowder.PrintProfilingStats>` and
-:class:`inspection<gunpowder.Snapshot>`. For a complete list see
-:ref:`sec_nodes`
+:class:`inspection<gunpowder.Snapshot>`. For a complete list see the
+:ref:`API reference<sec_api>`.
 
 Continue reading :ref:`here<sec_custom_providers>` to learn how to write your
 own :mod:`gunpowder` batch providers.

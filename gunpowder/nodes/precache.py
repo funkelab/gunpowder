@@ -23,9 +23,13 @@ class PreCache(BatchFilter):
 
     Args:
 
-        cache_size (int): How many batches to hold at most in the cache.
+        cache_size (``int``):
 
-        num_workers (int): How many processes to spawn to fill the cache.
+            How many batches to hold at most in the cache.
+
+        num_workers (``int``):
+
+            How many processes to spawn to fill the cache.
     '''
 
     def __init__(self, cache_size=50, num_workers=20):

@@ -16,7 +16,7 @@ class CsvPointsSource(BatchProvider):
 
     Args:
 
-        filename (string):
+        filename (``string``):
 
             The file to read from.
 
@@ -24,7 +24,7 @@ class CsvPointsSource(BatchProvider):
 
             The key of the points set to create.
 
-        points_spec (PointsSpec, optional):
+        points_spec (:class:`PointsSpec`, optional):
 
             An optional :class:`PointsSpec` to overwrite the points specs
             automatically determined from the CSV file. This is useful to set

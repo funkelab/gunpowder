@@ -7,9 +7,9 @@ from gunpowder.array_spec import ArraySpec
 from .freezable import Freezable
 
 class ProviderSpec(Freezable):
-    '''A collection of (possibly partial) :class:`ArraySpec`s and
-    :class:`PointsSpec`s describing a :class:`BatchProvider`'s offered arrays
-    and points.
+    '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
+    :class:`PointsSpecs<PointsSpec>` describing a
+    :class:`BatchProvider's<BatchProvider>` offered arrays and points.
 
     This collection mimics a dictionary. Specs can be added with::
 
@@ -32,11 +32,23 @@ class ProviderSpec(Freezable):
 
     Args:
 
-        array_specs (dict): A dictionary from :class:`ArrayKey` to
-            :class:`ArraySpec`.
+        array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`):
 
-        points_specs (dict): A dictionary from :class:`PointsKey` to
-            :class:`PointsSpec`.
+            Initial array specs.
+
+        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+
+            Initial points specs.
+
+    Attributes:
+
+        array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`):
+
+            Contains all array specs contained in this provider spec.
+
+        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+
+            Contains all points specs contained in this provider spec.
     '''
 
     def __init__(self, array_specs=None, points_specs=None):

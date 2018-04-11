@@ -13,6 +13,28 @@ class ExcludeLabels(BatchFilter):
     The labels will be replaced by background_value. An optional ignore mask
     will be created and set to 0 for the excluded locations that are further
     than a threshold away from not excluded locations.
+
+    Args:
+
+        labels (:class:`ArrayKey`):
+
+            The array containing the labels.
+
+        exclude (``list`` of ``int``):
+
+            The labels to exclude from ``labels``.
+
+        ignore_mask (:class:`ArrayKey`, optional):
+
+            The ignore mask to create.
+
+        ignore_mask_erode (``float``, optional):
+
+            By how much (in world units) to erode the ignore mask.
+
+        background_value (``int``, optional):
+
+            Value to replace excluded IDs, defaults to 0.
     '''
 
     def __init__(
@@ -22,22 +44,7 @@ class ExcludeLabels(BatchFilter):
             ignore_mask=None,
             ignore_mask_erode=0,
             background_value=0):
-        '''
-        Args:
 
-            labels (:class:``ArrayKey``): The array containing the labels.
-
-            exclude (list of IDs): The labels to exclude from ``labels``.
-
-            ignore_mask (:class:``ArrayKey``, optional): The ignore mask to
-                create.
-
-            ignore_mask_erode (float, optional): By how much (in world units) to erode
-                the ignore mask.
-
-            background_value (int, optional): Value to replace excluded IDs,
-                defaults to 0.
-        '''
         self.labels = labels
         self.exclude = set(exclude)
         self.ignore_mask = ignore_mask

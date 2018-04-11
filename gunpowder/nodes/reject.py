@@ -11,14 +11,21 @@ class Reject(BatchFilter):
 
     Args:
 
-        mask(:class:``ArrayKey``): The mask to use.
+        mask (:class:`ArrayKey`):
 
-        min_masked(float, optional): The minimal required ratio of masked-in
-            vs. masked-out voxels. Defaults to 0.5.
+            The mask to use.
 
-        reject_probability(float, optional): The probability by which a batch
-            that is not valid (less than min_masked) is actually rejected.
-            Defaults to 1., i.e. strict rejection.
+        min_masked (``float``, optional):
+
+
+            The minimal required ratio of masked-in vs. masked-out voxels.
+            Defaults to 0.5.
+
+        reject_probability (``float``, optional):
+
+            The probability by which a batch that is not valid (less than
+            min_masked) is actually rejected. Defaults to 1., i.e. strict
+            rejection.
     '''
 
     def __init__(self, mask, min_masked=0.5, reject_probability=1.):

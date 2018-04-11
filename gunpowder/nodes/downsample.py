@@ -16,7 +16,7 @@ class DownSample(BatchFilter):
 
             The key of the array to downsample.
 
-        factor (integer or tuple of integer):
+        factor (``int`` or ``tuple`` of ``int``):
 
             The factor to downsample with.
 

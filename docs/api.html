@@ -1,0 +1,2337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Reference &mdash; gunpowder 0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Writing Custom Batch Providers" href="custom_providers.html" />
+    <link rel="prev" title="Batch Requests and Batches" href="requests_batches.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/gunpowder.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#going-further">Going Further</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gunpowder</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-gunpowder">
+<span id="api-reference"></span><span id="sec-api"></span><h1>API Reference<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="data-containers">
+<h2>Data Containers<a class="headerlink" href="#data-containers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="batch">
+<h3>Batch<a class="headerlink" href="#batch" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Batch">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Batch</code><a class="reference internal" href="_modules/gunpowder/batch.html#Batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains the requested batch as a collection of <a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Arrays</span></code></a>
+and <a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a> that is passed through the pipeline from sources to
+sinks.</p>
+<p>This collection mimics a dictionary. Items can be added with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">batch</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
+<span class="n">batch</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">batch</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Points</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal"><span class="pre">array_key</span></code> and <code class="docutils literal"><span class="pre">points_key</span></code> are <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>. The items can be queried with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">array</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Furthermore, pairs of keys/values can be iterated over using
+<code class="docutils literal"><span class="pre">batch.items()</span></code>.</p>
+<p>To access only arrays or point sets, use the dictionaries <code class="docutils literal"><span class="pre">batch.arrays</span></code>
+or <code class="docutils literal"><span class="pre">batch.points</span></code>, respectively.</p>
+<dl class="attribute">
+<dt id="gunpowder.Batch.arrays">
+<code class="descname">arrays</code><a class="headerlink" href="#gunpowder.Batch.arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict from <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> to <a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Array</span></code></a> – Contains all arrays that have been requested for this batch.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.Batch.points">
+<code class="descname">points</code><a class="headerlink" href="#gunpowder.Batch.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict from <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a> to <a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a> – Contains all point sets that have been requested for this batch.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Batch.items">
+<code class="descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch.html#Batch.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides a generator iterating over key/value pairs.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="array">
+<h3>Array<a class="headerlink" href="#array" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Array">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Array</code><span class="sig-paren">(</span><em>data</em>, <em>spec=None</em>, <em>attrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#Array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Array" title="Permalink to this definition">¶</a></dt>
+<dd><p>A numpy array with a specification describing the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>array-like</em>) – The data to be stored in the array. Will be converted to a numpy
+array, if necessary.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – A spec describing the data.</li>
+<li><strong>attrs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, optional) – Optional attributes to describe this array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="gunpowder.Array.crop">
+<code class="descname">crop</code><span class="sig-paren">(</span><em>roi</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#Array.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Array.crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cropped copy of this Array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>roi</strong> (<a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a>) – ROI in world units to crop to.</li>
+<li><strong>copy</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – Make a copy of the data (default).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="points">
+<h3>Points<a class="headerlink" href="#points" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Points">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Points</code><span class="sig-paren">(</span><em>data</em>, <em>spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/points.html#Points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Points" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <a class="reference internal" href="#gunpowder.Point" title="gunpowder.Point"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a> with a specification describing the
+data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">int</span></code> -&gt; <a class="reference internal" href="#gunpowder.Point" title="gunpowder.Point"><code class="xref py py-class docutils literal"><span class="pre">Point</span></code></a>) – A dictionary of IDs mapping to <a class="reference internal" href="#gunpowder.Point" title="gunpowder.Point"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a>.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>) – A spec describing the data.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="point">
+<h3>Point<a class="headerlink" href="#point" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Point">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Point</code><span class="sig-paren">(</span><em>location</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/points.html#Point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Point" title="Permalink to this definition">¶</a></dt>
+<dd><p>A point with a location, as stored in <a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>location</strong> (array-like of <code class="docutils literal"><span class="pre">float</span></code>) – The location of this point.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="arraykey">
+<h3>ArrayKey<a class="headerlink" href="#arraykey" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ArrayKey">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ArrayKey</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#ArrayKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ArrayKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>A key to identify arrays in requests, batches, and across nodes.</p>
+<p>Used as key in <a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> and <a class="reference internal" href="#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a> to retrieve array
+specs or arrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – A unique, human readable identifier for this array key. Will be
+used in log messages and to look up arrays in requests and batches.
+Should be upper case (like <code class="docutils literal"><span class="pre">RAW</span></code>, <code class="docutils literal"><span class="pre">GT_LABELS</span></code>). The identifier
+is unique: Two array keys with the same identifier will refer to
+the same array.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="pointskey">
+<h3>PointsKey<a class="headerlink" href="#pointskey" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.PointsKey">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PointsKey</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/points.html#PointsKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PointsKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>A key to identify lists of points in requests, batches, and across
+nodes.</p>
+<p>Used as key in <a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> and <a class="reference internal" href="#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a> to retrieve specs
+or lists of points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – A unique, human readable identifier for this points key. Will be
+used in log messages and to look up points in requests and batches.
+Should be upper case (like <code class="docutils literal"><span class="pre">CENTER_POINTS</span></code>). The identifier is
+unique: Two points keys with the same identifier will refer to the
+same points.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="requests-and-specifications">
+<h2>Requests and Specifications<a class="headerlink" href="#requests-and-specifications" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="providerspec">
+<h3>ProviderSpec<a class="headerlink" href="#providerspec" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ProviderSpec">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ProviderSpec</code><span class="sig-paren">(</span><em>array_specs=None</em>, <em>points_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/provider_spec.html#ProviderSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ProviderSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of (possibly partial) <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpecs</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpecs</span></code></a> describing a
+<a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider's</span></code></a> offered arrays and points.</p>
+<p>This collection mimics a dictionary. Specs can be added with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">provider_spec</span> <span class="o">=</span> <span class="n">ProviderSpec</span><span class="p">()</span>
+<span class="n">provider_spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">provider_spec</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal"><span class="pre">array_key</span></code> and <code class="docutils literal"><span class="pre">points_key</span></code> are <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>. The specs can be queried with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">array_spec</span> <span class="o">=</span> <span class="n">provider_spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span>
+<span class="n">points_spec</span> <span class="o">=</span> <span class="n">provider_spec</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Furthermore, pairs of keys/values can be iterated over using
+<code class="docutils literal"><span class="pre">provider_spec.items()</span></code>.</p>
+<p>To access only array or points specs, use the dictionaries
+<code class="docutils literal"><span class="pre">provider_spec.array_specs</span></code> or <code class="docutils literal"><span class="pre">provider_spec.points_specs</span></code>,
+respectively.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>) – Initial array specs.</li>
+<li><strong>points_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>) – Initial points specs.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="gunpowder.ProviderSpec.array_specs">
+<code class="descname">array_specs</code><a class="headerlink" href="#gunpowder.ProviderSpec.array_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> – Contains all array specs contained in this provider spec.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ProviderSpec.points_specs">
+<code class="descname">points_specs</code><a class="headerlink" href="#gunpowder.ProviderSpec.points_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a> – Contains all points specs contained in this provider spec.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.ProviderSpec.items">
+<code class="descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/provider_spec.html#ProviderSpec.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ProviderSpec.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides a generator iterating over key/value pairs.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="batchrequest">
+<h3>BatchRequest<a class="headerlink" href="#batchrequest" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.BatchRequest">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">BatchRequest</code><span class="sig-paren">(</span><em>array_specs=None</em>, <em>points_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch_request.html#BatchRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of (possibly partial) <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a> forming a request.</p>
+<p>Inherits from <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal"><span class="pre">ProviderSpec</span></code></a>.</p>
+<p>See <a class="reference internal" href="requests_batches.html#sec-requests-batches"><span class="std std-ref">Batch Requests and Batches</span></a> for how to use a batch request to obtain a
+batch.</p>
+<dl class="method">
+<dt id="gunpowder.BatchRequest.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>key</em>, <em>shape</em>, <em>voxel_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch_request.html#BatchRequest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchRequest.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to add an array or point spec by providing only
+the shape of a ROI (in world units).</p>
+<p>A ROI with zero-offset will be generated. If more than one request is
+added, the ROIs with smaller shapes will be shifted to be centered in
+the largest one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The key for which to add a spec.</li>
+<li><strong>shape</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a>) – A tuple containing the shape of the desired roi</li>
+<li><strong>voxel_size</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a>) – A tuple contening the voxel sizes for each corresponding
+dimension</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="arrayspec">
+<h3>ArraySpec<a class="headerlink" href="#arrayspec" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ArraySpec">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ArraySpec</code><span class="sig-paren">(</span><em>roi=None</em>, <em>voxel_size=None</em>, <em>interpolatable=None</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array_spec.html#ArraySpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ArraySpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains meta-information about an array. This is used by
+<a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProviders</span></code></a> to communicate the arrays they
+offer, as well as by <a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Arrays</span></code></a> to describe the data they
+contain.</p>
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.roi">
+<code class="descname">roi</code><a class="headerlink" href="#gunpowder.ArraySpec.roi" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> – The region of interested represented by this array spec. Can be
+<code class="docutils literal"><span class="pre">None</span></code> for <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProviders</span></code></a> that allow
+requests for arrays everywhere, but will always be set for array
+specs that are part of a <a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Array</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.voxel_size">
+<code class="descname">voxel_size</code><a class="headerlink" href="#gunpowder.ArraySpec.voxel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a> – The size of the spatial axises in world units.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.interpolatable">
+<code class="descname">interpolatable</code><a class="headerlink" href="#gunpowder.ArraySpec.interpolatable" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">bool</span></code> – Whether the values of this array can be interpolated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.ArraySpec.dtype">
+<code class="descname">dtype</code><a class="headerlink" href="#gunpowder.ArraySpec.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">np.dtype</span></code> – The data type of the array.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.ArraySpec.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array_spec.html#ArraySpec.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ArraySpec.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of this spec.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="pointsspec">
+<h3>PointsSpec<a class="headerlink" href="#pointsspec" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.PointsSpec">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PointsSpec</code><span class="sig-paren">(</span><em>roi=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/points_spec.html#PointsSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PointsSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains meta-information about a set of points. This is used by
+<a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProviders</span></code></a> to communicate the points they
+offer, as well as by <a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a> to describe the data they contain.</p>
+<dl class="attribute">
+<dt id="gunpowder.PointsSpec.roi">
+<code class="descname">roi</code><a class="headerlink" href="#gunpowder.PointsSpec.roi" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> – The region of interested represented by this set of points.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.PointsSpec.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/points_spec.html#PointsSpec.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PointsSpec.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of this spec.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="geometry">
+<h2>Geometry<a class="headerlink" href="#geometry" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="coordinate">
+<h3>Coordinate<a class="headerlink" href="#coordinate" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Coordinate">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Coordinate</code><a class="reference internal" href="_modules/gunpowder/coordinate.html#Coordinate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Coordinate" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="docutils literal"><span class="pre">tuple</span></code> of integers.</p>
+<p>Allows the following element-wise operators: addition, subtraction,
+multiplication, division, absolute value, and negation. This allows to
+perform simple arithmetics with coordinates, e.g.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">shape</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">size</span> <span class="o">=</span> <span class="n">shape</span><span class="o">*</span><span class="n">voxel_size</span> <span class="c1"># == Coordinate((20, 15, 4))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="roi">
+<h3>Roi<a class="headerlink" href="#roi" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Roi">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Roi</code><span class="sig-paren">(</span><em>offset=None</em>, <em>shape=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>A rectangular region of interest, defined by an offset and a shape.</p>
+<p>Similar to <a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a>, supports simple arithmetics, e.g.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">scale_shift</span> <span class="o">=</span> <span class="n">roi</span><span class="o">*</span><span class="n">voxel_size</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># == Roi((11, 6, 2), (101, 51, 11))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>offset</strong> (array-like of <code class="docutils literal"><span class="pre">int</span></code>, optional) – The starting point (inclusive) of the ROI. Can be <code class="docutils literal"><span class="pre">None</span></code>
+(default) if the ROI only characterizes a shape.</li>
+<li><strong>shape</strong> (<em>array-like</em>) – The shape of the ROI. Entries can be <code class="docutils literal"><span class="pre">None</span></code> to indicate
+unboundedness. If <code class="docutils literal"><span class="pre">None</span></code> is passed instead of a tuple, all
+dimensions are set to <code class="docutils literal"><span class="pre">None</span></code>, if the number of dimensions can be
+inferred from <code class="docutils literal"><span class="pre">offset</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="gunpowder.Roi.contains">
+<code class="descname">contains</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if this ROI contains <code class="docutils literal"><span class="pre">other</span></code>, which can be another
+<a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> or a <a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of this ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.dims">
+<code class="descname">dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>The the number of dimensions of this ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.empty">
+<code class="descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if this ROI is empty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.get_begin">
+<code class="descname">get_begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smallest coordinate inside ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.get_bounding_box">
+<code class="descname">get_bounding_box</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_bounding_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a <code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">slice</span></code> that represent this ROI and can be used
+to index arrays.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.get_end">
+<code class="descname">get_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smallest coordinate which is component-wise larger than any inside ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.grow">
+<code class="descname">grow</code><span class="sig-paren">(</span><em>amount_neg</em>, <em>amount_pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.grow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.grow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grow a ROI by the given amounts in each direction:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>amount_neg</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a> or <code class="docutils literal"><span class="pre">None</span></code>) – Amount (per dimension) to grow into the negative direction.</li>
+<li><strong>amount_pos</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a> or <code class="docutils literal"><span class="pre">None</span></code>) – Amount (per dimension) to grow into the positive direction.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.intersect">
+<code class="descname">intersect</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the intersection of this ROI with another <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.intersects">
+<code class="descname">intersects</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.intersects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.intersects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if this ROI intersects with another <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.set_shape">
+<code class="descname">set_shape</code><span class="sig-paren">(</span><em>shape</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.set_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.set_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the shape of this ROI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shape</strong> (array-like or <code class="docutils literal"><span class="pre">None</span></code>) – The new shape. Entries can be <code class="docutils literal"><span class="pre">None</span></code> to indicate
+unboundedness. If <code class="docutils literal"><span class="pre">None</span></code> is passed instead of a tuple, all
+dimensions are set to <code class="docutils literal"><span class="pre">None</span></code>, if the number of dimensions can
+be inferred from an existing offset or previous shape.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.shift">
+<code class="descname">shift</code><span class="sig-paren">(</span><em>by</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.shift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift this ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the volume of this ROI. Returns <code class="docutils literal"><span class="pre">None</span></code> if the ROI is
+unbounded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.snap_to_grid">
+<code class="descname">snap_to_grid</code><span class="sig-paren">(</span><em>voxel_size</em>, <em>mode=’grow’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.snap_to_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.snap_to_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align a ROI with a given voxel size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>voxel_size</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a>) – The voxel size of the grid to snap to.</li>
+<li><strong>mode</strong> (<em>string</em><em>, </em><em>optional</em>) – How to align the ROI if it is not a multiple of the voxel size.
+Available modes are ‘grow’, ‘shrink’, and ‘closest’. Defaults to
+‘grow’.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.unbounded">
+<code class="descname">unbounded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.unbounded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.unbounded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if this ROI is unbounded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.union">
+<code class="descname">union</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the union of this ROI with another <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="node-base-classes">
+<h2>Node Base Classes<a class="headerlink" href="#node-base-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="batchprovider">
+<h3>BatchProvider<a class="headerlink" href="#batchprovider" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.BatchProvider">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">BatchProvider</code><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Superclass for all nodes in a <cite>gunpowder</cite> graph.</p>
+<p>A <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a> provides <a class="reference internal" href="#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batches</span></code></a> containing
+<a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Arrays</span></code></a> and/or <a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a>. The available data is
+specified in a <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal"><span class="pre">ProviderSpec</span></code></a> instance, accessible via <a class="reference internal" href="#gunpowder.BatchProvider.spec" title="gunpowder.BatchProvider.spec"><code class="xref py py-attr docutils literal"><span class="pre">spec</span></code></a>.</p>
+<p>To create a new node, subclass this class and implement (at least)
+<a class="reference internal" href="#gunpowder.BatchProvider.setup" title="gunpowder.BatchProvider.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a> and <a class="reference internal" href="#gunpowder.BatchProvider.provide" title="gunpowder.BatchProvider.provide"><code class="xref py py-func docutils literal"><span class="pre">provide()</span></code></a>.</p>
+<p>A <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a> can be linked to any number of other
+<a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProviders</span></code></a> upstream. If your node accepts
+exactly one upstream provider, consider subclassing <a class="reference internal" href="#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code></a>
+instead.</p>
+<dl class="method">
+<dt id="gunpowder.BatchProvider.provide">
+<code class="descname">provide</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider.provide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider.provide" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>This function takes a <a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> and should return the
+corresponding <a class="reference internal" href="#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – The request to process.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchProvider.provides">
+<code class="descname">provides</code><span class="sig-paren">(</span><em>key</em>, <em>spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider.provides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider.provides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduce a new output provided by this <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>.</p>
+<p>Implementations should call this in their <a class="reference internal" href="#gunpowder.BatchProvider.setup" title="gunpowder.BatchProvider.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a> method, which
+will be called when the pipeline is build.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The array or point set key provided.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> or <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>) – The spec of the array or point set provided.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchProvider.request_batch">
+<code class="descname">request_batch</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider.request_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider.request_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request a batch from this provider.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – A request containing (possibly partial)
+<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpecs</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointSpecs</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchProvider.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Called during initialization of the DAG. Callees can assume that all
+upstream providers are set up already.</p>
+<p>In setup, call <a class="reference internal" href="#gunpowder.BatchProvider.provides" title="gunpowder.BatchProvider.provides"><code class="xref py py-func docutils literal"><span class="pre">provides()</span></code></a> to announce the arrays and points
+provided by this node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.BatchProvider.spec">
+<code class="descname">spec</code><a class="headerlink" href="#gunpowder.BatchProvider.spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal"><span class="pre">ProviderSpec</span></code></a> of this <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>.</p>
+<p>Note that the spec is only available after the pipeline has been build.
+Before that, it is <code class="docutils literal"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchProvider.teardown">
+<code class="descname">teardown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_provider.html#BatchProvider.teardown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchProvider.teardown" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Called during destruction of the DAG. Subclasses should use this to
+stop worker processes, if they used some.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="batchfilter">
+<h3>BatchFilter<a class="headerlink" href="#batchfilter" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.BatchFilter">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">BatchFilter</code><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience wrapper for <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProviders</span></code></a> with
+exactly one input provider.</p>
+<p>By default, a node of this class will expose the same <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal"><span class="pre">ProviderSpec</span></code></a>
+as the upstream provider. You can modify the provider spec by calling
+<a class="reference internal" href="#gunpowder.BatchFilter.provides" title="gunpowder.BatchFilter.provides"><code class="xref py py-func docutils literal"><span class="pre">provides()</span></code></a> and <a class="reference internal" href="#gunpowder.BatchFilter.updates" title="gunpowder.BatchFilter.updates"><code class="xref py py-func docutils literal"><span class="pre">updates()</span></code></a> in <a class="reference internal" href="#gunpowder.BatchFilter.setup" title="gunpowder.BatchFilter.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a>.</p>
+<p>Subclasses need to implement at least <a class="reference internal" href="#gunpowder.BatchFilter.process" title="gunpowder.BatchFilter.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a> to modify a passed
+batch (downstream). Optionally, the following methods can be implemented:</p>
+<blockquote>
+<div><p><a class="reference internal" href="#gunpowder.BatchFilter.setup" title="gunpowder.BatchFilter.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a></p>
+<blockquote>
+<div>Initialize this filter. Called after setup of the DAG. All upstream
+providers will be set up already.</div></blockquote>
+<p><a class="reference internal" href="#gunpowder.BatchFilter.teardown" title="gunpowder.BatchFilter.teardown"><code class="xref py py-func docutils literal"><span class="pre">teardown()</span></code></a></p>
+<blockquote>
+<div>Destruct this filter, free resources, stop worker processes.</div></blockquote>
+<p><a class="reference internal" href="#gunpowder.BatchFilter.prepare" title="gunpowder.BatchFilter.prepare"><code class="xref py py-func docutils literal"><span class="pre">prepare()</span></code></a></p>
+<blockquote>
+<div>Prepare for a batch request. Always called before each
+<a class="reference internal" href="#gunpowder.BatchFilter.process" title="gunpowder.BatchFilter.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a>. Use it to modify a batch request to be passed
+upstream.</div></blockquote>
+</div></blockquote>
+<dl class="method">
+<dt id="gunpowder.BatchFilter.enable_autoskip">
+<code class="descname">enable_autoskip</code><span class="sig-paren">(</span><em>skip=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.enable_autoskip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.enable_autoskip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable automatic skipping of this <a class="reference internal" href="#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code></a>, based on
+given <a class="reference internal" href="#gunpowder.BatchFilter.updates" title="gunpowder.BatchFilter.updates"><code class="xref py py-func docutils literal"><span class="pre">updates()</span></code></a> and <a class="reference internal" href="#gunpowder.BatchFilter.provides" title="gunpowder.BatchFilter.provides"><code class="xref py py-func docutils literal"><span class="pre">provides()</span></code></a> calls. Has to be called in
+<a class="reference internal" href="#gunpowder.BatchFilter.setup" title="gunpowder.BatchFilter.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a>.</p>
+<p>By default, <a class="reference internal" href="#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilters</span></code></a> are not skipped
+automatically, regardless of what they update or provide. If autskip is
+enabled, <a class="reference internal" href="#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilters</span></code></a> will only be run if the
+request contains at least one key reported earlier with
+<a class="reference internal" href="#gunpowder.BatchFilter.updates" title="gunpowder.BatchFilter.updates"><code class="xref py py-func docutils literal"><span class="pre">updates()</span></code></a> or <a class="reference internal" href="#gunpowder.BatchFilter.provides" title="gunpowder.BatchFilter.provides"><code class="xref py py-func docutils literal"><span class="pre">provides()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Prepare for a batch request. Change the request as needed, it will be
+passed on upstream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.process">
+<code class="descname">process</code><span class="sig-paren">(</span><em>batch</em>, <em>request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Filter a batch, will be called after <a class="reference internal" href="#gunpowder.BatchFilter.prepare" title="gunpowder.BatchFilter.prepare"><code class="xref py py-func docutils literal"><span class="pre">prepare()</span></code></a>. Change batch as
+needed, it will be passed downstream. <code class="docutils literal"><span class="pre">request</span></code> is the same as passed
+to <a class="reference internal" href="#gunpowder.BatchFilter.prepare" title="gunpowder.BatchFilter.prepare"><code class="xref py py-func docutils literal"><span class="pre">prepare()</span></code></a>, provided for convenience.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>batch</strong> (<a class="reference internal" href="#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a>) – The batch received from upstream to be modified by this node.</li>
+<li><strong>request</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – The request this node received. The updated batch should meet
+this request.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.provides">
+<code class="descname">provides</code><span class="sig-paren">(</span><em>key</em>, <em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#gunpowder.BatchFilter.provides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduce a new output provided by this <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>.</p>
+<p>Implementations should call this in their <a class="reference internal" href="#gunpowder.BatchFilter.setup" title="gunpowder.BatchFilter.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a> method, which
+will be called when the pipeline is build.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The array or point set key provided.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> or <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>) – The spec of the array or point set provided.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.request_batch">
+<code class="descname">request_batch</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#gunpowder.BatchFilter.request_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request a batch from this provider.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – A request containing (possibly partial)
+<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpecs</span></code></a> and
+<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointSpecs</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Called during initialization of the DAG. Callees can assume that all
+upstream providers are set up already.</p>
+<p>In setup, call <a class="reference internal" href="#gunpowder.BatchFilter.provides" title="gunpowder.BatchFilter.provides"><code class="xref py py-func docutils literal"><span class="pre">provides()</span></code></a> or <a class="reference internal" href="#gunpowder.BatchFilter.updates" title="gunpowder.BatchFilter.updates"><code class="xref py py-func docutils literal"><span class="pre">updates()</span></code></a> to announce the
+arrays and points provided or changed by this node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.BatchFilter.spec">
+<code class="descname">spec</code><a class="headerlink" href="#gunpowder.BatchFilter.spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal"><span class="pre">ProviderSpec</span></code></a> of this <a class="reference internal" href="#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>.</p>
+<p>Note that the spec is only available after the pipeline has been build.
+Before that, it is <code class="docutils literal"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.teardown">
+<code class="descname">teardown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gunpowder.BatchFilter.teardown" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be implemented in subclasses.</p>
+<p>Called during destruction of the DAG. Subclasses should use this to
+stop worker processes, if they used some.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.BatchFilter.updates">
+<code class="descname">updates</code><span class="sig-paren">(</span><em>key</em>, <em>spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.updates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.updates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update an output provided by this <a class="reference internal" href="#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal"><span class="pre">BatchFilter</span></code></a>.</p>
+<p>Implementations should call this in their <a class="reference internal" href="#gunpowder.BatchFilter.setup" title="gunpowder.BatchFilter.setup"><code class="xref py py-func docutils literal"><span class="pre">setup()</span></code></a> method, which
+will be called when the pipeline is build.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The array or point set key this filter updates.</li>
+<li><strong>spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> or <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>) – The updated spec of the array or point set.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="source-nodes">
+<h2>Source Nodes<a class="headerlink" href="#source-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="csvpointssource">
+<h3>CsvPointsSource<a class="headerlink" href="#csvpointssource" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.CsvPointsSource">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">CsvPointsSource</code><span class="sig-paren">(</span><em>filename</em>, <em>points</em>, <em>points_spec=None</em>, <em>scale=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/csv_points_source.html#CsvPointsSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.CsvPointsSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a set of points from a comma-separated-values text file. Each line
+in the file represents one point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The file to read from.</li>
+<li><strong>points</strong> (<a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The key of the points set to create.</li>
+<li><strong>points_spec</strong> (<a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a>, optional) – An optional <a class="reference internal" href="#gunpowder.PointsSpec" title="gunpowder.PointsSpec"><code class="xref py py-class docutils literal"><span class="pre">PointsSpec</span></code></a> to overwrite the points specs
+automatically determined from the CSV file. This is useful to set
+the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> manually.</li>
+<li><strong>scale</strong> (<em>scalar</em><em> or </em><em>array-like</em>) – An optional scaling to apply to the coordinates of the points read
+from the CSV file. This is useful if the points refer to voxel
+positions to convert them to world units.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="dvidsource">
+<h3>DvidSource<a class="headerlink" href="#dvidsource" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.DvidSource">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">DvidSource</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>uuid</em>, <em>datasets</em>, <em>masks=None</em>, <em>array_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/dvid_source.html#DvidSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.DvidSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>A DVID array source.</p>
+<p>Provides arrays from DVID servers for each array key given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>hostname</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The name of the DVID server.</li>
+<li><strong>port</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – The port of the DVID server.</li>
+<li><strong>uuid</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The UUID of the DVID node to use.</li>
+<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary mapping array keys to DVID data instance names that this
+source offers.</li>
+<li><strong>masks</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>, optional) – Dictionary of array keys to DVID ROI instance names. This will
+create binary masks from DVID ROIs.</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional dictionary of array keys to specs to overwrite the
+array specs automatically determined from the DVID server. This is
+useful to set <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields that are not
+<code class="docutils literal"><span class="pre">None</span></code> in the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="hdf5source">
+<h3>Hdf5Source<a class="headerlink" href="#hdf5source" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Hdf5Source">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>array_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_source.html#Hdf5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>An HDF5 data source.</p>
+<p>Provides arrays from HDF5 datasets for each array key given. If the
+attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set in an HDF5 dataset, it will be used as the
+array’s <code class="docutils literal"><span class="pre">voxel_size</span></code>. If the attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in an HDF5
+dataset, it will be used as the offset of the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> for this array.
+It is assumed that the offset is given in world units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The HDF5 file.</li>
+<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary of array keys to HDF5 dataset names that this source
+offers.</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional dictionary of array keys to array specs to overwrite
+the array specs automatically determined from the HDF5 file. This
+is useful to set a missing <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields
+that are not <code class="docutils literal"><span class="pre">None</span></code> in the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="klbsource">
+<h3>KlbSource<a class="headerlink" href="#klbsource" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.KlbSource">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">KlbSource</code><span class="sig-paren">(</span><em>filename</em>, <em>array</em>, <em>array_spec=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/klb_source.html#KlbSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.KlbSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>A KLB data source.</p>
+<p>Provides a single array from the given KLB dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The name of the KLB file. This string can be a glob expression
+(e.g., <code class="docutils literal"><span class="pre">frame_*.klb</span></code>), in which case all files that match are
+sorted and stacked together to form an additional dimension (like
+time). The additional dimension will start at 0 and have a default
+voxel size of 1 (which can be overwritten using the <code class="docutils literal"><span class="pre">array_spec</span></code>
+argument).</li>
+<li><strong>array</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – ArrayKey that this source offers.</li>
+<li><strong>array_spec</strong> (<a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> to overwrite the array specs
+automatically determined from the KLB file. This is useful to set
+<code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields that are not <code class="docutils literal"><span class="pre">None</span></code> in
+the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="augmentation-nodes">
+<h2>Augmentation Nodes<a class="headerlink" href="#augmentation-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="defectaugment">
+<h3>DefectAugment<a class="headerlink" href="#defectaugment" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.DefectAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">DefectAugment</code><span class="sig-paren">(</span><em>intensities</em>, <em>prob_missing=0.05</em>, <em>prob_low_contrast=0.05</em>, <em>prob_artifact=0.0</em>, <em>prob_deform=0.0</em>, <em>contrast_scale=0.1</em>, <em>artifact_source=None</em>, <em>artifacts=None</em>, <em>artifacts_mask=None</em>, <em>deformation_strength=20</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/defect_augment.html#DefectAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.DefectAugment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augment intensity arrays section-wise with artifacts like missing
+sections, low-contrast sections, by blending in artifacts drawn from a
+separate source, or by deforming a section.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>intensities</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The key of the array of intensities to modify.</li>
+<li><strong>prob_missing</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>prob_low_contrast</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>prob_artifact</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>prob_deform</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – Probabilities of having a missing section, low-contrast section, an
+artifact (see param <code class="docutils literal"><span class="pre">artifact_source</span></code>) or a deformed slice. The
+sum should not exceed 1. Values in missing sections will be set to
+0.</li>
+<li><strong>contrast_scale</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – By how much to scale the intensities for a low-contrast section,
+used if <code class="docutils literal"><span class="pre">prob_low_contrast</span></code> &gt; 0.</li>
+<li><strong>(</strong><strong>class</strong> (<em>artifact_source</em>) – <p><cite>BatchProvider</cite>, optional):</p>
+<p>A gunpowder batch provider that delivers intensities (via
+<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> <code class="docutils literal"><span class="pre">artifacts</span></code>) and an alpha mask (via
+<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> <code class="docutils literal"><span class="pre">artifacts_mask</span></code>), used if <code class="docutils literal"><span class="pre">prob_artifact</span></code> &gt; 0.</p>
+</li>
+<li><strong>artifacts</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The key to query <code class="docutils literal"><span class="pre">artifact_source</span></code> for to get the intensities
+of the artifacts.</li>
+<li><strong>artifacts_mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The key to query <code class="docutils literal"><span class="pre">artifact_source</span></code> for to get the alpha mask
+of the artifacts to blend them with <code class="docutils literal"><span class="pre">intensities</span></code>.</li>
+<li><strong>deformation_strength</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – Strength of the slice deformation in voxels, used if
+<code class="docutils literal"><span class="pre">prob_deform</span></code> &gt; 0. The deformation models a fold by shifting the
+section contents towards a randomly oriented line in the section.
+The line itself will be drawn with a value of 0.</li>
+<li><strong>axis</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – Along which axis sections are cut.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="elasticaugment">
+<h3>ElasticAugment<a class="headerlink" href="#elasticaugment" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ElasticAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ElasticAugment</code><span class="sig-paren">(</span><em>control_point_spacing</em>, <em>jitter_sigma</em>, <em>rotation_interval</em>, <em>prob_slip=0</em>, <em>prob_shift=0</em>, <em>max_misalign=0</em>, <em>subsample=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/elastic_augment.html#ElasticAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ElasticAugment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Elasticly deform a batch. Requests larger batches upstream to avoid data
+loss due to rotation and jitter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>control_point_spacing</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">int</span></code>) – Distance between control points for the elastic deformation, in
+voxels per dimension.</li>
+<li><strong>jitter_sigma</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">float</span></code>) – Standard deviation of control point jitter distribution, in voxels
+per dimension.</li>
+<li><strong>rotation_interval</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of two <code class="docutils literal"><span class="pre">floats</span></code>) – Interval to randomly sample rotation angles from (0, 2PI).</li>
+<li><strong>prob_slip</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – Probability of a section to “slip”, i.e., be independently moved in
+x-y.</li>
+<li><strong>prob_shift</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – Probability of a section and all following sections to move in x-y.</li>
+<li><strong>max_misalign</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – Maximal voxels to shift in x and y. Samples will be drawn
+uniformly. Used if <code class="docutils literal"><span class="pre">prob_slip</span> <span class="pre">+</span> <span class="pre">prob_shift</span></code> &gt; 0.</li>
+<li><strong>subsample</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – Instead of creating an elastic transformation on the full
+resolution, create one subsampled by the given factor, and linearly
+interpolate to obtain the full resolution transformation. This can
+significantly speed up this node, at the expense of having visible
+piecewise linear deformations for large factors. Usually, a factor
+of 4 can savely by used without noticable changes. However, the
+default is 1 (i.e., no subsampling).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="intensityaugment">
+<h3>IntensityAugment<a class="headerlink" href="#intensityaugment" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.IntensityAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">IntensityAugment</code><span class="sig-paren">(</span><em>array</em>, <em>scale_min</em>, <em>scale_max</em>, <em>shift_min</em>, <em>shift_max</em>, <em>z_section_wise=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/intensity_augment.html#IntensityAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.IntensityAugment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly scale and shift the values of an intensity array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>array</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The intensity array to modify.</li>
+<li><strong>scale_min</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>scale_max</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>shift_min</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>shift_max</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – <p>The min and max of the uniformly randomly drawn scaling and
+shifting values for the intensity augmentation. Intensities are
+changed as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">*</span><span class="n">scale</span> <span class="o">+</span> <span class="n">shift</span>
+</pre></div>
+</div>
+</li>
+<li><strong>z_section_wise</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – Perform the augmentation z-section wise. Requires 3D arrays and
+assumes that z is the first dimension.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="simpleaugment">
+<h3>SimpleAugment<a class="headerlink" href="#simpleaugment" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.SimpleAugment">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">SimpleAugment</code><span class="sig-paren">(</span><em>mirror_only=None</em>, <em>transpose_only=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/simple_augment.html#SimpleAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.SimpleAugment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly mirror and transpose all <a class="reference internal" href="#gunpowder.Array" title="gunpowder.Array"><code class="xref py py-class docutils literal"><span class="pre">Arrays</span></code></a> and
+<a class="reference internal" href="#gunpowder.Points" title="gunpowder.Points"><code class="xref py py-class docutils literal"><span class="pre">Points</span></code></a> in a batch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mirror_only</strong> (<code class="docutils literal"><span class="pre">list</span></code> of <code class="docutils literal"><span class="pre">int</span></code>, optional) – If set, only mirror between the given axes. This is useful to
+exclude channels that have a set direction, like time.</li>
+<li><strong>transpose_only</strong> (<code class="docutils literal"><span class="pre">list</span></code> of <code class="docutils literal"><span class="pre">int</span></code>, optional) – If set, only transpose between the given axes. This is useful to
+limit the transpose to axes with the same resolution or to exclude
+non-spatial dimensions.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="location-manipulation-nodes">
+<h2>Location Manipulation Nodes<a class="headerlink" href="#location-manipulation-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="crop">
+<h3>Crop<a class="headerlink" href="#crop" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Crop">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Crop</code><span class="sig-paren">(</span><em>key</em>, <em>roi=None</em>, <em>fraction_negative=None</em>, <em>fraction_positive=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/crop.html#Crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limits provided ROIs by either giving a new <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> or crop
+fractions from either face of the provided ROI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The key of the array or points set to modify.</li>
+<li><strong>roi</strong> (<a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> or <code class="docutils literal"><span class="pre">None</span></code>) – The ROI to crop to.</li>
+<li><strong>fraction_negative</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">float</span></code>) – Relative crop starting from the negative end of the provided ROI.</li>
+<li><strong>fraction_positive</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">float</span></code>) – Relative crop starting from the positive end of the provided ROI.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="pad">
+<h3>Pad<a class="headerlink" href="#pad" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Pad">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Pad</code><span class="sig-paren">(</span><em>key</em>, <em>size</em>, <em>value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/pad.html#Pad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a constant intensity padding around arrays of another batch
+provider. This is useful if your requested batches can be larger than what
+your source provides.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> or <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>) – The array or points set to pad.</li>
+<li><strong>size</strong> (<a class="reference internal" href="#gunpowder.Coordinate" title="gunpowder.Coordinate"><code class="xref py py-class docutils literal"><span class="pre">Coordinate</span></code></a> or <code class="docutils literal"><span class="pre">None</span></code>) – The padding to be added. If None, an infinite padding is added. If
+a coordinate, this amount will be added to the ROI in the positive
+and negative direction.</li>
+<li><strong>value</strong> (scalar or <code class="docutils literal"><span class="pre">None</span></code>) – The value to report inside the padding. If not given, 0 is used.
+Only used for <code class="xref py py-class docutils literal"><span class="pre">Array</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="randomlocation">
+<h3>RandomLocation<a class="headerlink" href="#randomlocation" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.RandomLocation">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomLocation</code><span class="sig-paren">(</span><em>min_masked=0</em>, <em>mask=None</em>, <em>ensure_nonempty=None</em>, <em>p_nonempty=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/random_location.html#RandomLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomLocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choses a batch at a random location in the bounding box of the upstream
+provider.</p>
+<p>The random location is chosen such that the batch request ROI lies entirely
+inside the provider’s ROI.</p>
+<p>If <code class="docutils literal"><span class="pre">min_masked</span></code> and <code class="docutils literal"><span class="pre">mask</span></code> are set, only batches are returned that have
+at least the given ratio of masked-in voxels. This is in general faster
+than using the <a class="reference internal" href="#gunpowder.Reject" title="gunpowder.Reject"><code class="xref py py-class docutils literal"><span class="pre">Reject</span></code></a> node, at the expense of storing an integral
+array of the complete mask.</p>
+<p>If <code class="docutils literal"><span class="pre">ensure_nonempty</span></code> is set to a <a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>, only batches are
+returned that have at least one point of this point collection within the
+requested ROI.</p>
+<p>Additional tests for randomly picked locations can be implemented by
+subclassing and overwriting of <code class="xref py py-func docutils literal"><span class="pre">accepts()</span></code>. This method takes the
+randomly shifted request that meets all previous criteria (like
+<code class="docutils literal"><span class="pre">min_masked</span></code> and <code class="docutils literal"><span class="pre">ensure_nonempty</span></code>) and should return <code class="docutils literal"><span class="pre">True</span></code> if the
+request is acceptable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>min_masked</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – If non-zero, require that the random sample contains at least that
+ratio of masked-in voxels.</li>
+<li><strong>mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The array to use for mask checks.</li>
+<li><strong>ensure_nonempty</strong> (<a class="reference internal" href="#gunpowder.PointsKey" title="gunpowder.PointsKey"><code class="xref py py-class docutils literal"><span class="pre">PointsKey</span></code></a>, optional) – Ensures that when finding a random location, a request for
+<code class="docutils literal"><span class="pre">ensure_nonempty</span></code> will contain at least one point.</li>
+<li><strong>p_nonempty</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – If <code class="docutils literal"><span class="pre">ensure_nonempty</span></code> is set, it defines the probability that a
+request for <code class="docutils literal"><span class="pre">ensure_nonempty</span></code> will contain at least one point.
+Default value is 1.0.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="reject">
+<h3>Reject<a class="headerlink" href="#reject" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Reject">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Reject</code><span class="sig-paren">(</span><em>mask</em>, <em>min_masked=0.5</em>, <em>reject_probability=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/reject.html#Reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Reject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reject batches based on the masked-in vs. masked-out ratio.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The mask to use.</li>
+<li><strong>min_masked</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – The minimal required ratio of masked-in vs. masked-out voxels.
+Defaults to 0.5.</li>
+<li><strong>reject_probability</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – The probability by which a batch that is not valid (less than
+min_masked) is actually rejected. Defaults to 1., i.e. strict
+rejection.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="scan">
+<h3>Scan<a class="headerlink" href="#scan" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Scan">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Scan</code><span class="sig-paren">(</span><em>reference</em>, <em>num_workers=1</em>, <em>cache_size=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/scan.html#Scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iteratively requests batches of size <code class="docutils literal"><span class="pre">reference</span></code> from upstream
+providers in a scanning fashion, until all requested ROIs are covered. If
+the batch request to this node is empty, it will scan the complete upstream
+ROIs (and return nothing). Otherwise, it scans only the requested ROIs and
+returns a batch assembled of the smaller requests. In either case, the
+upstream requests will be contained in the downstream requested ROI or
+upstream ROIs.</p>
+<p>See also <a class="reference internal" href="#gunpowder.Hdf5Write" title="gunpowder.Hdf5Write"><code class="xref py py-class docutils literal"><span class="pre">Hdf5Write</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – A reference <a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>. This request will be shifted in
+a scanning fashion over the upstream ROIs of the requested arrays
+or points.</li>
+<li><strong>num_workers</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – If set to &gt;1, upstream requests are made in parallel with that
+number of workers.</li>
+<li><strong>cache_size</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – If multiple workers are used, how many batches to hold at most.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="specifiedlocation">
+<h3>SpecifiedLocation<a class="headerlink" href="#specifiedlocation" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.SpecifiedLocation">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">SpecifiedLocation</code><span class="sig-paren">(</span><em>locations</em>, <em>choose_randomly=False</em>, <em>extra_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/specified_location.html#SpecifiedLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.SpecifiedLocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choses a batch at a location from the list provided at init, making sure
+it is in the bounding box of the upstream provider.</p>
+<p>Locations should be given in world units.</p>
+<p>Locations will be chosen in order or at random from the list depending on the
+<code class="docutils literal"><span class="pre">choose_randomly</span></code> parameter.</p>
+<p>If a location requires a shift outside the bounding box of any upstream provider
+the module will skip that location with a warning.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>locations</strong> (<code class="docutils literal"><span class="pre">list</span></code> of locations) – Locations to center batches around.</li>
+<li><strong>choose_randomly</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – Defines whether locations should be picked in order or at random
+from the list.</li>
+<li><strong>extra_data</strong> (<code class="docutils literal"><span class="pre">list</span></code> of array-like) – A list of data that will be passed along with the arrays provided
+by this node. This data will be appended as an attribute to the
+dataset so it must be a data format compatible with hdf5.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="image-processing-nodes">
+<h2>Image Processing Nodes<a class="headerlink" href="#image-processing-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="downsample">
+<h3>DownSample<a class="headerlink" href="#downsample" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.DownSample">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">DownSample</code><span class="sig-paren">(</span><em>source</em>, <em>factor</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/downsample.html#DownSample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.DownSample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downsample arrays in a batch by given factors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The key of the array to downsample.</li>
+<li><strong>factor</strong> (<code class="docutils literal"><span class="pre">int</span></code> or <code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">int</span></code>) – The factor to downsample with.</li>
+<li><strong>target</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The key of the array to store the downsampled <code class="docutils literal"><span class="pre">source</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="intensityscaleshift">
+<h3>IntensityScaleShift<a class="headerlink" href="#intensityscaleshift" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.IntensityScaleShift">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">IntensityScaleShift</code><span class="sig-paren">(</span><em>array</em>, <em>scale</em>, <em>shift</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/intensity_scale_shift.html#IntensityScaleShift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.IntensityScaleShift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales the intensities of a batch by <code class="docutils literal"><span class="pre">scale</span></code>, then adds <code class="docutils literal"><span class="pre">shift</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>array</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The key of the array to modify.</li>
+<li><strong>scale</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – </li>
+<li><strong>shift</strong> (<code class="docutils literal"><span class="pre">float</span></code>) – The shift and scale to apply to <code class="docutils literal"><span class="pre">array</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="normalize">
+<h3>Normalize<a class="headerlink" href="#normalize" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Normalize">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Normalize</code><span class="sig-paren">(</span><em>array</em>, <em>factor=None</em>, <em>dtype=&lt;type ‘numpy.float32’&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/normalize.html#Normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize the values of an array to be floats between 0 and 1, based on
+the type of the array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>array</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The key of the array to modify.</li>
+<li><strong>factor</strong> (<em>scalar</em><em>, </em><em>optional</em>) – The factor to use. If not given, a factor is chosen based on the
+<code class="docutils literal"><span class="pre">dtype</span></code> of the array (e.g., <code class="docutils literal"><span class="pre">np.uint8</span></code> would result in a factor
+of <code class="docutils literal"><span class="pre">1.0/255</span></code>).</li>
+<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The datatype of the normalized array. Defaults to <code class="docutils literal"><span class="pre">np.float32</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="label-manipulation-nodes">
+<h2>Label Manipulation Nodes<a class="headerlink" href="#label-manipulation-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="addaffinities">
+<h3>AddAffinities<a class="headerlink" href="#addaffinities" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.AddAffinities">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">AddAffinities</code><span class="sig-paren">(</span><em>affinity_neighborhood</em>, <em>labels</em>, <em>affinities</em>, <em>labels_mask=None</em>, <em>unlabelled=None</em>, <em>affinities_mask=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/add_affinities.html#AddAffinities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.AddAffinities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an array with affinities for a given label array and neighborhood to
+the batch. Affinity values are created one for each voxel and entry in the
+neighborhood list, i.e., for each voxel and each neighbor of this voxel.
+Values are 1 iff both labels (of the voxel and the neighbor) are equal and
+non-zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>affinity_neighborhood</strong> (<code class="docutils literal"><span class="pre">list</span></code> of array-like) – List of offsets for the affinities to consider for each voxel.</li>
+<li><strong>labels</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The array to read the labels from.</li>
+<li><strong>affinities</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The array to generate containing the affinities.</li>
+<li><strong>labels_mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The array to use as a mask for <code class="docutils literal"><span class="pre">labels</span></code>. Affinities connecting at
+least one masked out label will be masked out in
+<code class="docutils literal"><span class="pre">affinities_mask</span></code>. If not given, <code class="docutils literal"><span class="pre">affinities_mask</span></code> will contain
+ones everywhere (if requested).</li>
+<li><strong>unlabelled</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – A binary array to indicate unlabelled areas with 0. Affinities from
+labelled to unlabelled voxels are set to 0, affinities between
+unlabelled voxels are masked out (they will not be used for
+training).</li>
+<li><strong>affinities_mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The array to generate containing the affinitiy mask, as derived
+from parameter <code class="docutils literal"><span class="pre">labels_mask</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="balancelabels">
+<h3>BalanceLabels<a class="headerlink" href="#balancelabels" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.BalanceLabels">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">BalanceLabels</code><span class="sig-paren">(</span><em>labels</em>, <em>scales</em>, <em>mask=None</em>, <em>slab=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/balance_labels.html#BalanceLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BalanceLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a scale array to balance the loss between positive and negative
+labels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>labels</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – A array containing binary labels.</li>
+<li><strong>scales</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – A array with scales to be created. This new array will have the
+same ROI and resolution as <code class="docutils literal"><span class="pre">labels</span></code>.</li>
+<li><strong>mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – An optional mask (or list of masks) to consider for balancing.
+Every voxel marked with a 0 will not contribute to the scaling and
+will have a scale of 0 in <code class="docutils literal"><span class="pre">scales</span></code>.</li>
+<li><strong>slab</strong> (<code class="docutils literal"><span class="pre">tuple</span></code> of <code class="docutils literal"><span class="pre">int</span></code>, optional) – <p>A shape specification to perform the balancing in slabs of this
+size. -1 can be used to refer to the actual size of the label
+array. For example, a slab of:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will perform the balancing for every each slice <code class="docutils literal"><span class="pre">[0:2,:]</span></code>,
+<code class="docutils literal"><span class="pre">[2:4,:]</span></code>, … individually.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="excludelabels">
+<h3>ExcludeLabels<a class="headerlink" href="#excludelabels" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ExcludeLabels">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ExcludeLabels</code><span class="sig-paren">(</span><em>labels</em>, <em>exclude</em>, <em>ignore_mask=None</em>, <em>ignore_mask_erode=0</em>, <em>background_value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/exclude_labels.html#ExcludeLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ExcludeLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Excludes several labels from the ground-truth.</p>
+<p>The labels will be replaced by background_value. An optional ignore mask
+will be created and set to 0 for the excluded locations that are further
+than a threshold away from not excluded locations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>labels</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The array containing the labels.</li>
+<li><strong>exclude</strong> (<code class="docutils literal"><span class="pre">list</span></code> of <code class="docutils literal"><span class="pre">int</span></code>) – The labels to exclude from <code class="docutils literal"><span class="pre">labels</span></code>.</li>
+<li><strong>ignore_mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – The ignore mask to create.</li>
+<li><strong>ignore_mask_erode</strong> (<code class="docutils literal"><span class="pre">float</span></code>, optional) – By how much (in world units) to erode the ignore mask.</li>
+<li><strong>background_value</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – Value to replace excluded IDs, defaults to 0.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="growboundary">
+<h3>GrowBoundary<a class="headerlink" href="#growboundary" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.GrowBoundary">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">GrowBoundary</code><span class="sig-paren">(</span><em>labels</em>, <em>mask</em>, <em>steps=1</em>, <em>background=0</em>, <em>only_xy=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/grow_boundary.html#GrowBoundary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.GrowBoundary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grow a boundary between regions in a label array. Does not grow at the
+border of the batch or an optionally provided mask.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>labels</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The array containing labels.</li>
+<li><strong>mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – A mask indicating unknown regions. This is to avoid boundaries to
+grow between labelled and unknown regions.</li>
+<li><strong>steps</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – Number of voxels (not world units!) to grow.</li>
+<li><strong>background</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – The label to assign to the boundary voxels.</li>
+<li><strong>only_xy</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – Do not grow a boundary in the z direction.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="renumberconnectedcomponents">
+<h3>RenumberConnectedComponents<a class="headerlink" href="#renumberconnectedcomponents" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.RenumberConnectedComponents">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RenumberConnectedComponents</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/renumber_connected_components.html#RenumberConnectedComponents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RenumberConnectedComponents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find connected components of the same value, and replace each component
+with a new label.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>labels</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>) – The label array to modify.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="point-processing-nodes">
+<h2>Point Processing Nodes<a class="headerlink" href="#point-processing-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rasterizepoints">
+<h3>RasterizePoints<a class="headerlink" href="#rasterizepoints" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.RasterizePoints">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RasterizePoints</code><span class="sig-paren">(</span><em>points</em>, <em>array</em>, <em>array_spec=None</em>, <em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/rasterize_points.html#RasterizePoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RasterizePoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw points into a binary array as balls of a given radius.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>points</strong> (:class:<code class="docutils literal"><span class="pre">PointsKeys</span></code>) – The key of the points to rasterize.</li>
+<li><strong>array</strong> (:class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – The key of the binary array to create.</li>
+<li><strong>array_spec</strong> (:class:<code class="docutils literal"><span class="pre">ArraySpec</span></code>, optional) – The spec of the array to create. Use this to set the datatype and
+voxel size.</li>
+<li><strong>settings</strong> (:class:<code class="docutils literal"><span class="pre">RasterizationSettings</span></code>, optional) – Which settings to use to rasterize the points.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.RasterizationSettings">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RasterizationSettings</code><span class="sig-paren">(</span><em>radius</em>, <em>mode=’ball’</em>, <em>mask=None</em>, <em>inner_radius=None</em>, <em>fg_value=1</em>, <em>bg_value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/rasterize_points.html#RasterizationSettings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RasterizationSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data structure to store parameters for rasterization of points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>radius</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – The radius (for balls) or sigma (for peaks) in world units.</li>
+<li><strong>mode</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – One of <code class="docutils literal"><span class="pre">ball</span></code> or <code class="docutils literal"><span class="pre">peak</span></code>. If <code class="docutils literal"><span class="pre">ball</span></code> (the default), a ball with the
+given <code class="docutils literal"><span class="pre">radius</span></code> will be drawn. If <code class="docutils literal"><span class="pre">peak</span></code>, the point will be
+rasterized as a peak with values <span class="math">\(\exp(-|x-p|^2/\sigma)\)</span> with
+sigma set by <code class="docutils literal"><span class="pre">radius</span></code>.</li>
+<li><strong>mask</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a>, optional) – Used to mask the rasterization of points. The array is assumed to
+contain discrete labels. The object id at the specific point being
+rasterized is used to intersect the rasterization to keep it inside
+the specific object.</li>
+<li><strong>inner_radius</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – <p>Only for mode <code class="docutils literal"><span class="pre">ball</span></code>.</p>
+<p>If set, instead of a ball, a hollow sphere is rastered. The radius
+of the whole sphere corresponds to the radius specified with
+<code class="docutils literal"><span class="pre">radius</span></code>. This parameter sets the radius of the hollow area.</p>
+</li>
+<li><strong>fg_value</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – <p>Only for mode <code class="docutils literal"><span class="pre">ball</span></code>.</p>
+<p>The value to use to rasterize points, defaults to 1.</p>
+</li>
+<li><strong>bg_value</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – <p>Only for mode <code class="docutils literal"><span class="pre">ball</span></code>.</p>
+<p>The value to use to for the background in the output array,
+defaults to 0.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="provider-combination-nodes">
+<h2>Provider Combination Nodes<a class="headerlink" href="#provider-combination-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mergeprovider">
+<h3>MergeProvider<a class="headerlink" href="#mergeprovider" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.MergeProvider">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">MergeProvider</code><a class="reference internal" href="_modules/gunpowder/nodes/merge_provider.html#MergeProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.MergeProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges different providers:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">MergeProvider</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>will create a provider that combines the arrays and points offered by
+<code class="docutils literal"><span class="pre">a</span></code>, <code class="docutils literal"><span class="pre">b</span></code>, and <code class="docutils literal"><span class="pre">c</span></code>. Array and point keys of <code class="docutils literal"><span class="pre">a</span></code>, <code class="docutils literal"><span class="pre">b</span></code>, and <code class="docutils literal"><span class="pre">c</span></code> should be
+the disjoint.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="randomprovider">
+<h3>RandomProvider<a class="headerlink" href="#randomprovider" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.RandomProvider">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">RandomProvider</code><a class="reference internal" href="_modules/gunpowder/nodes/random_provider.html#RandomProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.RandomProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly selects one of the upstream providers:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">RandomProvider</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>will create a provider that randomly relays requests to providers <code class="docutils literal"><span class="pre">a</span></code>,
+<code class="docutils literal"><span class="pre">b</span></code>, or <code class="docutils literal"><span class="pre">c</span></code>. Array and point keys of <code class="docutils literal"><span class="pre">a</span></code>, <code class="docutils literal"><span class="pre">b</span></code>, and <code class="docutils literal"><span class="pre">c</span></code> should be
+the same.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="training-and-prediction-nodes">
+<h2>Training and Prediction Nodes<a class="headerlink" href="#training-and-prediction-nodes" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-gunpowder.caffe"></span></div></blockquote>
+<div class="section" id="caffe-train">
+<h3>caffe.Train<a class="headerlink" href="#caffe-train" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.caffe.Train">
+<em class="property">class </em><code class="descclassname">gunpowder.caffe.</code><code class="descname">Train</code><span class="sig-paren">(</span><em>solver_parameters</em>, <em>inputs</em>, <em>outputs</em>, <em>gradients</em>, <em>array_specs=None</em>, <em>use_gpu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/caffe/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.caffe.Train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Caffe implementation of <code class="xref py py-class docutils literal"><span class="pre">gunpowder.nodes.Train</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>solver_parameters</strong> (<a class="reference internal" href="#gunpowder.caffe.SolverParameters" title="gunpowder.caffe.SolverParameters"><code class="xref py py-class docutils literal"><span class="pre">SolverParameters</span></code></a>) – Parameters of the solver to use for training, contains the network
+description as well.</li>
+<li><strong>inputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from names of input layers in the network to
+array keys.</li>
+<li><strong>outputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output layers in the network to array
+keys. New arrays will be generated by this node for each entry (if
+requested downstream).</li>
+<li><strong>gradients</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output layers in the network to array
+keys. New arrays containing the gradient of an output with respect
+to the loss will be generated by this node for each entry (if
+requested downstream).</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code>, optional) – Used to set the array specs of generated arrays (see <code class="docutils literal"><span class="pre">outputs</span></code>
+and <code class="docutils literal"><span class="pre">gradients</span></code>). This is useful to set the <code class="docutils literal"><span class="pre">voxel_size</span></code>, for
+example, if they differ from the voxel size of the input arrays.
+Only fields that are not <code class="docutils literal"><span class="pre">None</span></code> in the given <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code>
+will be used.</li>
+<li><strong>use_gpu</strong> (<code class="docutils literal"><span class="pre">int</span></code> or <code class="docutils literal"><span class="pre">None</span></code>, optional) – Which GPU to use. Set to <code class="docutils literal"><span class="pre">None</span></code> for CPU mode.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gunpowder.caffe.SolverParameters">
+<em class="property">class </em><code class="descclassname">gunpowder.caffe.</code><code class="descname">SolverParameters</code><a class="reference internal" href="_modules/gunpowder/caffe/solver_parameters.html#SolverParameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.caffe.SolverParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper of the caffe’s <code class="docutils literal"><span class="pre">SolverParameter</span></code> class.</p>
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.train_net">
+<code class="descname">train_net</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.train_net" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">string</span></code> – The network to train.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.base_lr">
+<code class="descname">base_lr</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.base_lr" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">float</span></code> – The initial learning rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.snapshot">
+<code class="descname">snapshot</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.snapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">int</span></code> – Weight snapshot interval in iterations.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.snapshot_prefix">
+<code class="descname">snapshot_prefix</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.snapshot_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">string</span></code> – Prefix of snapshot files.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.type">
+<code class="descname">type</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.type" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">string</span></code> – Optimizer type, e.g., <code class="docutils literal"><span class="pre">Adam</span></code></p>
+<p>For <code class="docutils literal"><span class="pre">Adam</span></code>, the following parameters can be set as attributes
+of this class: <code class="docutils literal"><span class="pre">momentum</span></code> (<code class="docutils literal"><span class="pre">float</span></code>), <code class="docutils literal"><span class="pre">momentum2</span></code>
+(<code class="docutils literal"><span class="pre">float</span></code>), <code class="docutils literal"><span class="pre">delta</span></code> (<code class="docutils literal"><span class="pre">float</span></code>), <code class="docutils literal"><span class="pre">weight_decay</span></code>
+(<code class="docutils literal"><span class="pre">float</span></code>), <code class="docutils literal"><span class="pre">lr_policy</span></code> (<code class="docutils literal"><span class="pre">string</span></code>), <code class="docutils literal"><span class="pre">gamma</span></code> (<code class="docutils literal"><span class="pre">float</span></code>),
+<code class="docutils literal"><span class="pre">power</span></code> (<code class="docutils literal"><span class="pre">float</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.resume_from">
+<code class="descname">resume_from</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.resume_from" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">string</span></code> or <code class="docutils literal"><span class="pre">None</span></code> – Weight snapshot file to resume training from.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gunpowder.caffe.SolverParameters.train_state">
+<code class="descname">train_state</code><a class="headerlink" href="#gunpowder.caffe.SolverParameters.train_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>training stages</em> – Used to set the current trainig stage (if used during
+construction of the network).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="caffe-predict">
+<h3>caffe.Predict<a class="headerlink" href="#caffe-predict" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.caffe.Predict">
+<em class="property">class </em><code class="descclassname">gunpowder.caffe.</code><code class="descname">Predict</code><span class="sig-paren">(</span><em>prototxt</em>, <em>weights</em>, <em>inputs</em>, <em>outputs</em>, <em>array_specs=None</em>, <em>use_gpu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/caffe/nodes/predict.html#Predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.caffe.Predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augments a batch with network predictions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>prototxt</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – Filename of the network prototxt.</li>
+<li><strong>weights</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – Filename of the network weights.</li>
+<li><strong>inputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of input layers in the network to array
+keys.</li>
+<li><strong>outputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output layers in the network to
+array keys. New arrays will be generated by this node for each
+entry (if requested downstream).</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code>, optional) – Used to set the specs of generated arrays (<code class="docutils literal"><span class="pre">outputs</span></code>). This is
+useful to set the <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example, if they differ from
+the voxel size of the input arrays. Only fields that are not
+<code class="docutils literal"><span class="pre">None</span></code> in the given <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code> will be used.</li>
+<li><strong>use_gpu</strong> (<code class="docutils literal"><span class="pre">int</span></code> or <code class="docutils literal"><span class="pre">None</span></code>, optional) – Which GPU to use. Set to <code class="docutils literal"><span class="pre">None</span></code> for CPU mode.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-gunpowder.tensorflow"></span></div></blockquote>
+</div>
+<div class="section" id="tensorflow-train">
+<h3>tensorflow.Train<a class="headerlink" href="#tensorflow-train" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.tensorflow.Train">
+<em class="property">class </em><code class="descclassname">gunpowder.tensorflow.</code><code class="descname">Train</code><span class="sig-paren">(</span><em>meta_graph_filename</em>, <em>optimizer</em>, <em>loss</em>, <em>inputs</em>, <em>outputs</em>, <em>gradients</em>, <em>summary=None</em>, <em>array_specs=None</em>, <em>save_every=2000</em>, <em>log_dir=’./’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/tensorflow/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.tensorflow.Train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tensorflow implementation of <code class="xref py py-class docutils literal"><span class="pre">gunpowder.nodes.Train</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>meta_graph_filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – <p>Filename of a tensorflow meta-graph storing the tensorflow graph
+containing an optimizer. A meta-graph file can be created by
+running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># create tensorflow graph</span>
+<span class="o">...</span>
+
+<span class="c1"># store it</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">export_meta_graph</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">meta_graph_filename</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>optimizer</strong> (<code class="docutils literal"><span class="pre">string</span></code> or function) – <p>Either the name of the tensorflow operator performing a training
+iteration, or a function that, given the graph of the meta-graph
+file, adds a custom loss and optimizer.</p>
+<p>If a function is given, it should return a tuple <code class="docutils literal"><span class="pre">(loss,</span>
+<span class="pre">optimizer)</span></code> of a tensor and an operator representing the loss and
+the optimizer, respectively. In this case, parameter <code class="docutils literal"><span class="pre">loss</span></code>
+should be <code class="docutils literal"><span class="pre">None</span></code>.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_custom_optimizer</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+
+    <span class="c1"># get the output of your graph</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_tensor_by_name</span><span class="p">(</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+
+    <span class="c1"># create your custom loss</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">custom_loss</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+    <span class="c1"># add an optimizer of your choice</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>loss</strong> (<code class="docutils literal"><span class="pre">string</span></code> or <code class="docutils literal"><span class="pre">None</span></code>) – The name of the tensorflow tensor containing the loss, or <code class="docutils literal"><span class="pre">None</span></code>
+if <code class="docutils literal"><span class="pre">optimizer</span></code> is a function.</li>
+<li><strong>inputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; :class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of input tensors in the network to
+array keys.</li>
+<li><strong>outputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; :class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output tensors in the network to array
+keys. New arrays will be generated by this node for each entry (if
+requested downstream).</li>
+<li><strong>gradients</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; :class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output tensors in the network to
+array keys. New arrays containing the gradient of an output with
+respect to the loss will be generated by this node for each entry
+(if requested downstream).</li>
+<li><strong>summary</strong> (<code class="docutils literal"><span class="pre">string</span></code>, optional) – The name of the tensorflow tensor containing the tensorboard
+summaries.</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code>, optional) – Used to set the specs of generated arrays (<code class="docutils literal"><span class="pre">outputs</span></code>). This is
+useful to set the <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example, if they differ from
+the voxel size of the input arrays. Only fields that are not
+<code class="docutils literal"><span class="pre">None</span></code> in the given <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code> will be used.</li>
+<li><strong>save_every</strong> (<code class="docutils literal"><span class="pre">int</span></code>, optional) – After how many iterations to create a checkpoint to store the
+learnt weights.</li>
+<li><strong>log_dir</strong> (<code class="docutils literal"><span class="pre">string</span></code>, optional) – Directory for saving tensorboard summaries.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="tensorflow-predict">
+<h3>tensorflow.Predict<a class="headerlink" href="#tensorflow-predict" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.tensorflow.Predict">
+<em class="property">class </em><code class="descclassname">gunpowder.tensorflow.</code><code class="descname">Predict</code><span class="sig-paren">(</span><em>checkpoint</em>, <em>inputs</em>, <em>outputs</em>, <em>array_specs=None</em>, <em>graph=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/tensorflow/nodes/predict.html#Predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.tensorflow.Predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tensorflow implementation of <code class="xref py py-class docutils literal"><span class="pre">gunpowder.nodes.Predict</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>checkpoint</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – Basename of a tensorflow checkpoint storing the tensorflow graph
+and associated tensor values and metadata, as created by
+<code class="xref py py-class docutils literal"><span class="pre">gunpowder.nodes.Train</span></code>, for example.</li>
+<li><strong>inputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; :class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of input tensors in the network to
+array keys.</li>
+<li><strong>outputs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="docutils literal"><span class="pre">string</span></code> -&gt; :class:<code class="docutils literal"><span class="pre">ArrayKey</span></code>) – Dictionary from the names of output tensors in the network to array
+keys. New arrays will be generated by this node for each entry (if
+requested downstream).</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code> -&gt; <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code>, optional) – Used to set the specs of generated arrays (<code class="docutils literal"><span class="pre">outputs</span></code>). This is
+useful to set the <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example, if they differ from
+the voxel size of the input arrays. Only fields that are not
+<code class="docutils literal"><span class="pre">None</span></code> in the given <code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code> will be used.</li>
+<li><strong>graph</strong> – <p>(<code class="docutils literal"><span class="pre">string</span></code>, optional):</p>
+<p>An optional path to a tensorflow computation graph that should be
+used for prediction. The checkpoint is used to restore the values
+of matching variable names in the graph. Note that the graph
+specified here can differ from the one associated to the
+checkpoint.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-gunpowder"></span></div></blockquote>
+</div>
+</div>
+<div class="section" id="output-nodes">
+<h2>Output Nodes<a class="headerlink" href="#output-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hdf5write">
+<h3>Hdf5Write<a class="headerlink" href="#hdf5write" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Hdf5Write">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Write</code><span class="sig-paren">(</span><em>dataset_names</em>, <em>output_dir=’.’</em>, <em>output_filename=’output.hdf’</em>, <em>compression_type=None</em>, <em>dataset_dtypes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_write.html#Hdf5Write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble arrays of passing batches in one HDF5 file. This is useful to
+store chunks produced by <a class="reference internal" href="#gunpowder.Scan" title="gunpowder.Scan"><code class="xref py py-class docutils literal"><span class="pre">Scan</span></code></a> on disk without keeping the larger
+array in memory. The ROIs of the passing arrays will be used to determine
+the position where to store the data in the dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataset_names</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – A dictionary from array keys to names of the datasets to store them
+in.</li>
+<li><strong>output_dir</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The directory to save the HDF5 file. Will be created, if it does
+not exist.</li>
+<li><strong>output_filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The output filename.</li>
+<li><strong>compression_type</strong> (<code class="docutils literal"><span class="pre">string</span></code> or <code class="docutils literal"><span class="pre">int</span></code>) – Compression strategy.  Legal values are <code class="docutils literal"><span class="pre">gzip</span></code>, <code class="docutils literal"><span class="pre">szip</span></code>,
+<code class="docutils literal"><span class="pre">lzf</span></code>. If an integer between 1 and 10, this indicates <code class="docutils literal"><span class="pre">gzip</span></code>
+compression level.</li>
+<li><strong>dataset_dtypes</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; data type) – A dictionary from array keys to datatype (eg. <code class="docutils literal"><span class="pre">np.int8</span></code>). If
+given, arrays are stored using this type. The original arrays
+within the pipeline remain unchanged.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="snapshot">
+<h3>Snapshot<a class="headerlink" href="#snapshot" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Snapshot">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Snapshot</code><span class="sig-paren">(</span><em>dataset_names</em>, <em>output_dir=’snapshots’</em>, <em>output_filename=’{id}.hdf’</em>, <em>every=1</em>, <em>additional_request=None</em>, <em>compression_type=None</em>, <em>dataset_dtypes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/snapshot.html#Snapshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Snapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a passing batch in an HDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataset_names</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – A dictionary from array keys to names of the datasets to store them
+in.</li>
+<li><strong>output_dir</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The directory to save the snapshots. Will be created, if it does
+not exist.</li>
+<li><strong>output_filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – Template for output filenames. <code class="docutils literal"><span class="pre">{id}</span></code> in the string will be
+replaced with the ID of the batch. <code class="docutils literal"><span class="pre">{iteration}</span></code> with the training
+iteration (if training was performed on this batch).</li>
+<li><strong>every</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – How often to save a batch. <code class="docutils literal"><span class="pre">every=1</span></code> indicates that every batch
+will be stored, <code class="docutils literal"><span class="pre">every=2</span></code> every second and so on. By default,
+every batch will be stored.</li>
+<li><strong>additional_request</strong> (<a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>) – An additional batch request to merge with the passing request, if a
+snapshot is to be made. If not given, only the arrays that are in
+the batch anyway are recorded. This is useful to request additional
+arrays like loss gradients for visualization that are otherwise not
+needed.</li>
+<li><strong>compression_type</strong> (<code class="docutils literal"><span class="pre">string</span></code> or <code class="docutils literal"><span class="pre">int</span></code>) – Compression strategy.  Legal values are <code class="docutils literal"><span class="pre">gzip</span></code>, <code class="docutils literal"><span class="pre">szip</span></code>,
+<code class="docutils literal"><span class="pre">lzf</span></code>. If an integer between 1 and 10, this indicates <code class="docutils literal"><span class="pre">gzip</span></code>
+compression level.</li>
+<li><strong>dataset_dtypes</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; data type) – A dictionary from array keys to datatype (eg. <code class="docutils literal"><span class="pre">np.int8</span></code>). If
+given, arrays are stored using this type. The original arrays
+within the pipeline remain unchanged.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="performance-nodes">
+<h2>Performance Nodes<a class="headerlink" href="#performance-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="precache">
+<h3>PreCache<a class="headerlink" href="#precache" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.PreCache">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PreCache</code><span class="sig-paren">(</span><em>cache_size=50</em>, <em>num_workers=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/precache.html#PreCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PreCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pre-cache repeated equal batch requests. For the first of a series of
+equal batch request, a set of workers is spawned to pre-cache the batches
+in parallel processes. This way, subsequent requests can be served quickly.</p>
+<p>This node only makes sense if:</p>
+<ol class="arabic simple">
+<li>Incoming batch requests are repeatedly the same.</li>
+<li>There is a source of randomness in upstream nodes.</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cache_size</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – How many batches to hold at most in the cache.</li>
+<li><strong>num_workers</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – How many processes to spawn to fill the cache.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="printprofilingstats">
+<h3>PrintProfilingStats<a class="headerlink" href="#printprofilingstats" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.PrintProfilingStats">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">PrintProfilingStats</code><span class="sig-paren">(</span><em>every=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/print_profiling_stats.html#PrintProfilingStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.PrintProfilingStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print profiling information about nodes upstream of this node in the DAG.</p>
+<p>The output also includes a <code class="docutils literal"><span class="pre">TOTAL</span></code> section, which shows the wall-time
+spent in the upstream and downstream passes. For the downstream pass, this
+information is not available in the first iteration, since the request-batch
+cycle is not completed, yet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>every</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – Collect statistics about that many batch requests and show min,
+max, mean, and median runtimes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="custom_providers.html" class="btn btn-neutral float-right" title="Writing Custom Batch Providers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="requests_batches.html" class="btn btn-neutral" title="Batch Requests and Batches" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Jan Funke.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script> 
+
+</body>
+</html>

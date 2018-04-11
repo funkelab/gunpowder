@@ -2,6 +2,15 @@ from .batch_filter import BatchFilter
 from gunpowder.ext import malis
 
 class RenumberConnectedComponents(BatchFilter):
+    '''Find connected components of the same value, and replace each component
+    with a new label.
+
+    Args:
+
+        labels (:class:`ArrayKey`):
+
+            The label array to modify.
+    '''
 
     def __init__(self, labels):
         self.labels = labels

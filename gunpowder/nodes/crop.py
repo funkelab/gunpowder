@@ -16,15 +16,15 @@ class Crop(BatchFilter):
 
             The key of the array or points set to modify.
 
-        roi (:class:`Roi` or None):
+        roi (:class:`Roi` or ``None``):
 
             The ROI to crop to.
 
-        fraction_negative (tuple of float):
+        fraction_negative (``tuple`` of ``float``):
 
             Relative crop starting from the negative end of the provided ROI.
 
-        fraction_positive (tuple of float):
+        fraction_positive (``tuple`` of ``float``):
 
             Relative crop starting from the positive end of the provided ROI.
     '''

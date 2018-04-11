@@ -12,34 +12,47 @@ class Snapshot(BatchFilter):
 
     Args:
 
-        dataset_names (dict): A dictionary from :class:`ArrayKey` to names of 
-            the datasets to store them in.
+        dataset_names (``dict``, :class:`ArrayKey` -> ``string``):
 
-        output_dir (string): The directory to save the snapshots. Will be 
-            created, if it does not exist.
+            A dictionary from array keys to names of the datasets to store them
+            in.
 
-        output_filename (string): Template for output filenames. '{id}' in the 
-            string will be replaced with the ID of the batch. '{iteration}' with 
-            the training iteration (if training was performed on this batch).
+        output_dir (``string``):
 
-        every (int): How often to save a batch. 'every=1' indicates that every 
-            batch will be stored, 'every=2' every second and so on. By default, 
+            The directory to save the snapshots. Will be created, if it does
+            not exist.
+
+        output_filename (``string``):
+
+            Template for output filenames. ``{id}`` in the string will be
+            replaced with the ID of the batch. ``{iteration}`` with the training
+            iteration (if training was performed on this batch).
+
+        every (``int``):
+
+            How often to save a batch. ``every=1`` indicates that every batch
+            will be stored, ``every=2`` every second and so on. By default,
             every batch will be stored.
 
-        additional_request (:class:`BatchRequest`): An additional batch request 
-            to merge with the passing request, if a snapshot is to be made. If 
-            not given, only the arrays that are in the batch anyway are 
-            recorded.
+        additional_request (:class:`BatchRequest`):
 
-        compression_type (string or int): Compression strategy.  Legal values 
-            are 'gzip', 'szip', 'lzf'.  If an integer in range(10), this 
-            indicates gzip compression level. Otherwise, an integer indicates 
-            the number of a dynamically loaded compression filter. (See 
-            h5py.groups.create_dataset())
+            An additional batch request to merge with the passing request, if a
+            snapshot is to be made. If not given, only the arrays that are in
+            the batch anyway are recorded. This is useful to request additional
+            arrays like loss gradients for visualization that are otherwise not
+            needed.
 
-        dataset_dtypes (dict): A dictionary from :class:`ArrayKey` to datatype
-            (eg. np.int8). Array to store is copied and casted to the specified type.
-             Original array within the pipeline remains unchanged.
+        compression_type (``string`` or ``int``):
+
+            Compression strategy.  Legal values are ``gzip``, ``szip``,
+            ``lzf``. If an integer between 1 and 10, this indicates ``gzip``
+            compression level.
+
+        dataset_dtypes (``dict``, :class:`ArrayKey` -> data type):
+
+            A dictionary from array keys to datatype (eg. ``np.int8``). If
+            given, arrays are stored using this type. The original arrays
+            within the pipeline remain unchanged.
         '''
 
     def __init__(

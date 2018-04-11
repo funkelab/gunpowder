@@ -93,8 +93,98 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -170,39 +260,52 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Snapshot"><a class="viewcode-back" href="../../../nodes.html#gunpowder.Snapshot">[docs]</a><span class="k">class</span> <span class="nc">Snapshot</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+<div class="viewcode-block" id="Snapshot"><a class="viewcode-back" href="../../../api.html#gunpowder.Snapshot">[docs]</a><span class="k">class</span> <span class="nc">Snapshot</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Save a passing batch in an HDF file.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        dataset_names (dict): A dictionary from :class:`ArrayKey` to names of </span>
-<span class="sd">            the datasets to store them in.</span>
+<span class="sd">        dataset_names (``dict``, :class:`ArrayKey` -&gt; ``string``):</span>
 
-<span class="sd">        output_dir (string): The directory to save the snapshots. Will be </span>
-<span class="sd">            created, if it does not exist.</span>
+<span class="sd">            A dictionary from array keys to names of the datasets to store them</span>
+<span class="sd">            in.</span>
 
-<span class="sd">        output_filename (string): Template for output filenames. &#39;{id}&#39; in the </span>
-<span class="sd">            string will be replaced with the ID of the batch. &#39;{iteration}&#39; with </span>
-<span class="sd">            the training iteration (if training was performed on this batch).</span>
+<span class="sd">        output_dir (``string``):</span>
 
-<span class="sd">        every (int): How often to save a batch. &#39;every=1&#39; indicates that every </span>
-<span class="sd">            batch will be stored, &#39;every=2&#39; every second and so on. By default, </span>
+<span class="sd">            The directory to save the snapshots. Will be created, if it does</span>
+<span class="sd">            not exist.</span>
+
+<span class="sd">        output_filename (``string``):</span>
+
+<span class="sd">            Template for output filenames. ``{id}`` in the string will be</span>
+<span class="sd">            replaced with the ID of the batch. ``{iteration}`` with the training</span>
+<span class="sd">            iteration (if training was performed on this batch).</span>
+
+<span class="sd">        every (``int``):</span>
+
+<span class="sd">            How often to save a batch. ``every=1`` indicates that every batch</span>
+<span class="sd">            will be stored, ``every=2`` every second and so on. By default,</span>
 <span class="sd">            every batch will be stored.</span>
 
-<span class="sd">        additional_request (:class:`BatchRequest`): An additional batch request </span>
-<span class="sd">            to merge with the passing request, if a snapshot is to be made. If </span>
-<span class="sd">            not given, only the arrays that are in the batch anyway are </span>
-<span class="sd">            recorded.</span>
+<span class="sd">        additional_request (:class:`BatchRequest`):</span>
 
-<span class="sd">        compression_type (string or int): Compression strategy.  Legal values </span>
-<span class="sd">            are &#39;gzip&#39;, &#39;szip&#39;, &#39;lzf&#39;.  If an integer in range(10), this </span>
-<span class="sd">            indicates gzip compression level. Otherwise, an integer indicates </span>
-<span class="sd">            the number of a dynamically loaded compression filter. (See </span>
-<span class="sd">            h5py.groups.create_dataset())</span>
+<span class="sd">            An additional batch request to merge with the passing request, if a</span>
+<span class="sd">            snapshot is to be made. If not given, only the arrays that are in</span>
+<span class="sd">            the batch anyway are recorded. This is useful to request additional</span>
+<span class="sd">            arrays like loss gradients for visualization that are otherwise not</span>
+<span class="sd">            needed.</span>
 
-<span class="sd">        dataset_dtypes (dict): A dictionary from :class:`ArrayKey` to datatype</span>
-<span class="sd">            (eg. np.int8). Array to store is copied and casted to the specified type.</span>
-<span class="sd">             Original array within the pipeline remains unchanged.</span>
+<span class="sd">        compression_type (``string`` or ``int``):</span>
+
+<span class="sd">            Compression strategy.  Legal values are ``gzip``, ``szip``,</span>
+<span class="sd">            ``lzf``. If an integer between 1 and 10, this indicates ``gzip``</span>
+<span class="sd">            compression level.</span>
+
+<span class="sd">        dataset_dtypes (``dict``, :class:`ArrayKey` -&gt; data type):</span>
+
+<span class="sd">            A dictionary from array keys to datatype (eg. ``np.int8``). If</span>
+<span class="sd">            given, arrays are stored using this type. The original arrays</span>
+<span class="sd">            within the pipeline remain unchanged.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
