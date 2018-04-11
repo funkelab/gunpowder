@@ -7,7 +7,6 @@ except ImportError:
 
 extras_require = {
     'tensorflow': ['tensorflow'],
-    'test': ['tox']
 }
 
 

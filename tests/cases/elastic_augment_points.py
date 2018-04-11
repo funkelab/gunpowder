@@ -1,6 +1,7 @@
 import unittest
 from gunpowder import *
 from gunpowder.points import PointsKeys, Points, Point
+from .provider_test import ProviderTest
 
 import numpy as np
 import math
@@ -77,7 +78,7 @@ class PointTestSource3D(BatchProvider):
         return batch
 
 
-class TestElasticAugment(unittest.TestCase):
+class TestElasticAugment(ProviderTest):
 
     def test_3d_basics(self):
 
@@ -101,12 +102,15 @@ class TestElasticAugment(unittest.TestCase):
                 settings=RasterizationSettings(
                     radius=2,
                     mode='peak')) +
-            Snapshot({
-                test_labels: 'volumes/labels',
-                test_raster: 'volumes/raster'
-            },
-            dataset_dtypes={
-                test_raster: np.float32})
+            Snapshot(
+                {
+                    test_labels: 'volumes/labels',
+                    test_raster: 'volumes/raster'
+                },
+                dataset_dtypes={test_raster: np.float32},
+                output_dir=self.path_to(),
+                output_filename='elastic_augment_test{id}-{iteration}.hdf'
+            )
         )
 
         for _ in range(5):

@@ -8,7 +8,7 @@ from .crop import TestCrop
 from .downsample import TestDownSample
 from .dvid_source import TestDvidSource
 from .elastic_augment_points import TestElasticAugment
-from .hdf5_source import TestHdf5Source
+from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
 from .normalize import TestNormalize

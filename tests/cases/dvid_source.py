@@ -1,20 +1,28 @@
 from .provider_test import ProviderTest
+from unittest import skipIf
 from gunpowder import *
 import numpy as np
 import socket
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+DVID_SERVER = 'slowpoke1'
+
+
+def is_dvid_unavailable(server):
+    try:
+        socket.gethostbyname(server)
+        return False
+    except Exception:  # todo: make more specific
+        return True
+
 
 class TestDvidSource(ProviderTest):
 
+    @skipIf(is_dvid_unavailable(DVID_SERVER), 'DVID server not available')
     def test_output_3d(self):
-
-        dvid_server = 'slowpoke1'
-
-        # check if DVID server is available:
-        try:
-            socket.gethostbyname(dvid_server)
-        except:
-            print("DVID server not available, skipping TestDvidSource")
-            return
 
         # create array keys
         raw = ArrayKey('RAW')
@@ -23,7 +31,7 @@ class TestDvidSource(ProviderTest):
 
         pipeline = (
             DvidSource(
-                dvid_server,
+                DVID_SERVER,
                 32768,
                 '2ad1d8f0f172425c9f87b60fd97331e6',
                 datasets = {
@@ -40,7 +48,8 @@ class TestDvidSource(ProviderTest):
                     seg: '/volumes/labels/neuron_ids',
                     mask: '/volumes/labels/mask'
                 },
-                output_filename = self.path_to('dvid_source_test.hdf')
+                output_dir=self.path_to(),
+                output_filename='dvid_source_test{id}-{iteration}.hdf'
             )
         )
 

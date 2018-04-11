@@ -1,9 +1,11 @@
 from .provider_test import ProviderTest
 from gunpowder import *
 from itertools import product
+from unittest import skipIf
 import itertools
 import numpy as np
 import logging
+
 
 class TestSource(BatchProvider):
 
@@ -52,13 +54,11 @@ class TestSource(BatchProvider):
 
         return batch
 
+
 class TestAddAffinities(ProviderTest):
 
+    @skipIf(isinstance(gunpowder.ext.malis, gunpowder.ext.NoSuchModule), "malis not installed")
     def test_output(self):
-
-        # skip the test if malis is not installed
-        if isinstance(gunpowder.ext.malis, gunpowder.ext.NoSuchModule):
-            return
 
         neighborhood = [
                 Coordinate((-2,0,0)),
