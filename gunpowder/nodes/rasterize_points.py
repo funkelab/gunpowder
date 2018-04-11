@@ -86,18 +86,18 @@ class RasterizePoints(BatchFilter):
 
     Args:
 
-        points (:class:``PointsKeys``):
+        points (:class:`PointsKeys`):
             The key of the points to rasterize.
 
-        array (:class:``ArrayKey``):
+        array (:class:`ArrayKey`):
             The key of the binary array to create.
 
-        array_spec (:class:``ArraySpec``, optional):
+        array_spec (:class:`ArraySpec`, optional):
 
             The spec of the array to create. Use this to set the datatype and
             voxel size.
 
-        settings (:class:``RasterizationSettings``, optional):
+        settings (:class:`RasterizationSettings`, optional):
             Which settings to use to rasterize the points.
     '''
 
