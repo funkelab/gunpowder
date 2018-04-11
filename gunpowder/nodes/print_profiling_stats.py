@@ -15,8 +15,10 @@ class PrintProfilingStats(BatchFilter):
 
     Args:
 
-        every (int): Collect statistics about that many batch requests and show 
-            min, max, mean, and median runtimes.
+        every (``int``):
+
+            Collect statistics about that many batch requests and show min,
+            max, mean, and median runtimes.
     '''
 
     def __init__(self, every=1):

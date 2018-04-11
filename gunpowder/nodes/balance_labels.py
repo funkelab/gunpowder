@@ -14,24 +14,31 @@ class BalanceLabels(BatchFilter):
 
     Args:
 
-        labels (:class:``ArrayKey``): A array containing binary labels.
+        labels (:class:`ArrayKey`):
 
-        scales (:class:``ArrayKey``): A array with scales to be created. This
-            new array will have the same ROI and resolution as `labels`.
+            A array containing binary labels.
 
-        mask (:class:``ArrayKey``, optional): An optional mask (or list of
-            masks) to consider for balancing. Every voxel marked with a 0 will
-            not contribute to the scaling and will have a scale of 0 in
-            `scales`.
+        scales (:class:`ArrayKey`):
 
-        slab (tuple of int, optional): A shape specification to perform the
-            balancing in slabs of this size. -1 can be used to refer to the
-            actual size of the label array. For example, a slab of::
+            A array with scales to be created. This new array will have the
+            same ROI and resolution as ``labels``.
+
+        mask (:class:`ArrayKey`, optional):
+
+            An optional mask (or list of masks) to consider for balancing.
+            Every voxel marked with a 0 will not contribute to the scaling and
+            will have a scale of 0 in ``scales``.
+
+        slab (``tuple`` of ``int``, optional):
+
+            A shape specification to perform the balancing in slabs of this
+            size. -1 can be used to refer to the actual size of the label
+            array. For example, a slab of::
 
                 (2, -1, -1, -1)
 
-            will perform the balancing for every each slice `(0:2,:)`,
-            `(2:4,:)`, ... individually.
+            will perform the balancing for every each slice ``[0:2,:]``,
+            ``[2:4,:]``, ... individually.
     '''
 
     def __init__(self, labels, scales, mask=None, slab=None):

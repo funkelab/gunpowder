@@ -3,6 +3,8 @@
 First steps
 ===========
 
+.. automodule:: gunpowder
+
 Declaring arrays
 ----------------
 
@@ -27,8 +29,8 @@ available.
 Creating a source
 -----------------
 
-In :mod:`gunpowder`, you assemble a training pipeline as a directed acyclic
-graph (DAG) of :class:`BatchProvider<gunpowder.BatchProvider>`. The leaves of
+In ``gunpowder``, you assemble a training pipeline as a directed acyclic
+graph (DAG) of :class:`BatchProvider<BatchProvider>`. The leaves of
 your DAG are called sources, i.e., batch providers with no inputs:
 
 .. code-block:: python
@@ -64,7 +66,7 @@ as a batch provider:
           jitter_sigma=[0, 2, 2],
           rotation_interval=[0, math.pi/2.0])
 
-When :class:`gunpowder.ElasticAugment` is asked for a batch via a request, the
+When :class:`ElasticAugment` is asked for a batch via a request, the
 request is automatically changed to request an upstream batch large enough to
 perform the elastic augmentation seamlessly.
 
@@ -104,7 +106,7 @@ be
       for i in range(1000):
       p.request_batch(request)
 
-Note that we use a :class:`gunpowder.BatchRequest` object to communicate
+Note that we use a :class:`BatchRequest` object to communicate
 downstream the requirements for a batch. In the example, we are interested in
 batches of certain sizes (fitting the network we want to train) with raw data,
 ground-truth labels, and a mask.
@@ -112,15 +114,14 @@ ground-truth labels, and a mask.
 Going Further
 -------------
 
-:mod:`gunpowder` provides much more nodes to chain together, including
-:class:`a pre-cache node for easy parallel fetching of
-batches<gunpowder.PreCache>`, several augmentation nodes, and nodes for
-:class:`profiling<gunpowder.PrintProfilingStats>` and
-:class:`inspection<gunpowder.Snapshot>`. For a complete list see
-:ref:`sec_nodes`
+``gunpowder`` provides much more nodes to chain together, including a
+:ref:`pre-cache<sec_api_precache>` node for easy parallel fetching of batches,
+several :ref:`augmentation nodes<sec_api_augmentation>`, and nodes for
+:ref:`profiling<sec_api_profiling>` and :ref:`inspection<sec_api_snapshot>`.
+For a complete list see the :ref:`API reference<sec_api>`.
 
 Continue reading :ref:`here<sec_custom_providers>` to learn how to write your
-own :mod:`gunpowder` batch providers.
+own ``gunpowder`` batch providers.
 
 Working examples (with many more batch providers) can be found in `the example
 directory <https://github.com/funkey/gunpowder/tree/master/examples>`_.

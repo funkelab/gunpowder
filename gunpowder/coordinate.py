@@ -1,6 +1,16 @@
 import numbers
 
 class Coordinate(tuple):
+    '''A ``tuple`` of integers.
+
+    Allows the following element-wise operators: addition, subtraction,
+    multiplication, division, absolute value, and negation. This allows to
+    perform simple arithmetics with coordinates, e.g.::
+
+        shape = Coordinate((2, 3, 4))
+        voxel_size = Coordinate((10, 5, 1))
+        size = shape*voxel_size # == Coordinate((20, 15, 4))
+    '''
 
     def __new__(cls, array_like):
         return super(Coordinate, cls).__new__(

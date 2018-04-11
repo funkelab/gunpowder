@@ -93,8 +93,98 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -174,44 +264,49 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RandomLocation"><a class="viewcode-back" href="../../../nodes.html#gunpowder.RandomLocation">[docs]</a><span class="k">class</span> <span class="nc">RandomLocation</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomLocation"><a class="viewcode-back" href="../../../api.html#gunpowder.RandomLocation">[docs]</a><span class="k">class</span> <span class="nc">RandomLocation</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Choses a batch at a random location in the bounding box of the upstream</span>
 <span class="sd">    provider.</span>
 
-<span class="sd">    The random location is chosen such that the batch request roi lies entirely</span>
-<span class="sd">    inside the provider&#39;s roi.</span>
+<span class="sd">    The random location is chosen such that the batch request ROI lies entirely</span>
+<span class="sd">    inside the provider&#39;s ROI.</span>
 
-<span class="sd">    If `min_masked` and `mask` are set, only batches are returned that have at</span>
-<span class="sd">    least the given ratio of masked-in voxels. This is in general faster than</span>
-<span class="sd">    using the ``Reject`` node, at the expense of storing an integral array of</span>
-<span class="sd">    the complete mask.</span>
+<span class="sd">    If ``min_masked`` and ``mask`` are set, only batches are returned that have</span>
+<span class="sd">    at least the given ratio of masked-in voxels. This is in general faster</span>
+<span class="sd">    than using the :class:`Reject` node, at the expense of storing an integral</span>
+<span class="sd">    array of the complete mask.</span>
 
-<span class="sd">    If &#39;ensure_nonempty&#39; is set to a :class:``PointsKey``, only batches are</span>
+<span class="sd">    If ``ensure_nonempty`` is set to a :class:`PointsKey`, only batches are</span>
 <span class="sd">    returned that have at least one point of this point collection within the</span>
 <span class="sd">    requested ROI.</span>
 
 <span class="sd">    Additional tests for randomly picked locations can be implemented by</span>
-<span class="sd">    subclassing and overwriting of :fun:`accepts`. This method takes the</span>
+<span class="sd">    subclassing and overwriting of :func:`accepts`. This method takes the</span>
 <span class="sd">    randomly shifted request that meets all previous criteria (like</span>
 <span class="sd">    ``min_masked`` and ``ensure_nonempty``) and should return ``True`` if the</span>
 <span class="sd">    request is acceptable.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        min_masked(float, optional): If non-zero, require that the random</span>
-<span class="sd">            sample contains at least that ratio of masked-in voxels.</span>
+<span class="sd">        min_masked (``float``, optional):</span>
 
-<span class="sd">        mask(:class:``ArrayKey``): The array to use for mask checks.</span>
+<span class="sd">            If non-zero, require that the random sample contains at least that</span>
+<span class="sd">            ratio of masked-in voxels.</span>
 
-<span class="sd">        ensure_nonempty(:class:``PointsKey``, optional): Ensures that when</span>
-<span class="sd">            finding a random location, a request for ``ensure_nonempty`` will</span>
-<span class="sd">            one point. This does only work if all upstream</span>
-<span class="sd">            nodes are deterministic (e.g., there is no</span>
-<span class="sd">            :class:``RandomProvider`` upstream).</span>
+<span class="sd">        mask (:class:`ArrayKey`, optional):</span>
 
-<span class="sd">       p_nonempty(float, optional): If  ``ensure_nonempty`` is set, it defines</span>
-<span class="sd">            the probability that a request for ``ensure_nonempty`` will</span>
-<span class="sd">            contain at least one point. Default value is 1.0.</span>
+<span class="sd">            The array to use for mask checks.</span>
+
+<span class="sd">        ensure_nonempty (:class:`PointsKey`, optional):</span>
+
+<span class="sd">            Ensures that when finding a random location, a request for</span>
+<span class="sd">            ``ensure_nonempty`` will contain at least one point.</span>
+
+<span class="sd">        p_nonempty (``float``, optional):</span>
+
+<span class="sd">            If ``ensure_nonempty`` is set, it defines the probability that a</span>
+<span class="sd">            request for ``ensure_nonempty`` will contain at least one point.</span>
+<span class="sd">            Default value is 1.0.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_masked</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ensure_nonempty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_nonempty</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>

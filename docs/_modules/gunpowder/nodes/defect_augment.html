@@ -93,8 +93,98 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -177,7 +267,59 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DefectAugment"><a class="viewcode-back" href="../../../nodes.html#gunpowder.DefectAugment">[docs]</a><span class="k">class</span> <span class="nc">DefectAugment</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+<div class="viewcode-block" id="DefectAugment"><a class="viewcode-back" href="../../../api.html#gunpowder.DefectAugment">[docs]</a><span class="k">class</span> <span class="nc">DefectAugment</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Augment intensity arrays section-wise with artifacts like missing</span>
+<span class="sd">    sections, low-contrast sections, by blending in artifacts drawn from a</span>
+<span class="sd">    separate source, or by deforming a section.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        intensities (:class:`ArrayKey`):</span>
+
+<span class="sd">            The key of the array of intensities to modify.</span>
+
+<span class="sd">        prob_missing(``float``):</span>
+<span class="sd">        prob_low_contrast(``float``):</span>
+<span class="sd">        prob_artifact(``float``):</span>
+<span class="sd">        prob_deform(``float``):</span>
+
+<span class="sd">            Probabilities of having a missing section, low-contrast section, an</span>
+<span class="sd">            artifact (see param ``artifact_source``) or a deformed slice. The</span>
+<span class="sd">            sum should not exceed 1. Values in missing sections will be set to</span>
+<span class="sd">            0.</span>
+
+<span class="sd">        contrast_scale (``float``, optional):</span>
+
+<span class="sd">            By how much to scale the intensities for a low-contrast section,</span>
+<span class="sd">            used if ``prob_low_contrast`` &gt; 0.</span>
+
+<span class="sd">        artifact_source (class:`BatchProvider`, optional):</span>
+
+<span class="sd">            A gunpowder batch provider that delivers intensities (via</span>
+<span class="sd">            :class:`ArrayKey` ``artifacts``) and an alpha mask (via</span>
+<span class="sd">            :class:`ArrayKey` ``artifacts_mask``), used if ``prob_artifact`` &gt; 0.</span>
+
+<span class="sd">        artifacts(:class:`ArrayKey`, optional):</span>
+
+<span class="sd">            The key to query ``artifact_source`` for to get the intensities</span>
+<span class="sd">            of the artifacts.</span>
+
+<span class="sd">        artifacts_mask(:class:`ArrayKey`, optional):</span>
+
+<span class="sd">            The key to query ``artifact_source`` for to get the alpha mask</span>
+<span class="sd">            of the artifacts to blend them with ``intensities``.</span>
+
+<span class="sd">        deformation_strength (``int``, optional):</span>
+
+<span class="sd">            Strength of the slice deformation in voxels, used if</span>
+<span class="sd">            ``prob_deform`` &gt; 0. The deformation models a fold by shifting the</span>
+<span class="sd">            section contents towards a randomly oriented line in the section.</span>
+<span class="sd">            The line itself will be drawn with a value of 0.</span>
+
+<span class="sd">        axis (``int``, optional):</span>
+
+<span class="sd">            Along which axis sections are cut.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -192,48 +334,6 @@
             <span class="n">artifacts_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">deformation_strength</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Create a new DefectAugment node.</span>
-
-<span class="sd">        Args:</span>
-
-<span class="sd">            intensities(:class:``ArrayKey``):</span>
-
-<span class="sd">                The array of intensities to modify.</span>
-
-<span class="sd">            prob_missing, prob_low_contrast, prob_artifact, prob_deform:</span>
-
-<span class="sd">                Probabilities of having a missing section, low-contrast section,</span>
-<span class="sd">                an artifact (see param &#39;artifact_source&#39;) or a deformed slice.</span>
-<span class="sd">                The sum should not exceed 1.</span>
-
-<span class="sd">            contrast_scale:</span>
-
-<span class="sd">                By how much to scale the intensities for a low-contrast section.</span>
-
-<span class="sd">            artifact_source:</span>
-
-<span class="sd">                A gunpowder batch provider that delivers intensities</span>
-<span class="sd">                (``artifacts``) and an alpha mask (``artifacts_mask``), used if</span>
-<span class="sd">                prob_artifact &gt; 0.</span>
-
-<span class="sd">            artifacts(:class:``ArrayKey``, optional):</span>
-
-<span class="sd">                The key to query ``artifact_source`` for to get the intensities</span>
-<span class="sd">                of the artifacts.</span>
-
-<span class="sd">            artifacts_mask(:class:``ArrayKey``, optional):</span>
-
-<span class="sd">                The key to query ``artifact_source`` for to get the alpha mask</span>
-<span class="sd">                of the artifacts to blend them with ``intensities``.</span>
-
-<span class="sd">            deformation_strength:</span>
-
-<span class="sd">                Strength of the slice deformation.</span>
-
-<span class="sd">            axis:</span>
-
-<span class="sd">                Along which axis sections are cut.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intensities</span> <span class="o">=</span> <span class="n">intensities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prob_missing</span> <span class="o">=</span> <span class="n">prob_missing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prob_low_contrast</span> <span class="o">=</span> <span class="n">prob_low_contrast</span>

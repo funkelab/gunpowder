@@ -16,33 +16,46 @@ class ElasticAugment(BatchFilter):
     loss due to rotation and jitter.
 
     Args:
-        control_point_spacing (tuple of int): Distance between control points 
-            for the elastic deformation, in voxels per dimension.
 
-        jitter_sigma (tuple of float): Standard deviation of control point 
-            jitter distribution, in voxels per dimension.
+        control_point_spacing (``tuple`` of ``int``):
 
-        rotation_interval (two floats): Interval to randomly sample rotation 
-            angles from (0,2PI).
+            Distance between control points for the elastic deformation, in
+            voxels per dimension.
 
-        prob_slip (float): Probability of a section to "slip", i.e., be 
-            independently moved in x-y.
+        jitter_sigma (``tuple`` of ``float``):
 
-        prob_shift (float): Probability of a section and all following sections 
-            to move in x-y.
+            Standard deviation of control point jitter distribution, in voxels
+            per dimension.
 
-        max_misalign (int): Maximal voxels to shift in x and y. Samples will be 
-            drawn uniformly.
+        rotation_interval (``tuple`` of two ``floats``):
 
-        subsample (int): Instead of creating an elastic transformation on the 
-            full resolution, create one subsampled by the given factor, and 
-            linearly interpolate to obtain the full resolution transformation. 
-            This can significantly speed up this node, at the expense of having 
-            visible piecewise linear deformations for large factors. Usually, a 
-            factor of 4 can savely by used without noticable changes. However, 
-            the default is 1 (i.e., no subsampling).
+            Interval to randomly sample rotation angles from (0, 2PI).
 
-        spatial_dims (int):
+        prob_slip (``float``):
+
+            Probability of a section to "slip", i.e., be independently moved in
+            x-y.
+
+        prob_shift (``float``):
+
+            Probability of a section and all following sections to move in x-y.
+
+        max_misalign (``int``):
+
+            Maximal voxels to shift in x and y. Samples will be drawn
+            uniformly. Used if ``prob_slip + prob_shift`` > 0.
+
+        subsample (``int``):
+
+            Instead of creating an elastic transformation on the full
+            resolution, create one subsampled by the given factor, and linearly
+            interpolate to obtain the full resolution transformation. This can
+            significantly speed up this node, at the expense of having visible
+            piecewise linear deformations for large factors. Usually, a factor
+            of 4 can savely by used without noticable changes. However, the
+            default is 1 (i.e., no subsampling).
+
+        spatial_dims (``int``):
 
             The number of spacial dimensions in arrays. Spatial dimensions are
             assumed to be the last ones and cannot be more than 3 (default).

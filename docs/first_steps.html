@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Nodes" href="nodes.html" />
+    <link rel="next" title="Pipelines" href="pipeline.html" />
     <link rel="prev" title="Welcome to Gunpowder’s Documentation!" href="index.html" /> 
 
   
@@ -95,8 +95,98 @@
 <li class="toctree-l2"><a class="reference internal" href="#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -164,12 +254,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="first-steps">
-<span id="sec-first-steps"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-gunpowder">
+<span id="first-steps"></span><span id="sec-first-steps"></span><h1>First steps<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="declaring-arrays">
 <h2>Declaring arrays<a class="headerlink" href="#declaring-arrays" title="Permalink to this headline">¶</a></h2>
 <p>Before you start assembling a training of prediction pipeline, you have to
-create <code class="xref py py-class docutils literal"><span class="pre">ArrayKeys</span></code> for all arrays your pipeline will use.
+create <a class="reference internal" href="api.html#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKeys</span></code></a> for all arrays your pipeline will use.
 These keys are used later to formulate a request for an array or to access the
 actual array associated with that key.</p>
 <p>In the example here, we assume we have a raw dataset, together with
@@ -185,8 +275,8 @@ available.</p>
 </div>
 <div class="section" id="creating-a-source">
 <h2>Creating a source<a class="headerlink" href="#creating-a-source" title="Permalink to this headline">¶</a></h2>
-<p>In <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a>, you assemble a training pipeline as a directed acyclic
-graph (DAG) of <a class="reference internal" href="nodes.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>. The leaves of
+<p>In <code class="docutils literal"><span class="pre">gunpowder</span></code>, you assemble a training pipeline as a directed acyclic
+graph (DAG) of <a class="reference internal" href="api.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a>. The leaves of
 your DAG are called sources, i.e., batch providers with no inputs:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">=</span>
     <span class="n">gp</span><span class="o">.</span><span class="n">Hdf5Source</span><span class="p">(</span>
@@ -202,9 +292,9 @@ your DAG are called sources, i.e., batch providers with no inputs:</p>
 </div>
 <div class="section" id="chaining-batch-providers">
 <h2>Chaining batch providers<a class="headerlink" href="#chaining-batch-providers" title="Permalink to this headline">¶</a></h2>
-<p>Every batch provider can be asked for a batch via a <code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code>
+<p>Every batch provider can be asked for a batch via a <a class="reference internal" href="api.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a>
 (e.g., shape, offset, which kind of volumes to provide) to provide a
-<code class="xref py py-class docutils literal"><span class="pre">Batch</span></code>. Starting from one or multiple sources, you can chain batch
+<a class="reference internal" href="api.html#gunpowder.Batch" title="gunpowder.Batch"><code class="xref py py-class docutils literal"><span class="pre">Batch</span></code></a>. Starting from one or multiple sources, you can chain batch
 providers to build a DAG. When a non-source batch provider is asked for a
 batch, it passes the request on <em>upstream</em> (i.e., towards a source) to receive
 a batch, possibly modifies it, and passes the batch on <em>downstream</em>.</p>
@@ -217,7 +307,7 @@ as a batch provider:</p>
         <span class="n">rotation_interval</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>When <a class="reference internal" href="nodes.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal"><span class="pre">gunpowder.ElasticAugment</span></code></a> is asked for a batch via a request, the
+<p>When <a class="reference internal" href="api.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal"><span class="pre">ElasticAugment</span></code></a> is asked for a batch via a request, the
 request is automatically changed to request an upstream batch large enough to
 perform the elastic augmentation seamlessly.</p>
 <p>Another example is the random selection of locations inside a source:</p>
@@ -225,11 +315,11 @@ perform the elastic augmentation seamlessly.</p>
     <span class="n">gp</span><span class="o">.</span><span class="n">RandomLocation</span><span class="p">()</span>
 </pre></div>
 </div>
-<p><code class="xref py py-class docutils literal"><span class="pre">RandomLocation</span></code> does only modify the request (by changing the offset).</p>
+<p><a class="reference internal" href="api.html#gunpowder.RandomLocation" title="gunpowder.RandomLocation"><code class="xref py py-class docutils literal"><span class="pre">RandomLocation</span></code></a> does only modify the request (by changing the offset).</p>
 </div>
 <div class="section" id="training">
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
-<p><code class="xref py py-class docutils literal"><span class="pre">Training</span></code> itself is modelled as a batch provider. It
+<p><a class="reference internal" href="api.html#gunpowder.tensorflow.Train" title="gunpowder.tensorflow.Train"><code class="xref py py-class docutils literal"><span class="pre">Training</span></code></a> itself is modelled as a batch provider. It
 takes a batch and performs one training iteration:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">train</span> <span class="o">=</span>
     <span class="n">gp</span><span class="o">.</span><span class="n">tensorflow</span><span class="o">.</span><span class="n">Train</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
@@ -249,21 +339,20 @@ be</p>
     <span class="n">p</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that we use a <code class="xref py py-class docutils literal"><span class="pre">gunpowder.BatchRequest</span></code> object to communicate
+<p>Note that we use a <a class="reference internal" href="api.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> object to communicate
 downstream the requirements for a batch. In the example, we are interested in
 batches of certain sizes (fitting the network we want to train) with raw data,
 ground-truth labels, and a mask.</p>
 </div>
 <div class="section" id="going-further">
 <h2>Going Further<a class="headerlink" href="#going-further" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> provides much more nodes to chain together, including
-<a class="reference internal" href="nodes.html#gunpowder.PreCache" title="gunpowder.PreCache"><code class="xref py py-class docutils literal"><span class="pre">a</span> <span class="pre">pre-cache</span> <span class="pre">node</span> <span class="pre">for</span> <span class="pre">easy</span> <span class="pre">parallel</span> <span class="pre">fetching</span> <span class="pre">of</span>
-<span class="pre">batches</span></code></a>, several augmentation nodes, and nodes for
-<a class="reference internal" href="nodes.html#gunpowder.PrintProfilingStats" title="gunpowder.PrintProfilingStats"><code class="xref py py-class docutils literal"><span class="pre">profiling</span></code></a> and
-<a class="reference internal" href="nodes.html#gunpowder.Snapshot" title="gunpowder.Snapshot"><code class="xref py py-class docutils literal"><span class="pre">inspection</span></code></a>. For a complete list see
-<span class="xref std std-ref">sec_nodes</span></p>
+<p><code class="docutils literal"><span class="pre">gunpowder</span></code> provides much more nodes to chain together, including a
+<a class="reference internal" href="api.html#sec-api-precache"><span class="std std-ref">pre-cache</span></a> node for easy parallel fetching of batches,
+several <a class="reference internal" href="api.html#sec-api-augmentation"><span class="std std-ref">augmentation nodes</span></a>, and nodes for
+<a class="reference internal" href="api.html#sec-api-profiling"><span class="std std-ref">profiling</span></a> and <a class="reference internal" href="api.html#sec-api-snapshot"><span class="std std-ref">inspection</span></a>.
+For a complete list see the <a class="reference internal" href="api.html#sec-api"><span class="std std-ref">API reference</span></a>.</p>
 <p>Continue reading <a class="reference internal" href="custom_providers.html#sec-custom-providers"><span class="std std-ref">here</span></a> to learn how to write your
-own <a class="reference internal" href="nodes.html#module-gunpowder" title="gunpowder"><code class="xref py py-mod docutils literal"><span class="pre">gunpowder</span></code></a> batch providers.</p>
+own <code class="docutils literal"><span class="pre">gunpowder</span></code> batch providers.</p>
 <p>Working examples (with many more batch providers) can be found in <a class="reference external" href="https://github.com/funkey/gunpowder/tree/master/examples">the example
 directory</a>.</p>
 </div>
@@ -277,7 +366,7 @@ directory</a>.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="nodes.html" class="btn btn-neutral float-right" title="Nodes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pipeline.html" class="btn btn-neutral float-right" title="Pipelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="Welcome to Gunpowder’s Documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

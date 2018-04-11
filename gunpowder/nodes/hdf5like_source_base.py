@@ -15,26 +15,30 @@ logger = logging.getLogger(__name__)
 class Hdf5LikeSource(BatchProvider):
     '''An HDF5-like data source.
 
-        Provides arrays from datasets accessed with an h5py-like API for each array
-        key given. If the attribute `resolution` is set in an HDF5 dataset, it will
-        be used as the array's `voxel_size` and a warning issued if they differ. If
-        the attribute `offset` is set in a dataset, it will be used as the
-        offset of the :class:`Roi` for this array. It is assumed that the offset
-        is given in world units.
+    Provides arrays from datasets accessed with an h5py-like API for each array
+    key given. If the attribute ``resolution`` is set in an HDF5 dataset, it
+    will be used as the array's ``voxel_size`` and a warning issued if they
+    differ. If the attribute `offset` is set in a dataset, it will be used as
+    the offset of the :class:`Roi` for this array. It is assumed that the
+    offset is given in world units.
 
-        Args:
+    Args:
 
-            filename (string): The file path.
+        filename (``string``):
 
-            datasets (dict): Dictionary of ArrayKey -> dataset names that this
-                source offers.
+            The HDF5 file.
 
-            array_specs (dict, optional): An optional dictionary of
-                :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
-                specs automatically determined from the data file. This is useful
-                to set a missing ``voxel_size``, for example. Only fields that are
-                not ``None`` in the given :class:`ArraySpec` will be used.
-        '''
+        datasets (``dict``, :class:`ArrayKey` -> ``string``):
+
+            Dictionary of array keys to dataset names that this source offers.
+
+        array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`, optional):
+
+            An optional dictionary of array keys to array specs to overwrite
+            the array specs automatically determined from the data file. This
+            is useful to set a missing ``voxel_size``, for example. Only fields
+            that are not ``None`` in the given :class:`ArraySpec` will be used.
+    '''
     def __init__(
             self,
             filename,
@@ -50,19 +54,19 @@ class Hdf5LikeSource(BatchProvider):
             self.array_specs = array_specs
 
         self.ndims = None
-    
+
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
 
     def setup(self):
         with self._open_file(self.filename) as data_file:
             for (array_key, ds_name) in self.datasets.items():
-        
+
                 if ds_name not in data_file:
                     raise RuntimeError("%s not in %s" % (ds_name, self.filename))
-        
+
                 spec = self.__read_spec(array_key, data_file, ds_name)
-        
+
                 self.provides(array_key, spec)
 
     def provide(self, request):

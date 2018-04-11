@@ -93,8 +93,98 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -171,15 +261,15 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BatchProvider"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider">[docs]</a><span class="k">class</span> <span class="nc">BatchProvider</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider">[docs]</a><span class="k">class</span> <span class="nc">BatchProvider</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Superclass for all nodes in a `gunpowder` graph.</span>
 
 <span class="sd">    A :class:`BatchProvider` provides :class:`Batches&lt;Batch&gt;` containing</span>
 <span class="sd">    :class:`Arrays&lt;Array&gt;` and/or :class:`Points`. The available data is</span>
 <span class="sd">    specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.</span>
 
-<span class="sd">    To create a new :mod:`gunpowder` node, subclass this class and implement</span>
-<span class="sd">    (at least) :func:`setup` and :func:`provide`.</span>
+<span class="sd">    To create a new node, subclass this class and implement (at least)</span>
+<span class="sd">    :func:`setup` and :func:`provide`.</span>
 
 <span class="sd">    A :class:`BatchProvider` can be linked to any number of other</span>
 <span class="sd">    :class:`BatchProviders&lt;BatchProvider&gt;` upstream. If your node accepts</span>
@@ -196,7 +286,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">upstream_providers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_providers</span>
 
-<div class="viewcode-block" id="BatchProvider.setup"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider.setup"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
 
 <span class="sd">        Called during initialization of the DAG. Callees can assume that all</span>
@@ -207,7 +297,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;setup&#39;&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="BatchProvider.teardown"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.teardown">[docs]</a>    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider.teardown"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.teardown">[docs]</a>    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
 
 <span class="sd">        Called during destruction of the DAG. Subclasses should use this to</span>
@@ -215,7 +305,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="BatchProvider.provides"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.provides">[docs]</a>    <span class="k">def</span> <span class="nf">provides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider.provides"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.provides">[docs]</a>    <span class="k">def</span> <span class="nf">provides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Introduce a new output provided by this :class:`BatchProvider`.</span>
 
 <span class="sd">        Implementations should call this in their :func:`setup` method, which</span>
@@ -223,15 +313,13 @@
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            key:</span>
+<span class="sd">            key (:class:`ArrayKey` or :class:`PointsKey`):</span>
 
-<span class="sd">                An :class:`ArrayKey` or :class:`PointsKey` instance to refer to</span>
-<span class="sd">                the output.</span>
+<span class="sd">                The array or point set key provided.</span>
 
-<span class="sd">            spec:</span>
+<span class="sd">            spec (:class:`ArraySpec` or :class:`PointsSpec`):</span>
 
-<span class="sd">                An :class:`ArraySpec` or :class:`PointsSpec` to describe the</span>
-<span class="sd">                output.</span>
+<span class="sd">                The spec of the array or point set provided.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Current spec of </span><span class="si">%s</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
@@ -292,15 +380,16 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
                 <span class="k">del</span> <span class="n">request</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-<div class="viewcode-block" id="BatchProvider.request_batch"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.request_batch">[docs]</a>    <span class="k">def</span> <span class="nf">request_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider.request_batch"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.request_batch">[docs]</a>    <span class="k">def</span> <span class="nf">request_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Request a batch from this provider.</span>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            request(:class:`BatchRequest`):</span>
+<span class="sd">            request (:class:`BatchRequest`):</span>
 
-<span class="sd">                A request containing (possibly partial) :class:`ArraySpec`s and</span>
-<span class="sd">                :class:`PointsSpec`s.</span>
+<span class="sd">                A request containing (possibly partial)</span>
+<span class="sd">                :class:`ArraySpecs&lt;ArraySpec&gt;` and</span>
+<span class="sd">                :class:`PointSpecs&lt;PointsSpec&gt;`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> got request </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">request</span><span class="p">)</span>
@@ -399,7 +488,7 @@
                     <span class="s2">&quot;points provided by </span><span class="si">%s</span><span class="s2"> with ROI </span><span class="si">%s</span><span class="s2"> contain point at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">))</span>
 
-<div class="viewcode-block" id="BatchProvider.provide"><a class="viewcode-back" href="../../../nodes.html#gunpowder.BatchProvider.provide">[docs]</a>    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+<div class="viewcode-block" id="BatchProvider.provide"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.provide">[docs]</a>    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
 
 <span class="sd">        This function takes a :class:`BatchRequest` and should return the</span>

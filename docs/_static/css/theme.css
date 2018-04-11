@@ -5592,11 +5592,11 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   line-height: normal;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  color: #E74C3C;
+  color: #404040;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;
-  color: #404040;
+  color: #36872f;
 }
 .rst-content a tt, .rst-content a tt, .rst-content a code {
   color: #60c557;
@@ -5672,7 +5672,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 .rst-content .viewcode-link, .rst-content .viewcode-back {
   display: inline-block;
-  color: #84d27d;
+  color: #404040;
   font-size: 80%;
   padding-left: 24px;
 }

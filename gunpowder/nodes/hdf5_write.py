@@ -15,23 +15,31 @@ class Hdf5Write(BatchFilter):
 
     Args:
 
-        dataset_names (dict): A dictionary from :class:`ArrayKey` to names of 
-            the datasets to store them in.
+        dataset_names (``dict``, :class:`ArrayKey` -> ``string``):
 
-        output_dir (string): The directory to save the HDF5 file. Will be 
-            created, if it does not exist.
+            A dictionary from array keys to names of the datasets to store them
+            in.
 
-        output_filename (string): The output filename.
+        output_dir (``string``):
 
-        compression_type (string or int): Compression strategy.  Legal values 
-            are 'gzip', 'szip', 'lzf'.  If an integer in range(10), this 
-            indicates gzip compression level. Otherwise, an integer indicates 
-            the number of a dynamically loaded compression filter. (See 
-            h5py.groups.create_dataset())
+            The directory to save the HDF5 file. Will be created, if it does
+            not exist.
 
-        dataset_dtypes (dict): A dictionary from :class:`ArrayKey` to datatype
-            (eg. np.int8). Array to store is copied and casted to the specified type.
-             Original array within the pipeline remains unchanged.
+        output_filename (``string``):
+
+            The output filename.
+
+        compression_type (``string`` or ``int``):
+
+            Compression strategy.  Legal values are ``gzip``, ``szip``,
+            ``lzf``. If an integer between 1 and 10, this indicates ``gzip``
+            compression level.
+
+        dataset_dtypes (``dict``, :class:`ArrayKey` -> data type):
+
+            A dictionary from array keys to datatype (eg. ``np.int8``). If
+            given, arrays are stored using this type. The original arrays
+            within the pipeline remain unchanged.
         '''
 
     def __init__(

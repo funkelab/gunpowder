@@ -15,8 +15,8 @@ class BatchProvider(object):
     :class:`Arrays<Array>` and/or :class:`Points`. The available data is
     specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.
 
-    To create a new :mod:`gunpowder` node, subclass this class and implement
-    (at least) :func:`setup` and :func:`provide`.
+    To create a new node, subclass this class and implement (at least)
+    :func:`setup` and :func:`provide`.
 
     A :class:`BatchProvider` can be linked to any number of other
     :class:`BatchProviders<BatchProvider>` upstream. If your node accepts
@@ -60,15 +60,13 @@ class BatchProvider(object):
 
         Args:
 
-            key:
+            key (:class:`ArrayKey` or :class:`PointsKey`):
 
-                An :class:`ArrayKey` or :class:`PointsKey` instance to refer to
-                the output.
+                The array or point set key provided.
 
-            spec:
+            spec (:class:`ArraySpec` or :class:`PointsSpec`):
 
-                An :class:`ArraySpec` or :class:`PointsSpec` to describe the
-                output.
+                The spec of the array or point set provided.
         '''
 
         logger.debug("Current spec of %s:\n%s", self.name(), self.spec)
@@ -134,10 +132,11 @@ class BatchProvider(object):
 
         Args:
 
-            request(:class:`BatchRequest`):
+            request (:class:`BatchRequest`):
 
-                A request containing (possibly partial) :class:`ArraySpec`s and
-                :class:`PointsSpec`s.
+                A request containing (possibly partial)
+                :class:`ArraySpecs<ArraySpec>` and
+                :class:`PointSpecs<PointsSpec>`.
         '''
 
         logger.debug("%s got request %s", self.name(), request)

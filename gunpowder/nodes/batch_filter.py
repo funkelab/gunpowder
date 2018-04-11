@@ -45,14 +45,13 @@ class BatchFilter(BatchProvider):
 
         Args:
 
-            key:
+            key (:class:`ArrayKey` or :class:`PointsKey`):
 
-                A :class:`ArrayKey` or :class:`PointsKey` instance to refer to
-                the output.
+                The array or point set key this filter updates.
 
-            spec:
+            spec (:class:`ArraySpec` or :class:`PointsSpec`):
 
-                A :class:`ArraySpec` or :class:`PointsSpec` to describe the output.
+                The updated spec of the array or point set.
         '''
 
         assert key in self.spec, "Node %s is trying to change the spec for %s, but is not provided upstream."%(type(self).__name__, key)
@@ -178,16 +177,16 @@ class BatchFilter(BatchProvider):
         '''To be implemented in subclasses.
 
         Filter a batch, will be called after :func:`prepare`. Change batch as
-        needed, it will be passed downstream. :arg:`request` is the same as
-        passed to :func:`prepare`, provided for convenience.
+        needed, it will be passed downstream. ``request`` is the same as passed
+        to :func:`prepare`, provided for convenience.
 
         Args:
 
-            batch(:class:`Batch`):
+            batch (:class:`Batch`):
 
                 The batch received from upstream to be modified by this node.
 
-            request(:class:`BatchRequest`):
+            request (:class:`BatchRequest`):
 
                 The request this node received. The updated batch should meet
                 this request.

@@ -15,6 +15,58 @@ from .batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class DefectAugment(BatchFilter):
+    '''Augment intensity arrays section-wise with artifacts like missing
+    sections, low-contrast sections, by blending in artifacts drawn from a
+    separate source, or by deforming a section.
+
+    Args:
+
+        intensities (:class:`ArrayKey`):
+
+            The key of the array of intensities to modify.
+
+        prob_missing(``float``):
+        prob_low_contrast(``float``):
+        prob_artifact(``float``):
+        prob_deform(``float``):
+
+            Probabilities of having a missing section, low-contrast section, an
+            artifact (see param ``artifact_source``) or a deformed slice. The
+            sum should not exceed 1. Values in missing sections will be set to
+            0.
+
+        contrast_scale (``float``, optional):
+
+            By how much to scale the intensities for a low-contrast section,
+            used if ``prob_low_contrast`` > 0.
+
+        artifact_source (class:`BatchProvider`, optional):
+
+            A gunpowder batch provider that delivers intensities (via
+            :class:`ArrayKey` ``artifacts``) and an alpha mask (via
+            :class:`ArrayKey` ``artifacts_mask``), used if ``prob_artifact`` > 0.
+
+        artifacts(:class:`ArrayKey`, optional):
+
+            The key to query ``artifact_source`` for to get the intensities
+            of the artifacts.
+
+        artifacts_mask(:class:`ArrayKey`, optional):
+
+            The key to query ``artifact_source`` for to get the alpha mask
+            of the artifacts to blend them with ``intensities``.
+
+        deformation_strength (``int``, optional):
+
+            Strength of the slice deformation in voxels, used if
+            ``prob_deform`` > 0. The deformation models a fold by shifting the
+            section contents towards a randomly oriented line in the section.
+            The line itself will be drawn with a value of 0.
+
+        axis (``int``, optional):
+
+            Along which axis sections are cut.
+    '''
 
     def __init__(
             self,
@@ -29,48 +81,6 @@ class DefectAugment(BatchFilter):
             artifacts_mask=None,
             deformation_strength=20,
             axis=0):
-        '''Create a new DefectAugment node.
-
-        Args:
-
-            intensities(:class:``ArrayKey``):
-
-                The array of intensities to modify.
-
-            prob_missing, prob_low_contrast, prob_artifact, prob_deform:
-
-                Probabilities of having a missing section, low-contrast section,
-                an artifact (see param 'artifact_source') or a deformed slice.
-                The sum should not exceed 1.
-
-            contrast_scale:
-
-                By how much to scale the intensities for a low-contrast section.
-
-            artifact_source:
-
-                A gunpowder batch provider that delivers intensities
-                (``artifacts``) and an alpha mask (``artifacts_mask``), used if
-                prob_artifact > 0.
-
-            artifacts(:class:``ArrayKey``, optional):
-
-                The key to query ``artifact_source`` for to get the intensities
-                of the artifacts.
-
-            artifacts_mask(:class:``ArrayKey``, optional):
-
-                The key to query ``artifact_source`` for to get the alpha mask
-                of the artifacts to blend them with ``intensities``.
-
-            deformation_strength:
-
-                Strength of the slice deformation.
-
-            axis:
-
-                Along which axis sections are cut.
-        '''
         self.intensities = intensities
         self.prob_missing = prob_missing
         self.prob_low_contrast = prob_low_contrast
