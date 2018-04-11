@@ -12,21 +12,26 @@ Batch
 ^^^^^
   .. autoclass:: Batch
     :members: arrays, points, items
+
 Array
 ^^^^^
   .. autoclass:: Array
     :members:
+
 Points
 ^^^^^^
   .. autoclass:: Points
     :members:
+
 Point
 ^^^^^
   .. autoclass:: Point
     :members:
+
 ArrayKey
 ^^^^^^^^
   .. autoclass:: ArrayKey
+
 PointsKey
 ^^^^^^^^^
   .. autoclass:: PointsKey
@@ -38,14 +43,17 @@ ProviderSpec
 ^^^^^^^^^^^^
   .. autoclass:: ProviderSpec
     :members: array_specs, points_specs, items
+
 BatchRequest
 ^^^^^^^^^^^^
   .. autoclass:: BatchRequest
     :members: add
+
 ArraySpec
 ^^^^^^^^^
   .. autoclass:: ArraySpec
     :members:
+
 PointsSpec
 ^^^^^^^^^^
   .. autoclass:: PointsSpec
@@ -58,6 +66,7 @@ Coordinate
 ^^^^^^^^^^
   .. autoclass:: Coordinate
     :members:
+
 Roi
 ^^^
   .. autoclass:: Roi
@@ -82,12 +91,15 @@ Source Nodes
 CsvPointsSource
 ^^^^^^^^^^^^^^^
   .. autoclass:: CsvPointsSource
+
 DvidSource
 ^^^^^^^^^^
   .. autoclass:: DvidSource
+
 Hdf5Source
 ^^^^^^^^^^
   .. autoclass:: Hdf5Source
+
 KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource
@@ -100,12 +112,15 @@ Augmentation Nodes
 DefectAugment
 ^^^^^^^^^^^^^
   .. autoclass:: DefectAugment
+
 ElasticAugment
 ^^^^^^^^^^^^^^
   .. autoclass:: ElasticAugment
+
 IntensityAugment
 ^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityAugment
+
 SimpleAugment
 ^^^^^^^^^^^^^
   .. autoclass:: SimpleAugment
@@ -116,18 +131,23 @@ Location Manipulation Nodes
 Crop
 ^^^^
   .. autoclass:: Crop
+
 Pad
 ^^^
   .. autoclass:: Pad
+
 RandomLocation
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomLocation
+
 Reject
 ^^^^^^
   .. autoclass:: Reject
+
 Scan
 ^^^^
   .. autoclass:: Scan
+
 SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
   .. autoclass:: SpecifiedLocation
@@ -138,9 +158,11 @@ Image Processing Nodes
 DownSample
 ^^^^^^^^^^
   .. autoclass:: DownSample
+
 IntensityScaleShift
 ^^^^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityScaleShift
+
 Normalize
 ^^^^^^^^^
   .. autoclass:: Normalize
@@ -151,15 +173,19 @@ Label Manipulation Nodes
 AddAffinities
 ^^^^^^^^^^^^^
   .. autoclass:: AddAffinities
+
 BalanceLabels
 ^^^^^^^^^^^^^
   .. autoclass:: BalanceLabels
+
 ExcludeLabels
 ^^^^^^^^^^^^^
   .. autoclass:: ExcludeLabels
+
 GrowBoundary
 ^^^^^^^^^^^^
   .. autoclass:: GrowBoundary
+
 RenumberConnectedComponents
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   .. autoclass:: RenumberConnectedComponents
@@ -178,6 +204,7 @@ Provider Combination Nodes
 MergeProvider
 ^^^^^^^^^^^^^
   .. autoclass:: MergeProvider
+
 RandomProvider
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomProvider
@@ -185,20 +212,26 @@ RandomProvider
 Training and Prediction Nodes
 -----------------------------
   .. automodule:: gunpowder.caffe
+
 caffe.Train
 ^^^^^^^^^^^
   .. autoclass:: Train
   .. autoclass:: SolverParameters
+
 caffe.Predict
 ^^^^^^^^^^^^^
   .. autoclass:: Predict
+
   .. automodule:: gunpowder.tensorflow
+
 tensorflow.Train
 ^^^^^^^^^^^^^^^^
   .. autoclass:: Train
+
 tensorflow.Predict
 ^^^^^^^^^^^^^^^^^^
   .. autoclass:: Predict
+
   .. automodule:: gunpowder
 
 Output Nodes
