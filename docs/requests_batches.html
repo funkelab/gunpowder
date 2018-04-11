@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Batch Requests and Batches &mdash; gunpowder 0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Pipelines" href="pipeline.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/gunpowder.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#going-further">Going Further</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gunpowder</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Batch Requests and Batches</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/requests_batches.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="batch-requests-and-batches">
+<span id="sec-requests-batches"></span><h1>Batch Requests and Batches<a class="headerlink" href="#batch-requests-and-batches" title="Permalink to this headline">¶</a></h1>
+<p>TODO: describe up/down passing of requests/batches.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pipeline.html" class="btn btn-neutral" title="Pipelines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Jan Funke.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script> 
+
+</body>
+</html>

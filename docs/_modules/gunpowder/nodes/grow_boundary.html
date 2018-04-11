@@ -93,8 +93,98 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../nodes.html">Nodes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../nodes.html#list-of-all-gunpowder-nodes">List of All Gunpowder Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../requests_batches.html">Batch Requests and Batches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#coordinate">Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#roi">Roi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#node-base-classes">Node Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchprovider">BatchProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchfilter">BatchFilter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#location-manipulation-nodes">Location Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#crop">Crop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#label-manipulation-nodes">Label Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#addaffinities">AddAffinities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#balancelabels">BalanceLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#excludelabels">ExcludeLabels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#growboundary">GrowBoundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#renumberconnectedcomponents">RenumberConnectedComponents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#mergeprovider">MergeProvider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomprovider">RandomProvider</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
@@ -167,22 +257,32 @@
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 <span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">Array</span>
 
-<div class="viewcode-block" id="GrowBoundary"><a class="viewcode-back" href="../../../nodes.html#gunpowder.GrowBoundary">[docs]</a><span class="k">class</span> <span class="nc">GrowBoundary</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+<div class="viewcode-block" id="GrowBoundary"><a class="viewcode-back" href="../../../api.html#gunpowder.GrowBoundary">[docs]</a><span class="k">class</span> <span class="nc">GrowBoundary</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Grow a boundary between regions in a label array. Does not grow at the</span>
 <span class="sd">    border of the batch or an optionally provided mask.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        labels(:class:``ArrayKey``): The array containing labels.</span>
 
-<span class="sd">        mask(:class:``ArrayKey``, optional): A mask indicating unknown</span>
-<span class="sd">            regions. This is to avoid boundaries to grow between labelled and</span>
-<span class="sd">            unknown regions.</span>
+<span class="sd">        labels (:class:`ArrayKey`):</span>
 
-<span class="sd">        steps(int): Number of voxels (not world units!) to grow.</span>
+<span class="sd">            The array containing labels.</span>
 
-<span class="sd">        background(int): The label to assign to the boundary voxels.</span>
+<span class="sd">        mask (:class:`ArrayKey`, optional):</span>
 
-<span class="sd">        only_xy(bool): Do not grow a boundary in the z direction.</span>
+<span class="sd">            A mask indicating unknown regions. This is to avoid boundaries to</span>
+<span class="sd">            grow between labelled and unknown regions.</span>
+
+<span class="sd">        steps (``int``):</span>
+
+<span class="sd">            Number of voxels (not world units!) to grow.</span>
+
+<span class="sd">        background (``int``):</span>
+
+<span class="sd">            The label to assign to the boundary voxels.</span>
+
+<span class="sd">        only_xy (``bool``):</span>
+
+<span class="sd">            Do not grow a boundary in the z direction.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">only_xy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
