@@ -111,10 +111,6 @@ SimpleAugment
 Location Manipulation Nodes
 ---------------------------
 
-Nodes in this category do not modify :class:`Batches<Batch>`, but instead the
-specs of the :class:`BatchRequest` from downstream and/or the
-:class:`ProviderSpec` from upstream.
-
 Crop
 ^^^^
   .. autoclass:: Crop
@@ -190,6 +186,7 @@ Training and Prediction Nodes
 caffe.Train
 ^^^^^^^^^^^
   .. autoclass:: Train
+  .. autoclass:: SolverParameters
 caffe.Predict
 ^^^^^^^^^^^^^
   .. autoclass:: Predict
