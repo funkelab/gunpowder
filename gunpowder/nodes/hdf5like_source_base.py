@@ -16,17 +16,16 @@ class Hdf5LikeSource(BatchProvider):
     '''An HDF5-like data source.
 
     Provides arrays from datasets accessed with an h5py-like API for each array
-    key given. If the attribute ``resolution`` is set in an HDF5 dataset, it
-    will be used as the array's ``voxel_size`` and a warning issued if they
-    differ. If the attribute `offset` is set in a dataset, it will be used as
-    the offset of the :class:`Roi` for this array. It is assumed that the
-    offset is given in world units.
+    key given. If the attribute ``resolution`` is set in a dataset, it will be
+    used as the array's ``voxel_size``. If the attribute ``offset`` is set in a
+    dataset, it will be used as the offset of the :class:`Roi` for this array.
+    It is assumed that the offset is given in world units.
 
     Args:
 
         filename (``string``):
 
-            The HDF5 file.
+            The input file.
 
         datasets (``dict``, :class:`ArrayKey` -> ``string``):
 

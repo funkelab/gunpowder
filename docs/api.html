@@ -128,6 +128,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -1137,21 +1139,84 @@ useful to set <code class="docutils literal"><span class="pre">voxel_size</span>
 <dt id="gunpowder.Hdf5Source">
 <em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">Hdf5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>array_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/hdf5_source.html#Hdf5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Hdf5Source" title="Permalink to this definition">¶</a></dt>
 <dd><p>An HDF5 data source.</p>
-<p>Provides arrays from HDF5 datasets for each array key given. If the
-attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set in an HDF5 dataset, it will be used as the
-array’s <code class="docutils literal"><span class="pre">voxel_size</span></code>. If the attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in an HDF5
-dataset, it will be used as the offset of the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> for this array.
-It is assumed that the offset is given in world units.</p>
+<p>Provides arrays from HDF5 datasets. If the attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set
+in a HDF5 dataset, it will be used as the array’s <code class="docutils literal"><span class="pre">voxel_size</span></code>. If the
+attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in a dataset, it will be used as the offset of
+the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> for this array. It is assumed that the offset is given in
+world units.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The HDF5 file.</li>
-<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary of array keys to HDF5 dataset names that this source
-offers.</li>
+<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary of array keys to dataset names that this source offers.</li>
 <li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional dictionary of array keys to array specs to overwrite
-the array specs automatically determined from the HDF5 file. This
+the array specs automatically determined from the data file. This
+is useful to set a missing <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields
+that are not <code class="docutils literal"><span class="pre">None</span></code> in the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="zarrsource">
+<h3>ZarrSource<a class="headerlink" href="#zarrsource" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.ZarrSource">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ZarrSource</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>array_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/zarr_source.html#ZarrSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ZarrSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference external" href="https://github.com/zarr-developers/zarr">zarr</a> data source.</p>
+<p>Provides arrays from zarr datasets. If the attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set
+in a zarr dataset, it will be used as the array’s <code class="docutils literal"><span class="pre">voxel_size</span></code>. If the
+attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in a dataset, it will be used as the offset of
+the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> for this array. It is assumed that the offset is given in
+world units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The zarr directory.</li>
+<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary of array keys to dataset names that this source offers.</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional dictionary of array keys to array specs to overwrite
+the array specs automatically determined from the data file. This
+is useful to set a missing <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields
+that are not <code class="docutils literal"><span class="pre">None</span></code> in the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="n5source">
+<h3>N5Source<a class="headerlink" href="#n5source" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.N5Source">
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">N5Source</code><span class="sig-paren">(</span><em>filename</em>, <em>datasets</em>, <em>array_specs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/n5_source.html#N5Source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.N5Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <a class="reference external" href="https://github.com/saalfeldlab/n5">N5</a> data source.</p>
+<p>Provides arrays from N5 datasets. If the attribute <code class="docutils literal"><span class="pre">resolution</span></code> is set
+in a N5 dataset, it will be used as the array’s <code class="docutils literal"><span class="pre">voxel_size</span></code>. If the
+attribute <code class="docutils literal"><span class="pre">offset</span></code> is set in a dataset, it will be used as the offset of
+the <a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal"><span class="pre">Roi</span></code></a> for this array. It is assumed that the offset is given in
+world units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – The N5 directory.</li>
+<li><strong>datasets</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <code class="docutils literal"><span class="pre">string</span></code>) – Dictionary of array keys to dataset names that this source offers.</li>
+<li><strong>array_specs</strong> (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal"><span class="pre">ArrayKey</span></code></a> -&gt; <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a>, optional) – An optional dictionary of array keys to array specs to overwrite
+the array specs automatically determined from the data file. This
 is useful to set a missing <code class="docutils literal"><span class="pre">voxel_size</span></code>, for example. Only fields
 that are not <code class="docutils literal"><span class="pre">None</span></code> in the given <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal"><span class="pre">ArraySpec</span></code></a> will be used.</li>
 </ul>
@@ -1169,7 +1234,8 @@ that are not <code class="docutils literal"><span class="pre">None</span></code>
 <div><dl class="class">
 <dt id="gunpowder.KlbSource">
 <em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">KlbSource</code><span class="sig-paren">(</span><em>filename</em>, <em>array</em>, <em>array_spec=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/klb_source.html#KlbSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.KlbSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>A KLB data source.</p>
+<dd><p>A <a class="reference external" href="https://bitbucket.org/fernandoamat/keller-lab-block-filetype">KLB</a>
+data source.</p>
 <p>Provides a single array from the given KLB dataset.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1251,7 +1317,7 @@ The line itself will be drawn with a value of 0.</li>
 <blockquote>
 <div><dl class="class">
 <dt id="gunpowder.ElasticAugment">
-<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ElasticAugment</code><span class="sig-paren">(</span><em>control_point_spacing</em>, <em>jitter_sigma</em>, <em>rotation_interval</em>, <em>prob_slip=0</em>, <em>prob_shift=0</em>, <em>max_misalign=0</em>, <em>subsample=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/elastic_augment.html#ElasticAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ElasticAugment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.</code><code class="descname">ElasticAugment</code><span class="sig-paren">(</span><em>control_point_spacing</em>, <em>jitter_sigma</em>, <em>rotation_interval</em>, <em>prob_slip=0</em>, <em>prob_shift=0</em>, <em>max_misalign=0</em>, <em>subsample=1</em>, <em>spatial_dims=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/elastic_augment.html#ElasticAugment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.ElasticAugment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Elasticly deform a batch. Requests larger batches upstream to avoid data
 loss due to rotation and jitter.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1276,6 +1342,12 @@ significantly speed up this node, at the expense of having visible
 piecewise linear deformations for large factors. Usually, a factor
 of 4 can savely by used without noticable changes. However, the
 default is 1 (i.e., no subsampling).</li>
+<li><strong>spatial_dims</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – The number of spacial dimensions in arrays. Spatial dimensions are
+assumed to be the last ones and cannot be more than 3 (default).
+Set this value here to avoid treating channels as spacial
+dimension. If, for example, your array is indexed as <code class="docutils literal"><span class="pre">(c,y,x)</span></code>
+(2D plus channels), you would want to set <code class="docutils literal"><span class="pre">spatial_dims=2</span></code> to
+perform the elastic deformation only on x and y.</li>
 </ul>
 </td>
 </tr>
@@ -2013,21 +2085,21 @@ the voxel size of the input arrays. Only fields that are not
 <blockquote>
 <div><dl class="class">
 <dt id="gunpowder.tensorflow.Train">
-<em class="property">class </em><code class="descclassname">gunpowder.tensorflow.</code><code class="descname">Train</code><span class="sig-paren">(</span><em>meta_graph_filename</em>, <em>optimizer</em>, <em>loss</em>, <em>inputs</em>, <em>outputs</em>, <em>gradients</em>, <em>summary=None</em>, <em>array_specs=None</em>, <em>save_every=2000</em>, <em>log_dir=’./’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/tensorflow/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.tensorflow.Train" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gunpowder.tensorflow.</code><code class="descname">Train</code><span class="sig-paren">(</span><em>graph</em>, <em>optimizer</em>, <em>loss</em>, <em>inputs</em>, <em>outputs</em>, <em>gradients</em>, <em>summary=None</em>, <em>array_specs=None</em>, <em>save_every=2000</em>, <em>log_dir=’./’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/tensorflow/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.tensorflow.Train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tensorflow implementation of <code class="xref py py-class docutils literal"><span class="pre">gunpowder.nodes.Train</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>meta_graph_filename</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – <p>Filename of a tensorflow meta-graph storing the tensorflow graph
+<li><strong>graph</strong> (<code class="docutils literal"><span class="pre">string</span></code>) – <p>Filename of a tensorflow meta-graph storing the tensorflow graph
 containing an optimizer. A meta-graph file can be created by
 running:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># create tensorflow graph</span>
 <span class="o">...</span>
 
 <span class="c1"># store it</span>
-<span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">export_meta_graph</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">meta_graph_filename</span><span class="p">)</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">export_meta_graph</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>

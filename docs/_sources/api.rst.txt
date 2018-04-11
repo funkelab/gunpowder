@@ -100,6 +100,14 @@ Hdf5Source
 ^^^^^^^^^^
   .. autoclass:: Hdf5Source
 
+ZarrSource
+^^^^^^^^^^
+  .. autoclass:: ZarrSource
+
+N5Source
+^^^^^^^^
+  .. autoclass:: N5Source
+
 KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource

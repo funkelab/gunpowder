@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.merge_provider &mdash; gunpowder 0.3 documentation</title>
+  <title>gunpowder.nodes.zarr_source &mdash; gunpowder 0.3 documentation</title>
   
 
   
@@ -237,7 +237,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>gunpowder.nodes.merge_provider</li>
+      <li>gunpowder.nodes.zarr_source</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -252,63 +252,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for gunpowder.nodes.merge_provider</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">gunpowder.provider_spec</span> <span class="k">import</span> <span class="n">ProviderSpec</span>
-<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="k">import</span> <span class="n">Batch</span>
-<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="k">import</span> <span class="n">BatchRequest</span>
-
-<span class="kn">from</span> <span class="nn">.batch_provider</span> <span class="k">import</span> <span class="n">BatchProvider</span>
+  <h1>Source code for gunpowder.nodes.zarr_source</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">z5py</span>
+<span class="kn">from</span> <span class="nn">.hdf5like_source_base</span> <span class="k">import</span> <span class="n">Hdf5LikeSource</span>
 
 
-<div class="viewcode-block" id="MergeProvider"><a class="viewcode-back" href="../../../api.html#gunpowder.MergeProvider">[docs]</a><span class="k">class</span> <span class="nc">MergeProvider</span><span class="p">(</span><span class="n">BatchProvider</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Merges different providers::</span>
+<div class="viewcode-block" id="ZarrSource"><a class="viewcode-back" href="../../../api.html#gunpowder.ZarrSource">[docs]</a><span class="k">class</span> <span class="nc">ZarrSource</span><span class="p">(</span><span class="n">Hdf5LikeSource</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A `zarr &lt;https://github.com/zarr-developers/zarr&gt;`_ data source.</span>
 
-<span class="sd">        (a + b + c) + MergeProvider()</span>
+<span class="sd">    Provides arrays from zarr datasets. If the attribute ``resolution`` is set</span>
+<span class="sd">    in a zarr dataset, it will be used as the array&#39;s ``voxel_size``. If the</span>
+<span class="sd">    attribute ``offset`` is set in a dataset, it will be used as the offset of</span>
+<span class="sd">    the :class:`Roi` for this array. It is assumed that the offset is given in</span>
+<span class="sd">    world units.</span>
 
-<span class="sd">    will create a provider that combines the arrays and points offered by</span>
-<span class="sd">    ``a``, ``b``, and ``c``. Array and point keys of ``a``, ``b``, and ``c`` should be</span>
-<span class="sd">    the disjoint.</span>
+<span class="sd">    Args:</span>
+
+<span class="sd">        filename (``string``):</span>
+
+<span class="sd">            The zarr directory.</span>
+
+<span class="sd">        datasets (``dict``, :class:`ArrayKey` -&gt; ``string``):</span>
+
+<span class="sd">            Dictionary of array keys to dataset names that this source offers.</span>
+
+<span class="sd">        array_specs (``dict``, :class:`ArrayKey` -&gt; :class:`ArraySpec`, optional):</span>
+
+<span class="sd">            An optional dictionary of array keys to array specs to overwrite</span>
+<span class="sd">            the array specs automatically determined from the data file. This</span>
+<span class="sd">            is useful to set a missing ``voxel_size``, for example. Only fields</span>
+<span class="sd">            that are not ``None`` in the given :class:`ArraySpec` will be used.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">key_to_provider</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;at least one batch provider needs to be added to the MergeProvider&quot;</span>
-        <span class="c1"># Only allow merging if no two upstream_providers have the same</span>
-        <span class="c1"># array/points keys</span>
-        <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;Key </span><span class="si">{}</span><span class="s2"> provided by more than one upstream provider. Node MergeProvider only allows to merge &quot;</span> \
-                        <span class="s2">&quot;providers with different keys.&quot;</span>
-        <span class="k">for</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="n">error_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">key_to_provider</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">provider</span>
-
-    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-
-        <span class="c1"># create upstream requests</span>
-        <span class="n">upstream_requests</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-            <span class="n">provider</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_to_provider</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">provider</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upstream_requests</span><span class="p">:</span>
-                <span class="n">upstream_requests</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-
-            <span class="n">upstream_requests</span><span class="p">[</span><span class="n">provider</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
-
-        <span class="c1"># execute requests, merge batches</span>
-        <span class="n">merged_batch</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">provider</span><span class="p">,</span> <span class="n">upstream_request</span> <span class="ow">in</span> <span class="n">upstream_requests</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-            <span class="n">batch</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">upstream_request</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">merged_batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">merged_batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
-
-        <span class="k">return</span> <span class="n">merged_batch</span></div>
-
-
+    <span class="k">def</span> <span class="nf">_open_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">z5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_zarr_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

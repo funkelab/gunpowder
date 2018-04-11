@@ -126,6 +126,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -251,29 +253,17 @@
            <div itemprop="articleBody">
             
   <h1>Source code for gunpowder.nodes.hdf5_source</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">h5py</span>
+<span class="kn">from</span> <span class="nn">.hdf5like_source_base</span> <span class="k">import</span> <span class="n">Hdf5LikeSource</span>
 
-<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="k">import</span> <span class="n">Batch</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">h5py</span>
-<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span>
-<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">Array</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
-<span class="kn">from</span> <span class="nn">.batch_provider</span> <span class="k">import</span> <span class="n">BatchProvider</span>
-
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Hdf5Source"><a class="viewcode-back" href="../../../api.html#gunpowder.Hdf5Source">[docs]</a><span class="k">class</span> <span class="nc">Hdf5Source</span><span class="p">(</span><span class="n">BatchProvider</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5Source"><a class="viewcode-back" href="../../../api.html#gunpowder.Hdf5Source">[docs]</a><span class="k">class</span> <span class="nc">Hdf5Source</span><span class="p">(</span><span class="n">Hdf5LikeSource</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;An HDF5 data source.</span>
 
-<span class="sd">    Provides arrays from HDF5 datasets for each array key given. If the</span>
-<span class="sd">    attribute ``resolution`` is set in an HDF5 dataset, it will be used as the</span>
-<span class="sd">    array&#39;s ``voxel_size``. If the attribute ``offset`` is set in an HDF5</span>
-<span class="sd">    dataset, it will be used as the offset of the :class:`Roi` for this array.</span>
-<span class="sd">    It is assumed that the offset is given in world units.</span>
+<span class="sd">    Provides arrays from HDF5 datasets. If the attribute ``resolution`` is set</span>
+<span class="sd">    in a HDF5 dataset, it will be used as the array&#39;s ``voxel_size``. If the</span>
+<span class="sd">    attribute ``offset`` is set in a dataset, it will be used as the offset of</span>
+<span class="sd">    the :class:`Roi` for this array. It is assumed that the offset is given in</span>
+<span class="sd">    world units.</span>
 
 <span class="sd">    Args:</span>
 
@@ -283,152 +273,17 @@
 
 <span class="sd">        datasets (``dict``, :class:`ArrayKey` -&gt; ``string``):</span>
 
-<span class="sd">            Dictionary of array keys to HDF5 dataset names that this source</span>
-<span class="sd">            offers.</span>
+<span class="sd">            Dictionary of array keys to dataset names that this source offers.</span>
 
 <span class="sd">        array_specs (``dict``, :class:`ArrayKey` -&gt; :class:`ArraySpec`, optional):</span>
 
 <span class="sd">            An optional dictionary of array keys to array specs to overwrite</span>
-<span class="sd">            the array specs automatically determined from the HDF5 file. This</span>
+<span class="sd">            the array specs automatically determined from the data file. This</span>
 <span class="sd">            is useful to set a missing ``voxel_size``, for example. Only fields</span>
 <span class="sd">            that are not ``None`` in the given :class:`ArraySpec` will be used.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">filename</span><span class="p">,</span>
-            <span class="n">datasets</span><span class="p">,</span>
-            <span class="n">array_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
-
-        <span class="k">if</span> <span class="n">array_specs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span> <span class="o">=</span> <span class="n">array_specs</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="n">hdf_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-            <span class="k">if</span> <span class="n">ds_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdf_file</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
-
-            <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_spec</span><span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">hdf_file</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
-
-        <span class="n">hdf_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-
-        <span class="n">timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">timing</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-
-        <span class="n">batch</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
-
-        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf_file</span><span class="p">:</span>
-
-            <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">request_spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">array_key</span><span class="p">,</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
-
-                <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
-
-                <span class="c1"># scale request roi to voxel units</span>
-                <span class="n">dataset_roi</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">/</span><span class="n">voxel_size</span>
-
-                <span class="c1"># shift request roi into dataset</span>
-                <span class="n">dataset_roi</span> <span class="o">=</span> <span class="n">dataset_roi</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span>
-
-                <span class="c1"># create array spec</span>
-                <span class="n">array_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                <span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span>
-
-                <span class="c1"># add array to batch</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">__read</span><span class="p">(</span><span class="n">hdf_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">array_key</span><span class="p">],</span> <span class="n">dataset_roi</span><span class="p">),</span>
-                    <span class="n">array_spec</span><span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">)</span>
-
-        <span class="n">timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">profiling_stats</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">timing</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">batch</span>
-
-    <span class="k">def</span> <span class="nf">__read_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_key</span><span class="p">,</span> <span class="n">hdf_file</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">):</span>
-
-        <span class="n">dataset</span> <span class="o">=</span> <span class="n">hdf_file</span><span class="p">[</span><span class="n">ds_name</span><span class="p">]</span>
-
-        <span class="n">dims</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">array_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span><span class="p">:</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ndims</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARNING: File </span><span class="si">%s</span><span class="s2"> does not contain resolution information &quot;</span>
-                               <span class="s2">&quot;for </span><span class="si">%s</span><span class="s2"> (dataset </span><span class="si">%s</span><span class="s2">), voxel size has been set to </span><span class="si">%s</span><span class="s2">. This &quot;</span>
-                               <span class="s2">&quot;might not be what you want.&quot;</span><span class="p">,</span>
-                               <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">array_key</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
-                <span class="n">offset</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">offset</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ndims</span><span class="p">)</span>
-
-            <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">dims</span><span class="o">*</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;dtype </span><span class="si">%s</span><span class="s2"> provided in array_specs for </span><span class="si">%s</span><span class="s2">, &quot;</span>
-                                                 <span class="s2">&quot;but differs from dataset </span><span class="si">%s</span><span class="s2"> dtype </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span>
-                                                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                                                  <span class="n">array_key</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dtype</span>
-
-        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">interpolatable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-            <span class="n">spec</span><span class="o">.</span><span class="n">interpolatable</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">uint8</span> <span class="c1"># assuming this is not used for labels</span>
-            <span class="p">]</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARNING: You didn&#39;t set &#39;interpolatable&#39; for </span><span class="si">%s</span><span class="s2"> &quot;</span>
-                           <span class="s2">&quot;(dataset </span><span class="si">%s</span><span class="s2">). Based on the dtype </span><span class="si">%s</span><span class="s2">, it has been &quot;</span>
-                           <span class="s2">&quot;set to </span><span class="si">%s</span><span class="s2">. This might not be what you want.&quot;</span><span class="p">,</span>
-                           <span class="n">array_key</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                           <span class="n">spec</span><span class="o">.</span><span class="n">interpolatable</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">spec</span>
-
-    <span class="k">def</span> <span class="nf">__read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdf_file</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hdf_file</span><span class="p">[</span><span class="n">ds_name</span><span class="p">][</span><span class="n">roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()])</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span></div>
+    <span class="k">def</span> <span class="nf">_open_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
