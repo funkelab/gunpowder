@@ -19,22 +19,33 @@ class DvidSource(BatchProvider):
 
     Args:
 
-        hostname (string): The name of the DVID server.
+        hostname (``string``):
 
-        port (int): The port of the DVID server.
+            The name of the DVID server.
 
-        uuid (string): The UUID of the DVID node to use.
+        port (``int``):
 
-        datasets (dict): Dictionary of ArrayKey -> DVID data instance names
-            that this source offers.
+            The port of the DVID server.
 
-        masks (dict, optional): Dictionary of ArrayKey -> DVID ROI instance
-            names. This will create binary masks from DVID ROIs.
+        uuid (``string``):
 
-        array_specs (dict, optional): An optional dictionary of
-            :class:`ArrayKey` to :class:`ArraySpec` to overwrite the array
-            specs automatically determined from the DVID server. This is useful
-            to set ``voxel_size``, for example. Only fields that are not
+            The UUID of the DVID node to use.
+
+        datasets (``dict``, :class:`ArrayKey` -> ``string``):
+
+            Dictionary mapping array keys to DVID data instance names that this
+            source offers.
+
+        masks (``dict``, :class:`ArrayKey` -> ``string``, optional):
+
+            Dictionary of array keys to DVID ROI instance names. This will
+            create binary masks from DVID ROIs.
+
+        array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`, optional):
+
+            An optional dictionary of array keys to specs to overwrite the
+            array specs automatically determined from the DVID server. This is
+            useful to set ``voxel_size``, for example. Only fields that are not
             ``None`` in the given :class:`ArraySpec` will be used.
     '''
 

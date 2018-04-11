@@ -15,40 +15,45 @@ class RandomLocation(BatchFilter):
     '''Choses a batch at a random location in the bounding box of the upstream
     provider.
 
-    The random location is chosen such that the batch request roi lies entirely
-    inside the provider's roi.
+    The random location is chosen such that the batch request ROI lies entirely
+    inside the provider's ROI.
 
-    If `min_masked` and `mask` are set, only batches are returned that have at
-    least the given ratio of masked-in voxels. This is in general faster than
-    using the ``Reject`` node, at the expense of storing an integral array of
-    the complete mask.
+    If ``min_masked`` and ``mask`` are set, only batches are returned that have
+    at least the given ratio of masked-in voxels. This is in general faster
+    than using the :class:`Reject` node, at the expense of storing an integral
+    array of the complete mask.
 
-    If 'ensure_nonempty' is set to a :class:``PointsKey``, only batches are
+    If ``ensure_nonempty`` is set to a :class:`PointsKey`, only batches are
     returned that have at least one point of this point collection within the
     requested ROI.
 
     Additional tests for randomly picked locations can be implemented by
-    subclassing and overwriting of :fun:`accepts`. This method takes the
+    subclassing and overwriting of :func:`accepts`. This method takes the
     randomly shifted request that meets all previous criteria (like
     ``min_masked`` and ``ensure_nonempty``) and should return ``True`` if the
     request is acceptable.
 
     Args:
 
-        min_masked(float, optional): If non-zero, require that the random
-            sample contains at least that ratio of masked-in voxels.
+        min_masked (``float``, optional):
 
-        mask(:class:``ArrayKey``): The array to use for mask checks.
+            If non-zero, require that the random sample contains at least that
+            ratio of masked-in voxels.
 
-        ensure_nonempty(:class:``PointsKey``, optional): Ensures that when
-            finding a random location, a request for ``ensure_nonempty`` will
-            one point. This does only work if all upstream
-            nodes are deterministic (e.g., there is no
-            :class:``RandomProvider`` upstream).
+        mask (:class:`ArrayKey`, optional):
 
-       p_nonempty(float, optional): If  ``ensure_nonempty`` is set, it defines
-            the probability that a request for ``ensure_nonempty`` will
-            contain at least one point. Default value is 1.0.
+            The array to use for mask checks.
+
+        ensure_nonempty (:class:`PointsKey`, optional):
+
+            Ensures that when finding a random location, a request for
+            ``ensure_nonempty`` will contain at least one point.
+
+        p_nonempty (``float``, optional):
+
+            If ``ensure_nonempty`` is set, it defines the probability that a
+            request for ``ensure_nonempty`` will contain at least one point.
+            Default value is 1.0.
     '''
 
     def __init__(self, min_masked=0, mask=None, ensure_nonempty=None, p_nonempty=1.0):

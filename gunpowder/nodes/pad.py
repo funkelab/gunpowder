@@ -21,13 +21,13 @@ class Pad(BatchFilter):
 
             The array or points set to pad.
 
-        size (Coordinate or None):
+        size (:class:`Coordinate` or ``None``):
 
             The padding to be added. If None, an infinite padding is added. If
-            a Coordinate, this amount will be added to the ROI in the positive
+            a coordinate, this amount will be added to the ROI in the positive
             and negative direction.
 
-        value (scalar or None):
+        value (scalar or ``None``):
 
             The value to report inside the padding. If not given, 0 is used.
             Only used for :class:`Array<Arrays>`.

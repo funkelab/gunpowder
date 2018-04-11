@@ -21,41 +21,41 @@ class RasterizationSettings(Freezable):
 
     Args:
 
-        radius (int):
+        radius (``int``):
 
             The radius (for balls) or sigma (for peaks) in world units.
 
-        mode (string):
+        mode (``string``):
 
-            One of 'ball' or 'peak'. If 'ball' (the default), a ball with the
-            given ``radius`` will be drawn. If 'peak', the point will be
-            rasterized as a peak with values :math:`exp(-|x-p|^2/sigma)` with
+            One of ``ball`` or ``peak``. If ``ball`` (the default), a ball with the
+            given ``radius`` will be drawn. If ``peak``, the point will be
+            rasterized as a peak with values :math:`\exp(-|x-p|^2/\sigma)` with
             sigma set by ``radius``.
 
-        mask (:class:``ArrayKey``, optional):
+        mask (:class:`ArrayKey`, optional):
 
             Used to mask the rasterization of points. The array is assumed to
             contain discrete labels. The object id at the specific point being
             rasterized is used to intersect the rasterization to keep it inside
             the specific object.
 
-        inner_radius (int, optional):
+        inner_radius (``int``, optional):
 
-            Only for mode 'ball'.
+            Only for mode ``ball``.
 
             If set, instead of a ball, a hollow sphere is rastered. The radius
             of the whole sphere corresponds to the radius specified with
             ``radius``. This parameter sets the radius of the hollow area.
 
-        fg_value (int, optional):
+        fg_value (``int``, optional):
 
-            Only for mode 'ball'.
+            Only for mode ``ball``.
 
             The value to use to rasterize points, defaults to 1.
 
-        bg_value (int, optional):
+        bg_value (``int``, optional):
 
-            Only for mode 'ball'.
+            Only for mode ``ball``.
 
             The value to use to for the background in the output array,
             defaults to 0.

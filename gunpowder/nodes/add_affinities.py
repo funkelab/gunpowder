@@ -17,28 +17,36 @@ class AddAffinities(BatchFilter):
 
     Args:
 
-        affinity_neighborhood(list of offsets): List of offsets for the 
-            affinities to consider for each voxel.
+        affinity_neighborhood (``list`` of array-like):
 
-        labels(:class:``ArrayKey``): The array to read the labels from.
+            List of offsets for the affinities to consider for each voxel.
 
-        affinities(:class:``ArrayKey``): The array to generate containing
-            the affinities.
+        labels (:class:`ArrayKey`):
 
-        labels_mask(:class:``ArrayKey``, optional): The array to use as a
-            mask for ``labels``. Affinities connecting at least one masked
-            out label will be masked out in ``affinities_mask``. If not
-            given, ``affinities_mask`` will contain ones everywhere (if
-            requested).
+            The array to read the labels from.
 
-        unlabelled(:class:``ArrayKey``, optional): A binary array to
-            indicate unlabelled areas with 0. Affinities from labelled to
-            unlabelled voxels are set to 0, affinities between unlabelled voxels
-            are masked out (they will not be used for training).
+        affinities (:class:`ArrayKey`):
 
-        affinities_mask(:class:``ArrayKey``, optional): The array to
-            generate containing the affinitiy mask, as derived from parameter
-            ``labels_mask``.
+            The array to generate containing the affinities.
+
+        labels_mask (:class:`ArrayKey`, optional):
+
+            The array to use as a mask for ``labels``. Affinities connecting at
+            least one masked out label will be masked out in
+            ``affinities_mask``. If not given, ``affinities_mask`` will contain
+            ones everywhere (if requested).
+
+        unlabelled (:class:`ArrayKey`, optional):
+
+            A binary array to indicate unlabelled areas with 0. Affinities from
+            labelled to unlabelled voxels are set to 0, affinities between
+            unlabelled voxels are masked out (they will not be used for
+            training).
+
+        affinities_mask (:class:`ArrayKey`, optional):
+
+            The array to generate containing the affinitiy mask, as derived
+            from parameter ``labels_mask``.
     '''
 
     def __init__(

@@ -3,6 +3,30 @@ import numpy as np
 from .batch_filter import BatchFilter
 
 class IntensityAugment(BatchFilter):
+    '''Randomly scale and shift the values of an intensity array.
+
+    Args:
+
+        array (:class:`ArrayKey`):
+
+            The intensity array to modify.
+
+        scale_min (``float``):
+        scale_max (``float``):
+        shift_min (``float``):
+        shift_max (``float``):
+
+            The min and max of the uniformly randomly drawn scaling and
+            shifting values for the intensity augmentation. Intensities are
+            changed as::
+
+                a = a.mean() + (a-a.mean())*scale + shift
+
+        z_section_wise (``bool``):
+
+            Perform the augmentation z-section wise. Requires 3D arrays and
+            assumes that z is the first dimension.
+    '''
 
     def __init__(self, array, scale_min, scale_max, shift_min, shift_max, z_section_wise=False):
         self.array = array

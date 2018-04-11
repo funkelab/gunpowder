@@ -8,6 +8,22 @@ logger = logging.getLogger(__name__)
 class Normalize(BatchFilter):
     '''Normalize the values of an array to be floats between 0 and 1, based on
     the type of the array.
+
+    Args:
+
+        array (:class:`ArrayKey`):
+
+            The key of the array to modify.
+
+        factor (scalar, optional):
+
+            The factor to use. If not given, a factor is chosen based on the
+            ``dtype`` of the array (e.g., ``np.uint8`` would result in a factor
+            of ``1.0/255``).
+
+        dtype (data-type, optional):
+
+            The datatype of the normalized array. Defaults to ``np.float32``.
     '''
 
     def __init__(self, array, factor=None, dtype=np.float32):

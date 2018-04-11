@@ -11,25 +11,30 @@ class SpecifiedLocation(BatchFilter):
     '''Choses a batch at a location from the list provided at init, making sure
     it is in the bounding box of the upstream provider.
 
-    Locations should be given in physical dimensions and with reference to (0,0,0)
+    Locations should be given in world units.
 
     Locations will be chosen in order or at random from the list depending on the
-    choose_randomly parameter.
+    ``choose_randomly`` parameter.
 
     If a location requires a shift outside the bounding box of any upstream provider
     the module will skip that location with a warning.
 
     Args:
 
-        locations: list, array, A list of locations to center batches. Should be given
-        physical dimensions and with respect to (0,0,0)
+        locations (``list`` of locations):
 
-        choose_randomly: bool, defines whether locations should be picked in order or at random from
-        the list.
+            Locations to center batches around.
 
-        extra_data: list, array, A list of data that you want to be passed along with the arrays
-        provided by this node. This data will be appended as an attribute to the dataset so it must
-        be a data format compatible with hdf5.
+        choose_randomly (``bool``):
+
+            Defines whether locations should be picked in order or at random
+            from the list.
+
+        extra_data (``list`` of array-like):
+
+            A list of data that will be passed along with the arrays provided
+            by this node. This data will be appended as an attribute to the
+            dataset so it must be a data format compatible with hdf5.
     '''
 
     def __init__(self, locations, choose_randomly=False, extra_data=None):

@@ -13,16 +13,16 @@ class SimpleAugment(BatchFilter):
 
     Args:
 
-        mirror_only (list of int, optional):
+        mirror_only (``list`` of ``int``, optional):
 
             If set, only mirror between the given axes. This is useful to
             exclude channels that have a set direction, like time.
 
-        transpose_only (list of int, optional):
+        transpose_only (``list`` of ``int``, optional):
 
             If set, only transpose between the given axes. This is useful to
             limit the transpose to axes with the same resolution or to exclude
-            channels representing time.
+            non-spatial dimensions.
     '''
 
     def __init__(self, mirror_only=None, transpose_only=None):

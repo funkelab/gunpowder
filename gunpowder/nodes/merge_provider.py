@@ -6,7 +6,13 @@ from .batch_provider import BatchProvider
 
 
 class MergeProvider(BatchProvider):
-    '''Merges different providers.
+    '''Merges different providers::
+
+        (a + b + c) + MergeProvider()
+
+    will create a provider that combines the arrays and points offered by
+    ``a``, ``b``, and ``c``. Array and point keys of ``a``, ``b``, and ``c`` should be
+    the disjoint.
     '''
     def __init__(self):
         self.key_to_provider = {}
