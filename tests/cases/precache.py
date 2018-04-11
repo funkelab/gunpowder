@@ -26,8 +26,9 @@ class TestPreCache(ProviderTest):
                     batch.arrays[ArrayKeys.RAW].spec.roi ==
                     self.test_request[ArrayKeys.RAW].roi)
 
-            # should be done in a bit more than 1 seconds
-            self.assertTrue(time.time() - start < 2)
+            # should be done in a bit more than 1 seconds, certainly much less
+            # than 100
+            self.assertTrue(time.time() - start < 10)
 
             # change request
             self.test_request[ArrayKeys.RAW].roi = \
