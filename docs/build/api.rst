@@ -92,6 +92,8 @@ KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource
 
+.. _sec_api_augmentation:
+
 Augmentation Nodes
 ------------------
 
@@ -205,6 +207,9 @@ Output Nodes
 Hdf5Write
 ^^^^^^^^^
   .. autoclass:: Hdf5Write
+
+.. _sec_api_snapshot:
+
 Snapshot
 ^^^^^^^^
   .. autoclass:: Snapshot
@@ -212,9 +217,14 @@ Snapshot
 Performance Nodes
 -----------------
 
+.. _sec_api_precache:
+
 PreCache
 ^^^^^^^^
   .. autoclass:: PreCache
+
+.. _sec_api_profiling:
+
 PrintProfilingStats
 ^^^^^^^^^^^^^^^^^^^
   .. autoclass:: PrintProfilingStats
