@@ -151,13 +151,19 @@ class RasterizePoints(BatchFilter):
 
         # however, restrict the request to the points actually provided
         points_roi = points_roi.intersect(self.spec[self.points].roi)
-
         request[self.points] = PointsSpec(roi=points_roi)
 
         if self.settings.mask is not None:
             mask_voxel_size = self.spec[self.settings.mask].voxel_size
-            request[self.settings.mask] = \
-                ArraySpec(roi=points_roi.snap_to_grid(mask_voxel_size))
+            assert self.spec[self.array].voxel_size == mask_voxel_size, ("Voxel size of mask and rasterized "
+                                                                                "volume need to be equal")
+            new_mask_roi = points_roi.snap_to_grid(mask_voxel_size)
+            if self.settings.mask in request:
+                request[self.settings.mask].roi = \
+                    request[self.settings.mask].roi.union(new_mask_roi)
+            else:
+                request[self.settings.mask] = \
+                    ArraySpec(roi=new_mask_roi)
 
     def process(self, batch, request):
 
@@ -180,7 +186,7 @@ class RasterizePoints(BatchFilter):
 
         if mask is not None:
 
-            mask_array = batch.arrays[mask]
+            mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
             # get all component labels in the mask
             labels = list(np.unique(mask_array.data))
 
@@ -242,14 +248,11 @@ class RasterizePoints(BatchFilter):
 
         # restore requested mask
         if mask is not None:
-            batch.arrays[mask] = mask_array.crop(request[mask].roi)
+            batch.arrays[mask] = batch.arrays[mask].crop(request[mask].roi)
 
     def __rasterize(self, points, data_roi, voxel_size, dtype, settings, mask_array=None):
-        '''Rasterize 'points' into an array with the given 'voxel_size'. If a
-        mask array is given, it needs to have the same ROI as the points.'''
+        '''Rasterize 'points' into an array with the given 'voxel_size'''
 
-        assert mask_array is None or mask_array.spec.roi == points.spec.roi
-        assert mask_array is None or mask_array.spec.voxel_size == voxel_size
         mask = mask_array.data if mask_array is not None else None
 
         logger.debug("Rasterizing points in %s", points.spec.roi)
