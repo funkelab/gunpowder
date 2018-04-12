@@ -304,6 +304,10 @@ class RasterizePoints(BatchFilter):
                 rasterized_points /= max_value
 
         if mask_array is not None:
-            rasterized_points &= mask
+            # use more efficient bitwise operation when possible
+            if settings.mode == 'ball':
+                rasterized_points &= mask
+            else:
+                rasterized_points *= mask
 
         return rasterized_points
