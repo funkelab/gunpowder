@@ -425,7 +425,7 @@ class ElasticAugment(BatchFilter):
 
     def __misalign(self, transformation):
 
-        assert transformation.shape(0) == 3, (
+        assert transformation.shape[0] == 3, (
             "misalign can only be applied to 3D volumes")
 
         num_sections = transformation[0].shape[0]
