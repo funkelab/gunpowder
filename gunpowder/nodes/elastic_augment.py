@@ -57,7 +57,7 @@ class ElasticAugment(BatchFilter):
 
         spatial_dims (``int``):
 
-            The number of spacial dimensions in arrays. Spatial dimensions are
+            The number of spatial dimensions in arrays. Spatial dimensions are
             assumed to be the last ones and cannot be more than 3 (default).
             Set this value here to avoid treating channels as spacial
             dimension. If, for example, your array is indexed as ``(c,y,x)``
@@ -425,7 +425,7 @@ class ElasticAugment(BatchFilter):
 
     def __misalign(self, transformation):
 
-        assert transformation.shape(0) == 3, (
+        assert transformation.shape[0] == 3, (
             "misalign can only be applied to 3D volumes")
 
         num_sections = transformation[0].shape[0]
