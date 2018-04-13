@@ -130,8 +130,8 @@ class RandomLocation(BatchFilter):
 
             lcm_voxel_size = self.spec.get_lcm_voxel_size(
                 request.array_specs.keys())
+            shift_roi = shift_roi.snap_to_grid(lcm_voxel_size, mode='shrink')
             lcm_shift_roi = shift_roi/lcm_voxel_size
-
             logger.debug("lcm voxel size: %s", lcm_voxel_size)
 
             logger.debug(
