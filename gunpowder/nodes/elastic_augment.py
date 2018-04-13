@@ -57,7 +57,7 @@ class ElasticAugment(BatchFilter):
 
         spatial_dims (``int``):
 
-            The number of spacial dimensions in arrays. Spatial dimensions are
+            The number of spatial dimensions in arrays. Spatial dimensions are
             assumed to be the last ones and cannot be more than 3 (default).
             Set this value here to avoid treating channels as spacial
             dimension. If, for example, your array is indexed as ``(c,y,x)``
