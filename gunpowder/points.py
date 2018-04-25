@@ -24,6 +24,9 @@ class Points(Freezable):
         self.spec = spec
         self.freeze()
 
+    def __repr__(self):
+        return "%s, %s"%(self.data, self.spec)
+
 class Point(Freezable):
     '''A point with a location, as stored in :class:`Points`.
 
