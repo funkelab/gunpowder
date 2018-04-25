@@ -19,6 +19,7 @@ from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
 from .random_location import TestRandomLocation
+from .random_location_points import TestRandomLocationPoints
 from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
 from .tensorflow_train import TestTensorflowTrain
