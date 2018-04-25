@@ -1,6 +1,9 @@
 snapshots
 docker/gunpowder
 docker/requirements.txt
+singularity/gunpowder
+singularity/requirements.txt
+singularity/gunpowder.simg
 *.sw[pmno]
 net_iter*
 *.prototxt
