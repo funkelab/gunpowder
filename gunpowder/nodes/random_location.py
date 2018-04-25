@@ -1,7 +1,9 @@
+import math
 import logging
 from random import random, randint, choice
 
 import numpy as np
+from scipy.spatial import KDTree
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
@@ -110,7 +112,9 @@ class RandomLocation(BatchFilter):
             points_request = BatchRequest({self.ensure_nonempty: points_spec})
             points_batch = upstream.request_batch(points_request)
 
-            self.points = points_batch.points[self.ensure_nonempty]
+            self.points = KDTree([
+                p.location
+                for p in points_batch[self.ensure_nonempty].data.values()])
 
             logger.info("retrieved %d points", len(self.points.data))
 
@@ -332,23 +336,19 @@ class RandomLocation(BatchFilter):
             #                 request.shape-1
 
             # pick a random point
-            point_id = choice(self.points.data.keys())
-            point = self.points.data[point_id]
+            point = choice(self.points.data)
 
-            logger.debug(
-                "select random point %d at %s",
-                point_id,
-                point.location)
+            logger.debug("select random point at %s", point)
 
             # get the lcm voxel that contains this point
-            lcm_location = Coordinate(point.location/lcm_voxel_size)
+            lcm_location = Coordinate(point/lcm_voxel_size)
             logger.debug(
                 "belongs to lcm voxel %s",
                 lcm_location)
 
             # mark all dimensions in which the point lies on the lower boundary
             # of the lcm voxel
-            on_lower_boundary = lcm_location*lcm_voxel_size == point.location
+            on_lower_boundary = lcm_location*lcm_voxel_size == point
             logger.debug(
                 "lies on the lower boundary of the lcm voxel in dimensions %s",
                 on_lower_boundary)
@@ -385,7 +385,7 @@ class RandomLocation(BatchFilter):
             if not lcm_point_shift_roi.intersects(lcm_shift_roi):
                 logger.debug(
                     "reject random shift, random point %s shift ROI %s does "
-                    "not intersect total shift ROI %s", point.location,
+                    "not intersect total shift ROI %s", point,
                     lcm_point_shift_roi, lcm_shift_roi)
                 continue
             lcm_point_shift_roi = lcm_point_shift_roi.intersect(lcm_shift_roi)
@@ -399,11 +399,10 @@ class RandomLocation(BatchFilter):
             # count all points inside the shifted ROI
             points = self.__get_points_in_roi(
                 request_points_roi.shift(random_shift))
-            point_ids = points.data.keys()
-            assert point_id in point_ids, (
+            assert point in points, (
                 "Requested batch to contain point %s, but got points "
-                "%s"%(point_id, point_ids))
-            num_points = len(point_ids)
+                "%s"%(point, points))
+            num_points = len(points)
 
             # accept this shift with p=1/num_points
             #
@@ -425,10 +424,14 @@ class RandomLocation(BatchFilter):
 
     def __get_points_in_roi(self, roi):
 
-        points = Points({}, PointsSpec(roi))
+        points = []
 
-        for (point_id, point) in self.points.data.items():
-            if roi.contains(point.location):
-                points.data[point_id] = point
+        center = roi.get_center()
+        radius = math.ceil(float(max(roi.get_shape()))/2)
+        candidates = self.points.query_ball_point(center, radius, p=np.inf)
 
-        return points
+        for i in candidates:
+            if roi.contains(self.points.data[i]):
+                points.append(self.points.data[i])
+
+        return np.array(points)
