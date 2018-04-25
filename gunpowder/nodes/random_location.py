@@ -5,6 +5,7 @@ import numpy as np
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
+from gunpowder.points import Points
 from gunpowder.points_spec import PointsSpec
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
@@ -396,13 +397,9 @@ class RandomLocation(BatchFilter):
             logger.debug("random shift: %s", random_shift)
 
             # count all points inside the shifted ROI
-            points_request = BatchRequest()
-            points_request[self.ensure_nonempty] = PointsSpec(
-                roi=request_points_roi.shift(random_shift))
-            logger.debug("points request: %s", points_request)
-            points_batch = self.get_upstream_provider().request_batch(points_request)
-
-            point_ids = points_batch.points[self.ensure_nonempty].data.keys()
+            points = self.__get_points_in_roi(
+                request_points_roi.shift(random_shift))
+            point_ids = points.data.keys()
             assert point_id in point_ids, (
                 "Requested batch to contain point %s, but got points "
                 "%s"%(point_id, point_ids))
@@ -425,3 +422,13 @@ class RandomLocation(BatchFilter):
         random_shift *= lcm_voxel_size
 
         return random_shift
+
+    def __get_points_in_roi(self, roi):
+
+        points = Points({}, PointsSpec(roi))
+
+        for (point_id, point) in self.points.data.items():
+            if roi.contains(point.location):
+                points.data[point_id] = point
+
+        return points
