@@ -3,6 +3,8 @@ import multiprocessing
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
+from .array import Array, ArrayKey
+from .points import Points, PointsKey
 
 logger = logging.getLogger(__name__)
 
