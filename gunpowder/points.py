@@ -44,6 +44,9 @@ class Point(Freezable):
     def __repr__(self):
         return str(self.location)
 
+    def copy(self):
+        return Point(self.location)
+
 class PointsKey(Freezable):
     '''A key to identify lists of points in requests, batches, and across
     nodes.
