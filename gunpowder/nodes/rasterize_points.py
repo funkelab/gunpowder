@@ -187,8 +187,14 @@ class RasterizePoints(BatchFilter):
         if mask is not None:
 
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
-            # get all component labels in the mask
-            labels = list(np.unique(mask_array.data))
+            # get those component labels in the mask, that contain points
+            labels = []
+            for i, point in points.data.items():
+                v = Coordinate(point.location / voxel_size)
+                v -= data_roi.get_begin()
+                labels.append(mask_array.data[v])
+            # Make list unique
+            labels = list(set(labels))
 
             # zero label should be ignored
             if 0 in labels:
