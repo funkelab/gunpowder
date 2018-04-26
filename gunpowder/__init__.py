@@ -21,6 +21,7 @@ from .array_spec import ArraySpec
 import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
+import gunpowder.zoo
 
 def set_verbose(verbose=True):
     if verbose:
