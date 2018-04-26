@@ -51,7 +51,7 @@ class TestRandomLocationPoints(ProviderTest):
 
         with build(pipeline):
 
-            for i in range(1000):
+            for i in range(5000):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
