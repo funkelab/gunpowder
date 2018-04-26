@@ -82,6 +82,12 @@ class Hdf5Write(BatchFilter):
             batch_shape = batch.arrays[array_key].data.shape
 
             total_roi = self.spec[array_key].roi
+
+            assert total_roi is not None, (
+                "Provided ROI for %s is not set, I can not guess how large the "
+                "HDF5 dataset should be. Make sure that the node that "
+                "introduces %s sets its ROI."%(array_key, array_key))
+
             dims = total_roi.dims()
 
             # extends of spatial dimensions

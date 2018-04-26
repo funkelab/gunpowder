@@ -1,5 +1,8 @@
 from __future__ import absolute_import
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from . import nodes
 from .nodes import *
 
@@ -18,10 +21,7 @@ from .array_spec import ArraySpec
 import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
-
-import logging
-
-# logging.basicConfig(level=logging.INFO)
+import gunpowder.zoo
 
 def set_verbose(verbose=True):
     if verbose:
