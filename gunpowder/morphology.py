@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
+from skimage.morphology import ball
+from scipy.ndimage import zoom
 
 def enlarge_binary_map(
     binary_map,
@@ -71,3 +73,34 @@ def enlarge_binary_map(
         return None
 
     return binary_map
+
+
+def create_ball_kernel(radius, voxel_size):
+    '''	Generates a ball-shaped structuring element.
+
+    Args:
+
+        radius (float):
+
+            The radius of the ball-shaped structuring element in world-units
+
+        voxel_size (tuple, list or numpy array):
+
+            Indicates the physical voxel size of the structuring element.
+
+    Returns:
+
+        The structuring element where elements of the neighborhood are 1 and 0 otherwise. The shape of the returned
+        array depends on radius and voxel_size. For instance voxel_size = [2, 1, 1], radius = 5 produces an array of
+        shape (5, 11, 11)
+    '''
+    voxel_size = np.asarray(voxel_size)
+    assert voxel_size.shape[0] == 3, (
+        "structuring element can only be generated in 3D")
+    radius_voxel = radius/voxel_size
+    new_shape = np.array(radius_voxel)*2+1
+
+    # Create structuring element in world units and then downsample it into voxel units
+    kernel_world_units = ball(radius)
+    kernel_voxel = zoom(kernel_world_units, new_shape.astype(np.float)/kernel_world_units.shape, order=0)
+    return kernel_voxel
