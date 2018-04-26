@@ -1,20 +1,25 @@
 Preparation
 ===========
 
-Download the training samples from the [CREMI Challenge](https://cremi.org/data).
-
-You will also need a `pycaffe` version that has the layers in the `net.prototxt`
-implemented. The easiest way to get one is to use the `funkey/gunpowder` docker
-image, which already contains `pycaffe` and `gunpowder`.
+Download the padded training samples from the [CREMI Challenge](https://cremi.org/data).
 
 Run
 ===
 
-To use the docker image, run the example via
+Create a network to train with
 
 ```
-./train.sh
+python mknet.py
 ```
 
-This will download the docker image, instantiate it via `nvidia-docker`, and
-run `train.py`.
+Train and predict with
+
+```
+python train.py
+```
+
+and
+
+```
+python predict.py
+```
