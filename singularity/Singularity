@@ -15,10 +15,8 @@ This container contains gunpowder with TensorFlow 1.7 included.
 
 %files
 
-    # assumes that gunpowder package directory and requirements.txt are in build
-    # context (the complementary Makefile ensures that)
-    gunpowder /src/gunpowder/gunpowder
-    requirements.txt /src/gunpowder/requirements.txt
+    ../gunpowder /src/gunpowder/gunpowder
+    ../requirements.txt /src/gunpowder/requirements.txt
 
 %post
 
