@@ -70,7 +70,7 @@ class RasterizationSettings(Freezable):
             bg_value=0):
 
         if inner_radius is not None:
-            assert radius < inner_radius, (
+            assert radius > inner_radius, (
                 "trying to create a sphere in which the inner radius is larger "
                 "or equal than the ball radius")
         self.radius = radius
