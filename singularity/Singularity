@@ -16,8 +16,8 @@ This container contains gunpowder with TensorFlow 1.7 included.
 
 %files
 
-    /requirements.txt
-    /gunpowder
+    requirements.txt /src/gunpowder/requirements.txt
+    gunpowder /src/gunpowder/gunpowder
 
 %post
 
