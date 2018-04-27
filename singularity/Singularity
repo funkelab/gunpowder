@@ -11,6 +11,7 @@ This container contains gunpowder with TensorFlow 1.7 included.
 
 %setup
 
+    env
     mkdir -p ${SINGULARITY_ROOTFS}/src/gunpowder
 
 %files
