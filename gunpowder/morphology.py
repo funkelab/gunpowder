@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt
 
+
 def enlarge_binary_map(
     binary_map,
     radius,
@@ -71,3 +72,36 @@ def enlarge_binary_map(
         return None
 
     return binary_map
+
+
+def create_ball_kernel(radius, voxel_size):
+    '''	Generates a ball-shaped structuring element.
+
+    Args:
+
+        radius (float):
+
+            The radius of the ball-shaped structuring element in world-units
+
+        voxel_size (tuple, list or numpy array):
+
+            Indicates the physical voxel size of the structuring element.
+
+    Returns:
+
+        The structuring element where elements of the neighborhood are 1 and 0 otherwise. The shape of the returned
+        array depends on radius and voxel_size. For instance voxel_size = [2, 1, 1], radius = 5 produces an array of
+        shape (7, 11, 11)
+    '''
+    voxel_size = np.asarray(voxel_size)
+    assert voxel_size.shape[0] <= 3, (
+        "structuring element can only be generated in 2D or 3D")
+
+    # Calculate shape for new kernel, make it sufficiently large (--> ceil)
+    radius_voxel = np.ceil(float(radius) / voxel_size).astype(np.int)
+    kernel_shape = np.array(radius_voxel) * 2 + 1
+
+    kernel = np.zeros(kernel_shape, dtype=np.uint8)
+    middle_point = kernel_shape / 2
+    kernel[tuple(middle_point)] = 1
+    return enlarge_binary_map(kernel, radius, voxel_size)
