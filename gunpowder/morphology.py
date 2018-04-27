@@ -94,8 +94,8 @@ def create_ball_kernel(radius, voxel_size):
         shape (7, 11, 11)
     '''
     voxel_size = np.asarray(voxel_size)
-    assert voxel_size.shape[0] == 3, (
-        "structuring element can only be generated in 3D")
+    assert voxel_size.shape[0] <= 3, (
+        "structuring element can only be generated in 2D or 3D")
 
     # Calculate shape for new kernel, make it sufficiently large (--> ceil)
     radius_voxel = np.ceil(float(radius) / voxel_size).astype(np.int)
