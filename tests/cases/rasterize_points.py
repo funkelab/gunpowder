@@ -169,7 +169,7 @@ class TestRasterizePoints(ProviderTest):
             self.assertEqual(rasterized[2, 20, 20], 0)
             self.assertEqual(rasterized[4, 49, 49], 0)
 
-        # same with unisotropic radius
+        # same with anisotropic radius
 
         pipeline = (
             PointTestSource3D() +
@@ -204,7 +204,7 @@ class TestRasterizePoints(ProviderTest):
             self.assertEqual(rasterized[1, 0, 0], 1)
             self.assertEqual(rasterized[2, 0, 0], 0)
 
-        # same with unisotropic radius and inner radius
+        # same with anisotropic radius and inner radius
 
         pipeline = (
             PointTestSource3D() +
