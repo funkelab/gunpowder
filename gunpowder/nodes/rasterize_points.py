@@ -39,13 +39,14 @@ class RasterizationSettings(Freezable):
             rasterized is used to intersect the rasterization to keep it inside
             the specific object.
 
-        inner_radius (``float`` or ``tuple`` of ``float``, optional):
+        inner_radius_fraction (``float``, optional):
 
             Only for mode ``ball``.
 
             If set, instead of a ball, a hollow sphere is rastered. The radius
             of the whole sphere corresponds to the radius specified with
-            ``radius``. This parameter sets the radius of the hollow area.
+            ``radius``. This parameter sets the radius of the hollow area, as a
+            fraction of ``radius``.
 
         fg_value (``int``, optional):
 
@@ -65,23 +66,22 @@ class RasterizationSettings(Freezable):
             radius,
             mode='ball',
             mask=None,
-            inner_radius=None,
+            inner_radius_fraction=None,
             fg_value=1,
             bg_value=0):
 
         radius = np.array([radius]).flatten()
 
-        if inner_radius is not None:
+        if inner_radius_fraction is not None:
+            assert (
+                inner_radius_fraction > 0.0 and
+                inner_radius_fraction < 1.0), (
+                    "Inner radius fraction has to be between (excluding) 0 and 1")
 
-            inner_radius = np.array([inner_radius]).flatten()
-
-            assert (radius > inner_radius).all(), (
-                "trying to create a sphere in which the inner radius is larger "
-                "or equal than the ball radius")
         self.radius = radius
         self.mode = mode
         self.mask = mask
-        self.inner_radius = inner_radius
+        self.inner_radius_fraction = inner_radius_fraction
         self.fg_value = fg_value
         self.bg_value = bg_value
         self.freeze()
@@ -285,7 +285,7 @@ class RasterizePoints(BatchFilter):
         # inner radius set
         use_fast_rasterization = (
             settings.mode == 'ball' and
-            settings.inner_radius is None
+            settings.inner_radius_fraction is None
         )
 
         if use_fast_rasterization:
@@ -341,7 +341,7 @@ class RasterizePoints(BatchFilter):
                     rasterized_points,
                     settings.radius,
                     voxel_size,
-                    settings.inner_radius,
+                    1.0 - settings.inner_radius_fraction,
                     in_place=True)
 
             else:
