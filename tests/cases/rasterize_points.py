@@ -141,7 +141,7 @@ class TestRasterizePoints(ProviderTest):
                 ArraySpec(voxel_size=(40, 4, 4)),
                 RasterizationSettings(
                     radius=40,
-                    inner_radius=10,
+                    inner_radius_fraction=0.25,
                     fg_value=1,
                     bg_value=0))
         )
@@ -160,10 +160,84 @@ class TestRasterizePoints(ProviderTest):
 
             # in the middle of the ball, there should be 0 (since inner radius is set)
             self.assertEqual(rasterized[0, 0, 0], 0)
-            # check larger radius: rasterized point (0, 0, 0) should extend in x,y by 10; z, by 1
+            # check larger radius: rasterized point (0, 0, 0) should extend in
+            # x,y by 10; z, by 1
             self.assertEqual(rasterized[0, 10, 0], 1)
             self.assertEqual(rasterized[0, 0, 10], 1)
             self.assertEqual(rasterized[1, 0, 0], 1)
 
             self.assertEqual(rasterized[2, 20, 20], 0)
             self.assertEqual(rasterized[4, 49, 49], 0)
+
+        # same with unisotropic radius
+
+        pipeline = (
+            PointTestSource3D() +
+            RasterizePoints(
+                PointsKeys.TEST_POINTS,
+                ArrayKeys.RASTERIZED,
+                ArraySpec(voxel_size=(40, 4, 4)),
+                RasterizationSettings(
+                    radius=(40, 40, 20),
+                    fg_value=1,
+                    bg_value=0))
+        )
+
+        with build(pipeline):
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (120, 80, 80))
+
+            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
+
+            # check larger radius: rasterized point (0, 0, 0) should extend in
+            # x,y by 10; z, by 1
+            self.assertEqual(rasterized[0, 10, 0], 1)
+            self.assertEqual(rasterized[0, 11, 0], 0)
+            self.assertEqual(rasterized[0, 0, 5], 1)
+            self.assertEqual(rasterized[0, 0, 6], 0)
+            self.assertEqual(rasterized[1, 0, 0], 1)
+            self.assertEqual(rasterized[2, 0, 0], 0)
+
+        # same with unisotropic radius and inner radius
+
+        pipeline = (
+            PointTestSource3D() +
+            RasterizePoints(
+                PointsKeys.TEST_POINTS,
+                ArrayKeys.RASTERIZED,
+                ArraySpec(voxel_size=(40, 4, 4)),
+                RasterizationSettings(
+                    radius=(40, 40, 20),
+                    inner_radius_fraction=0.75,
+                    fg_value=1,
+                    bg_value=0))
+        )
+
+        with build(pipeline):
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (120, 80, 80))
+
+            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
+
+            # in the middle of the ball, there should be 0 (since inner radius is set)
+            self.assertEqual(rasterized[0, 0, 0], 0)
+            # check larger radius: rasterized point (0, 0, 0) should extend in
+            # x,y by 10; z, by 1
+            self.assertEqual(rasterized[0, 10, 0], 1)
+            self.assertEqual(rasterized[0, 11, 0], 0)
+            self.assertEqual(rasterized[0, 0, 5], 1)
+            self.assertEqual(rasterized[0, 0, 6], 0)
+            self.assertEqual(rasterized[1, 0, 0], 1)
+            self.assertEqual(rasterized[2, 0, 0], 0)
