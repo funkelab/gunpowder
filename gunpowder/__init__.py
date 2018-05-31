@@ -1,8 +1,5 @@
 from __future__ import absolute_import
 
-import logging
-logging.basicConfig(level=logging.INFO)
-
 from . import nodes
 from .nodes import *
 
@@ -22,9 +19,3 @@ import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
 import gunpowder.zoo
-
-def set_verbose(verbose=True):
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
