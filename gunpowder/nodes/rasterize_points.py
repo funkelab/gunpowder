@@ -290,11 +290,17 @@ class RasterizePoints(BatchFilter):
 
         if use_fast_rasterization:
 
+            dims = len(rasterized_points.shape)
+
             # get structuring element for mode ball
             ball_kernel = create_ball_kernel(settings.radius, voxel_size)
             radius_voxel = Coordinate(np.array(ball_kernel.shape)/2)
-            data_roi_base = Roi(offset=Coordinate((0, 0, 0)), shape=Coordinate(rasterized_points.shape))
-            kernel_roi_base = Roi(offset=Coordinate((0, 0, 0)), shape=Coordinate(ball_kernel.shape))
+            data_roi_base = Roi(
+                    offset=Coordinate((0,)*dims),
+                    shape=Coordinate(rasterized_points.shape))
+            kernel_roi_base = Roi(
+                    offset=Coordinate((0,)*dims),
+                    shape=Coordinate(ball_kernel.shape))
 
         # Rasterize volume either with single voxel or with defined struct elememt
         for point in points.data.values():
