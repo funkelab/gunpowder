@@ -141,7 +141,7 @@ class TestRasterizePoints(ProviderTest):
                 ArraySpec(voxel_size=(40, 4, 4)),
                 RasterizationSettings(
                     radius=40,
-                    inner_radius=10,
+                    inner_radius_fraction=0.25,
                     fg_value=1,
                     bg_value=0))
         )
@@ -160,7 +160,8 @@ class TestRasterizePoints(ProviderTest):
 
             # in the middle of the ball, there should be 0 (since inner radius is set)
             self.assertEqual(rasterized[0, 0, 0], 0)
-            # check larger radius: rasterized point (0, 0, 0) should extend in x,y by 10; z, by 1
+            # check larger radius: rasterized point (0, 0, 0) should extend in
+            # x,y by 10; z, by 1
             self.assertEqual(rasterized[0, 10, 0], 1)
             self.assertEqual(rasterized[0, 0, 10], 1)
             self.assertEqual(rasterized[1, 0, 0], 1)
