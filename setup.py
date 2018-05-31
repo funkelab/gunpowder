@@ -38,7 +38,8 @@ setup(
             'gunpowder.tensorflow.nodes',
             'gunpowder.contrib',
             'gunpowder.contrib.nodes',
-            'gunpowder.ext'
+            'gunpowder.ext',
+            'gunpowder.zoo'
         ],
         install_requires=[
             "numpy",
