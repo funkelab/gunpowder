@@ -114,7 +114,7 @@ class Roi(Freezable):
 
         return self.__offset + self.__shape/2
 
-    def get_bounding_box(self):
+    def to_slices(self):
         '''Get a ``tuple`` of ``slice`` that represent this ROI and can be used
         to index arrays.'''
 
@@ -131,6 +131,9 @@ class Roi(Freezable):
                     else None)
                 for d in range(self.dims())
         )
+
+    def get_bounding_box(self):
+        return self.to_slices()
 
     def dims(self):
         '''The the number of dimensions of this ROI.'''
