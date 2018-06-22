@@ -19,7 +19,7 @@ class LocalServer(Freezable):
         session = tf.Session(target=LocalServer.get_target())
     '''
 
-    __target = multiprocessing.Array(ctypes.c_char, ' '*256)
+    __target = multiprocessing.Array(ctypes.c_char, b' '*256)
     __server = None
 
     @staticmethod
