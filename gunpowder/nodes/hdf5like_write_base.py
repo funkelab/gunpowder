@@ -59,8 +59,16 @@ class Hdf5LikeWrite(BatchFilter):
         else:
             self.dataset_dtypes = dataset_dtypes
 
+        self.dataset_offsets = {}
+
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
+
+    def _get_voxel_size(self, dataset):
+        return Coordinate(dataset.attrs['resolution'])
+
+    def _get_offset(self, dataset):
+        return Coordinate(dataset.attrs['offset'])
 
     def _set_voxel_size(self, dataset, voxel_size):
         dataset.attrs['resolution'] = voxel_size
@@ -71,7 +79,7 @@ class Hdf5LikeWrite(BatchFilter):
     def init_datasets(self, batch):
 
         filename = os.path.join(self.output_dir, self.output_filename)
-        logger.info("Creating container %s", filename)
+        logger.info("Initializing container %s", filename)
 
         try:
             os.makedirs(self.output_dir)
@@ -80,57 +88,70 @@ class Hdf5LikeWrite(BatchFilter):
 
         for (array_key, dataset_name) in self.dataset_names.items():
 
-            logger.info("Creating dataset for %s", array_key)
+            logger.info("Initializing dataset for %s", array_key)
 
             assert array_key in self.spec, (
                 "Asked to store %s, but is not provided upstream."%array_key)
             assert array_key in batch.arrays, (
                 "Asked to store %s, but is not part of batch."%array_key)
 
-            batch_shape = batch.arrays[array_key].data.shape
-
-            total_roi = self.spec[array_key].roi
-
-            assert total_roi is not None, (
-                "Provided ROI for %s is not set, I can not guess how large the "
-                "HDF5 dataset should be. Make sure that the node that "
-                "introduces %s sets its ROI."%(array_key, array_key))
-
-            dims = total_roi.dims()
-
-            # extends of spatial dimensions
-            data_shape = total_roi.get_shape()//self.spec[array_key].voxel_size
-            logger.debug("Shape in voxels: %s", data_shape)
-            # add channel dimensions (if present)
-            data_shape = batch_shape[:-dims] + data_shape
-            logger.debug("Shape with channel dimensions: %s", data_shape)
-
-            if array_key in self.dataset_dtypes:
-                dtype = self.dataset_dtypes[array_key]
-            else:
-                dtype = batch.arrays[array_key].data.dtype
+            array = batch.arrays[array_key]
+            dims = array.spec.roi.dims()
+            batch_shape = array.data.shape
 
             with self._open_file(filename) as data_file:
 
-                logger.debug(
-                    "create_dataset: %s, %s, %s, %s, offset=%s, resolution=%s",
-                    dataset_name, data_shape, self.compression_type, dtype,
-                    total_roi.get_offset(), self.spec[array_key].voxel_size)
+                # if a dataset already exists, read its meta-information (if
+                # present)
+                if dataset_name in data_file:
 
-                dataset = data_file.create_dataset(
-                        name=dataset_name,
-                        shape=data_shape,
-                        compression=self.compression_type,
-                        dtype=dtype)
+                    offset = self._get_offset(data_file[dataset_name]) or Coordinate((0,)*dims)
 
-                self._set_offset(dataset, total_roi.get_offset())
-                self._set_voxel_size(dataset, self.spec[array_key].voxel_size)
+                else:
+
+                    provided_roi = self.spec[array_key].roi
+
+                    if provided_roi is None:
+                        raise RuntimeError(
+                            "Dataset %s does not exist in %s, and no ROI is "
+                            "provided for %s. I don't know how to initialize "
+                            "the dataset."%(dataset_name, filename, array_key))
+
+                    offset = provided_roi.get_offset()
+                    voxel_size = array.spec.voxel_size
+                    data_shape = provided_roi.get_shape()//voxel_size
+
+                    logger.debug("Shape in voxels: %s", data_shape)
+                    # add channel dimensions (if present)
+                    data_shape = batch_shape[:-dims] + data_shape
+                    logger.debug("Shape with channel dimensions: %s", data_shape)
+
+                    if array_key in self.dataset_dtypes:
+                        dtype = self.dataset_dtypes[array_key]
+                    else:
+                        dtype = batch.arrays[array_key].data.dtype
+
+                    logger.debug(
+                        "create_dataset: %s, %s, %s, %s, offset=%s, resolution=%s",
+                        dataset_name, data_shape, self.compression_type, dtype,
+                        offset, voxel_size)
+
+                    dataset = data_file.create_dataset(
+                            name=dataset_name,
+                            shape=data_shape,
+                            compression=self.compression_type,
+                            dtype=dtype)
+
+                    self._set_offset(dataset, offset)
+                    self._set_voxel_size(dataset, voxel_size)
+
+                self.dataset_offsets[array_key] = offset
 
     def process(self, batch, request):
 
         filename = os.path.join(self.output_dir, self.output_filename)
 
-        if not os.path.exists(filename):
+        if not self.dataset_offsets:
             self.init_datasets(batch)
 
         with self._open_file(filename) as data_file:
@@ -140,9 +161,8 @@ class Hdf5LikeWrite(BatchFilter):
                 dataset = data_file[dataset_name]
                 roi = batch.arrays[array_key].spec.roi
                 data = batch.arrays[array_key].data
-                total_roi = self.spec[array_key].roi
 
-                data_roi = (roi - total_roi.get_offset())//self.spec[array_key].voxel_size
+                data_roi = (roi - self.dataset_offsets[array_key])//self.spec[array_key].voxel_size
                 dims = data_roi.dims()
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
                 voxel_slices = data_roi.get_bounding_box()
