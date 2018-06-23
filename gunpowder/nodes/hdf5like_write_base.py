@@ -1,8 +1,8 @@
-import logging
-import os
-
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+import logging
+import os
 
 logger = logging.getLogger(__name__)
 
