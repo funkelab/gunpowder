@@ -1,7 +1,8 @@
 from .provider_test import ProviderTest
 from gunpowder import *
+from gunpowder.ext import z5py, NoSuchModule
+from unittest import skipIf
 import numpy as np
-from gunpowder.ext import z5py
 
 class N5WriteTestSource(BatchProvider):
 
