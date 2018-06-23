@@ -19,6 +19,7 @@ from .intensity_scale_shift import IntensityScaleShift
 from .klb_source import KlbSource
 from .merge_provider import MergeProvider
 from .n5_source import N5Source
+from .n5_write import N5Write
 from .normalize import Normalize
 from .pad import Pad
 from .precache import PreCache
