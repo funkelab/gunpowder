@@ -62,13 +62,16 @@ class Hdf5LikeWrite(BatchFilter):
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
 
-    def __set_voxel_size(self, dataset, voxel_size):
+    def _set_voxel_size(self, dataset, voxel_size):
         dataset.attrs['resolution'] = voxel_size
 
-    def __set_offset(self, dataset, offset):
+    def _set_offset(self, dataset, offset):
         dataset.attrs['offset'] = offset
 
     def init_datasets(self, batch):
+
+        filename = os.path.join(self.output_dir, self.output_filename)
+        logger.info("Creating container %s", filename)
 
         try:
             os.makedirs(self.output_dir)
@@ -77,7 +80,7 @@ class Hdf5LikeWrite(BatchFilter):
 
         for (array_key, dataset_name) in self.dataset_names.items():
 
-            logger.debug("Create dataset for %s", array_key)
+            logger.info("Creating dataset for %s", array_key)
 
             assert array_key in self.spec, (
                 "Asked to store %s, but is not provided upstream."%array_key)
@@ -107,16 +110,21 @@ class Hdf5LikeWrite(BatchFilter):
             else:
                 dtype = batch.arrays[array_key].data.dtype
 
-            filename = os.path.join(self.output_dir, self.output_filename)
             with self._open_file(filename) as data_file:
+
+                logger.debug(
+                    "create_dataset: %s, %s, %s, %s, offset=%s, resolution=%s",
+                    dataset_name, data_shape, self.compression_type, dtype,
+                    total_roi.get_offset(), self.spec[array_key].voxel_size)
+
                 dataset = data_file.create_dataset(
                         name=dataset_name,
                         shape=data_shape,
                         compression=self.compression_type,
                         dtype=dtype)
 
-                self.__set_offset(dataset, total_roi.get_offset())
-                self.__set_voxel_size(dataset, self.spec[array_key].voxel_size)
+                self._set_offset(dataset, total_roi.get_offset())
+                self._set_voxel_size(dataset, self.spec[array_key].voxel_size)
 
     def process(self, batch, request):
 

@@ -40,12 +40,12 @@ class N5Write(Hdf5LikeWrite):
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
         '''
-    def __set_voxel_size(self, dataset, voxel_size):
+    def _set_voxel_size(self, dataset, voxel_size):
 
         logger.debug('Voxel size being reversed to account for N5 using column-major ordering')
         dataset.attrs['resolution'] = voxel_size[::-1]
 
-    def __set_offset(self, dataset, offset):
+    def _set_offset(self, dataset, offset):
 
         logger.debug('Offset being reversed to account for N5 using column-major ordering')
         dataset.attrs['offset'] = offset[::-1]
