@@ -62,6 +62,12 @@ class Hdf5LikeWrite(BatchFilter):
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
 
+    def __set_voxel_size(self, dataset, voxel_size):
+        dataset.attrs['resolution'] = voxel_size
+
+    def __set_offset(self, dataset, offset):
+        dataset.attrs['offset'] = offset
+
     def init_datasets(self, batch):
 
         try:
@@ -109,8 +115,8 @@ class Hdf5LikeWrite(BatchFilter):
                         compression=self.compression_type,
                         dtype=dtype)
 
-                dataset.attrs['offset'] = total_roi.get_offset()
-                dataset.attrs['resolution'] = self.spec[array_key].voxel_size
+                self.__set_offset(dataset, total_roi.get_offset())
+                self.__set_voxel_size(dataset, self.spec[array_key].voxel_size)
 
     def process(self, batch, request):
 
