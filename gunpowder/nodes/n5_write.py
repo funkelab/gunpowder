@@ -39,7 +39,24 @@ class N5Write(Hdf5LikeWrite):
             A dictionary from array keys to datatype (eg. ``np.int8``). If
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
-        '''
+    '''
+
+    def _get_voxel_size(self, dataset):
+
+        logger.debug('Voxel size being reversed to account for N5 using column-major ordering')
+        try:
+            return Coordinate(dataset.attrs['resolution'][::-1])
+        except Exception:
+            return None
+
+    def _get_offset(self, dataset):
+
+        logger.debug('Offset being reversed to account for N5 using column-major ordering')
+        try:
+            return Coordinate(dataset.attrs['offset'][::-1])
+        except Exception:
+            return None
+
     def _set_voxel_size(self, dataset, voxel_size):
 
         logger.debug('Voxel size being reversed to account for N5 using column-major ordering')
