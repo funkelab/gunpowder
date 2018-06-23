@@ -1,12 +1,15 @@
 from .hdf5like_write_base import Hdf5LikeWrite
-from gunpowder.ext import h5py
+from gunpowder.ext import z5py
 import os
+import logging
 
-class Hdf5Write(Hdf5LikeWrite):
-    '''Assemble arrays of passing batches in one HDF5 file. This is useful to
-    store chunks produced by :class:`Scan` on disk without keeping the larger
-    array in memory. The ROIs of the passing arrays will be used to determine
-    the position where to store the data in the dataset.
+logger = logging.getLogger(__name__)
+
+class N5Write(Hdf5LikeWrite):
+    '''Assemble arrays of passing batches in one N5 container. This is useful
+    to store chunks produced by :class:`Scan` on disk without keeping the
+    larger array in memory. The ROIs of the passing arrays will be used to
+    determine the position where to store the data in the dataset.
 
     Args:
 
@@ -17,7 +20,7 @@ class Hdf5Write(Hdf5LikeWrite):
 
         output_dir (``string``):
 
-            The directory to save the HDF5 file. Will be created, if it does
+            The directory to save the N5 container. Will be created, if it does
             not exist.
 
         output_filename (``string``):
@@ -37,9 +40,16 @@ class Hdf5Write(Hdf5LikeWrite):
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
         '''
+    def _set_voxel_size(self, dataset, voxel_size):
+
+        logger.debug('Voxel size being reversed to account for N5 using column-major ordering')
+        dataset.attrs['resolution'] = voxel_size[::-1]
+
+    def _set_offset(self, dataset, offset):
+
+        logger.debug('Offset being reversed to account for N5 using column-major ordering')
+        dataset.attrs['offset'] = offset[::-1]
 
     def _open_file(self, filename):
-        if os.path.exists(filename):
-            return h5py.File(filename, 'r+')
-        else:
-            return h5py.File(filename, 'w')
+        return z5py.File(filename, use_zarr_format=False)
+

@@ -11,6 +11,7 @@ from .elastic_augment_points import TestElasticAugment
 from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
 from .merge_provider import TestMergeProvider
+from .n5_write import TestN5Write
 from .normalize import TestNormalize
 from .pad import TestPad
 from .points_keys import TestPointsKeys
