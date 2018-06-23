@@ -1,9 +1,6 @@
 from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.ext import h5py
-import logging
 import os
-
-logger = logging.getLogger(__name__)
 
 class Hdf5Write(Hdf5LikeWrite):
     '''Assemble arrays of passing batches in one HDF5 file. This is useful to
