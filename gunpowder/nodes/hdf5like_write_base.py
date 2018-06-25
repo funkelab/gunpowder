@@ -167,6 +167,8 @@ class Hdf5LikeWrite(BatchFilter):
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
                 voxel_slices = data_roi.get_bounding_box()
 
+                logger.debug(
+                    "writing %s to voxel coordinates %s"%(array_key, data_roi))
                 dataset[channel_slices + voxel_slices] = batch.arrays[array_key].data
 
 
