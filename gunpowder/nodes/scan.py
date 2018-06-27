@@ -95,7 +95,7 @@ class Scan(BatchFilter):
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
 
-                logger.info("processed chunk %d/%d", i, num_chunks)
+                logger.info("processed chunk %d/%d", i + 1, num_chunks)
 
         else:
 
@@ -107,7 +107,7 @@ class Scan(BatchFilter):
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
 
-                logger.info("processed chunk %d/%d", i, num_chunks)
+                logger.info("processed chunk %d/%d", i + 1, num_chunks)
 
         batch = self.batch
         self.batch = None
