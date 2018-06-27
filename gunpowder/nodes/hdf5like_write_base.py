@@ -145,6 +145,12 @@ class Hdf5LikeWrite(BatchFilter):
                     self._set_offset(dataset, offset)
                     self._set_voxel_size(dataset, voxel_size)
 
+                logger.debug(
+                    "%s (%s in %s) has offset %s",
+                    array_key,
+                    dataset_name,
+                    filename,
+                    offset)
                 self.dataset_offsets[array_key] = offset
 
     def process(self, batch, request):

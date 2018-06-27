@@ -1,7 +1,8 @@
 from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.ext import z5py
-import os
 import logging
+import os
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class N5Write(Hdf5LikeWrite):
         try:
             return Coordinate(dataset.attrs['resolution'][::-1])
         except Exception:
+            logger.error(traceback.format_exc())
             return None
 
     def _get_offset(self, dataset):
@@ -55,6 +57,7 @@ class N5Write(Hdf5LikeWrite):
         try:
             return Coordinate(dataset.attrs['offset'][::-1])
         except Exception:
+            logger.error(traceback.format_exc())
             return None
 
     def _set_voxel_size(self, dataset, voxel_size):
