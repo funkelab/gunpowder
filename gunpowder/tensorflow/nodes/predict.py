@@ -58,7 +58,7 @@ class Predict(GenericPredict):
             inputs,
             outputs,
             array_specs,
-            spawn_subprocess=False)
+            spawn_subprocess=True)
         self.checkpoint = checkpoint
         self.meta_graph = graph
         self.session = None
