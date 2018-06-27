@@ -34,14 +34,14 @@ class N5Source(Hdf5LikeSource):
             is useful to set a missing ``voxel_size``, for example. Only fields
             that are not ``None`` in the given :class:`ArraySpec` will be used.
     '''
-    def __get_voxel_size(self, dataset):
+    def _get_voxel_size(self, dataset):
         try:
             logger.debug('Voxel size being reversed to account for N5 using column-major ordering')
             return Coordinate(dataset.attrs['resolution'][::-1])
         except Exception:  # todo: make specific when z5py supports it
             return None
 
-    def __get_offset(self, dataset):
+    def _get_offset(self, dataset):
         try:
             logger.debug('Offset being reversed to account for N5 using column-major ordering')
             return Coordinate(dataset.attrs['offset'][::-1])

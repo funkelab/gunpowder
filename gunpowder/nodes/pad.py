@@ -64,7 +64,7 @@ class Pad(BatchFilter):
         if self.key not in request:
             return
 
-        roi = request[self.key].roi
+        roi = request[self.key].roi.copy()
 
         # change request to fit into upstream spec
         request[self.key].roi = roi.intersect(upstream_spec[self.key].roi)
@@ -72,8 +72,8 @@ class Pad(BatchFilter):
         if request[self.key].roi.empty():
 
             logger.warning(
-                "Requested %s ROI lies entirely outside of upstream "
-                "ROI.", self.key)
+                "Requested %s ROI %s lies entirely outside of upstream "
+                "ROI %s.", self.key, roi, upstream_spec[self.key].roi)
 
             # ensure a valid request by asking for empty ROI
             request[self.key].roi = Roi(

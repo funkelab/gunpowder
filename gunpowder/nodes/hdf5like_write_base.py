@@ -1,8 +1,8 @@
-import logging
-import os
-
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +145,12 @@ class Hdf5LikeWrite(BatchFilter):
                     self._set_offset(dataset, offset)
                     self._set_voxel_size(dataset, voxel_size)
 
+                logger.debug(
+                    "%s (%s in %s) has offset %s",
+                    array_key,
+                    dataset_name,
+                    filename,
+                    offset)
                 self.dataset_offsets[array_key] = offset
 
     def process(self, batch, request):
@@ -167,6 +173,8 @@ class Hdf5LikeWrite(BatchFilter):
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
                 voxel_slices = data_roi.get_bounding_box()
 
+                logger.debug(
+                    "writing %s to voxel coordinates %s"%(array_key, data_roi))
                 dataset[channel_slices + voxel_slices] = batch.arrays[array_key].data
 
 
