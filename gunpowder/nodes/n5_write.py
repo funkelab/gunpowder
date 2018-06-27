@@ -1,4 +1,5 @@
 from .hdf5like_write_base import Hdf5LikeWrite
+from gunpowder.coordinate import Coordinate
 from gunpowder.ext import z5py
 import logging
 import os
