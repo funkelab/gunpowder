@@ -55,8 +55,8 @@ class CsvPointsSource(BatchProvider):
             self.provides(self.points, self.points_spec)
             return
 
-        min_bb = Coordinate(np.floor(np.amin(self.data, 0)))
-        max_bb = Coordinate(np.ceil(np.amax(self.data, 0)))
+        min_bb = Coordinate(np.floor(np.amin(self.data[:,:self.ndims], 0)))
+        max_bb = Coordinate(np.ceil(np.amax(self.data[:,:self.ndims], 0)) + 1)
 
         roi = Roi(min_bb, max_bb - min_bb)
 
