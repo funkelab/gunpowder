@@ -48,8 +48,7 @@ class CsvPointsSource(BatchProvider):
 
     def setup(self):
 
-        self.data = self.read_points(self.filename)
-        self.ndims = self.data.shape[1]
+        self._read_points()
 
         if self.points_spec is not None:
 
@@ -80,14 +79,7 @@ class CsvPointsSource(BatchProvider):
             point_filter = np.logical_and(point_filter, self.data[:,d] >= min_bb[d])
             point_filter = np.logical_and(point_filter, self.data[:,d] < max_bb[d])
 
-        filtered = self.data[point_filter]
-        ids = np.arange(len(self.data))[point_filter]
-
-        points_data = {
-
-            i: Point(p)
-            for i, p in zip(ids, filtered)
-        }
+        points_data = self._get_points(point_filter)
         points_spec = PointsSpec(roi=request[self.points].roi.copy())
 
         batch = Batch()
@@ -98,15 +90,38 @@ class CsvPointsSource(BatchProvider):
 
         return batch
 
-    def read_points(self, filename):
+    def _get_points(self, point_filter):
+
+        filtered = self.data[point_filter]
+        ids = np.arange(len(self.data))[point_filter]
+
+        return {
+            i: Point(p)
+            for i, p in zip(ids, filtered)
+        }
+
+    def _read_points(self):
+        self.data, self.ndims = self._parse_csv()
+
+    def _parse_csv(self, ndims=0):
+        '''Read one point per line. If ``ndims`` is 0, all values in one line
+        are considered as the location of the point. If positive, only the
+        first ``ndims`` are used. If negative, all but the last ``-ndims`` are
+        used.
+        '''
 
         points = np.array(
             [
                 [ float(t.strip(',')) for t in line.split() ]
-                for line in open(filename, 'r')
+                for line in open(self.filename, 'r')
             ])
 
-        if self.scale is not None:
-            points *= self.scale
+        if ndims == 0:
+            ndims = points.shape[1]
+        elif ndims < 0:
+            ndims = points.shape[1] + ndims
 
-        return points
+        if self.scale is not None:
+            points[:,:ndims] *= self.scale
+
+        return points, ndims
