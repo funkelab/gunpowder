@@ -114,7 +114,7 @@ class CsvPointsSource(BatchProvider):
             [
                 [ float(t.strip(',')) for t in line.split() ]
                 for line in open(self.filename, 'r')
-            ])
+            ], dtype=np.float32)
 
         if ndims == 0:
             ndims = points.shape[1]
