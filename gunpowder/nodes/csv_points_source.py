@@ -48,16 +48,15 @@ class CsvPointsSource(BatchProvider):
 
     def setup(self):
 
-        self.data = self.read_points(self.filename)
-        self.ndims = self.data.shape[1]
+        self._read_points()
 
         if self.points_spec is not None:
 
             self.provides(self.points, self.points_spec)
             return
 
-        min_bb = Coordinate(np.floor(np.amin(self.data, 0)))
-        max_bb = Coordinate(np.ceil(np.amax(self.data, 0)))
+        min_bb = Coordinate(np.floor(np.amin(self.data[:,:self.ndims], 0)))
+        max_bb = Coordinate(np.ceil(np.amax(self.data[:,:self.ndims], 0)) + 1)
 
         roi = Roi(min_bb, max_bb - min_bb)
 
@@ -80,14 +79,7 @@ class CsvPointsSource(BatchProvider):
             point_filter = np.logical_and(point_filter, self.data[:,d] >= min_bb[d])
             point_filter = np.logical_and(point_filter, self.data[:,d] < max_bb[d])
 
-        filtered = self.data[point_filter]
-        ids = np.arange(len(self.data))[point_filter]
-
-        points_data = {
-
-            i: Point(p)
-            for i, p in zip(ids, filtered)
-        }
+        points_data = self._get_points(point_filter)
         points_spec = PointsSpec(roi=request[self.points].roi.copy())
 
         batch = Batch()
@@ -98,15 +90,38 @@ class CsvPointsSource(BatchProvider):
 
         return batch
 
-    def read_points(self, filename):
+    def _get_points(self, point_filter):
+
+        filtered = self.data[point_filter]
+        ids = np.arange(len(self.data))[point_filter]
+
+        return {
+            i: Point(p)
+            for i, p in zip(ids, filtered)
+        }
+
+    def _read_points(self):
+        self.data, self.ndims = self._parse_csv()
+
+    def _parse_csv(self, ndims=0):
+        '''Read one point per line. If ``ndims`` is 0, all values in one line
+        are considered as the location of the point. If positive, only the
+        first ``ndims`` are used. If negative, all but the last ``-ndims`` are
+        used.
+        '''
 
         points = np.array(
             [
                 [ float(t.strip(',')) for t in line.split() ]
-                for line in open(filename, 'r')
-            ])
+                for line in open(self.filename, 'r')
+            ], dtype=np.float32)
+
+        if ndims == 0:
+            ndims = points.shape[1]
+        elif ndims < 0:
+            ndims = points.shape[1] + ndims
 
         if self.scale is not None:
-            points *= self.scale
+            points[:,:ndims] *= self.scale
 
-        return points
+        return points, ndims
