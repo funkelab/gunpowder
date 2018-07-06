@@ -70,7 +70,7 @@ class RasterizationSettings(Freezable):
             fg_value=1,
             bg_value=0):
 
-        radius = np.array([radius]).flatten().astype(np.float32)
+        radius = np.array([radius]).flatten().astype(np.float64)
 
         if inner_radius_fraction is not None:
             assert (
