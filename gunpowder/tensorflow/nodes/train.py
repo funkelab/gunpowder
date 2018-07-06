@@ -94,6 +94,10 @@ class Train(GenericTrain):
         log_dir (``string``, optional):
 
             Directory for saving tensorboard summaries.
+
+        log_every (``int``, optional):
+
+            After how many iterations to write out tensorboard summaries.
     '''
 
     def __init__(
@@ -107,7 +111,8 @@ class Train(GenericTrain):
             summary=None,
             array_specs=None,
             save_every=2000,
-            log_dir='./'):
+            log_dir='./',
+            log_every=1):
 
         super(Train, self).__init__(
             inputs,
@@ -131,6 +136,7 @@ class Train(GenericTrain):
         self.iteration_increment = None
         self.summary_saver = None
         self.log_dir = log_dir
+        self.log_every = log_every
         if isinstance(optimizer, basestring):
             self.optimizer_loss_names = (optimizer, loss)
         else:
@@ -188,7 +194,7 @@ class Train(GenericTrain):
 
         batch.loss = outputs['loss']
         batch.iteration = outputs['iteration'][0]
-        if self.summary is not None:
+        if self.summary is not None and (batch.iteration % self.log_every == 0 or batch.iteration == 1):
             self.summary_saver.add_summary(summaries, batch.iteration)
 
         if batch.iteration%self.save_every == 0:
