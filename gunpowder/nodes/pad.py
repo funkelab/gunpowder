@@ -112,17 +112,20 @@ class Pad(BatchFilter):
             "expanding array of shape %s from %s to %s",
             str(a.shape), from_roi, to_roi)
 
-        b = np.zeros(to_roi.get_shape(), dtype=a.dtype)
+        num_channels = len(a.shape) - from_roi.dims()
+        channel_shapes = a.shape[:num_channels]
+
+        b = np.zeros(channel_shapes + to_roi.get_shape(), dtype=a.dtype)
         if value != 0:
             b[:] = value
 
         shift = tuple(-x for x in to_roi.get_offset())
         logger.debug("shifting 'from' by " + str(shift))
-        a_in_b = from_roi.shift(shift).get_bounding_box()
+        a_in_b = from_roi.shift(shift).to_slices()
 
         logger.debug("target shape is " + str(b.shape))
         logger.debug("target slice is " + str(a_in_b))
 
-        b[a_in_b] = a
+        b[(slice(None),)*num_channels + a_in_b] = a
 
         return b
