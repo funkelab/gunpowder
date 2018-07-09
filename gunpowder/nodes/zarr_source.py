@@ -1,6 +1,18 @@
-from gunpowder.ext import z5py
+from gunpowder.ext import zarr
 from .hdf5like_source_base import Hdf5LikeSource
 
+class ZarrFile():
+    '''To be used as a context manager, similar to h5py.File.'''
+
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+
+    def __enter__(self):
+        return zarr.open(self.filename, mode=self.mode)
+
+    def __exit__(self, *args):
+        pass
 
 class ZarrSource(Hdf5LikeSource):
     '''A `zarr <https://github.com/zarr-developers/zarr>`_ data source.
@@ -29,4 +41,4 @@ class ZarrSource(Hdf5LikeSource):
             that are not ``None`` in the given :class:`ArraySpec` will be used.
     '''
     def _open_file(self, filename):
-        return z5py.File(filename, use_zarr_format=True)
+        return ZarrFile(filename, mode='r')
