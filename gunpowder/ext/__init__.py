@@ -61,5 +61,6 @@ except ImportError as e:
 
 try:
     import zarr
+    from .zarr_file import ZarrFile
 except ImportError as e:
     zarr = NoSuchModule('zarr')
