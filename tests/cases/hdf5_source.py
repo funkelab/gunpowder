@@ -3,7 +3,7 @@ from unittest import skipIf
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
-from gunpowder.ext import h5py, zarr, z5py, NoSuchModule
+from gunpowder.ext import h5py, zarr, ZarrFile, z5py, NoSuchModule
 
 
 class Hdf5LikeSourceTestMixin(object):
