@@ -52,6 +52,7 @@ class Hdf5LikeSource(BatchProvider):
         else:
             self.array_specs = array_specs
 
+        # number of spatial dimensions
         self.ndims = None
 
     def _open_file(self, filename):
@@ -119,13 +120,6 @@ class Hdf5LikeSource(BatchProvider):
 
         dataset = data_file[ds_name]
 
-        dims = Coordinate(dataset.shape)
-
-        if self.ndims is None:
-            self.ndims = len(dims)
-        else:
-            assert self.ndims == len(dims)
-
         if array_key in self.array_specs:
             spec = self.array_specs[array_key].copy()
         else:
@@ -134,19 +128,22 @@ class Hdf5LikeSource(BatchProvider):
         if spec.voxel_size is None:
             voxel_size = self._get_voxel_size(dataset)
             if voxel_size is None:
-                voxel_size = Coordinate((1,) * self.ndims)
+                voxel_size = Coordinate((1,)*len(dataset.shape))
                 logger.warning("WARNING: File %s does not contain resolution information "
                                "for %s (dataset %s), voxel size has been set to %s. This "
                                "might not be what you want.",
                                self.filename, array_key, ds_name, spec.voxel_size)
             spec.voxel_size = voxel_size
 
+        self.ndims = len(spec.voxel_size)
+
         if spec.roi is None:
             offset = self._get_offset(dataset)
             if offset is None:
-                offset = Coordinate((0,) * self.ndims)
+                offset = Coordinate((0,)*self.ndims)
 
-            spec.roi = Roi(offset, dims * spec.voxel_size)
+            shape= Coordinate(dataset.shape[-self.ndims:])
+            spec.roi = Roi(offset, shape*spec.voxel_size)
 
         if spec.dtype is not None:
             assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
@@ -173,7 +170,8 @@ class Hdf5LikeSource(BatchProvider):
         return spec
 
     def __read(self, data_file, ds_name, roi):
-        return np.asarray(data_file[ds_name][roi.get_bounding_box()])
+        c = len(data_file[ds_name].shape) - self.ndims
+        return np.asarray(data_file[ds_name][(slice(None),)*c + roi.to_slices()])
 
     def __repr__(self):
 

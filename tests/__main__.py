@@ -24,7 +24,7 @@ if __name__ == "__main__":
         kwargs['filemode'] = 'w'
 
     logging.basicConfig(**kwargs)
-    from cases import *  # to log any import-related issues
+    from .cases import *  # to log any import-related issues
 
     logging.getLogger().setLevel(log_level)
 
