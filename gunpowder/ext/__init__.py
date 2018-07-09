@@ -64,3 +64,4 @@ try:
     from .zarr_file import ZarrFile
 except ImportError as e:
     zarr = NoSuchModule('zarr')
+    ZarrFile = None
