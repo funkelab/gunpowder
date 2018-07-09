@@ -24,3 +24,4 @@ from .random_location_points import TestRandomLocationPoints
 from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
 from .tensorflow_train import TestTensorflowTrain
+from .zarr_write import TestZarrWrite

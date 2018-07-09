@@ -58,3 +58,10 @@ try:
     import z5py
 except ImportError as e:
     z5py = NoSuchModule('z5py')
+
+try:
+    import zarr
+    from .zarr_file import ZarrFile
+except ImportError as e:
+    zarr = NoSuchModule('zarr')
+    ZarrFile = None
