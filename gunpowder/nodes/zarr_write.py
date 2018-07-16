@@ -72,4 +72,4 @@ class ZarrWrite(Hdf5LikeWrite):
         dataset.attrs['offset'] = offset[::-1]
 
     def _open_file(self, filename):
-        return ZarrFile(filename, mode='a')
+        return ZarrFile(filename.encode(), mode='a')
