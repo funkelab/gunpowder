@@ -79,7 +79,7 @@ class Hdf5LikeWrite(BatchFilter):
     def init_datasets(self, batch):
 
         filename = os.path.join(self.output_dir, self.output_filename)
-        logger.info("Initializing container %s", filename)
+        logger.debug("Initializing container %s", filename)
 
         try:
             os.makedirs(self.output_dir)
@@ -88,7 +88,7 @@ class Hdf5LikeWrite(BatchFilter):
 
         for (array_key, dataset_name) in self.dataset_names.items():
 
-            logger.info("Initializing dataset for %s", array_key)
+            logger.debug("Initializing dataset for %s", array_key)
 
             assert array_key in self.spec, (
                 "Asked to store %s, but is not provided upstream."%array_key)
