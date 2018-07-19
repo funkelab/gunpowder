@@ -47,6 +47,11 @@ class Predict(GenericPredict):
             of matching variable names in the graph. Note that the graph
             specified here can differ from the one associated to the
             checkpoint.
+
+        skip_empty (``bool``, optional):
+
+            Skip prediction, if all inputs are empty (contain only 0). In this
+            case, outputs are simply set to 0.
     '''
 
     MAX_SHARED_MEMORY = 500*1024*1024 # 500M
@@ -57,7 +62,8 @@ class Predict(GenericPredict):
             inputs,
             outputs,
             array_specs=None,
-            graph=None):
+            graph=None,
+            skip_empty=False):
 
         super(Predict, self).__init__(
             inputs,
@@ -68,6 +74,7 @@ class Predict(GenericPredict):
         self.meta_graph = graph
         self.session = None
         self.graph = None
+        self.skip_empty = skip_empty
 
         self.manager = mp.Manager()
         self.shared_input_array_config = self.manager.dict()
@@ -79,14 +86,44 @@ class Predict(GenericPredict):
 
         self.send_lock = mp.Lock()
         self.receive_lock = mp.Lock()
+        self.predict_process_initialized = mp.Event()
         self.worker_sent_inputs = mp.Event()
         self.predict_received_inputs = mp.Event()
         self.predict_sent_outputs = mp.Event()
 
         self.predict_process = mp.Process(target=self.__predict)
         self.predict_process.start()
+        self.predict_process_initialized.wait()
 
     def predict(self, batch, request):
+
+        if not self.shared_output_arrays:
+            self.__init_shared_output_arrays()
+
+        if self.skip_empty:
+
+            can_skip = True
+            for array_key in self.inputs.values():
+                if batch[array_key].data.sum() != 0:
+                    can_skip = False
+                    break
+
+            if can_skip:
+
+                logger.info("Skipping batch %i (all inputs are 0)"%batch.id)
+
+                for name, array_key in self.outputs.items():
+
+                    shape = self.shared_output_arrays[name].shape
+                    dtype = self.shared_output_arrays[name].dtype
+
+                    spec = self.spec[array_key].copy()
+                    spec.roi = request[array_key].roi.copy()
+                    batch.arrays[array_key] = Array(
+                        np.zeros(shape, dtype=dtype),
+                        spec)
+
+                return
 
         logger.debug("predicting in batch %i", batch.id)
 
@@ -110,9 +147,6 @@ class Predict(GenericPredict):
 
         self.predict_sent_outputs.wait()
         self.predict_sent_outputs.clear()
-
-        if not self.shared_output_arrays:
-            self.__init_shared_output_arrays()
 
         output_data = self.__read_outputs_from_shared(output_tensors)
 
@@ -140,6 +174,9 @@ class Predict(GenericPredict):
             if not self.shared_output_array_config:
                 self.__create_shared_output_array_config()
             self.__init_shared_output_arrays()
+
+        # from now on it is save to access the shared array configuration
+        self.predict_process_initialized.set()
 
         # loop predict
         while True:
