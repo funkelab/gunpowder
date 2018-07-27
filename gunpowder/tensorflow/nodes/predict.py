@@ -130,14 +130,8 @@ class Predict(GenericPredict):
     def __predict(self):
         '''The background predict process.'''
 
-        # TODO: is the server still needed?
-        target = LocalServer.get_target()
-        logger.info("Initializing tf session, connecting to %s...", target)
-
         self.graph = tf.Graph()
-        self.session = tf.Session(
-            target=target,
-            graph=self.graph)
+        self.session = tf.Session(graph=self.graph)
 
         with self.graph.as_default():
             self.__read_checkpoint()
