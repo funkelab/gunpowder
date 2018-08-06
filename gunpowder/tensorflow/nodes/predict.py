@@ -3,6 +3,7 @@ import logging
 import multiprocessing as mp
 import numpy as np
 
+from functools import reduce
 from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_predict import GenericPredict
