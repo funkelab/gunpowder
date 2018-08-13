@@ -137,7 +137,7 @@ class Train(GenericTrain):
         self.summary_saver = None
         self.log_dir = log_dir
         self.log_every = log_every
-        if isinstance(optimizer, basestring):
+        if isinstance(optimizer, str):
             self.optimizer_loss_names = (optimizer, loss)
         else:
             self.optimizer_func = optimizer

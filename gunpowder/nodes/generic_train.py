@@ -58,7 +58,7 @@ class GenericTrain(BatchFilter):
         self.array_specs = {} if array_specs is None else array_specs
         self.spawn_subprocess = spawn_subprocess
 
-        self.provided_arrays = self.outputs.values() + self.gradients.values()
+        self.provided_arrays = list(self.outputs.values()) + list(self.gradients.values())
 
         if self.spawn_subprocess:
 
