@@ -33,7 +33,7 @@ class LocalServer(Freezable):
 
             target = LocalServer.__target.value
 
-            if target == ' '*256:
+            if target == b' '*256:
                 logger.info("Creating local tensorflow server")
                 LocalServer.__server = tf.train.Server.create_local_server()
                 target = LocalServer.__server.target
