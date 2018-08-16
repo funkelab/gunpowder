@@ -59,7 +59,7 @@ class PointTestSource3D(BatchProvider):
         image = np.ones(roi_array.get_shape()/self.voxel_size, dtype=np.uint64)
         # label half of GT_LABELS differently
         depth = image.shape[0]
-        image[0:depth/2] = 2
+        image[0:depth//2] = 2
 
         spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi_array
