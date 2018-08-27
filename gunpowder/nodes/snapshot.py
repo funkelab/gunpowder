@@ -128,8 +128,9 @@ class Snapshot(BatchFilter):
                     dataset.attrs['resolution'] = self.spec[array_key].voxel_size
 
                     if self.store_value_range:
-                        dataset.attrs['valueRangeMin'] = np.asscalar(array.data.min())
-                        dataset.attrs['valueRangeMax'] = np.asscalar(array.data.max())
+                        dataset.attrs['value_range'] = (
+                            np.asscalar(array.data.min()),
+                            np.asscalar(array.data.max()))
 
                     # if array has attributes, add them to the dataset
                     for attribute_name, attribute in array.attrs.items():
