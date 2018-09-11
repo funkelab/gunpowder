@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
 import logging
 import os
 
@@ -164,17 +165,26 @@ class Hdf5LikeWrite(BatchFilter):
 
             for (array_key, dataset_name) in self.dataset_names.items():
 
-                dataset = data_file[dataset_name]
-                roi = batch.arrays[array_key].spec.roi
-                data = batch.arrays[array_key].data
-
-                data_roi = (roi - self.dataset_offsets[array_key])//self.spec[array_key].voxel_size
-                dims = data_roi.dims()
+                array_roi = batch.arrays[array_key].spec.roi
+                voxel_size = self.spec[array_key].voxel_size
+                dims = array_roi.dims()
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
-                voxel_slices = data_roi.get_bounding_box()
+
+                dataset = data_file[dataset_name]
+                dataset_roi = Roi(
+                    self.dataset_offsets[array_key],
+                    Coordinate(dataset.shape[-dims:])*voxel_size)
+                common_roi = array_roi.intersect(dataset_roi)
+
+                dataset_voxel_roi = (common_roi - self.dataset_offsets[array_key])//voxel_size
+                dataset_voxel_slices = dataset_voxel_roi.to_slices()
+                array_voxel_roi = (common_roi - array_roi.get_offset())//voxel_size
+                array_voxel_slices = array_voxel_roi.to_slices()
 
                 logger.debug(
-                    "writing %s to voxel coordinates %s"%(array_key, data_roi))
-                dataset[channel_slices + voxel_slices] = batch.arrays[array_key].data
+                    "writing %s to voxel coordinates %s"%(
+                        array_key,
+                        dataset_voxel_roi))
 
-
+                data = batch.arrays[array_key].data[channel_slices + array_voxel_slices]
+                dataset[channel_slices + dataset_voxel_slices] = data
