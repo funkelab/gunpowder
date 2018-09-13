@@ -165,12 +165,13 @@ class Hdf5LikeWrite(BatchFilter):
 
             for (array_key, dataset_name) in self.dataset_names.items():
 
+                dataset = data_file[dataset_name]
+
                 array_roi = batch.arrays[array_key].spec.roi
                 voxel_size = self.spec[array_key].voxel_size
                 dims = array_roi.dims()
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
 
-                dataset = data_file[dataset_name]
                 dataset_roi = Roi(
                     self.dataset_offsets[array_key],
                     Coordinate(dataset.shape[-dims:])*voxel_size)
