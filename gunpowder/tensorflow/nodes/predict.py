@@ -213,18 +213,20 @@ class Predict(GenericPredict):
 
     def __read_checkpoint(self):
 
-        logger.info("Reading checkpoint...")
-
         # read the graph associated to the checkpoint
         if self.meta_graph is None:
-            saver = tf.train.import_meta_graph(
-                self.checkpoint + '.meta',
-                clear_devices=True)
+            meta_graph_file = self.checkpoint + '.meta'
         # read alternative, custom graph
         else:
-            saver = tf.train.import_meta_graph(
-                    self.meta_graph,
-                    clear_devices=True)
+            meta_graph_file = self.meta_graph
+
+        logger.info(
+            "Reading graph from %s and weights from %s...",
+            meta_graph_file, self.checkpoint)
+
+        saver = tf.train.import_meta_graph(
+                meta_graph_file,
+                clear_devices=True)
 
         # restore variables from checkpoint
         saver.restore(self.session, self.checkpoint)
