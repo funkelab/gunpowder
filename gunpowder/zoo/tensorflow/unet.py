@@ -19,11 +19,12 @@ def conv_pass(
 
         f_in:
 
-            The input tensor of shape ``(batch_size, channels, depth, height, width)``.
+            The input tensor of shape ``(batch_size, channels, depth, height,
+            width)`` or ``(batch_size, channels, height, width)``.
 
         kernel_size:
 
-            Size of the kernel. Forwarded to tf.layers.conv3d.
+            Size of the kernel. Forwarded to the tensorflow convolution layer.
 
         num_fmaps:
 
@@ -44,8 +45,12 @@ def conv_pass(
     if activation is not None:
         activation = getattr(tf.nn, activation)
 
+    conv_layer = getattr(
+        tf.layers,
+        {2: 'conv2d', 3: 'conv3d'}[fmaps_in.get_shape().ndims - 2])
+
     for i in range(num_repetitions):
-        fmaps = tf.layers.conv3d(
+        fmaps = conv_layer(
             inputs=fmaps,
             filters=num_fmaps,
             kernel_size=kernel_size,
@@ -58,7 +63,11 @@ def conv_pass(
 
 def downsample(fmaps_in, factors, name='down'):
 
-    fmaps = tf.layers.max_pooling3d(
+    pooling_layer = getattr(
+        tf.layers,
+        {2: 'max_pooling2d', 3: 'max_pooling3d'}[fmaps_in.get_shape().ndims - 2])
+
+    fmaps = pooling_layer(
         fmaps_in,
         pool_size=factors,
         strides=factors,
@@ -73,7 +82,11 @@ def upsample(fmaps_in, factors, num_fmaps, activation='relu', name='up'):
     if activation is not None:
         activation = getattr(tf.nn, activation)
 
-    fmaps = tf.layers.conv3d_transpose(
+    conv_trans_layer = getattr(
+        tf.layers,
+        {2: 'conv2d_transpose', 3: 'conv3d_transpose'}[fmaps_in.get_shape().ndims - 2])
+
+    fmaps = conv_trans_layer(
         fmaps_in,
         filters=num_fmaps,
         kernel_size=factors,
@@ -85,7 +98,7 @@ def upsample(fmaps_in, factors, num_fmaps, activation='relu', name='up'):
 
     return fmaps
 
-def crop_zyx(fmaps_in, shape):
+def crop_spatial(fmaps_in, shape):
     '''Crop only the spacial dimensions to match shape.
 
     Args:
@@ -96,25 +109,14 @@ def crop_zyx(fmaps_in, shape):
 
         shape:
 
-            A list (not a tensor) with the requested shape [_, _, z, y, x].
+            A list (not a tensor) with the requested shape [_, _, z, y, x] or
+            [_, _, y, x].
     '''
 
     in_shape = fmaps_in.get_shape().as_list()
 
-    offset = [
-        0, # batch
-        0, # channel
-        (in_shape[2] - shape[2])//2, # z
-        (in_shape[3] - shape[3])//2, # y
-        (in_shape[4] - shape[4])//2, # x
-    ]
-    size = [
-        in_shape[0],
-        in_shape[1],
-        shape[2],
-        shape[3],
-        shape[4],
-    ]
+    offset = [0, 0] + [(in_shape[i] - shape[i]) // 2 for i in range(2, len(shape))]
+    size = in_shape[0:2] + shape[2:]
 
     fmaps = tf.slice(fmaps_in, offset, size)
 
@@ -127,7 +129,7 @@ def unet(
         downsample_factors,
         activation='relu',
         layer=0):
-    '''Create a U-Net::
+    '''Create a 2D or 3D U-Net::
 
         f_in --> f_left --------------------------->> f_right--> f_out
                     |                                   ^
@@ -142,7 +144,7 @@ def unet(
     respectively.
 
     The U-Net expects tensors to have shape ``(batch=1, channels, depth, height,
-    width)``.
+    width)`` for 3D or ``(batch=1, channels, height, width)`` for 2D.
 
     This U-Net performs only "valid" convolutions, i.e., sizes of the feature
     maps decrease after each convolution.
@@ -166,8 +168,8 @@ def unet(
 
         downsample_factors:
 
-            List of lists ``[z, y, x]`` to use to down- and up-sample the
-            feature maps between layers.
+            List of lists ``[z, y, x]`` or ``[y, x]`` to use to down- and
+            up-sample the feature maps between layers.
 
         activation:
 
@@ -227,7 +229,7 @@ def unet(
     print(prefix + "g_out_upsampled: " + str(g_out_upsampled.shape))
 
     # copy-crop
-    f_left_cropped = crop_zyx(f_left, g_out_upsampled.get_shape().as_list())
+    f_left_cropped = crop_spatial(f_left, g_out_upsampled.get_shape().as_list())
 
     print(prefix + "f_left_cropped: " + str(f_left_cropped.shape))
 

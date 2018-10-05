@@ -226,7 +226,7 @@ class ElasticAugment(BatchFilter):
 
         for (points_key, points) in batch.points.items():
 
-            for point_id, point in points.data.items():
+            for point_id, point in list(points.data.items()):
 
                 logger.debug("projecting %s", point.location)
 
