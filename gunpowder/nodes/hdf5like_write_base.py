@@ -177,6 +177,15 @@ class Hdf5LikeWrite(BatchFilter):
                     Coordinate(dataset.shape[-dims:])*voxel_size)
                 common_roi = array_roi.intersect(dataset_roi)
 
+                if common_roi.empty():
+                    logger.warn(
+                        "array %s with ROI %s lies outside of dataset ROI %s, "
+                        "skipping writing"%(
+                            array_key,
+                            array_roi,
+                            dataset_roi))
+                    continue
+
                 dataset_voxel_roi = (common_roi - self.dataset_offsets[array_key])//voxel_size
                 dataset_voxel_slices = dataset_voxel_roi.to_slices()
                 array_voxel_roi = (common_roi - array_roi.get_offset())//voxel_size
