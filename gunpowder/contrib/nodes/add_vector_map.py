@@ -163,7 +163,7 @@ class AddVectorMap(BatchFilter):
                         dist_to_locs = {}
                         for phys_loc in relevant_partner_loc:
                             dist_to_locs[np.linalg.norm(point.location - phys_loc)] = phys_loc
-                        for nr, dist in enumerate(reversed(np.sort(dist_to_locs.keys()))):
+                        for nr, dist in enumerate(reversed(np.sort(list(dist_to_locs.keys())))):
                             trg_loc_abs_phys       = dist_to_locs[dist]
                             kdtree_locs_vector_map = KDTree(locations_to_fill_abs_phys)
                             if nr == len(relevant_partner_loc)-1:

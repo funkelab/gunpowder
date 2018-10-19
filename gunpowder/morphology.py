@@ -104,7 +104,7 @@ def create_ball_kernel(radius, voxel_size):
     kernel_shape = np.array(radius_voxel)*2 + 1
 
     kernel = np.zeros(kernel_shape, dtype=np.uint8)
-    middle_point = kernel_shape/2
+    middle_point = kernel_shape//2
     kernel[tuple(middle_point)] = 1
 
     enlarge_binary_map(kernel, radius, voxel_size, in_place=True)

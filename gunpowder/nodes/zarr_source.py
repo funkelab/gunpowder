@@ -27,5 +27,20 @@ class ZarrSource(Hdf5LikeSource):
             is useful to set a missing ``voxel_size``, for example. Only fields
             that are not ``None`` in the given :class:`ArraySpec` will be used.
     '''
+
+    def _get_voxel_size(self, dataset):
+
+        if dataset.order == 'F':
+            return Coordinate(dataset.attrs['resolution'][::-1])
+        else:
+            return Coordinate(dataset.attrs['resolution'])
+
+    def _get_offset(self, dataset):
+
+        if dataset.order == 'F':
+            return Coordinate(dataset.attrs['offset'][::-1])
+        else:
+            return Coordinate(dataset.attrs['offset'])
+
     def _open_file(self, filename):
         return ZarrFile(filename, mode='r')
