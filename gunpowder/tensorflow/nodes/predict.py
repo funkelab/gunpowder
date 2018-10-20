@@ -282,9 +282,17 @@ class Predict(GenericPredict):
 
             shape = batch[array_key].data.shape
             size = reduce(mul, shape, 1)
+            dtype = batch[array_key].data.dtype
 
-            self.shared_input_array_config[name] = (begin, size, shape)
-            begin += size
+            self.shared_input_array_config[name] = (
+                begin,
+                size,
+                shape,
+                dtype)
+
+            begin += size*np.dtype(dtype).itemsize
+            assert begin <= Predict.MAX_SHARED_MEMORY, (
+                "The input arrays exceed the MAX_SHARED_MEMORY")
 
     def __create_shared_output_array_config(self):
         '''To be called by predict process.'''
@@ -292,29 +300,40 @@ class Predict(GenericPredict):
         begin = 0
         for name, array_key in self.outputs.items():
 
-            shape = self.graph.get_tensor_by_name(name).get_shape().as_list()
+            tensor = self.graph.get_tensor_by_name(name)
+            shape = tensor.get_shape().as_list()
             size = reduce(mul, shape, 1)
+            dtype = tensor.dtype.as_numpy_dtype
 
-            self.shared_output_array_config[name] = (begin, size, tuple(shape))
-            begin += size
+            self.shared_output_array_config[name] = (
+                begin,
+                size,
+                tuple(shape),
+                dtype)
+
+            begin += size*np.dtype(dtype).itemsize
+            assert begin <= Predict.MAX_SHARED_MEMORY, (
+                "The output arrays exceed the MAX_SHARED_MEMORY")
 
     def __init_shared_input_arrays(self):
         '''Assign the shared memory to numpy arrays.'''
 
-        for name, (begin, size, shape) in self.shared_input_array_config.items():
+        for name, (begin, size, shape, dtype) in self.shared_input_array_config.items():
 
             self.shared_input_arrays[name] = np.frombuffer(
                 self.shared_input_memory,
+                dtype=dtype,
                 offset=begin,
                 count=size).reshape(shape)
 
     def __init_shared_output_arrays(self):
         '''Assign the shared memory to numpy arrays.'''
 
-        for name, (begin, size, shape) in self.shared_output_array_config.items():
+        for name, (begin, size, shape, dtype) in self.shared_output_array_config.items():
 
             self.shared_output_arrays[name] = np.frombuffer(
                 self.shared_output_memory,
+                dtype=dtype,
                 offset=begin,
                 count=size).reshape(shape)
 
