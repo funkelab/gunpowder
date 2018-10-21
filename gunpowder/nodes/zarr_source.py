@@ -1,5 +1,6 @@
-from gunpowder.ext import ZarrFile
 from gunpowder.compat import ensure_str
+from gunpowder.coordinate import Coordinate
+from gunpowder.ext import ZarrFile
 from .hdf5like_source_base import Hdf5LikeSource
 
 class ZarrSource(Hdf5LikeSource):
