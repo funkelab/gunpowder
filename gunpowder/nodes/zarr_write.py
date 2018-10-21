@@ -1,6 +1,7 @@
 from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
+from gunpowder.compat import ensure_str
 import logging
 import os
 import traceback
@@ -72,4 +73,4 @@ class ZarrWrite(Hdf5LikeWrite):
             dataset.attrs['offset'] = offset
 
     def _open_file(self, filename):
-        return ZarrFile(filename.encode(), mode='a')
+        return ZarrFile(ensure_str(filename), mode='a')

@@ -1,4 +1,5 @@
 from gunpowder.ext import ZarrFile
+from gunpowder.compat import ensure_str
 from .hdf5like_source_base import Hdf5LikeSource
 
 class ZarrSource(Hdf5LikeSource):
@@ -43,4 +44,4 @@ class ZarrSource(Hdf5LikeSource):
             return Coordinate(dataset.attrs['offset'])
 
     def _open_file(self, filename):
-        return ZarrFile(filename, mode='r')
+        return ZarrFile(ensure_str(filename), mode='r')
