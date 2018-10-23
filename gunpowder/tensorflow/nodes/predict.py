@@ -55,7 +55,7 @@ class Predict(GenericPredict):
             case, outputs are simply set to 0.
     '''
 
-    MAX_SHARED_MEMORY = 500*1024*1024 # 500M
+    MAX_SHARED_MEMORY = 1024*1024*1024 # 1G
 
     def __init__(
             self,
