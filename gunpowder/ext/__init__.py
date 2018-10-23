@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class NoSuchModule(object):
     def __init__(self, name):
-        logger.warning('Module {} is not accessible, some features may be unavailable'.format(name))
         self.__name = name
         self.__traceback_str = traceback.format_tb(sys.exc_info()[2])
         errtype, value = sys.exc_info()[:2]
