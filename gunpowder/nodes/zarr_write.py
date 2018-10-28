@@ -46,28 +46,28 @@ class ZarrWrite(Hdf5LikeWrite):
 
     def _get_voxel_size(self, dataset):
 
-        if dataset.order == 'F':
+        if self.output_filename.endswith('.n5'):
             return Coordinate(dataset.attrs['resolution'][::-1])
         else:
             return Coordinate(dataset.attrs['resolution'])
 
     def _get_offset(self, dataset):
 
-        if dataset.order == 'F':
+        if self.output_filename.endswith('.n5'):
             return Coordinate(dataset.attrs['offset'][::-1])
         else:
             return Coordinate(dataset.attrs['offset'])
 
     def _set_voxel_size(self, dataset, voxel_size):
 
-        if dataset.order == 'F':
+        if self.output_filename.endswith('.n5'):
             dataset.attrs['resolution'] = voxel_size[::-1]
         else:
             dataset.attrs['resolution'] = voxel_size
 
     def _set_offset(self, dataset, offset):
 
-        if dataset.order == 'F':
+        if self.output_filename.endswith('.n5'):
             dataset.attrs['offset'] = offset[::-1]
         else:
             dataset.attrs['offset'] = offset
