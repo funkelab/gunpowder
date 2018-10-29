@@ -10,8 +10,6 @@ from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
-# TODO: consider voxel size
-
 
 class Jitter(BatchFilter):
     def __init__(
@@ -34,7 +32,6 @@ class Jitter(BatchFilter):
         # TODO: is it possible that different parts of the request could have different ndim?
         self.ndim = request.get_total_roi().dims()
         assert self.jitter_axis in range(self.ndim)
-        roi_shape = request.get_total_roi().get_shape()
 
         try:
             self.jitter_sigmas = tuple(self.sigma)
@@ -53,11 +50,18 @@ class Jitter(BatchFilter):
                 break
         assert has_nonzero
 
+        roi_shape = request.get_total_roi().get_shape()
         jitter_axis_len = roi_shape[self.jitter_axis]
+
+        if not request.array_specs:
+            lcm_voxel_size = Coordinate(tuple(1 for i in range(self.ndim)))
+        else:
+            lcm_voxel_size = request.get_lcm_voxel_size()
         self.shift_array = self.construct_global_shift_array(jitter_axis_len,
                                                              self.jitter_sigmas,
                                                              self.prob_slip,
-                                                             self.prob_shift)
+                                                             self.prob_shift,
+                                                             lcm_voxel_size)
 
         for key, spec in request.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), spec.roi,
@@ -70,7 +74,7 @@ class Jitter(BatchFilter):
         for array_key, array in batch.arrays.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), array.spec.roi,
                                                        self.shift_array, self.jitter_axis)
-            array.data = self.shift_and_crop(array.data, request[array_key].roi, sub_shift_array)
+            array.data = self.shift_and_crop(array.data, request[array_key].roi, sub_shift_array, array.spec.voxel_size)
             array.spec = request[array_key]
 
         for points_key, points in batch.points.items():
@@ -78,20 +82,23 @@ class Jitter(BatchFilter):
                                                        self.shift_array, self.jitter_axis)
             points = self.shift_points(points, request[points_key].roi, sub_shift_array, self.jitter_axis)
 
-    def shift_and_crop(self, arr, roi_shape, sub_shift_array):
+    def shift_and_crop(self, arr, roi_shape, sub_shift_array, voxel_size):
         """ Shift an array received from upstream and crop it to the target downstream region
 
         :param arr: an array of upstream data to be jittered and cropped
         :param roi_shape: the shape of the downstream ROI
         :param sub_shift_array: the cropped section of the global shift array that applies to this specific request
+        :param voxel_size: the voxel sizes of the data in the array
         :return: an array of shape roi_shape that contains the array to be passed downstream
         """
         assert arr.shape[self.jitter_axis] == sub_shift_array.shape[0]
-        max_shift = sub_shift_array.max(axis=0)
+        # assumption: each sub shift array element divides evenly by the voxel size
+        rescaled_sub_shift_array = sub_shift_array // np.array(voxel_size, dtype=int)
+        max_shift = rescaled_sub_shift_array.max(axis=0)
         batch = arr.copy()
         batch_view = np.moveaxis(batch, self.jitter_axis, 0)
         for index, plane in enumerate(batch_view):
-            shift = sub_shift_array[index, :] - max_shift
+            shift = rescaled_sub_shift_array[index, :] - max_shift
             shift = np.delete(shift, self.jitter_axis, axis=0)
             assert(len(shift) == plane.ndim)
             plane = np.roll(plane, shift, axis=tuple(range(len(shift))))
@@ -145,13 +152,14 @@ class Jitter(BatchFilter):
         return shift_array[offset_in_jitter_axis: offset_in_jitter_axis + len_in_jitter_axis, :]
 
     @staticmethod
-    def construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift):
+    def construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift, lcm_voxel_size):
         """ Sets the attribute variable self.shift_array
 
         :param jitter_axis_len: the length of the jitter axis
         :param jitter_sigmas: the sigma to generate the normal distribution of jitter amounts in each direction
         :param prob_slip: the probability of the slice shifting independently of all other slices
         :param prob_shift: the probability of the slice and all following slices shifting
+        :param lcm_voxel_size: the least common voxel size of all the arrays in the request
         :return: the shift_array for the total_roi
         """
         # each row is one slice along jitter axis
@@ -161,8 +169,11 @@ class Jitter(BatchFilter):
 
         for jitter_axis_position in range(jitter_axis_len):
             r = random.random()
-            slip = np.array([np.random.normal(scale=sigma) for sigma in jitter_sigmas])
+            slip = np.array([np.random.normal(scale=sigma / lcm_voxel_size[dimension])
+                             for dimension, sigma in enumerate(jitter_sigmas)])
             slip = np.rint(slip).astype(int)
+            slip = slip * np.array(lcm_voxel_size, dtype=int)
+
             if r <= prob_slip:
                 shift_array[jitter_axis_position] = base_shift + slip
             elif r <= prob_slip + prob_shift:

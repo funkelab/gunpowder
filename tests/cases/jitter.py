@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import random
-from gunpowder import Jitter, Roi, Points, Point, PointsSpec
+from gunpowder import Jitter, Roi, Points, Point, PointsSpec, Coordinate
 
 
 class TestJitter2D(unittest.TestCase):
@@ -33,10 +33,11 @@ class TestJitter2D(unittest.TestCase):
         upstream_arr = np.arange(16).reshape(4, 4)
         sub_shift_array = np.zeros(8, dtype=int).reshape(4, 2)
         roi_shape = (4, 4)
+        voxel_size = Coordinate((1,1))
 
         downstream_arr = np.arange(16).reshape(4, 4)
 
-        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array)
+        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array, voxel_size)
         self.assertTrue(np.array_equal(result, downstream_arr))
 
     def test_shift_and_crop1(self):
@@ -46,13 +47,14 @@ class TestJitter2D(unittest.TestCase):
         sub_shift_array = np.zeros(8, dtype=int).reshape(4, 2)
         sub_shift_array[:, 1] = np.array([0, -1, 1, 0], dtype=int)
         roi_shape = (4, 2)
+        voxel_size = Coordinate((1,1))
 
         downstream_arr = np.array([[1, 2],
                                    [6, 7],
                                    [8, 9],
                                    [13, 14]], dtype=int)
 
-        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array)
+        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array, voxel_size)
         self.assertTrue(np.array_equal(result, downstream_arr))
 
     def test_shift_and_crop2(self):
@@ -62,13 +64,14 @@ class TestJitter2D(unittest.TestCase):
         sub_shift_array = np.zeros(8, dtype=int).reshape(4, 2)
         sub_shift_array[:, 1] = np.array([0, -1, -2, 0], dtype=int)
         roi_shape = (4, 2)
+        voxel_size = Coordinate((1,1))
 
         downstream_arr = np.array([[0, 1],
                                    [5, 6],
                                    [10, 11],
                                    [12, 13]], dtype=int)
 
-        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array)
+        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array, voxel_size)
         self.assertTrue(np.array_equal(result, downstream_arr))
 
     def test_shift_and_crop3(self):
@@ -78,11 +81,28 @@ class TestJitter2D(unittest.TestCase):
         sub_shift_array = np.zeros(8, dtype=int).reshape(4, 2)
         sub_shift_array[:, 0] = np.array([0, 1, 0, 2], dtype=int)
         roi_shape = (2, 4)
+        voxel_size = Coordinate((1,1))
 
         downstream_arr = np.array([[8, 5, 10, 3],
                                    [12, 9, 14, 7]], dtype=int)
 
-        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array)
+        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array, voxel_size)
+        # print(result)
+        self.assertTrue(np.array_equal(result, downstream_arr))
+
+    def test_shift_and_crop4(self):
+        jitter_node = Jitter(sigma=1, jitter_axis=1)
+        jitter_node.ndim = 2
+        upstream_arr = np.arange(16).reshape(4, 4)
+        sub_shift_array = np.zeros(8, dtype=int).reshape(4, 2)
+        sub_shift_array[:, 0] = np.array([0, 2, 0, 4], dtype=int)
+        roi_shape = (2, 4)
+        voxel_size = Coordinate((2,1))
+
+        downstream_arr = np.array([[8, 5, 10, 3],
+                                   [12, 9, 14, 7]], dtype=int)
+
+        result = jitter_node.shift_and_crop(upstream_arr, roi_shape, sub_shift_array, voxel_size)
         # print(result)
         self.assertTrue(np.array_equal(result, downstream_arr))
 
@@ -222,9 +242,10 @@ class TestJitter2D(unittest.TestCase):
         jitter_sigmas = (0.0, 1.0)
         prob_slip = 0
         prob_shift = 0
+        lcm_voxel_size = Coordinate((1,1))
 
         shift_array = np.zeros(shape=(jitter_axis_len, len(jitter_sigmas)), dtype=int)
-        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_shift, prob_slip)
+        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_shift, prob_slip, lcm_voxel_size)
         self.assertTrue(np.array_equal(result, shift_array))
 
     def test_construct_global_shift_array1(self):
@@ -232,13 +253,14 @@ class TestJitter2D(unittest.TestCase):
         jitter_sigmas = (0.0, 1.0)
         prob_slip = 1
         prob_shift = 0
+        lcm_voxel_size = Coordinate((1,1))
 
         shift_array = np.array([[0, 0],
                                 [0, -1],
                                 [0, 1],
                                 [0, 0],
                                 [0, 1]], dtype=int)
-        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift)
+        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift, lcm_voxel_size)
         # print(result)
         self.assertTrue(len(result) == jitter_axis_len)
         for position_shift in result:
@@ -250,12 +272,34 @@ class TestJitter2D(unittest.TestCase):
         jitter_sigmas = (0.0, 1.0)
         prob_slip = 0
         prob_shift = 1
+        lcm_voxel_size = Coordinate((1,1))
+
         shift_array = np.array([[0, 0],
                                 [0, -1],
                                 [0, 0],
                                 [0, 0],
                                 [0, 1]], dtype=int)
-        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift)
+        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift, lcm_voxel_size)
+        self.assertTrue(len(result) == jitter_axis_len)
+        for position_shift in result:
+            self.assertTrue(position_shift[0] == 0)
+        self.assertTrue(np.array_equal(shift_array, result))
+
+    def test_construct_global_shift_array3(self):
+        jitter_axis_len = 5
+        jitter_sigmas = (0.0, 4.0)
+        prob_slip = 0
+        prob_shift = 1
+        lcm_voxel_size = Coordinate((1, 3))
+
+        shift_array = np.array([[0, 3],
+                                [0, 0],
+                                [0, 6],
+                                [0, 6],
+                                [0, 12]], dtype=int)
+        result = Jitter.construct_global_shift_array(jitter_axis_len, jitter_sigmas, prob_slip, prob_shift,
+                                                     lcm_voxel_size)
+        # print(result)
         self.assertTrue(len(result) == jitter_axis_len)
         for position_shift in result:
             self.assertTrue(position_shift[0] == 0)
