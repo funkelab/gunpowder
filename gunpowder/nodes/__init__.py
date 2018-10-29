@@ -16,6 +16,7 @@ from .hdf5_source import Hdf5Source
 from .hdf5_write import Hdf5Write
 from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
+from .jitter import Jitter
 from .klb_source import KlbSource
 from .merge_provider import MergeProvider
 from .n5_source import N5Source
