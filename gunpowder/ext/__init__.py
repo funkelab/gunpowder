@@ -15,7 +15,6 @@ class NoSuchModule(object):
         self.__exception = errtype(value)
 
     def __getattr__(self, item):
-        print(self.__traceback_str, file=sys.stderr)
         raise self.__exception
 
 try:
