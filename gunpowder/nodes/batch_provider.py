@@ -175,6 +175,7 @@ class BatchProvider(object):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
+                            self.name(),
                             request_spec.voxel_size,
                             key,
                             provided_spec.voxel_size)
