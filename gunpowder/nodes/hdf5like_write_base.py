@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
 import logging
 import os
 
@@ -79,7 +80,7 @@ class Hdf5LikeWrite(BatchFilter):
     def init_datasets(self, batch):
 
         filename = os.path.join(self.output_dir, self.output_filename)
-        logger.info("Initializing container %s", filename)
+        logger.debug("Initializing container %s", filename)
 
         try:
             os.makedirs(self.output_dir)
@@ -88,7 +89,7 @@ class Hdf5LikeWrite(BatchFilter):
 
         for (array_key, dataset_name) in self.dataset_names.items():
 
-            logger.info("Initializing dataset for %s", array_key)
+            logger.debug("Initializing dataset for %s", array_key)
 
             assert array_key in self.spec, (
                 "Asked to store %s, but is not provided upstream."%array_key)
@@ -165,16 +166,35 @@ class Hdf5LikeWrite(BatchFilter):
             for (array_key, dataset_name) in self.dataset_names.items():
 
                 dataset = data_file[dataset_name]
-                roi = batch.arrays[array_key].spec.roi
-                data = batch.arrays[array_key].data
 
-                data_roi = (roi - self.dataset_offsets[array_key])//self.spec[array_key].voxel_size
-                dims = data_roi.dims()
+                array_roi = batch.arrays[array_key].spec.roi
+                voxel_size = self.spec[array_key].voxel_size
+                dims = array_roi.dims()
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
-                voxel_slices = data_roi.get_bounding_box()
+
+                dataset_roi = Roi(
+                    self.dataset_offsets[array_key],
+                    Coordinate(dataset.shape[-dims:])*voxel_size)
+                common_roi = array_roi.intersect(dataset_roi)
+
+                if common_roi.empty():
+                    logger.warn(
+                        "array %s with ROI %s lies outside of dataset ROI %s, "
+                        "skipping writing"%(
+                            array_key,
+                            array_roi,
+                            dataset_roi))
+                    continue
+
+                dataset_voxel_roi = (common_roi - self.dataset_offsets[array_key])//voxel_size
+                dataset_voxel_slices = dataset_voxel_roi.to_slices()
+                array_voxel_roi = (common_roi - array_roi.get_offset())//voxel_size
+                array_voxel_slices = array_voxel_roi.to_slices()
 
                 logger.debug(
-                    "writing %s to voxel coordinates %s"%(array_key, data_roi))
-                dataset[channel_slices + voxel_slices] = batch.arrays[array_key].data
+                    "writing %s to voxel coordinates %s"%(
+                        array_key,
+                        dataset_voxel_roi))
 
-
+                data = batch.arrays[array_key].data[channel_slices + array_voxel_slices]
+                dataset[channel_slices + dataset_voxel_slices] = data

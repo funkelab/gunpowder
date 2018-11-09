@@ -73,7 +73,7 @@ class PrintProfilingStats(BatchFilter):
         stats += "MEDIAN".ljust(10)
         stats += "\n"
 
-        summaries = self.accumulated_stats.get_timing_summaries().items()
+        summaries = list(self.accumulated_stats.get_timing_summaries().items())
         summaries.sort()
 
         for (node_name, method_name), summary in summaries:

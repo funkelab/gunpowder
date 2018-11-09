@@ -86,12 +86,18 @@ class SimpleAugment(BatchFilter):
         # arrays
         for (array_key, array) in batch.arrays.items():
 
+            if array_key not in request:
+                continue
+
             array.data = array.data[mirror]
-            if self.transpose != (0,1,2):
+            if self.transpose != (0, 1, 2):
                 array.data = array.data.transpose(self.transpose)
         # points
         total_roi_offset = self.total_roi.get_offset()
         for (points_key, points) in batch.points.items():
+
+            if points_key not in request:
+                continue
 
             for loc_id, syn_point in points.data.items():
                 # mirror
@@ -109,13 +115,15 @@ class SimpleAugment(BatchFilter):
 
         # arrays & points
         for collection_type in [batch.arrays, batch.points]:
-            for (type, collector) in collection_type.items():
+            for (key, collector) in collection_type.items():
+                if key not in request:
+                    continue
                 logger.debug("total ROI: %s"%self.total_roi)
-                logger.debug("upstream %s ROI: %s"%(type, collector.spec.roi))
+                logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
-                logger.debug("mirrored %s ROI: %s"%(type,collector.spec.roi))
+                logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
                 self.__transpose_roi(collector.spec.roi, self.transpose)
-                logger.debug("transposed %s ROI: %s"%(type,collector.spec.roi))
+                logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
 
     def __mirror_request(self, request, mirror):

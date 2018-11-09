@@ -1,6 +1,7 @@
 from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
+from gunpowder.compat import ensure_str
 import logging
 import os
 import traceback
@@ -45,31 +46,31 @@ class ZarrWrite(Hdf5LikeWrite):
 
     def _get_voxel_size(self, dataset):
 
-        logger.debug('Voxel size being reversed to account for zarr using column-major ordering')
-        try:
+        if self.output_filename.endswith('.n5'):
             return Coordinate(dataset.attrs['resolution'][::-1])
-        except Exception:
-            logger.error(traceback.format_exc())
-            return None
+        else:
+            return Coordinate(dataset.attrs['resolution'])
 
     def _get_offset(self, dataset):
 
-        logger.debug('Offset being reversed to account for zarr using column-major ordering')
-        try:
+        if self.output_filename.endswith('.n5'):
             return Coordinate(dataset.attrs['offset'][::-1])
-        except Exception:
-            logger.error(traceback.format_exc())
-            return None
+        else:
+            return Coordinate(dataset.attrs['offset'])
 
     def _set_voxel_size(self, dataset, voxel_size):
 
-        logger.debug('Voxel size being reversed to account for zarr using column-major ordering')
-        dataset.attrs['resolution'] = voxel_size[::-1]
+        if self.output_filename.endswith('.n5'):
+            dataset.attrs['resolution'] = voxel_size[::-1]
+        else:
+            dataset.attrs['resolution'] = voxel_size
 
     def _set_offset(self, dataset, offset):
 
-        logger.debug('Offset being reversed to account for zarr using column-major ordering')
-        dataset.attrs['offset'] = offset[::-1]
+        if self.output_filename.endswith('.n5'):
+            dataset.attrs['offset'] = offset[::-1]
+        else:
+            dataset.attrs['offset'] = offset
 
     def _open_file(self, filename):
-        return ZarrFile(filename, mode='a')
+        return ZarrFile(ensure_str(filename), mode='a')
