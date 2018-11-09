@@ -4,8 +4,7 @@ import numpy as np
 import random
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points, Point
-from gunpowder.points_spec import PointsSpec
+from gunpowder.points import Point
 
 from .batch_filter import BatchFilter
 
@@ -31,8 +30,6 @@ class Jitter(BatchFilter):
         self.lcm_voxel_size = None
 
     def prepare(self, request):
-        # TODO: is it possible that different parts of the request could have different ndim?
-        # TODO: Also, it is possible that the request ROI won't line up with voxel size?
         self.ndim = request.get_total_roi().dims()
         assert self.jitter_axis in range(self.ndim)
 
@@ -54,9 +51,11 @@ class Jitter(BatchFilter):
         assert has_nonzero
 
         if not request.array_specs:
-            self.lcm_voxel_size = Coordinate(tuple(1 for i in range(self.ndim)))
-        else:
-            self.lcm_voxel_size = self.spec.get_lcm_voxel_size(array_keys=request.array_specs.keys())
+            raise ValueError("Request passed to Jitter node must contain at least one array key. " +
+                             "Check to make sure that Jitter node is not upstream of a RandomLocation node " +
+                             "with an ensure_nonempty argument.")
+
+        self.lcm_voxel_size = self.spec.get_lcm_voxel_size(array_keys=request.array_specs.keys())
         assert self.lcm_voxel_size
 
         roi_shape = request.get_total_roi().get_shape()
@@ -77,18 +76,31 @@ class Jitter(BatchFilter):
             updated_roi = self.compute_upstream_roi(spec.roi, sub_shift_array)
             spec.roi.set_offset(updated_roi.get_offset())
             spec.roi.set_shape(updated_roi.get_shape())
+            request[key] = spec
 
     def process(self, batch, request):
         for array_key, array in batch.arrays.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), array.spec.roi,
                                                        self.shift_array, self.jitter_axis, self.lcm_voxel_size)
-            array.data = self.shift_and_crop(array.data, request[array_key].roi.get_shape(), sub_shift_array, array.spec.voxel_size)
-            array.spec = request[array_key]
+            array.data = self.shift_and_crop(array.data,
+                                             request[array_key].roi.get_shape(),
+                                             sub_shift_array,
+                                             array.spec.voxel_size)
+            array.spec.roi = request[array_key].roi
+            assert request[array_key].roi.get_shape() == Coordinate(array.data.shape) * self.lcm_voxel_size, \
+                'request roi shape {} is not the same as generated array shape {}'.format(
+                    request[array_key].roi.get_shape(), array.data.shape)
+            batch[array_key] = array
 
         for points_key, points in batch.points.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), points.spec.roi,
                                                        self.shift_array, self.jitter_axis, self.lcm_voxel_size)
-            points = self.shift_points(points, request[points_key].roi, sub_shift_array, self.jitter_axis)
+            points = self.shift_points(points,
+                                       request[points_key].roi,
+                                       sub_shift_array,
+                                       self.jitter_axis,
+                                       self.lcm_voxel_size)
+            batch[points_key] = points
 
     def shift_and_crop(self, arr, roi_shape, sub_shift_array, voxel_size):
         """ Shift an array received from upstream and crop it to the target downstream region
@@ -154,8 +166,9 @@ class Jitter(BatchFilter):
             if request_roi.contains(new_loc):
                 shifted_data[id_] = Point(new_loc)
 
-        shifted_spec = PointsSpec(roi=request_roi)
-        return Points(shifted_data, shifted_spec)
+        points.data = shifted_data
+        points.spec.roi = request_roi
+        return points
 
     @staticmethod
     def get_sub_shift_array(total_roi, item_roi, shift_array, jitter_axis, lcm_voxel_size):
@@ -191,7 +204,8 @@ class Jitter(BatchFilter):
 
         for jitter_axis_position in range(jitter_axis_len):
             r = random.random()
-            slip = np.array([np.random.normal(scale=sigma / lcm_voxel_size[dimension]) for dimension, sigma in enumerate(jitter_sigmas)])
+            slip = np.array([np.random.normal(scale=sigma / lcm_voxel_size[dimension])
+                             for dimension, sigma in enumerate(jitter_sigmas)])
             slip = np.rint(slip).astype(int)
             slip = slip * np.array(lcm_voxel_size, dtype=int)
 
