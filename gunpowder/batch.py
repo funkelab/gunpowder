@@ -102,7 +102,7 @@ class Batch(Freezable):
             return key in self.arrays
 
         elif isinstance(key, PointsKey):
-            return key in self.pointss
+            return key in self.points
 
         else:
             raise RuntimeError(
