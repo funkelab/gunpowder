@@ -205,15 +205,14 @@ class DefectAugment(BatchFilter):
                                                             "voxel size")
 
                 artifact_request = BatchRequest()
-                artifact_request.add(self.artifacts, Coordinate(section.shape)*raw_voxel_size)
-                artifact_request.add(self.artifacts_mask, Coordinate(section.shape)*alpha_voxel_size)
-                logger.debug("Requesting artifact batch " + str(artifact_request))
+                artifact_request.add(self.artifacts, Coordinate(section.shape) * raw_voxel_size, voxel_size=raw_voxel_size)
+                artifact_request.add(self.artifacts_mask, Coordinate(section.shape) * alpha_voxel_size, voxel_size=raw_voxel_size)
+                logger.debug("Requesting artifact batch %s", artifact_request)
 
                 artifact_batch = self.artifact_source.request_batch(artifact_request)
                 artifact_alpha = artifact_batch.arrays[self.artifacts_mask].data
                 artifact_raw   = artifact_batch.arrays[self.artifacts].data
 
-                assert artifact_raw.dtype == section.dtype
                 assert artifact_alpha.dtype == np.float32
                 assert artifact_alpha.min() >= 0.0
                 assert artifact_alpha.max() <= 1.0
