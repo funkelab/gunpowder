@@ -1,5 +1,5 @@
 import copy
-import random
+import numpy as np
 
 from .batch_provider import BatchProvider
 
@@ -11,11 +11,30 @@ class RandomProvider(BatchProvider):
     will create a provider that randomly relays requests to providers ``a``,
     ``b``, or ``c``. Array and point keys of ``a``, ``b``, and ``c`` should be
     the same.
+
+    Args:
+        probabilities (1-D array-like, optional): An optional list of
+            probabilities for choosing upstream providers, given in the
+            same order. Probabilities do not need to be normalized. Default
+            is ``None``, corresponding to equal probabilities.
     '''
+
+    def __init__(self, probabilities=None):
+        self.probabilities = probabilities
+
+        # automatically normalize probabilities to sum to 1
+        if self.probabilities is not None:
+            self.probabilities = [float(x)/np.sum(probabilities) for x in
+                                  self.probabilities]
 
     def setup(self):
 
         assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the RandomProvider"
+        if self.probabilities is not None:
+            assert len(self.get_upstream_providers()) == len(
+                self.probabilities), "if probabilities are specified, they " \
+                                     "need to be given for each batch " \
+                                     "provider added to the RandomProvider"
 
         common_spec = None
 
@@ -33,4 +52,5 @@ class RandomProvider(BatchProvider):
             self.provides(key, spec)
 
     def provide(self, request):
-        return random.choice(self.get_upstream_providers()).request_batch(request)
+        return np.random.choice(self.get_upstream_providers(),
+                                p=self.probabilities).request_batch(request)
