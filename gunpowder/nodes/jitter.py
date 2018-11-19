@@ -4,7 +4,6 @@ import numpy as np
 import random
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Point
 
 from .batch_filter import BatchFilter
 
@@ -164,7 +163,8 @@ class Jitter(BatchFilter):
             shift = Coordinate(sub_shift_array[shift_array_index])
             new_loc = loc + shift
             if request_roi.contains(new_loc):
-                shifted_data[id_] = Point(new_loc)
+                point.location = new_loc
+                shifted_data[id_] = point
 
         points.data = shifted_data
         points.spec.roi = request_roi
