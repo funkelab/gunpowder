@@ -215,21 +215,26 @@ class RasterizePoints(BatchFilter):
             if 0 in labels:
                 labels.remove(0)
 
-            # create data for the whole points ROI, "or"ed together over
-            # individual object masks
-            rasterized_points_data = np.sum(
-                [
-                    self.__rasterize(
-                        points,
-                        data_roi,
-                        voxel_size,
-                        self.spec[self.array].dtype,
-                        self.settings,
-                        Array(data=mask_array.data==label, spec=mask_array.spec))
+            if len(labels) == 0:
+                logger.debug("Points and provided object mask do not overlap. No points to rasterize.")
+                rasterized_points_data = np.zeros(data_roi.get_shape(),
+                                                  dtype=self.spec[self.array].dtype)
+            else:
+                # create data for the whole points ROI, "or"ed together over
+                # individual object masks
+                rasterized_points_data = np.sum(
+                    [
+                        self.__rasterize(
+                            points,
+                            data_roi,
+                            voxel_size,
+                            self.spec[self.array].dtype,
+                            self.settings,
+                            Array(data=mask_array.data==label, spec=mask_array.spec))
 
-                    for label in labels
-                ],
-                axis=0)
+                        for label in labels
+                    ],
+                    axis=0)
 
         else:
 
