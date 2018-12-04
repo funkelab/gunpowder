@@ -10,7 +10,7 @@ from .dvid_source import TestDvidSource
 from .elastic_augment_points import TestElasticAugment
 from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
-from .jitter import TestJitter2D
+from .shift_augment import TestShiftAugment2D
 from .merge_provider import TestMergeProvider
 from .n5_write import TestN5Write
 from .normalize import TestNormalize
