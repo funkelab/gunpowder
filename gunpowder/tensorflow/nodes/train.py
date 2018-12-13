@@ -201,7 +201,7 @@ class Train(GenericTrain):
         if batch.iteration%self.save_every == 0:
 
             checkpoint_name = (
-                self.meta_graph_filename +
+                './' + self.meta_graph_filename +
                 '_checkpoint_%i'%batch.iteration)
 
             logger.info(
