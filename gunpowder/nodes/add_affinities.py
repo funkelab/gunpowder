@@ -149,7 +149,7 @@ class AddAffinities(BatchFilter):
         affinities = malis.seg_to_affgraph(
                 batch.arrays[self.labels].data.astype(np.int32),
                 self.affinity_neighborhood
-        ).astype(np.float32)
+        ).astype(np.uint8)
 
 
         # crop affinities to requested ROI
