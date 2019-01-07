@@ -1,6 +1,6 @@
 from gunpowder.batch import Batch
 from gunpowder.ext import daisy
-from gunpowder.batch_provider import BatchProvider
+from gunpowder.nodes.batch_provider import BatchProvider
 import multiprocessing
 import logging
 
