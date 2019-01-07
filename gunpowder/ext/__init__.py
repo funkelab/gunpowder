@@ -63,3 +63,8 @@ try:
 except ImportError as e:
     zarr = NoSuchModule('zarr')
     ZarrFile = None
+
+try:
+    import daisy
+except ImportError as e:
+    daisy = NoSuchModule('daisy')
