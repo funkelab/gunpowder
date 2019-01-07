@@ -1,6 +1,7 @@
 from gunpowder.batch import Batch
 from gunpowder.ext import daisy
 from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.roi import Roi
 import multiprocessing
 import logging
 
@@ -103,9 +104,13 @@ class DaisyRequestBlocks(BatchFilter):
                         "or 'write_roi'" % key)
 
                 if roi_type == 'read_roi':
-                    chunk_request[key].roi = block.read_roi
+                    chunk_request[key].roi = Roi(
+                        block.read_roi.get_offset(),
+                        block.read_roi.get_shape())
                 elif roi_type == 'write_roi':
-                    chunk_request[key].roi = block.write_roi
+                    chunk_request[key].roi = Roi(
+                        block.write_roi.get_offset(),
+                        block.write_roi.get_shape())
                 else:
                     raise RuntimeError(
                         "%s is not a vaid ROI type (read_roi or write_roi)")
