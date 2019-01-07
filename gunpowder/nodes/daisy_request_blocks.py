@@ -1,13 +1,13 @@
 from gunpowder.batch import Batch
 from gunpowder.ext import daisy
-from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.nodes.batch_filter import BatchFilter
 import multiprocessing
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class DaisyRequestBlocks(BatchProvider):
+class DaisyRequestBlocks(BatchFilter):
     '''Iteratively requests batches similar to ``reference`` from upstream
     providers, with their ROIs set to blocks distributed by ``daisy``.
 
