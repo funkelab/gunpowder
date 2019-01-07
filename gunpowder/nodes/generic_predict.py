@@ -128,14 +128,29 @@ class GenericPredict(BatchFilter):
 
         if self.spawn_subprocess:
 
+            start = time.time()
             self.batch_in_lock.acquire()
+            logger.debug(
+                "waited for batch in lock for %.3fs", time.time() - start)
+            start = time.time()
             self.batch_in.put((batch, request))
+            logger.debug(
+                "queued batch for %.3fs", time.time() - start)
 
+            start = time.time()
             with self.batch_out_lock:
+                logger.debug(
+                    "waited for batch out lock for %.3fs", time.time() - start)
 
+                start = time.time()
                 self.batch_in_lock.release()
+                logger.debug(
+                    "released batch in lock for %.3fs", time.time() - start)
                 try:
+                    start = time.time()
                     out = self.worker.get()
+                    logger.debug(
+                        "retreived batch for %.3fs", time.time() - start)
                 except WorkersDied:
                     raise PredictProcessDied()
 
