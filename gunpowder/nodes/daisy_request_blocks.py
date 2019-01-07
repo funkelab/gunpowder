@@ -115,6 +115,5 @@ class DaisyRequestBlocks(BatchFilter):
                     raise RuntimeError(
                         "%s is not a vaid ROI type (read_roi or write_roi)")
 
-                self.get_upstream_provider().request_batch(chunk_request)
-
-                self.daisy_client.release_block(block, ret=0)
+            self.get_upstream_provider().request_batch(chunk_request)
+            self.daisy_client.release_block(block, ret=0)
