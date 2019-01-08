@@ -74,7 +74,7 @@ class KlbSource(BatchProvider):
 
         batch = Batch()
 
-        _, request_spec = request.array_specs.items()[0]
+        request_spec = request[self.array]
 
         logger.debug("Reading %s in %s...", self.array, request_spec.roi)
 
