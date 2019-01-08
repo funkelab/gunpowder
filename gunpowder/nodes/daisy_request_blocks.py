@@ -51,10 +51,6 @@ class DaisyRequestBlocks(BatchFilter):
         if num_workers > 1:
             self.request_queue = multiprocessing.Queue(maxsize=0)
 
-    def setup(self):
-
-        self.daisy_client = daisy.ClientScheduler()
-
     def provide(self, request):
 
         empty_request = (len(request) == 0)
@@ -83,9 +79,11 @@ class DaisyRequestBlocks(BatchFilter):
 
     def __get_chunks(self):
 
+        daisy_client = daisy.ClientScheduler()
+
         while True:
 
-            block = self.daisy_client.acquire_block()
+            block = daisy_client.acquire_block()
 
             if block is None:
                 return
@@ -116,4 +114,4 @@ class DaisyRequestBlocks(BatchFilter):
                         "%s is not a vaid ROI type (read_roi or write_roi)")
 
             self.get_upstream_provider().request_batch(chunk_request)
-            self.daisy_client.release_block(block, ret=0)
+            daisy_client.release_block(block, ret=0)
