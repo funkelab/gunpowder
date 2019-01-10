@@ -2,6 +2,9 @@ from __future__ import print_function
 import gunpowder as gp
 import json
 import math
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def train(iterations):
 
@@ -179,3 +182,4 @@ def train(iterations):
 
 if __name__ == "__main__":
     train(200000)
+    
