@@ -2,8 +2,9 @@ from gunpowder.batch import Batch
 from gunpowder.ext import daisy
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.roi import Roi
-import multiprocessing
 import logging
+import multiprocessing
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +37,32 @@ class DaisyRequestBlocks(BatchFilter):
 
             If set to >1, upstream requests are made in parallel with that
             number of workers.
+
+        block_done_callback (function, optional):
+
+            If given, will be called with arguments ``(block, start,
+            duration)`` for each block that was processed. ``start`` and
+            ``duration`` will be given in seconds, as in ``start =
+            time.time()`` and ``duration = time.time() - start``, right before
+            and after a block gets processed.
+
+            This callback can be used to log blocks that have successfully
+            finished processing, which can be used in ``check_function`` of
+            ``daisy.run_blockwise`` to skip already processed blocks in
+            repeated runs.
     '''
 
     def __init__(
             self,
             reference,
             roi_map,
-            num_workers=1):
+            num_workers=1,
+            block_done_callback=None):
 
         self.reference = reference
         self.roi_map = roi_map
         self.num_workers = num_workers
+        self.block_done_callback = block_done_callback
 
         if num_workers > 1:
             self.request_queue = multiprocessing.Queue(maxsize=0)
@@ -89,6 +105,7 @@ class DaisyRequestBlocks(BatchFilter):
                 return
 
             logger.info("Processing block %s", block)
+            start = time.time()
 
             chunk_request = self.reference.copy()
 
@@ -114,4 +131,9 @@ class DaisyRequestBlocks(BatchFilter):
                         "%s is not a vaid ROI type (read_roi or write_roi)")
 
             self.get_upstream_provider().request_batch(chunk_request)
+
+            end = time.time()
+            if self.block_done_callback:
+                self.block_done_callback(block, start, end - start)
+
             daisy_client.release_block(block, ret=0)
