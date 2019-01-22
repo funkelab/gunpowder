@@ -95,7 +95,7 @@ class DaisyRequestBlocks(BatchFilter):
 
     def __get_chunks(self):
 
-        daisy_client = daisy.ClientScheduler()
+        daisy_client = daisy.Client()
 
         while True:
 
