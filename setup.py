@@ -47,7 +47,8 @@ setup(
             "scipy",
             "h5py",
             "scikit-image",
-            "requests"
+            "requests",
+            "augment @ git+https://github.com/funkey/augment"
         ],
         extras_require=extras_require,
 )
