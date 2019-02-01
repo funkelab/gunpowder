@@ -6,20 +6,24 @@ from gunpowder.profiling import Timing
 
 logger = logging.getLogger(__name__)
 
+
 class Reject(BatchFilter):
     '''Reject batches based on the masked-in vs. masked-out ratio.
 
     Args:
 
-        mask (:class:`ArrayKey`):
+        mask (:class:`ArrayKey`, optional):
 
-            The mask to use.
+            The mask to use, if any.
 
         min_masked (``float``, optional):
 
-
             The minimal required ratio of masked-in vs. masked-out voxels.
             Defaults to 0.5.
+
+        ensure_nonempty (:class:`PointKey`, optional)
+
+            Ensures there is at least one point in the batch.
 
         reject_probability (``float``, optional):
 
@@ -28,16 +32,22 @@ class Reject(BatchFilter):
             rejection.
     '''
 
-    def __init__(self, mask, min_masked=0.5, reject_probability=1.):
+    def __init__(
+            self,
+            mask=None,
+            min_masked=0.5,
+            ensure_nonempty=None,
+            reject_probability=1.):
 
         self.mask = mask
         self.min_masked = min_masked
+        self.ensure_nonempty = ensure_nonempty
         self.reject_probability = reject_probability
 
     def setup(self):
 
         assert self.mask in self.spec, (
-            "Reject can only be used if %s is provided"%self.mask)
+            "Reject can only be used if %s is provided" % self.mask)
         self.upstream_provider = self.get_upstream_provider()
 
     def provide(self, request):
@@ -55,8 +65,21 @@ class Reject(BatchFilter):
         while not have_good_batch:
 
             batch = self.upstream_provider.request_batch(request)
-            mask_ratio = batch.arrays[self.mask].data.mean()
-            have_good_batch = mask_ratio>self.min_masked
+
+            if self.mask:
+                mask_ratio = batch.arrays[self.mask].data.mean()
+            else:
+                mask_ratio = None
+
+            if self.ensure_nonempty:
+                num_points = len(batch.points[self.ensure_nonempty].data)
+            else:
+                num_points = None
+
+            have_min_mask = mask_ratio is None or mask_ratio > self.min_masked
+            have_points = num_points is None or num_points > 0
+
+            have_good_batch = have_min_mask and have_points
 
             if not have_good_batch and self.reject_probability < 1.:
                 have_good_batch = random.random() > self.reject_probability
