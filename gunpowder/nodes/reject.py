@@ -45,9 +45,13 @@ class Reject(BatchFilter):
         self.reject_probability = reject_probability
 
     def setup(self):
-
-        assert self.mask in self.spec, (
-            "Reject can only be used if %s is provided" % self.mask)
+        if self.mask:
+            assert self.mask in self.spec, (
+                "Reject can only be used if %s is provided" % self.mask)
+        if self.ensure_nonempty:
+            assert self.ensure_nonempty in self.spec, (
+                "Reject can only be used if %s is provided" %
+                self.ensure_nonempty)
         self.upstream_provider = self.get_upstream_provider()
 
     def provide(self, request):
