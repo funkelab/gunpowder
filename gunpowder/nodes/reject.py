@@ -61,9 +61,13 @@ class Reject(BatchFilter):
 
         timing = Timing(self)
         timing.start()
-
-        assert self.mask in request, (
-            "Reject can only be used if a GT mask is requested")
+        if self.mask:
+            assert self.mask in request, (
+                "Reject can only be used if %s is provided" % self.mask)
+        if self.ensure_nonempty:
+            assert self.ensure_nonempty in request, (
+                "Reject can only be used if %s is provided" %
+                self.ensure_nonempty)
 
         have_good_batch = False
         while not have_good_batch:
