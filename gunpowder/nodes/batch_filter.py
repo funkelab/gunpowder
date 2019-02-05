@@ -112,7 +112,7 @@ class BatchFilter(BatchProvider):
 
         # operate on a copy of the request, to provide the original request to
         # 'process' for convenience
-        upstream_request = copy.deepcopy(request)
+        dependencies = copy.deepcopy(request)
 
         skip = self.__can_skip(request)
 
@@ -120,25 +120,30 @@ class BatchFilter(BatchProvider):
         timing_prepare.start()
 
         if not skip:
-            self.prepare(upstream_request)
-            self.remove_provided(upstream_request)
+            dependencies = self.prepare(request)
+            # self.remove_provided(dependencies)  # Remove keys from `dependencies` that are provided by this BatchFilter
 
         timing_prepare.stop()
 
+        upstream_request = request.merge(dependencies)
         batch = self.get_upstream_provider().request_batch(upstream_request)
+        batch_in = batch.crop(dependencies)
+        batch_out = copy.deepcopy(batch_in)
 
         timing_process = Timing(self, 'process')
         timing_process.start()
 
         if not skip:
-            self.process(batch, request)
+            batch_out = self.process(batch_in, request)
 
         timing_process.stop()
 
-        batch.profiling_stats.add(timing_prepare)
-        batch.profiling_stats.add(timing_process)
+        downstream_batch = batch.merge(batch_out).crop(request)
 
-        return batch
+        downstream_batch.profiling_stats.add(timing_prepare)
+        downstream_batch.profiling_stats.add(timing_process)
+
+        return downstream_batch
 
     def __can_skip(self, request):
         '''Check if this filter needs to be run for the given request.'''
@@ -171,7 +176,7 @@ class BatchFilter(BatchProvider):
         Prepare for a batch request. Change the request as needed, it will be
         passed on upstream.
         '''
-        pass
+        return copy.deepcopy(request)
 
     def process(self, batch, request):
         '''To be implemented in subclasses.
@@ -191,4 +196,5 @@ class BatchFilter(BatchProvider):
                 The request this node received. The updated batch should meet
                 this request.
         '''
-        raise RuntimeError("Class %s does not implement 'process'"%type(self).__name__)
+        return copy.deepcopy(batch)
+        # raise RuntimeError("Class %s does not implement 'process'"%type(self).__name__)
