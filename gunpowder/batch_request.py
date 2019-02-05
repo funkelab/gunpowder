@@ -72,3 +72,17 @@ class BatchRequest(ProviderSpec):
             for key in specs_type:
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())
+
+    def merge(self, dependencies):
+        '''Merge dependencies(another request) with current request. (merge points_spec only)'''
+        assert isinstance(dependencies, self), "Only requests can be merged!"
+
+        upstream_request = copy.deepcopy(self)
+        if dependencies.points_specs:
+            for key, specs in dependencies.points_specs.items():
+                try: 
+                    specs = upstream_request.points_specs[key]
+                except:
+                    upstream_request[key] = specs
+                
+        return upstream_request
