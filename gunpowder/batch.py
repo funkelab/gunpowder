@@ -1,10 +1,12 @@
 import logging
 import multiprocessing
+import copy
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
 from .array import Array, ArrayKey
 from .points import Points, PointsKey
+from .batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -151,3 +153,36 @@ class Batch(Freezable):
             for (key, obj) in collection_type.items():
                 r += "%s: %s\n"%(key, obj.spec)
         return r
+
+    def crop(self, request):
+        '''Crop batch to meet the request'''
+
+        assert isinstance(request, BatchRequest), "Only BatchRequest can be used for cropping batch"
+
+        new_batch = copy.deepcopy(self)
+
+        if request.array_specs is not None:
+            for (array_key, request_spec) in request.array_specs.items():
+                if request_spec.roi is not None and self.arrays[array_key].spec.roi.contains(request_spec.roi):
+                        array = self.arrays[array_key].crop(request_spec.roi)
+                        new_batch.arrays[array_key] = array
+        
+        if request.points_specs is not None:
+            for (points_key, request_spec) in request.points_specs.items():
+                if request_spec.roi is not None and self.points[points_key].spec.roi.contains(request_spec.roi):
+                        roi = self.points[points_key].spec.roi
+                        new_batch.points[points_key].spec.roi = roi.intersect(request_spec.roi)
+                
+        return new_batch
+
+    def merge(self, batch):
+        '''Merge two batches'''
+        assert isinstance(batch, self), "Only two batches can be merged!"
+
+        new_batch = copy.deepcopy(self)
+
+        for (key, val) in batch.items():
+            if val.spec.roi.contains(self[key].spec.roi) or self[key] is None:
+                    new_batch[key] = copy.deepcopy(batch[key])
+
+        return new_batch
