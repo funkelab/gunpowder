@@ -93,10 +93,14 @@ class Reject(BatchFilter):
                 have_good_batch = random.random() > self.reject_probability
 
             if not have_good_batch:
-
-                logger.debug(
-                    "reject batch with mask ratio %f at %s",
-                    mask_ratio, batch.arrays[self.mask].spec.roi)
+                if self.mask:
+                    logger.debug(
+                        "reject batch with mask ratio %f at %s",
+                        mask_ratio, batch.arrays[self.mask].spec.roi)
+                if self.ensure_nonempty:
+                    logger.debug(
+                        "reject batch with empty points in %s",
+                        batch.points[self.ensure_nonempty].spec.roi)
                 num_rejected += 1
 
                 if timing.elapsed() > report_next_timeout:
@@ -107,10 +111,14 @@ class Reject(BatchFilter):
                     report_next_timeout *= 2
 
             else:
-
-                logger.debug(
-                    "accepted batch with mask ratio %f at %s",
-                    mask_ratio, batch.arrays[self.mask].spec.roi)
+                if self.mask:
+                    logger.debug(
+                        "accepted batch with mask ratio %f at %s",
+                        mask_ratio, batch.arrays[self.mask].spec.roi)
+                if self.ensure_nonempty:
+                    logger.debug(
+                        "accepted batch with nonempty points in %s",
+                        self.ensure_nonempty)
 
         timing.stop()
         batch.profiling_stats.add(timing)
