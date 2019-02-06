@@ -143,6 +143,13 @@ class Train(GenericTrain):
         else:
             self.optimizer_func = optimizer
 
+        # at least for some versions of tensorflow, the checkpoint name has to
+        # start with a . if it is a relative path
+        if not os.path.isabs(self.meta_graph_filename):
+            self.meta_graph_filename = os.path.join(
+                '.'.
+                self.meta_graph_filename)
+
     def start(self):
 
         logger.info("Initializing tf session...")
@@ -201,7 +208,7 @@ class Train(GenericTrain):
         if batch.iteration%self.save_every == 0:
 
             checkpoint_name = (
-                './' + self.meta_graph_filename +
+                self.meta_graph_filename +
                 '_checkpoint_%i'%batch.iteration)
 
             logger.info(
