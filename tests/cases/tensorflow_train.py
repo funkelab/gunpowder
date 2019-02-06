@@ -124,7 +124,8 @@ class TestTensorflowTrain(ProviderTest):
         predict = Predict(
             meta_base + '_checkpoint_300',
             inputs={a: ArrayKeys.A, b: ArrayKeys.B},
-            outputs={c: ArrayKeys.C})
+            outputs={c: ArrayKeys.C},
+            max_shared_memory=1024*1024)
         pipeline = source + predict
 
         request = BatchRequest({
