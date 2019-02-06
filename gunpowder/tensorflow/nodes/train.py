@@ -146,9 +146,7 @@ class Train(GenericTrain):
         # at least for some versions of tensorflow, the checkpoint name has to
         # start with a . if it is a relative path
         if not os.path.isabs(self.meta_graph_filename):
-            self.meta_graph_filename = os.path.join(
-                '.'.
-                self.meta_graph_filename)
+            self.meta_graph_filename = os.path.join('.', self.meta_graph_filename)
 
     def start(self):
 
