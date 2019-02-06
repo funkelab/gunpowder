@@ -53,9 +53,12 @@ class Predict(GenericPredict):
 
             Skip prediction, if all inputs are empty (contain only 0). In this
             case, outputs are simply set to 0.
-    '''
 
-    MAX_SHARED_MEMORY = 1024*1024*1024 # 1G
+        max_shared_memory (``int``, optional):
+
+            The maximal amount of shared memory in bytes to allocate to send
+            batches to the GPU processes. Defaults to 1GB.
+    '''
 
     def __init__(
             self,
@@ -64,7 +67,8 @@ class Predict(GenericPredict):
             outputs,
             array_specs=None,
             graph=None,
-            skip_empty=False):
+            skip_empty=False,
+            max_shared_memory=1024*1024*1024):
 
         super(Predict, self).__init__(
             inputs,
@@ -78,12 +82,17 @@ class Predict(GenericPredict):
         self.skip_empty = skip_empty
 
         self.manager = mp.Manager()
+        self.max_shared_memory = max_shared_memory
         self.shared_input_array_config = self.manager.dict()
         self.shared_output_array_config = self.manager.dict()
         self.shared_input_arrays = {}
         self.shared_output_arrays = {}
-        self.shared_input_memory = mp.RawArray(ctypes.c_float, Predict.MAX_SHARED_MEMORY)
-        self.shared_output_memory = mp.RawArray(ctypes.c_float, Predict.MAX_SHARED_MEMORY)
+        self.shared_input_memory = mp.RawArray(
+            ctypes.c_float,
+            self.max_shared_memory)
+        self.shared_output_memory = mp.RawArray(
+            ctypes.c_float,
+            self.max_shared_memory)
 
         self.send_lock = mp.Lock()
         self.receive_lock = mp.Lock()
@@ -291,8 +300,8 @@ class Predict(GenericPredict):
                 dtype)
 
             begin += size*np.dtype(dtype).itemsize
-            assert begin <= Predict.MAX_SHARED_MEMORY, (
-                "The input arrays exceed the MAX_SHARED_MEMORY")
+            assert begin <= self.max_shared_memory, (
+                "The input arrays exceed the max_shared_memory")
 
     def __create_shared_output_array_config(self):
         '''To be called by predict process.'''
@@ -312,8 +321,8 @@ class Predict(GenericPredict):
                 dtype)
 
             begin += size*np.dtype(dtype).itemsize
-            assert begin <= Predict.MAX_SHARED_MEMORY, (
-                "The output arrays exceed the MAX_SHARED_MEMORY")
+            assert begin <= self.max_shared_memory, (
+                "The output arrays exceed the max_shared_memory")
 
     def __init_shared_input_arrays(self):
         '''Assign the shared memory to numpy arrays.'''
