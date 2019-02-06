@@ -28,7 +28,7 @@ class TestPreCache(ProviderTest):
 
             # should be done in a bit more than 1 seconds, certainly much less
             # than 100
-            self.assertTrue(time.time() - start < 10)
+            self.assertTrue(time.time() - start < 50)
 
             # change request
             self.test_request[ArrayKeys.RAW].roi = \
@@ -43,4 +43,4 @@ class TestPreCache(ProviderTest):
                     self.test_request[ArrayKeys.RAW].roi)
 
             # should be done in a bit more than 1 seconds
-            self.assertTrue(time.time() - start < 2)
+            self.assertTrue(time.time() - start < 50)
