@@ -99,7 +99,7 @@ class SimpleAugment(BatchFilter):
             if points_key not in request:
                 continue
 
-            for loc_id, syn_point in points.data.items():
+            for loc_id, syn_point in list(points.data.items()):
                 # mirror
                 location_in_total_offset = np.asarray(syn_point.location) - total_roi_offset
                 syn_point.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
