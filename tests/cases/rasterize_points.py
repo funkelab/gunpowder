@@ -24,6 +24,7 @@ class PointTestSource3D(BatchProvider):
                 8: Point(Coordinate((199, 199, 199))),
                 # center
                 9: Point(Coordinate((0, 0, 0))),
+                10: Point(Coordinate((-1, -1, -1))),
             }
 
     def setup(self):
