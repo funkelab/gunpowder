@@ -50,6 +50,7 @@ class MergeProvider(BatchProvider):
                 merged_batch.arrays[key] = array
             for key, points in batch.points.items():
                 merged_batch.points[key] = points
+            merged_batch.profiling_stats.merge_with(batch.profiling_stats)
 
         return merged_batch
 
