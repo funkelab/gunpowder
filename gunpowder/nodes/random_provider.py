@@ -3,6 +3,7 @@ import numpy as np
 
 from .batch_provider import BatchProvider
 
+
 class RandomProvider(BatchProvider):
     '''Randomly selects one of the upstream providers::
 
@@ -29,7 +30,8 @@ class RandomProvider(BatchProvider):
 
     def setup(self):
 
-        assert len(self.get_upstream_providers()) > 0, "at least one batch provider needs to be added to the RandomProvider"
+        assert len(self.get_upstream_providers()) > 0,\
+            "at least one batch provider must be added to the RandomProvider"
         if self.probabilities is not None:
             assert len(self.get_upstream_providers()) == len(
                 self.probabilities), "if probabilities are specified, they " \
@@ -44,8 +46,8 @@ class RandomProvider(BatchProvider):
             if common_spec is None:
                 common_spec = copy.deepcopy(provider.spec)
             else:
-                for key, spec in provider.spec.items():
-                    if key not in common_spec:
+                for key, spec in list(common_spec.items()):
+                    if key not in provider.spec:
                         del common_spec[key]
 
         for key, spec in common_spec.items():
