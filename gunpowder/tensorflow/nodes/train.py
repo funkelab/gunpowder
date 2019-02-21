@@ -2,9 +2,10 @@ import logging
 import os
 import numpy as np
 
+from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_train import GenericTrain
-from gunpowder.array import ArrayKey, Array
+from gunpowder.tensorflow.local_server import LocalServer
 
 logger = logging.getLogger(__name__)
 
@@ -150,10 +151,13 @@ class Train(GenericTrain):
 
     def start(self):
 
-        logger.info("Initializing tf session...")
+        target = LocalServer.get_target()
+        logger.info("Initializing tf session, connecting to %s...", target)
 
         self.graph = tf.Graph()
-        self.session = tf.Session(graph=self.graph)
+        self.session = tf.Session(
+            target=target,
+            graph=self.graph)
 
         with self.graph.as_default():
             self.__read_meta_graph()
