@@ -1,5 +1,4 @@
 from setuptools import setup
-import subprocess
 try:
     import base_string as string_types
 except ImportError:
@@ -18,8 +17,6 @@ for value in extras_require.values():
         dep_set.update(value)
 
 extras_require['full'] = list(dep_set)
-
-subprocess.call('pip install git+https://github.com/funkey/augment#egg=augment'.split())
 
 setup(
         name='gunpowder',
@@ -47,7 +44,8 @@ setup(
             "scipy",
             "h5py",
             "scikit-image",
-            "requests"
+            "requests",
+            "augment-nd"
         ],
         extras_require=extras_require,
 )
