@@ -1,3 +1,4 @@
+import os
 from setuptools import setup
 try:
     import base_string as string_types
@@ -18,9 +19,17 @@ for value in extras_require.values():
 
 extras_require['full'] = list(dep_set)
 
+name = 'gunpowder'
+here = os.path.abspath(os.path.dirname(__file__))
+version_info = {}
+with open(os.path.join(here, name, 'version_info.py')) as fp:
+    exec(fp.read(), version_info)
+version = version_info['_version']
+
+
 setup(
-        name='gunpowder',
-        version='0.3.2',
+        name=name,
+        version=str(version),
         description='Data loading DAG for Greentea.',
         url='https://github.com/funkey/gunpowder',
         author='Jan Funke',
