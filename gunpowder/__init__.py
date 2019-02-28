@@ -15,6 +15,7 @@ from .provider_spec import ProviderSpec
 from .roi import Roi
 from .array import Array, ArrayKey, ArrayKeys
 from .array_spec import ArraySpec
+from .version_info import _version as version
 import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
