@@ -123,12 +123,12 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest()
                 request[test_labels] = ArraySpec(roi=request_roi)
-                # request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = PointsSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 batch = pipeline.request_batch(request)
-                labels = batch.arrays[test_labels]
-                points = batch.points[test_points]
+                labels = batch[test_labels]
+                points = batch[test_points]
 
                 # the point at (0, 0, 0) should not have moved
                 self.assertTrue(0 in points.data)
