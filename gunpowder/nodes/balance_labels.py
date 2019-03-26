@@ -48,12 +48,12 @@ class BalanceLabels(BatchFilter):
             interval [0, ``num_classes``). Defaults to 2 for binary
             classification.
 
-        clipmin (float, optional):
+        clipmin (``float``, optional):
 
             Clip class fraction to clipmin when calculating class weights.
             Defaults to 0.05. Set to None if you do not want to clip min values.
 
-        clipmax (float, optional):
+        clipmax (``float``, optional):
 
             Clip class fraction to clipmax when calculating class weights.
             Defaults to 0.95. Set to None, if you do not want to clip max
