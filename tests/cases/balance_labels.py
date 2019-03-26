@@ -67,6 +67,8 @@ class TestBalanceLabels(ProviderTest):
 
                 request = BatchRequest()
                 request.add(ArrayKeys.GT_AFFINITIES, (400,30,34))
+                request.add(ArrayKeys.GT_AFFINITIES_MASK, (400,30,34))
+                request.add(ArrayKeys.GT_IGNORE, (400,30,34))
                 request.add(ArrayKeys.LOSS_SCALE, (400,30,34))
 
                 batch = pipeline.request_batch(request)
@@ -120,6 +122,8 @@ class TestBalanceLabels(ProviderTest):
 
                 request = BatchRequest()
                 request.add(ArrayKeys.GT_AFFINITIES, (400,30,34))
+                request.add(ArrayKeys.GT_AFFINITIES_MASK, (400,30,34))
+                request.add(ArrayKeys.GT_IGNORE, (400,30,34))
                 request.add(ArrayKeys.LOSS_SCALE, (400,30,34))
 
                 batch = pipeline.request_batch(request)

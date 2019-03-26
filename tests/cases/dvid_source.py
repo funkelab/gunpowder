@@ -1,6 +1,7 @@
 from .provider_test import ProviderTest
 from unittest import skipIf
 from gunpowder import *
+from gunpowder.ext import dvision, NoSuchModule
 import numpy as np
 import socket
 import logging
@@ -12,6 +13,8 @@ DVID_SERVER = 'slowpoke1'
 
 
 def is_dvid_unavailable(server):
+    if isinstance(dvision, NoSuchModule):
+        return True
     try:
         socket.gethostbyname(server)
         return False

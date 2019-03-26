@@ -147,6 +147,8 @@ class BatchProvider(object):
 
         self.check_batch_consistency(batch, request)
 
+        self.remove_unneeded(batch, request)
+
         logger.debug("%s provides %s", self.name(), batch)
 
         return batch
@@ -236,6 +238,13 @@ class BatchProvider(object):
                 assert points.spec.roi.contains(point.location), (
                     "points provided by %s with ROI %s contain point at %s"%(
                         self.name(), points.spec.roi, point.location))
+
+    def remove_unneeded(self, batch, request):
+
+        batch_keys = set(list(batch.arrays.keys()) + list(batch.points.keys()))
+        for key in batch_keys:
+            if key not in request:
+                del batch[key]
 
     def provide(self, request):
         '''To be implemented in subclasses.
