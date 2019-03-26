@@ -207,6 +207,7 @@ class ElasticAugment(BatchFilter):
 
             # reshape array data into (channels,) + spatial dims
             shape = array.data.shape
+            channel_shape = shape[:-self.spatial_dims]
             data = array.data.reshape((-1,) + shape[-self.spatial_dims:])
 
             # apply transformation on each channel
@@ -219,7 +220,7 @@ class ElasticAugment(BatchFilter):
             ])
 
             data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            array.data = data.reshape(data_roi.get_shape())
+            array.data = data.reshape(channel_shape + data_roi.get_shape())
 
             # restore original ROIs
             array.spec.roi = request[array_key].roi
