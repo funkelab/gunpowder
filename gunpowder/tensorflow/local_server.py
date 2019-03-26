@@ -37,6 +37,8 @@ class LocalServer(Freezable):
                 logger.info("Creating local tensorflow server")
                 LocalServer.__server = tf.train.Server.create_local_server()
                 target = LocalServer.__server.target
+                if not isinstance(target, bytes):
+                    target = target.encode('ascii')
                 logger.info("Server running at %s", target)
             else:
                 logger.info("Server already running at %s", target)

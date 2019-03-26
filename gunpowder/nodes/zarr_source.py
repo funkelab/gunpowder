@@ -32,12 +32,18 @@ class ZarrSource(Hdf5LikeSource):
 
     def _get_voxel_size(self, dataset):
 
+        if 'resolution' not in dataset.attrs:
+            return None
+
         if self.filename.endswith('.n5'):
             return Coordinate(dataset.attrs['resolution'][::-1])
         else:
             return Coordinate(dataset.attrs['resolution'])
 
     def _get_offset(self, dataset):
+
+        if 'offset' not in dataset.attrs:
+            return None
 
         if self.filename.endswith('.n5'):
             return Coordinate(dataset.attrs['offset'][::-1])
