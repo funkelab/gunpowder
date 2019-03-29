@@ -26,6 +26,14 @@ class Hdf5Source(Hdf5LikeSource):
             the array specs automatically determined from the data file. This
             is useful to set a missing ``voxel_size``, for example. Only fields
             that are not ``None`` in the given :class:`ArraySpec` will be used.
+
+        channels_first (``bool``, optional):
+
+            Specifies the ordering of the dimensions of the HDF5-like data source.
+            If channels_first is set (default), then the input shape is expected
+            to be (channels, spatial dimensions). This is recommended because of
+            better performance. If channels_first is set to false, then the input
+            data is read in channels_last manner and converted to channels_first.
     '''
     def _open_file(self, filename):
         return h5py.File(filename, 'r')
