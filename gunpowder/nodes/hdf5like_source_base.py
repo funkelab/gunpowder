@@ -192,8 +192,8 @@ class Hdf5LikeSource(BatchProvider):
             array = np.asarray(data_file[ds_name][(slice(None),) * c + roi.to_slices()])
         else:
             array = np.asarray(data_file[ds_name][roi.to_slices() + (slice(None),) * c])
-            array = np.transpose(array, 
-                    axes=[i + self.ndims for i in range(c)] + list(range(self.ndims)))
+            array = np.transpose(array,
+                                 axes=[i + self.ndims for i in range(c)] + list(range(self.ndims)))
 
         return array
 
