@@ -48,7 +48,7 @@ class Normalize(BatchFilter):
             if array.data.dtype == np.uint8:
                 factor = 1.0/255
             elif array.data.dtype == np.uint16:
-                factor = 1.0/(255*255)
+                factor = 1.0/(256*256-1)
             elif array.data.dtype == np.float32:
                 assert array.data.min() >= 0 and array.data.max() <= 1, (
                         "Values are float but not in [0,1], I don't know how "
