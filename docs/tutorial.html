@@ -86,12 +86,6 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install.html#installing-using-conda">Installing using <em>conda</em></a></li>
-<li class="toctree-l2"><a class="reference internal" href="install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install.html#install-from-github">Install from <em>github</em></a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -101,7 +95,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="requests_batches.html">Batch Requests and Batches</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
@@ -267,9 +260,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-gunpowder">
-<span id="tutorial-boundary-prediction-for-instance-segmentation"></span><span id="sec-tutorial"></span><h1>Tutorial: boundary prediction for instance segmentation<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
-<p>This is a tutorial about how to use <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> to assemble pipelines to train and test a neural network. As an
+  <div class="section" id="tutorial-boundary-prediction-for-instance-segmentation">
+<span id="sec-tutorial"></span><h1>Tutorial: boundary prediction for instance segmentation<a class="headerlink" href="#tutorial-boundary-prediction-for-instance-segmentation" title="Permalink to this headline">¶</a></h1>
+<p>(written by Sherry Ding)</p>
+<span class="target" id="module-gunpowder"></span><p>This is a tutorial about how to use <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> to assemble pipelines to train and test a neural network. As an
 example, here we do neuron segmentation on the <a class="reference external" href="https://cremi.org/data/">cremi dataset</a> using a <em>3D U-Net</em>. To segment
 neurons, we predict inter-voxel affinities from volumes of raw data. A <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> processing pipeline consists
 of nodes that can be chained together using <strong>+</strong>. The major nodes of our training pipeline in this example includes
@@ -607,19 +601,6 @@ of time consuming.</p>
     <span class="n">pipeline</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">BatchRequest</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>Put all above codes into a function called <em>predict</em>.</p>
-<p>..code-block:: python</p>
-<blockquote>
-<div><dl class="simple">
-<dt>def predict(iterations):</dt><dd><p>…</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>As before we repeated training for 200000 times, we test the final model.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">predict</span><span class="p">(</span><span class="mi">200000</span><span class="p">)</span>
-</pre></div>
-</div>
 </div>
 </div>
 
@@ -641,7 +622,7 @@ of time consuming.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Jan Funke.
+        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
