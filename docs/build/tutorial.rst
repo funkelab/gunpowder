@@ -3,6 +3,8 @@
 Tutorial: boundary prediction for instance segmentation
 =======================================================
 
+(written by Sherry Ding)
+
 .. automodule:: gunpowder
 
 This is a tutorial about how to use ``gunpowder`` to assemble pipelines to train and test a neural network. As an 
