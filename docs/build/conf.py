@@ -53,8 +53,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'gunpowder'
-copyright = u'2017, Jan Funke'
-author = u'Jan Funke'
+author = u'Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape'
+copyright = u'2019, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

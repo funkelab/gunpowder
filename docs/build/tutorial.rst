@@ -394,17 +394,3 @@ Finally, we request an empty batch from :class:`Scan<Scan>` to trigger scanning 
         # request an empty batch from Scan to trigger scanning of the dataset
         # without keeping the complete dataset in memory
         pipeline.request_batch(gp.BatchRequest())
-
-Put all above codes into a function called *predict*.
-
-..code-block:: python
-
-    def predict(iterations):
-        ...
-
-As before we repeated training for 200000 times, we test the final model.
-
-.. code-block:: python
-
-    if __name__ == "__main__":
-        predict(200000)
