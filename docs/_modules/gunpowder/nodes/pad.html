@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -261,7 +275,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">PointsKey</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Pad"><a class="viewcode-back" href="../../../api.html#gunpowder.Pad">[docs]</a><span class="k">class</span> <span class="nc">Pad</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Add a constant intensity padding around arrays of another batch </span>
@@ -317,7 +331,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+        <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># change request to fit into upstream spec</span>
         <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">upstream_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
@@ -325,8 +339,8 @@
         <span class="k">if</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Requested </span><span class="si">%s</span><span class="s2"> ROI lies entirely outside of upstream &quot;</span>
-                <span class="s2">&quot;ROI.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+                <span class="s2">&quot;Requested </span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> lies entirely outside of upstream &quot;</span>
+                <span class="s2">&quot;ROI </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">upstream_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
 
             <span class="c1"># ensure a valid request by asking for empty ROI</span>
             <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
@@ -356,7 +370,7 @@
         <span class="k">else</span><span class="p">:</span>
 
             <span class="n">points</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
-            <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
     <span class="k">def</span> <span class="nf">__expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">from_roi</span><span class="p">,</span> <span class="n">to_roi</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;from_roi and to_roi should be in voxels.&#39;&#39;&#39;</span>
@@ -365,18 +379,21 @@
             <span class="s2">&quot;expanding array of shape </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">from_roi</span><span class="p">,</span> <span class="n">to_roi</span><span class="p">)</span>
 
-        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">to_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="n">from_roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
+        <span class="n">channel_shapes</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="n">num_channels</span><span class="p">]</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">channel_shapes</span> <span class="o">+</span> <span class="n">to_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">b</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="n">shift</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">to_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;shifting &#39;from&#39; by &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shift</span><span class="p">))</span>
-        <span class="n">a_in_b</span> <span class="o">=</span> <span class="n">from_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+        <span class="n">a_in_b</span> <span class="o">=</span> <span class="n">from_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span><span class="o">.</span><span class="n">to_slices</span><span class="p">()</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;target shape is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;target slice is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">a_in_b</span><span class="p">))</span>
 
-        <span class="n">b</span><span class="p">[</span><span class="n">a_in_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="n">b</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">*</span><span class="n">num_channels</span> <span class="o">+</span> <span class="n">a_in_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
 
         <span class="k">return</span> <span class="n">b</span></div>
 </pre></div>
@@ -424,7 +441,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -259,7 +273,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">ArrayKey</span>
 <span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BatchProvider"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider">[docs]</a><span class="k">class</span> <span class="nc">BatchProvider</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Superclass for all nodes in a `gunpowder` graph.</span>
@@ -329,7 +343,7 @@
 
         <span class="k">assert</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="p">(</span>
             <span class="s2">&quot;Node </span><span class="si">%s</span><span class="s2"> is trying to add spec for </span><span class="si">%s</span><span class="s2">, but is already &quot;</span>
-            <span class="s2">&quot;provided.&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+            <span class="s2">&quot;provided.&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">provided_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -400,6 +414,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">check_batch_consistency</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_unneeded</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> provides </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">batch</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">batch</span></div>
@@ -428,6 +444,7 @@
 
                 <span class="k">if</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">assert</span> <span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: voxel size </span><span class="si">%s</span><span class="s2"> requested for </span><span class="si">%s</span><span class="s2">, but this node provides </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span>
                             <span class="n">request_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
                             <span class="n">key</span><span class="p">,</span>
                             <span class="n">provided_spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
@@ -461,17 +478,18 @@
                     <span class="n">array_key</span><span class="p">))</span>
             <span class="c1"># ensure that the spatial dimensions are the same (other dimensions </span>
             <span class="c1"># on top are okay, e.g., for affinities)</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
-            <span class="n">data_shape</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">dims</span><span class="p">:])</span>
-            <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
-            <span class="k">assert</span> <span class="n">data_shape</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> requested, but size of array is </span><span class="si">%s</span><span class="s2">*</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2"> provided by </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
-                    <span class="n">array_key</span><span class="p">,</span>
-                    <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
-                    <span class="n">data_shape</span><span class="p">,</span>
-                    <span class="n">voxel_size</span><span class="p">,</span>
-                    <span class="n">data_shape</span><span class="o">*</span><span class="n">voxel_size</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
+                <span class="n">data_shape</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">dims</span><span class="p">:])</span>
+                <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+                <span class="k">assert</span> <span class="n">data_shape</span> <span class="o">==</span> <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ROI </span><span class="si">%s</span><span class="s2"> requested, but size of array is </span><span class="si">%s</span><span class="s2">*</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2"> provided by </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
+                        <span class="n">array_key</span><span class="p">,</span>
+                        <span class="n">request_spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span>
+                        <span class="n">data_shape</span><span class="p">,</span>
+                        <span class="n">voxel_size</span><span class="p">,</span>
+                        <span class="n">data_shape</span><span class="o">*</span><span class="n">voxel_size</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+                <span class="p">)</span>
 
         <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">request_spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
@@ -488,6 +506,13 @@
                     <span class="s2">&quot;points provided by </span><span class="si">%s</span><span class="s2"> with ROI </span><span class="si">%s</span><span class="s2"> contain point at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">))</span>
 
+    <span class="k">def</span> <span class="nf">remove_unneeded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="n">batch_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">batch_keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">batch</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
 <div class="viewcode-block" id="BatchProvider.provide"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchProvider.provide">[docs]</a>    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
 
@@ -503,7 +528,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;provide&#39;&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">())</span></div>
 
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -553,7 +578,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

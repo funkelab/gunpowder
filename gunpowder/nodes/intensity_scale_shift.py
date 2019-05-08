@@ -22,5 +22,8 @@ class IntensityScaleShift(BatchFilter):
 
     def process(self, batch, request):
 
+        if self.array not in batch.arrays:
+            return
+
         raw = batch.arrays[self.array]
         raw.data = raw.data*self.scale + self.shift

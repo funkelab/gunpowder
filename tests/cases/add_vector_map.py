@@ -82,7 +82,7 @@ class AddVectorMapTestSource(BatchProvider):
         min_dist_between_presyn_locs = 250
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
         min_dist_pre_to_postsyn_loc, max_dist_pre_to_postsyn_loc= 60, 120
-        num_presyn_locations  = roi.size() / (np.prod(50*np.asarray(voxel_size_points)))  # 1 synapse per 50vx^3 cube
+        num_presyn_locations  = roi.size() // (np.prod(50*np.asarray(voxel_size_points)))  # 1 synapse per 50vx^3 cube
         num_postsyn_locations = np.random.randint(low=1, high=3)  # 1 to 3 postsyn partners
 
         loc_id = 0
@@ -182,7 +182,7 @@ class TestAddVectorMap(ProviderTest):
                     if partner_id in postsyn_locs.keys():
                         partner_location = postsyn_locs[partner_id].location
                         dist_to_loc[np.linalg.norm(partner_location - point.location)] = partner_location
-                min_dist             = np.min(dist_to_loc.keys())
+                min_dist             = np.min(list(dist_to_loc.keys()))
                 relevant_partner_loc = dist_to_loc[min_dist]
 
                 presyn_loc_shifted_vx = (point.location - offset_vector_map_presyn)//voxel_size
@@ -249,7 +249,7 @@ class TestAddVectorMap(ProviderTest):
                             for partner_id, partner_loc in partner_ids_to_locs_per_src.items():
                                 if np.array_equal(np.asarray(trg_loc_of_vector_phys), partner_loc):
                                     count_vectors_per_partner[partner_id] += 1
-                self.assertTrue((count_vectors_per_partner.values() - np.min(count_vectors_per_partner.values())
+                self.assertTrue((list(count_vectors_per_partner.values()) - np.min(list(count_vectors_per_partner.values()))
                                 <=len(count_vectors_per_partner.keys())).all())
 
 if __name__ == '__main__':

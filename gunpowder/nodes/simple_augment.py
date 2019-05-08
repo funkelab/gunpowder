@@ -37,6 +37,10 @@ class SimpleAugment(BatchFilter):
 
         self.dims = self.spec.get_total_roi().dims()
 
+        # mirror_mask and transpose_dims refer to the indices of the spatial
+        # dimensions only, starting counting at 0 for the first spatial
+        # dimension
+
         if self.mirror_only is None:
             self.mirror_mask = [ True ]*self.dims
         else:
@@ -86,20 +90,31 @@ class SimpleAugment(BatchFilter):
         # arrays
         for (array_key, array) in batch.arrays.items():
 
-            array.data = array.data[mirror]
-            if self.transpose != (0,1,2):
-                array.data = array.data.transpose(self.transpose)
+            if array_key not in request:
+                continue
+
+            num_channels = len(array.data.shape) - self.dims
+            channel_slices = (slice(None, None),)*num_channels
+
+            array.data = array.data[channel_slices + mirror]
+
+            transpose = [t + num_channels for t in self.transpose]
+            array.data = array.data.transpose([0]*num_channels + transpose)
+
         # points
         total_roi_offset = self.total_roi.get_offset()
         for (points_key, points) in batch.points.items():
 
-            for loc_id, syn_point in points.data.items():
+            if points_key not in request:
+                continue
+
+            for loc_id, syn_point in list(points.data.items()):
                 # mirror
                 location_in_total_offset = np.asarray(syn_point.location) - total_roi_offset
                 syn_point.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
                                                  if m else syn_point.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
-                if self.transpose != (0, 1, 2):
+                if self.transpose != tuple(range(self.dims)):
                     syn_point.location = np.asarray([syn_point.location[self.transpose[d]] for d in range(self.dims)])
 
                 # due to the mirroring, points at the lower boundary of the ROI
@@ -109,13 +124,15 @@ class SimpleAugment(BatchFilter):
 
         # arrays & points
         for collection_type in [batch.arrays, batch.points]:
-            for (type, collector) in collection_type.items():
+            for (key, collector) in collection_type.items():
+                if key not in request:
+                    continue
                 logger.debug("total ROI: %s"%self.total_roi)
-                logger.debug("upstream %s ROI: %s"%(type, collector.spec.roi))
+                logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
-                logger.debug("mirrored %s ROI: %s"%(type,collector.spec.roi))
+                logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
                 self.__transpose_roi(collector.spec.roi, self.transpose)
-                logger.debug("transposed %s ROI: %s"%(type,collector.spec.roi))
+                logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
 
     def __mirror_request(self, request, mirror):

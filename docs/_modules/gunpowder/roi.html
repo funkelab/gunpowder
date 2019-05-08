@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -367,7 +381,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__offset</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span><span class="o">/</span><span class="mi">2</span>
 
-<div class="viewcode-block" id="Roi.get_bounding_box"><a class="viewcode-back" href="../../api.html#gunpowder.Roi.get_bounding_box">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Roi.to_slices"><a class="viewcode-back" href="../../api.html#gunpowder.Roi.to_slices">[docs]</a>    <span class="k">def</span> <span class="nf">to_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Get a ``tuple`` of ``slice`` that represent this ROI and can be used</span>
 <span class="sd">        to index arrays.&#39;&#39;&#39;</span>
 
@@ -384,6 +398,9 @@
                     <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">())</span>
         <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_slices</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Roi.dims"><a class="viewcode-back" href="../../api.html#gunpowder.Roi.dims">[docs]</a>    <span class="k">def</span> <span class="nf">dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;The the number of dimensions of this ROI.&#39;&#39;&#39;</span>
@@ -472,14 +489,11 @@
             <span class="k">return</span> <span class="n">Roi</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">())</span> <span class="c1"># empty ROI</span>
 
         <span class="n">begin</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span>
-            <span class="nb">max</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span> <span class="c1"># max(x, None) is x, so this does the right thing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__left_max</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_begin</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
         <span class="p">))</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span>
-            <span class="nb">min</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span> <span class="c1"># min(x, None) is min, but we want x</span>
-            <span class="k">if</span> <span class="n">e1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">e2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span> <span class="c1"># so we just take the other value or None if both</span>
-                             <span class="c1"># are None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__right_min</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_end</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">get_end</span><span class="p">())</span>
         <span class="p">))</span>
 
@@ -489,13 +503,11 @@
         <span class="sd">&#39;&#39;&#39;Get the union of this ROI with another :class:`Roi`.&#39;&#39;&#39;</span>
 
         <span class="n">begin</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span>
-            <span class="nb">min</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span> <span class="c1"># min(x, None) is None, so this does the right thing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__left_min</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_begin</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
         <span class="p">))</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span>
-            <span class="nb">max</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span> <span class="c1"># max(x, None) is x, but we want None</span>
-            <span class="k">if</span> <span class="n">e1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">e2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__right_max</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_end</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">get_end</span><span class="p">())</span>
         <span class="p">))</span>
 
@@ -576,6 +588,42 @@
         <span class="sd">&#39;&#39;&#39;Create a copy of this ROI.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">__left_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+        <span class="c1"># None is considered -inf</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__left_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+        <span class="c1"># None is considered -inf</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__right_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+        <span class="c1"># None is considered +inf</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__right_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+        <span class="c1"># None is considered +inf</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">),</span> <span class="s2">&quot;can only add Coordinate or tuples to Roi&quot;</span>
@@ -608,14 +656,14 @@
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
-            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -678,7 +726,8 @@
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

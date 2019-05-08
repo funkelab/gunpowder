@@ -15,16 +15,8 @@ from .provider_spec import ProviderSpec
 from .roi import Roi
 from .array import Array, ArrayKey, ArrayKeys
 from .array_spec import ArraySpec
+from .version_info import _version as version
 import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
-
-import logging
-
-# logging.basicConfig(level=logging.INFO)
-
-def set_verbose(verbose=True):
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+import gunpowder.zoo

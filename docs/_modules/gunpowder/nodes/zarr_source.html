@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -251,9 +265,10 @@
            <div itemprop="articleBody">
             
   <h1>Source code for gunpowder.nodes.zarr_source</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">z5py</span>
+<span></span><span class="kn">from</span> <span class="nn">gunpowder.compat</span> <span class="k">import</span> <span class="n">ensure_str</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">ZarrFile</span>
 <span class="kn">from</span> <span class="nn">.hdf5like_source_base</span> <span class="k">import</span> <span class="n">Hdf5LikeSource</span>
-
 
 <div class="viewcode-block" id="ZarrSource"><a class="viewcode-back" href="../../../api.html#gunpowder.ZarrSource">[docs]</a><span class="k">class</span> <span class="nc">ZarrSource</span><span class="p">(</span><span class="n">Hdf5LikeSource</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;A `zarr &lt;https://github.com/zarr-developers/zarr&gt;`_ data source.</span>
@@ -280,9 +295,38 @@
 <span class="sd">            the array specs automatically determined from the data file. This</span>
 <span class="sd">            is useful to set a missing ``voxel_size``, for example. Only fields</span>
 <span class="sd">            that are not ``None`` in the given :class:`ArraySpec` will be used.</span>
+
+<span class="sd">        channels_first (``bool``, optional):</span>
+
+<span class="sd">            Specifies the ordering of the dimensions of the HDF5-like data source.</span>
+<span class="sd">            If channels_first is set (default), then the input shape is expected</span>
+<span class="sd">            to be (channels, spatial dimensions). This is recommended because of</span>
+<span class="sd">            better performance. If channels_first is set to false, then the input</span>
+<span class="sd">            data is read in channels_last manner and converted to channels_first.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_voxel_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.n5&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_get_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.n5&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">])</span>
+
     <span class="k">def</span> <span class="nf">_open_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">z5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_zarr_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ZarrFile</span><span class="p">(</span><span class="n">ensure_str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -328,7 +372,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

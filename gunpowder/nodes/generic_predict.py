@@ -57,6 +57,10 @@ class GenericPredict(BatchFilter):
             # exit if anything goes wrong
             self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
             self.batch_in = multiprocessing.Queue(maxsize=1)
+            self.batch_in_lock = multiprocessing.Lock()
+            self.batch_out_lock = multiprocessing.Lock()
+
+        self.timer_start = None
 
     def setup(self):
 
@@ -116,7 +120,7 @@ class GenericPredict(BatchFilter):
 
     def prepare(self, request):
 
-        if not self.initialized:
+        if not self.initialized and not self.spawn_subprocess:
             self.start()
             self.initialized = True
 
@@ -124,12 +128,31 @@ class GenericPredict(BatchFilter):
 
         if self.spawn_subprocess:
 
+            start = time.time()
+            self.batch_in_lock.acquire()
+            logger.debug(
+                "waited for batch in lock for %.3fs", time.time() - start)
+            start = time.time()
             self.batch_in.put((batch, request))
+            logger.debug(
+                "queued batch for %.3fs", time.time() - start)
 
-            try:
-                out = self.worker.get()
-            except WorkersDied:
-                raise PredictProcessDied()
+            start = time.time()
+            with self.batch_out_lock:
+                logger.debug(
+                    "waited for batch out lock for %.3fs", time.time() - start)
+
+                start = time.time()
+                self.batch_in_lock.release()
+                logger.debug(
+                    "released batch in lock for %.3fs", time.time() - start)
+                try:
+                    start = time.time()
+                    out = self.worker.get()
+                    logger.debug(
+                        "retreived batch for %.3fs", time.time() - start)
+                except WorkersDied:
+                    raise PredictProcessDied()
 
             for array_key in self.outputs.values():
                 if array_key in request:
@@ -173,14 +196,25 @@ class GenericPredict(BatchFilter):
             self.start()
             self.initialized = True
 
+        if self.timer_start is not None:
+            self.time_out = time.time() - self.timer_start
+            logger.info(
+                "batch in: %.3fs, predict: %.3fs, batch out: %.3fs",
+                self.time_in, self.time_predict, self.time_out)
+
+        self.timer_start = time.time()
         batch, request = self.batch_in.get()
+        self.time_in = time.time() - self.timer_start
 
         # stop signal
         if batch is None:
             self.stop()
             return None
 
+        self.timer_start = time.time()
         self.predict(batch, request)
+        self.time_predict = time.time() - self.timer_start
+        self.timer_start = time.time()
 
         return batch
 

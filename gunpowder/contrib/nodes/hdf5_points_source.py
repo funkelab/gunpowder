@@ -9,7 +9,7 @@ from gunpowder.points import PointsKeys, Points
 from gunpowder.points_spec import PointsSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-from .batch_provider import BatchProvider
+from gunpowder.nodes.batch_provider import BatchProvider
 
 from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 
@@ -53,7 +53,7 @@ class Hdf5PointsSource(BatchProvider):
                 raise RuntimeError("%s not in %s"%(ds_name, self.filename))
 
             spec = PointsSpec()
-            spec.roi = Roi(self.rois[points_key])
+            spec.roi = self.rois[points_key]
 
             self.provides(points_key, spec)
 

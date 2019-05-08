@@ -2,9 +2,10 @@ import logging
 import os
 import numpy as np
 
+from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_train import GenericTrain
-from gunpowder.array import ArrayKey, Array
+from gunpowder.tensorflow.local_server import LocalServer
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,10 @@ class Train(GenericTrain):
         log_dir (``string``, optional):
 
             Directory for saving tensorboard summaries.
+
+        log_every (``int``, optional):
+
+            After how many iterations to write out tensorboard summaries.
     '''
 
     def __init__(
@@ -107,7 +112,8 @@ class Train(GenericTrain):
             summary=None,
             array_specs=None,
             save_every=2000,
-            log_dir='./'):
+            log_dir='./',
+            log_every=1):
 
         super(Train, self).__init__(
             inputs,
@@ -131,17 +137,27 @@ class Train(GenericTrain):
         self.iteration_increment = None
         self.summary_saver = None
         self.log_dir = log_dir
-        if isinstance(optimizer, basestring):
+        self.log_every = log_every
+        # Check if optimizer is a str in python 2/3 compatible way.
+        if isinstance(optimizer, ("".__class__, u"".__class__)):
             self.optimizer_loss_names = (optimizer, loss)
         else:
             self.optimizer_func = optimizer
 
+        # at least for some versions of tensorflow, the checkpoint name has to
+        # start with a . if it is a relative path
+        if not os.path.isabs(self.meta_graph_filename):
+            self.meta_graph_filename = os.path.join('.', self.meta_graph_filename)
+
     def start(self):
 
-        logger.info("Initializing tf session...")
+        target = LocalServer.get_target()
+        logger.info("Initializing tf session, connecting to %s...", target)
 
         self.graph = tf.Graph()
-        self.session = tf.Session(graph=self.graph)
+        self.session = tf.Session(
+            target=target,
+            graph=self.graph)
 
         with self.graph.as_default():
             self.__read_meta_graph()
@@ -188,7 +204,7 @@ class Train(GenericTrain):
 
         batch.loss = outputs['loss']
         batch.iteration = outputs['iteration'][0]
-        if self.summary is not None:
+        if self.summary is not None and (batch.iteration % self.log_every == 0 or batch.iteration == 1):
             self.summary_saver.add_summary(summaries, batch.iteration)
 
         if batch.iteration%self.save_every == 0:

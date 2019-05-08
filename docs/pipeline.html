@@ -87,6 +87,12 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -192,6 +198,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -258,11 +270,11 @@
             
   <div class="section" id="module-gunpowder">
 <span id="pipelines"></span><span id="sec-pipeline"></span><h1>Pipelines<a class="headerlink" href="#module-gunpowder" title="Permalink to this headline">¶</a></h1>
-<p>A <code class="docutils literal"><span class="pre">gunpowder</span></code> processing pipeline consists of nodes, which can be chained
+<p>A <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> processing pipeline consists of nodes, which can be chained
 together to form a directed acyclic graph.</p>
-<p>All nodes inherit from <a class="reference internal" href="api.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal"><span class="pre">BatchProvider</span></code></a> and can be asked to provide a
-batch by formulating a <a class="reference internal" href="api.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal"><span class="pre">BatchRequest</span></code></a> and passing it to
-<a class="reference internal" href="api.html#gunpowder.BatchProvider.request_batch" title="gunpowder.BatchProvider.request_batch"><code class="xref py py-func docutils literal"><span class="pre">BatchProvider.request_batch()</span></code></a>.</p>
+<p>All nodes inherit from <a class="reference internal" href="api.html#gunpowder.BatchProvider" title="gunpowder.BatchProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchProvider</span></code></a> and can be asked to provide a
+batch by formulating a <a class="reference internal" href="api.html#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchRequest</span></code></a> and passing it to
+<a class="reference internal" href="api.html#gunpowder.BatchProvider.request_batch" title="gunpowder.BatchProvider.request_batch"><code class="xref py py-func docutils literal notranslate"><span class="pre">BatchProvider.request_batch()</span></code></a>.</p>
 <p>See <a class="reference internal" href="custom_providers.html#sec-custom-providers"><span class="std std-ref">Writing Custom Batch Providers</span></a> for how to write your own node.</p>
 </div>
 
@@ -319,7 +331,8 @@ batch by formulating a <a class="reference internal" href="api.html#gunpowder.Ba
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

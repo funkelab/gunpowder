@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -262,7 +276,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">augment</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ElasticAugment"><a class="viewcode-back" href="../../../api.html#gunpowder.ElasticAugment">[docs]</a><span class="k">class</span> <span class="nc">ElasticAugment</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Elasticly deform a batch. Requests larger batches upstream to avoid data </span>
@@ -307,6 +321,15 @@
 <span class="sd">            piecewise linear deformations for large factors. Usually, a factor</span>
 <span class="sd">            of 4 can savely by used without noticable changes. However, the</span>
 <span class="sd">            default is 1 (i.e., no subsampling).</span>
+
+<span class="sd">        spatial_dims (``int``):</span>
+
+<span class="sd">            The number of spatial dimensions in arrays. Spatial dimensions are</span>
+<span class="sd">            assumed to be the last ones and cannot be more than 3 (default).</span>
+<span class="sd">            Set this value here to avoid treating channels as spacial</span>
+<span class="sd">            dimension. If, for example, your array is indexed as ``(c,y,x)``</span>
+<span class="sd">            (2D plus channels), you would want to set ``spatial_dims=2`` to</span>
+<span class="sd">            perform the elastic deformation only on x and y.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
@@ -317,7 +340,8 @@
             <span class="n">prob_slip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">prob_shift</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">max_misalign</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">spatial_dims</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">control_point_spacing</span> <span class="o">=</span> <span class="n">control_point_spacing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">jitter_sigma</span> <span class="o">=</span> <span class="n">jitter_sigma</span>
@@ -327,6 +351,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">prob_shift</span> <span class="o">=</span> <span class="n">prob_shift</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_misalign</span> <span class="o">=</span> <span class="n">max_misalign</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">=</span> <span class="n">subsample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span> <span class="o">=</span> <span class="n">spatial_dims</span>
 
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
@@ -342,8 +367,8 @@
 
         <span class="c1"># get master ROI</span>
         <span class="n">master_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
-            <span class="n">total_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:],</span>
-            <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+            <span class="n">total_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:],</span>
+            <span class="n">total_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span> <span class="o">=</span> <span class="n">master_roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;master ROI is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">master_roi</span><span class="p">)</span>
 
@@ -374,8 +399,8 @@
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
             <span class="n">target_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:],</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:],</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;downstream request spatial ROI for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">target_roi</span><span class="p">)</span>
 
@@ -429,8 +454,8 @@
 
             <span class="c1"># update upstream request</span>
             <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">source_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:],</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">source_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">]</span> <span class="o">+</span> <span class="n">source_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:],</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">]</span> <span class="o">+</span> <span class="n">source_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;upstream request roi for </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
 
@@ -442,13 +467,14 @@
             <span class="c1"># same in spatial coordinates</span>
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">target_rois</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span> <span class="o">==</span>
-                <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+                <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">target_rois</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span> <span class="o">==</span>
-                <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+                <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
 
             <span class="c1"># reshape array data into (channels,) + spatial dims</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">channel_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">]</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:])</span>
 
             <span class="c1"># apply transformation on each channel</span>
@@ -461,14 +487,14 @@
             <span class="p">])</span>
 
             <span class="n">data_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
-            <span class="n">array</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">channel_shape</span> <span class="o">+</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
 
             <span class="c1"># restore original ROIs</span>
             <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;projecting </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
 
@@ -477,7 +503,7 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;relative to upstream ROI: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
 
                 <span class="c1"># get spatial coordinates of point in voxels</span>
-                <span class="n">location_voxels</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
+                <span class="n">location_voxels</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;relative to upstream ROI in voxels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">location_voxels</span><span class="p">)</span>
@@ -508,7 +534,7 @@
                 <span class="n">projected</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_rois</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
 
                 <span class="c1"># update spatial coordinates of point location</span>
-                <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="n">projected</span>
+                <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:]</span> <span class="o">=</span> <span class="n">projected</span>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;final location: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
 
@@ -529,9 +555,9 @@
         <span class="n">prev</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">array_key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">voxel_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+                <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="n">voxel_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:],</span> \
+                <span class="k">assert</span> <span class="n">voxel_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span><span class="p">:],</span> \
                         <span class="s2">&quot;ElasticAugment can only be used with arrays of same voxel sizes, &quot;</span> \
                         <span class="s2">&quot;but </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2">, and </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span>
                                 <span class="n">array_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
@@ -667,6 +693,9 @@
 
     <span class="k">def</span> <span class="nf">__misalign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation</span><span class="p">):</span>
 
+        <span class="k">assert</span> <span class="n">transformation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;misalign can only be applied to 3D volumes&quot;</span><span class="p">)</span>
+
         <span class="n">num_sections</span> <span class="o">=</span> <span class="n">transformation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">shifts</span> <span class="o">=</span> <span class="p">[</span><span class="n">Coordinate</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))]</span><span class="o">*</span><span class="n">num_sections</span>
@@ -747,7 +776,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

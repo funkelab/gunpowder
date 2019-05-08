@@ -23,9 +23,9 @@ class TestSource(BatchProvider):
         spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi
         data = np.ones(shape)
-        data[shape[0]/2:,:,:] += 2
-        data[:,shape[1]/2:,:] += 4
-        data[:,:,shape[2]/2:] += 8
+        data[shape[0]//2:,:,:] += 2
+        data[:,shape[1]//2:,:] += 4
+        data[:,:,shape[2]//2:] += 8
         batch.arrays[ArrayKeys.GT_LABELS] = Array(data, spec)
 
         return batch
@@ -59,12 +59,12 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
             gradients = batch.arrays[ArrayKeys.GT_BOUNDARY_GRADIENTS].data
             shape = distances.shape
 
-            l_001 = labels[:shape[0]/2,:shape[1]/2,shape[2]/2:]
-            l_101 = labels[shape[0]/2:,:shape[1]/2,shape[2]/2:]
-            d_001 = distances[:shape[0]/2,:shape[1]/2,shape[2]/2:]
-            d_101 = distances[shape[0]/2:,:shape[1]/2,shape[2]/2:]
-            g_001 = gradients[:,:shape[0]/2,:shape[1]/2,shape[2]/2:]
-            g_101 = gradients[:,shape[0]/2:,:shape[1]/2,shape[2]/2:]
+            l_001 = labels[:shape[0]//2,:shape[1]//2,shape[2]//2:]
+            l_101 = labels[shape[0]//2:,:shape[1]//2,shape[2]//2:]
+            d_001 = distances[:shape[0]//2,:shape[1]//2,shape[2]//2:]
+            d_101 = distances[shape[0]//2:,:shape[1]//2,shape[2]//2:]
+            g_001 = gradients[:,:shape[0]//2,:shape[1]//2,shape[2]//2:]
+            g_101 = gradients[:,shape[0]//2:,:shape[1]//2,shape[2]//2:]
 
             # print labels
             # print
@@ -81,7 +81,7 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
 
             self.assertTrue((g_001 == g_101).all())
 
-            top = gradients[:,0:shape[0]/2,:]
-            bot = gradients[:,shape[0]:shape[0]/2-1:-1,:]
+            top = gradients[:,0:shape[0]//2,:]
+            bot = gradients[:,shape[0]:shape[0]//2-1:-1,:]
 
             self.assertTrue((top == bot).all())

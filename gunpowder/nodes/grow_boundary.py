@@ -19,20 +19,20 @@ class GrowBoundary(BatchFilter):
             A mask indicating unknown regions. This is to avoid boundaries to
             grow between labelled and unknown regions.
 
-        steps (``int``):
+        steps (``int``, optional):
 
             Number of voxels (not world units!) to grow.
 
-        background (``int``):
+        background (``int``, optional):
 
             The label to assign to the boundary voxels.
 
-        only_xy (``bool``):
+        only_xy (``bool``, optional):
 
             Do not grow a boundary in the z direction.
     '''
 
-    def __init__(self, labels, mask, steps=1, background=0, only_xy=False):
+    def __init__(self, labels, mask=None, steps=1, background=0, only_xy=False):
         self.labels = labels
         self.mask = mask
         self.steps = steps

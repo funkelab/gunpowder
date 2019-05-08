@@ -114,7 +114,7 @@ class Roi(Freezable):
 
         return self.__offset + self.__shape/2
 
-    def get_bounding_box(self):
+    def to_slices(self):
         '''Get a ``tuple`` of ``slice`` that represent this ROI and can be used
         to index arrays.'''
 
@@ -131,6 +131,9 @@ class Roi(Freezable):
                     else None)
                 for d in range(self.dims())
         )
+
+    def get_bounding_box(self):
+        return self.to_slices()
 
     def dims(self):
         '''The the number of dimensions of this ROI.'''
@@ -219,14 +222,11 @@ class Roi(Freezable):
             return Roi(shape=(0,)*self.dims()) # empty ROI
 
         begin = Coordinate((
-            max(b1, b2) # max(x, None) is x, so this does the right thing
+            self.__left_max(b1, b2)
             for b1, b2 in zip(self.get_begin(), other.get_begin())
         ))
         end = Coordinate((
-            min(e1, e2) # min(x, None) is min, but we want x
-            if e1 is not None and e2 is not None
-            else max(e1, e2) # so we just take the other value or None if both
-                             # are None
+            self.__right_min(e1, e2)
             for e1, e2 in zip(self.get_end(), other.get_end())
         ))
 
@@ -236,13 +236,11 @@ class Roi(Freezable):
         '''Get the union of this ROI with another :class:`Roi`.'''
 
         begin = Coordinate((
-            min(b1, b2) # min(x, None) is None, so this does the right thing
+            self.__left_min(b1, b2)
             for b1, b2 in zip(self.get_begin(), other.get_begin())
         ))
         end = Coordinate((
-            max(e1, e2) # max(x, None) is x, but we want None
-            if e1 is not None and e2 is not None
-            else None
+            self.__right_max(e1, e2)
             for e1, e2 in zip(self.get_end(), other.get_end())
         ))
 
@@ -322,6 +320,42 @@ class Roi(Freezable):
     def copy(self):
         '''Create a copy of this ROI.'''
         return copy.deepcopy(self)
+
+    def __left_min(self, x, y):
+
+        # None is considered -inf
+
+        if x is None or y is None:
+            return None
+        return min(x, y)
+
+    def __left_max(self, x, y):
+
+        # None is considered -inf
+
+        if x is None:
+            return y
+        if y is None:
+            return x
+        return max(x, y)
+
+    def __right_min(self, x, y):
+
+        # None is considered +inf
+
+        if x is None:
+            return y
+        if y is None:
+            return x
+        return min(x, y)
+
+    def __right_max(self, x, y):
+
+        # None is considered +inf
+
+        if x is None or y is None:
+            return None
+        return max(x, y)
 
     def __add__(self, other):
 

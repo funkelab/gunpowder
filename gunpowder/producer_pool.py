@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 class NoResult(Exception):
     pass
 
+class ParentDied(Exception):
+    pass
+
 class WorkersDied(Exception):
     pass
 
@@ -52,9 +55,6 @@ class ProducerPool(object):
         item = None
         while item == None:
 
-            if not self.alive():
-                raise WorkersDied()
-
             try:
                 item = self.__result_queue.get(timeout=timeout)
             except Queue.Empty:
@@ -72,11 +72,6 @@ class ProducerPool(object):
 
         self.__stop.set()
         self.__watch_dog.join()
-
-    def alive(self):
-        '''Test if the pool is alive (i.e., all workers are running).
-        '''
-        return self.__watch_dog.is_alive()
 
     def __run_watch_dog(self, callables):
 
@@ -96,9 +91,11 @@ class ProducerPool(object):
             while not self.__stop.wait(1):
                 if os.getppid() != parent_pid:
                     logger.error("parent of producer pool died, shutting down")
+                    self.__result_queue.put(ParentDied())
                     break
                 if not self.__all_workers_alive(workers):
                     logger.error("at least one of my workers died, shutting down")
+                    self.__result_queue.put(WorkersDied())
                     break
         except:
             pass

@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
 from gunpowder.array import ArrayKey, Array
+from gunpowder.array_spec import ArraySpec
 import logging
 import numbers
 import numpy as np
@@ -60,7 +61,7 @@ class DownSample(BatchFilter):
                 "merging with existing request to %s",
                 request[self.source].roi)
         else:
-            request[self.source].roi = request_roi
+            request[self.source] = ArraySpec(roi=request_roi)
             logger.debug("adding as new request")
 
     def process(self, batch, request):
@@ -93,15 +94,17 @@ class DownSample(BatchFilter):
         spec.roi = request_roi
         batch.arrays[self.target] = Array(data, spec)
 
-        # restore requested rois
-        request_roi = request[self.source].roi
+        if self.source in request:
 
-        if input_roi != request_roi:
+            # restore requested rois
+            request_roi = request[self.source].roi
 
-            assert input_roi.contains(request_roi)
+            if input_roi != request_roi:
 
-            logger.debug(
-                "restoring original request roi %s of %s from %s",
-                request_roi, self.source, input_roi)
-            cropped = batch.arrays[self.source].crop(request_roi)
-            batch.arrays[self.source] = cropped
+                assert input_roi.contains(request_roi)
+
+                logger.debug(
+                    "restoring original request roi %s of %s from %s",
+                    request_roi, self.source, input_roi)
+                cropped = batch.arrays[self.source].crop(request_roi)
+                batch.arrays[self.source] = cropped

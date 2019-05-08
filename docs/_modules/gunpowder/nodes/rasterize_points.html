@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -261,20 +275,20 @@
 <span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.freezable</span> <span class="k">import</span> <span class="n">Freezable</span>
-<span class="kn">from</span> <span class="nn">gunpowder.morphology</span> <span class="k">import</span> <span class="n">enlarge_binary_map</span>
+<span class="kn">from</span> <span class="nn">gunpowder.morphology</span> <span class="k">import</span> <span class="n">enlarge_binary_map</span><span class="p">,</span> <span class="n">create_ball_kernel</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ndarray</span> <span class="k">import</span> <span class="n">replace</span>
 <span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">PointsKeys</span>
 <span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RasterizationSettings"><a class="viewcode-back" href="../../../api.html#gunpowder.RasterizationSettings">[docs]</a><span class="k">class</span> <span class="nc">RasterizationSettings</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Data structure to store parameters for rasterization of points.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        radius (``int``):</span>
+<span class="sd">        radius (``float`` or ``tuple`` of ``float``):</span>
 
 <span class="sd">            The radius (for balls) or sigma (for peaks) in world units.</span>
 
@@ -292,13 +306,14 @@
 <span class="sd">            rasterized is used to intersect the rasterization to keep it inside</span>
 <span class="sd">            the specific object.</span>
 
-<span class="sd">        inner_radius (``int``, optional):</span>
+<span class="sd">        inner_radius_fraction (``float``, optional):</span>
 
 <span class="sd">            Only for mode ``ball``.</span>
 
 <span class="sd">            If set, instead of a ball, a hollow sphere is rastered. The radius</span>
 <span class="sd">            of the whole sphere corresponds to the radius specified with</span>
-<span class="sd">            ``radius``. This parameter sets the radius of the hollow area.</span>
+<span class="sd">            ``radius``. This parameter sets the radius of the hollow area, as a</span>
+<span class="sd">            fraction of ``radius``.</span>
 
 <span class="sd">        fg_value (``int``, optional):</span>
 
@@ -318,18 +333,22 @@
             <span class="n">radius</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;ball&#39;</span><span class="p">,</span>
             <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">inner_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">inner_radius_fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">fg_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">bg_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="n">inner_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">radius</span> <span class="o">&lt;</span> <span class="n">inner_radius</span><span class="p">,</span> <span class="p">(</span>
-                <span class="s2">&quot;trying to create a sphere in which the inner radius is larger &quot;</span>
-                <span class="s2">&quot;or equal than the ball radius&quot;</span><span class="p">)</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">radius</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inner_radius_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">inner_radius_fraction</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span>
+                <span class="n">inner_radius_fraction</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Inner radius fraction has to be between (excluding) 0 and 1&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner_radius</span> <span class="o">=</span> <span class="n">inner_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_radius_fraction</span> <span class="o">=</span> <span class="n">inner_radius_fraction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fg_value</span> <span class="o">=</span> <span class="n">fg_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bg_value</span> <span class="o">=</span> <span class="n">bg_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span></div>
@@ -390,25 +409,39 @@
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
-            <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;peak&#39;</span><span class="p">:</span>
-            <span class="n">context</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown raster mode </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+
+        <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
 
         <span class="c1"># request points in a larger area to get rasterization from outside</span>
         <span class="c1"># points</span>
         <span class="n">points_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span>
-                <span class="n">Coordinate</span><span class="p">((</span><span class="n">context</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()),</span>
-                <span class="n">Coordinate</span><span class="p">((</span><span class="n">context</span><span class="p">,)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()))</span>
+                <span class="n">Coordinate</span><span class="p">(</span><span class="n">context</span><span class="p">),</span>
+                <span class="n">Coordinate</span><span class="p">(</span><span class="n">context</span><span class="p">))</span>
 
         <span class="c1"># however, restrict the request to the points actually provided</span>
         <span class="n">points_roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
-
         <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">points_roi</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">points_roi</span><span class="p">)</span>
+
+            <span class="n">mask_voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="n">mask_voxel_size</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;Voxel size of mask and rasterized volume need to be equal&quot;</span><span class="p">)</span>
+
+            <span class="n">new_mask_roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">mask_voxel_size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> \
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">new_mask_roi</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">ArraySpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">new_mask_roi</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
@@ -416,9 +449,11 @@
         <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span>
         <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
 
-        <span class="c1"># get the output array shape</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="o">-</span><span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">)</span> <span class="c1"># ceil division</span>
+        <span class="c1"># get roi used for creating the new array (points_roi does no</span>
+        <span class="c1"># necessarily align with voxel size)</span>
+        <span class="n">enlarged_vol_roi</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">enlarged_vol_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span> <span class="o">/</span> <span class="n">voxel_size</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">enlarged_vol_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span> <span class="o">/</span> <span class="n">voxel_size</span>
         <span class="n">data_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
@@ -427,30 +462,46 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data roi in voxels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_roi</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data roi in world units: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_roi</span><span class="o">*</span><span class="n">voxel_size</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If there are no points at all, just create an empty matrix.</span>
+            <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
-            <span class="c1"># get all component labels in the mask</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="n">mask_array</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">enlarged_vol_roi</span><span class="p">)</span>
+            <span class="c1"># get those component labels in the mask, that contain points</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">location</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">)</span>
+                <span class="n">v</span> <span class="o">-=</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask_array</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+            <span class="c1"># Make list unique</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
 
             <span class="c1"># zero label should be ignored</span>
             <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
                 <span class="n">labels</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="c1"># create data for the whole points ROI, &quot;or&quot;ed together over</span>
-            <span class="c1"># individual object masks</span>
-            <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">__rasterize</span><span class="p">(</span>
-                        <span class="n">points</span><span class="p">,</span>
-                        <span class="n">data_roi</span><span class="p">,</span>
-                        <span class="n">voxel_size</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
-                        <span class="n">Array</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">mask</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="n">mask</span><span class="o">.</span><span class="n">spec</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points and provided object mask do not overlap. No points to rasterize.&quot;</span><span class="p">)</span>
+                <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                                                  <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># create data for the whole points ROI, &quot;or&quot;ed together over</span>
+                <span class="c1"># individual object masks</span>
+                <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__rasterize</span><span class="p">(</span>
+                            <span class="n">points</span><span class="p">,</span>
+                            <span class="n">data_roi</span><span class="p">,</span>
+                            <span class="n">voxel_size</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
+                            <span class="n">Array</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">mask_array</span><span class="o">.</span><span class="n">data</span><span class="o">==</span><span class="n">label</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="n">mask_array</span><span class="o">.</span><span class="n">spec</span><span class="p">))</span>
 
-                    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span>
-                <span class="p">],</span>
-                <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span>
+                    <span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
 
@@ -484,16 +535,15 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
             <span class="n">request_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
             <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request_roi</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">request_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">location</span><span class="p">):</span>
-                    <span class="k">del</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">p</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">request_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">location</span><span class="p">)}</span>
+
+        <span class="c1"># restore requested mask</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__rasterize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">data_roi</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">mask_array</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Rasterize &#39;points&#39; into an array with the given &#39;voxel_size&#39;. If a</span>
-<span class="sd">        mask array is given, it needs to have the same ROI as the points.&#39;&#39;&#39;</span>
+        <span class="sd">&#39;&#39;&#39;Rasterize &#39;points&#39; into an array with the given &#39;voxel_size&#39;&#39;&#39;</span>
 
-        <span class="k">assert</span> <span class="n">mask_array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">mask_array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
-        <span class="k">assert</span> <span class="n">mask_array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">mmask_array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="n">voxel_size</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_array</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">mask_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rasterizing points in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
@@ -501,7 +551,28 @@
         <span class="c1"># prepare output array</span>
         <span class="n">rasterized_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
-        <span class="c1"># mark each point with a single voxel</span>
+        <span class="c1"># Fast rasterization currently only implemented for mode ball without</span>
+        <span class="c1"># inner radius set</span>
+        <span class="n">use_fast_rasterization</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span> <span class="ow">and</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">inner_radius_fraction</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_fast_rasterization</span><span class="p">:</span>
+
+            <span class="n">dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rasterized_points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="c1"># get structuring element for mode ball</span>
+            <span class="n">ball_kernel</span> <span class="o">=</span> <span class="n">create_ball_kernel</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+            <span class="n">radius_voxel</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ball_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">data_roi_base</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
+                    <span class="n">offset</span><span class="o">=</span><span class="n">Coordinate</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="n">dims</span><span class="p">),</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">Coordinate</span><span class="p">(</span><span class="n">rasterized_points</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="n">kernel_roi_base</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span>
+                    <span class="n">offset</span><span class="o">=</span><span class="n">Coordinate</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="n">dims</span><span class="p">),</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">Coordinate</span><span class="p">(</span><span class="n">ball_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="c1"># Rasterize volume either with single voxel or with defined struct elememt</span>
         <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
 
             <span class="c1"># get the voxel coordinate, &#39;Coordinate&#39; ensures integer</span>
@@ -519,33 +590,57 @@
                 <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
                 <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">voxel_size</span> <span class="o">-</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
 
-            <span class="c1"># mark the point</span>
-            <span class="n">rasterized_points</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">use_fast_rasterization</span><span class="p">:</span>
+
+                <span class="c1"># Calculate where to crop the kernel mask and the rasterized array</span>
+                <span class="n">shifted_kernel</span> <span class="o">=</span> <span class="n">kernel_roi_base</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">radius_voxel</span><span class="p">)</span>
+                <span class="n">shifted_data</span> <span class="o">=</span> <span class="n">data_roi_base</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">radius_voxel</span><span class="p">))</span>
+                <span class="n">arr_crop</span> <span class="o">=</span> <span class="n">data_roi_base</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">shifted_kernel</span><span class="p">)</span>
+                <span class="n">kernel_crop</span> <span class="o">=</span> <span class="n">kernel_roi_base</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">shifted_data</span><span class="p">)</span>
+                <span class="n">arr_crop_ind</span> <span class="o">=</span> <span class="n">arr_crop</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+                <span class="n">kernel_crop_ind</span> <span class="o">=</span> <span class="n">kernel_crop</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+                <span class="n">rasterized_points</span><span class="p">[</span><span class="n">arr_crop_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span>
+                    <span class="n">ball_kernel</span><span class="p">[</span><span class="n">kernel_crop_ind</span><span class="p">],</span>
+                    <span class="n">rasterized_points</span><span class="p">[</span><span class="n">arr_crop_ind</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">rasterized_points</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="c1"># grow points</span>
-        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
-            <span class="n">enlarge_binary_map</span><span class="p">(</span>
-                <span class="n">rasterized_points</span><span class="p">,</span>
-                <span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
-                <span class="n">voxel_size</span><span class="p">,</span>
-                <span class="n">settings</span><span class="o">.</span><span class="n">inner_radius</span><span class="p">,</span>
-                <span class="n">in_place</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">sigmas</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="nb">float</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span><span class="o">/</span><span class="n">vs</span>
-                <span class="k">for</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">voxel_size</span><span class="p">)</span>
-            <span class="n">gaussian_filter</span><span class="p">(</span>
-                <span class="n">rasterized_points</span><span class="p">,</span>
-                <span class="n">sigmas</span><span class="p">,</span>
-                <span class="n">output</span><span class="o">=</span><span class="n">rasterized_points</span><span class="p">,</span>
-                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
-            <span class="c1"># renormalize to have 1 be the highest value</span>
-            <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rasterized_points</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">max_value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">rasterized_points</span> <span class="o">/=</span> <span class="n">max_value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_fast_rasterization</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
+
+                <span class="n">enlarge_binary_map</span><span class="p">(</span>
+                    <span class="n">rasterized_points</span><span class="p">,</span>
+                    <span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
+                    <span class="n">voxel_size</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">-</span> <span class="n">settings</span><span class="o">.</span><span class="n">inner_radius_fraction</span><span class="p">,</span>
+                    <span class="n">in_place</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">sigmas</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">radius</span><span class="o">/</span><span class="n">voxel_size</span>
+
+                <span class="n">gaussian_filter</span><span class="p">(</span>
+                    <span class="n">rasterized_points</span><span class="p">,</span>
+                    <span class="n">sigmas</span><span class="p">,</span>
+                    <span class="n">output</span><span class="o">=</span><span class="n">rasterized_points</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
+
+                <span class="c1"># renormalize to have 1 be the highest value</span>
+                <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rasterized_points</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">max_value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">rasterized_points</span> <span class="o">/=</span> <span class="n">max_value</span>
 
         <span class="k">if</span> <span class="n">mask_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">rasterized_points</span> <span class="o">&amp;=</span> <span class="n">mask</span>
+            <span class="c1"># use more efficient bitwise operation when possible</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
+                <span class="n">rasterized_points</span> <span class="o">&amp;=</span> <span class="n">mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rasterized_points</span> <span class="o">*=</span> <span class="n">mask</span>
 
         <span class="k">return</span> <span class="n">rasterized_points</span></div>
 </pre></div>
@@ -593,7 +688,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

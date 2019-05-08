@@ -1,0 +1,93 @@
+Bootstrap: docker
+From: tensorflow/tensorflow:1.7.0-gpu
+
+%help
+This container contains gunpowder with TensorFlow 1.7 included.
+
+%labels
+
+    Maintainer Jan Funke
+    Version 1.0
+
+%setup
+
+    mkdir -p ${SINGULARITY_ROOTFS}/src/gunpowder
+
+%files
+
+    ../gunpowder /src/gunpowder/gunpowder
+    ../requirements.txt /src/gunpowder/requirements.txt
+
+%post
+
+    MALIS_ROOT=/src/malis
+    MALIS_REPOSITORY=https://github.com/TuragaLab/malis.git
+    MALIS_REVISION=2206fe01bd2d10c3bc6a861897820731d1ae131b
+
+    AUGMENT_ROOT=/src/augment
+    AUGMENT_REPOSITORY=https://github.com/funkey/augment.git
+    AUGMENT_REVISION=4a42b01ccad7607b47a1096e904220729dbcb80a 
+
+    DVISION_ROOT=/src/dvision
+    DVISION_REPOSITORY=https://github.com/TuragaLab/dvision.git
+    DVISION_REVISION=v0.1.1
+
+    WATERZ_ROOT=/src/waterz
+    WATERZ_REPOSITORY=https://github.com/funkey/waterz
+    WATERZ_REVISION=d2bede846391c56a54365c13d5b2f2f4e6db4ecd
+
+
+    # ESSENTIALS
+
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        libboost-all-dev \
+        python-dev \
+        python-numpy \
+        python-pip \
+        python-setuptools \
+        python-scipy
+    apt-get clean
+
+    # GUNPOWDER
+
+    # install dependencies for gunpowder
+
+    apt-get install -y --no-install-recommends \
+          cmake \
+          git && \
+
+    pip install cython
+    mkdir -p ${MALIS_ROOT}
+    cd ${MALIS_ROOT}
+    git clone ${MALIS_REPOSITORY} . && git checkout ${MALIS_REVISION}
+    python setup.py build_ext --inplace
+    PYTHONPATH=${MALIS_ROOT}:$PYTHONPATH
+
+    mkdir -p ${AUGMENT_ROOT}
+    cd ${AUGMENT_ROOT}
+    git clone ${AUGMENT_REPOSITORY} . && git checkout ${AUGMENT_REVISION}
+    pip install -r requirements.txt
+    PYTHONPATH=${AUGMENT_ROOT}:$PYTHONPATH
+
+    mkdir -p ${DVISION_ROOT}
+    cd ${DVISION_ROOT}
+    git clone -b ${DVISION_REVISION} --depth 1 ${DVISION_REPOSITORY} .
+    pip install -r requirements.txt
+    PYTHONPATH=${DVISION_ROOT}:$PYTHONPATH
+
+    mkdir -p ${WATERZ_ROOT}
+    cd ${WATERZ_ROOT}
+    git clone ${WATERZ_REPOSITORY} . && git checkout ${WATERZ_REVISION}
+    mkdir -p /.cython/inline
+    PYTHONPATH=${WATERZ_ROOT}:$PYTHONPATH
+
+    # install gunpowder
+
+    cd /src/gunpowder
+    pip install -r requirements.txt
+    PYTHONPATH=/src/gunpowder:$PYTHONPATH
+
+    echo "export PYTHONPATH=${PYTHONPATH}" >> $SINGULARITY_ENVIRONMENT

@@ -7,11 +7,13 @@ Welcome to Gunpowder's Documentation!
 .. toctree::
   :maxdepth: 2
 
+  install
   first_steps
   pipeline
   requests_batches
   api
   custom_providers
+  tutorial
 
 Indices and tables
 ==================

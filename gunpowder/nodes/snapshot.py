@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import os
 
 from .batch_filter import BatchFilter
@@ -53,6 +54,10 @@ class Snapshot(BatchFilter):
             A dictionary from array keys to datatype (eg. ``np.int8``). If
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
+
+        store_value_range (``bool``):
+
+            If set to ``True`, store range of values in data set attributes.
         '''
 
     def __init__(
@@ -63,7 +68,8 @@ class Snapshot(BatchFilter):
             every=1,
             additional_request=None,
             compression_type=None,
-            dataset_dtypes=None):
+            dataset_dtypes=None,
+            store_value_range=False):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
         self.output_filename = output_filename
@@ -71,6 +77,7 @@ class Snapshot(BatchFilter):
         self.additional_request = BatchRequest() if additional_request is None else additional_request
         self.n = 0
         self.compression_type = compression_type
+        self.store_value_range = store_value_range
         if dataset_dtypes is None:
             self.dataset_dtypes = {}
         else:
@@ -79,7 +86,6 @@ class Snapshot(BatchFilter):
     def prepare(self, request):
 
         self.record_snapshot = self.n%self.every == 0
-        self.n += 1
 
         # append additional array requests, don't overwrite existing ones
         for array_key, spec in self.additional_request.array_specs.items():
@@ -110,15 +116,20 @@ class Snapshot(BatchFilter):
 
                     ds_name = self.dataset_names[array_key]
 
-                    offset = array.spec.roi.get_offset()
                     if array_key in self.dataset_dtypes:
                         dtype = self.dataset_dtypes[array_key]
                         dataset = f.create_dataset(name=ds_name, data=array.data.astype(dtype), compression=self.compression_type)
                     else:
                         dataset = f.create_dataset(name=ds_name, data=array.data, compression=self.compression_type)
                     
-                    dataset.attrs['offset'] = offset
+                    if array.spec.roi is not None:
+                        dataset.attrs['offset'] = array.spec.roi.get_offset()
                     dataset.attrs['resolution'] = self.spec[array_key].voxel_size
+
+                    if self.store_value_range:
+                        dataset.attrs['value_range'] = (
+                            np.asscalar(array.data.min()),
+                            np.asscalar(array.data.max()))
 
                     # if array has attributes, add them to the dataset
                     for attribute_name, attribute in array.attrs.items():

@@ -117,37 +117,45 @@ class AddAffinities(BatchFilter):
                     request[self.labels].roi,
                     request[self.unlabelled].roi))
 
+        if self.labels not in request:
+            request[self.labels] = request[self.affinities].copy()
+
         labels_roi = request[self.labels].roi
-        logger.debug("downstream %s request: "%self.labels + str(labels_roi))
+        context_roi = request[self.affinities].roi.grow(
+            -self.padding_neg,
+            self.padding_pos)
 
         # grow labels ROI to accomodate padding
-        labels_roi = labels_roi.grow(-self.padding_neg, self.padding_pos)
+        labels_roi = labels_roi.union(context_roi)
         request[self.labels].roi = labels_roi
 
         # same for label mask
-        if self.labels_mask:
-            request[self.labels_mask].roi = labels_roi.copy()
+        if self.labels_mask and self.labels_mask in request:
+            request[self.labels_mask].roi = \
+                request[self.labels_mask].roi.union(context_roi)
+
         # and unlabelled mask
-        if self.unlabelled:
-            request[self.unlabelled].roi = labels_roi.copy()
+        if self.unlabelled and self.unlabelled in request:
+            request[self.unlabelled].roi = \
+                request[self.unlabelled].roi.union(context_roi)
 
         logger.debug("upstream %s request: "%self.labels + str(labels_roi))
 
     def process(self, batch, request):
 
-        labels_roi = request[self.labels].roi
+        affinities_roi = request[self.affinities].roi
 
         logger.debug("computing ground-truth affinities from labels")
         affinities = malis.seg_to_affgraph(
                 batch.arrays[self.labels].data.astype(np.int32),
                 self.affinity_neighborhood
-        ).astype(np.float32)
+        ).astype(np.uint8)
 
 
-        # crop affinities to original label ROI
-        offset = labels_roi.get_offset()
+        # crop affinities to requested ROI
+        offset = affinities_roi.get_offset()
         shift = -offset - self.padding_neg
-        crop_roi = labels_roi.shift(shift)
+        crop_roi = affinities_roi.shift(shift)
         crop_roi /= self.spec[self.labels].voxel_size
         crop = crop_roi.get_bounding_box()
 
@@ -155,7 +163,7 @@ class AddAffinities(BatchFilter):
         affinities = affinities[(slice(None),)+crop]
 
         spec = self.spec[self.affinities].copy()
-        spec.roi = labels_roi
+        spec.roi = affinities_roi
         batch.arrays[self.affinities] = Array(affinities, spec)
 
         if self.affinities_mask and self.affinities_mask in request:
@@ -198,13 +206,20 @@ class AddAffinities(BatchFilter):
                                "mask is not requested.")
 
         # crop labels to original label ROI
-        batch.arrays[self.labels] = batch.arrays[self.labels].crop(labels_roi)
+        if self.labels in request:
+            roi = request[self.labels].roi
+            batch.arrays[self.labels] = batch.arrays[self.labels].crop(roi)
 
         # same for label mask
-        if self.labels_mask:
-            batch.arrays[self.labels_mask] = batch.arrays[self.labels_mask].crop(labels_roi)
+        if self.labels_mask and self.labels_mask in request:
+            roi = request[self.labels_mask].roi
+            batch.arrays[self.labels_mask] = \
+                batch.arrays[self.labels_mask].crop(roi)
+
         # and unlabelled mask
-        if self.unlabelled:
-            batch.arrays[self.unlabelled] = batch.arrays[self.unlabelled].crop(labels_roi)
+        if self.unlabelled and self.unlabelled in request:
+            roi = request[self.unlabelled].roi
+            batch.arrays[self.unlabelled] = \
+                batch.arrays[self.unlabelled].crop(roi)
 
         batch.affinity_neighborhood = self.affinity_neighborhood

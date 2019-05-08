@@ -65,7 +65,7 @@ class SpecifiedLocation(BatchFilter):
         # clear bounding boxes of all provided arrays and points --
         # SpecifiedLocation does know its locations at setup (checks on the fly)
         for key, spec in self.spec.items():
-            spec.roi = None
+            spec.roi.set_shape(None)
             self.updates(key, spec)
 
     def prepare(self, request):

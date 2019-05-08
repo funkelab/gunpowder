@@ -6,6 +6,7 @@ from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .crop import Crop
 from .csv_points_source import CsvPointsSource
+from .daisy_request_blocks import DaisyRequestBlocks
 from .defect_augment import DefectAugment
 from .downsample import DownSample
 from .dvid_source import DvidSource
@@ -18,6 +19,9 @@ from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .klb_source import KlbSource
 from .merge_provider import MergeProvider
+from .n5_source import N5Source
+from .n5_write import N5Write
+from .noise_augment import NoiseAugment
 from .normalize import Normalize
 from .pad import Pad
 from .precache import PreCache
@@ -28,6 +32,9 @@ from .rasterize_points import RasterizationSettings, RasterizePoints
 from .reject import Reject
 from .renumber_connected_components import RenumberConnectedComponents
 from .scan import Scan
+from .shift_augment import ShiftAugment
 from .simple_augment import SimpleAugment
 from .snapshot import Snapshot
 from .specified_location import SpecifiedLocation
+from .zarr_source import ZarrSource
+from .zarr_write import ZarrWrite

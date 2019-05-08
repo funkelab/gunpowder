@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -251,18 +265,21 @@
            <div itemprop="articleBody">
             
   <h1>Source code for gunpowder.nodes.random_location</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">choice</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">KDTree</span>
 <span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">integral_image</span><span class="p">,</span> <span class="n">integrate</span>
 <span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="k">import</span> <span class="n">BatchRequest</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">Points</span>
 <span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RandomLocation"><a class="viewcode-back" href="../../../api.html#gunpowder.RandomLocation">[docs]</a><span class="k">class</span> <span class="nc">RandomLocation</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Choses a batch at a random location in the bounding box of the upstream</span>
@@ -362,7 +379,9 @@
             <span class="n">points_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span> <span class="n">points_spec</span><span class="p">})</span>
             <span class="n">points_batch</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">points_request</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points_batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">([</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">location</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points_batch</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;retrieved </span><span class="si">%d</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
 
@@ -383,8 +402,8 @@
 
             <span class="n">lcm_voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">get_lcm_voxel_size</span><span class="p">(</span>
                 <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">lcm_voxel_size</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;shrink&#39;</span><span class="p">)</span>
             <span class="n">lcm_shift_roi</span> <span class="o">=</span> <span class="n">shift_roi</span><span class="o">/</span><span class="n">lcm_voxel_size</span>
-
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;lcm voxel size: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">lcm_voxel_size</span><span class="p">)</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -584,23 +603,19 @@
             <span class="c1">#                 request.shape-1</span>
 
             <span class="c1"># pick a random point</span>
-            <span class="n">point_id</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;select random point </span><span class="si">%d</span><span class="s2"> at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">point_id</span><span class="p">,</span>
-                <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;select random point at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
 
             <span class="c1"># get the lcm voxel that contains this point</span>
-            <span class="n">lcm_location</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">lcm_voxel_size</span><span class="p">)</span>
+            <span class="n">lcm_location</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">point</span><span class="o">/</span><span class="n">lcm_voxel_size</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;belongs to lcm voxel </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">lcm_location</span><span class="p">)</span>
 
             <span class="c1"># mark all dimensions in which the point lies on the lower boundary</span>
             <span class="c1"># of the lcm voxel</span>
-            <span class="n">on_lower_boundary</span> <span class="o">=</span> <span class="n">lcm_location</span><span class="o">*</span><span class="n">lcm_voxel_size</span> <span class="o">==</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span>
+            <span class="n">on_lower_boundary</span> <span class="o">=</span> <span class="n">lcm_location</span><span class="o">*</span><span class="n">lcm_voxel_size</span> <span class="o">==</span> <span class="n">point</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;lies on the lower boundary of the lcm voxel in dimensions </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">on_lower_boundary</span><span class="p">)</span>
@@ -637,7 +652,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">lcm_point_shift_roi</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">lcm_shift_roi</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;reject random shift, random point </span><span class="si">%s</span><span class="s2"> shift ROI </span><span class="si">%s</span><span class="s2"> does &quot;</span>
-                    <span class="s2">&quot;not intersect total shift ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
+                    <span class="s2">&quot;not intersect total shift ROI </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span>
                     <span class="n">lcm_point_shift_roi</span><span class="p">,</span> <span class="n">lcm_shift_roi</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">lcm_point_shift_roi</span> <span class="o">=</span> <span class="n">lcm_point_shift_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">lcm_shift_roi</span><span class="p">)</span>
@@ -649,17 +664,12 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;random shift: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">random_shift</span><span class="p">)</span>
 
             <span class="c1"># count all points inside the shifted ROI</span>
-            <span class="n">points_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-            <span class="n">points_request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span>
-                <span class="n">roi</span><span class="o">=</span><span class="n">request_points_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;points request: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">points_request</span><span class="p">)</span>
-            <span class="n">points_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">points_request</span><span class="p">)</span>
-
-            <span class="n">point_ids</span> <span class="o">=</span> <span class="n">points_batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-            <span class="k">assert</span> <span class="n">point_id</span> <span class="ow">in</span> <span class="n">point_ids</span><span class="p">,</span> <span class="p">(</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_points_in_roi</span><span class="p">(</span>
+                <span class="n">request_points_roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">random_shift</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">,</span> <span class="p">(</span>
                 <span class="s2">&quot;Requested batch to contain point </span><span class="si">%s</span><span class="s2">, but got points &quot;</span>
-                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">point_id</span><span class="p">,</span> <span class="n">point_ids</span><span class="p">))</span>
-            <span class="n">num_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">point_ids</span><span class="p">)</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">points</span><span class="p">))</span>
+            <span class="n">num_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
             <span class="c1"># accept this shift with p=1/num_points</span>
             <span class="c1">#</span>
@@ -677,7 +687,21 @@
 
         <span class="n">random_shift</span> <span class="o">*=</span> <span class="n">lcm_voxel_size</span>
 
-        <span class="k">return</span> <span class="n">random_shift</span></div>
+        <span class="k">return</span> <span class="n">random_shift</span>
+
+    <span class="k">def</span> <span class="nf">__get_points_in_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">center</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">get_center</span><span class="p">()</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()))</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -723,7 +747,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

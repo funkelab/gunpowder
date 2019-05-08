@@ -86,6 +86,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -127,6 +133,8 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -189,6 +197,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -234,7 +248,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li></li>
+      <li>Index</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -272,6 +286,7 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -381,8 +396,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.Roi.get_begin">get_begin() (gunpowder.Roi method)</a>
 </li>
-      <li><a href="api.html#gunpowder.Roi.get_bounding_box">get_bounding_box() (gunpowder.Roi method)</a>
-</li>
       <li><a href="api.html#gunpowder.Roi.get_end">get_end() (gunpowder.Roi method)</a>
 </li>
       <li><a href="api.html#gunpowder.Roi.grow">grow() (gunpowder.Roi method)</a>
@@ -391,7 +404,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.GrowBoundary">GrowBoundary (class in gunpowder)</a>
 </li>
-      <li><a href="api.html#module-gunpowder">gunpowder (module)</a>, <a href="api.html#module-gunpowder">[1]</a>, <a href="first_steps.html#module-gunpowder">[2]</a>, <a href="pipeline.html#module-gunpowder">[3]</a>
+      <li><a href="api.html#module-gunpowder">gunpowder (module)</a>, <a href="api.html#module-gunpowder">[1]</a>, <a href="first_steps.html#module-gunpowder">[2]</a>, <a href="install.html#module-gunpowder">[3]</a>, <a href="pipeline.html#module-gunpowder">[4]</a>, <a href="tutorial.html#module-gunpowder">[5]</a>
 </li>
       <li><a href="api.html#module-gunpowder.caffe">gunpowder.caffe (module)</a>
 </li>
@@ -454,6 +467,10 @@
 
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.N5Source">N5Source (class in gunpowder)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.Normalize">Normalize (class in gunpowder)</a>
 </li>
@@ -593,6 +610,8 @@
         <li><a href="api.html#gunpowder.BatchProvider.teardown">(gunpowder.BatchProvider method)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#gunpowder.Roi.to_slices">to_slices() (gunpowder.Roi method)</a>
+</li>
       <li><a href="api.html#gunpowder.caffe.Train">Train (class in gunpowder.caffe)</a>
 
       <ul>
@@ -628,6 +647,14 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.ArraySpec.voxel_size">voxel_size (gunpowder.ArraySpec attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.ZarrSource">ZarrSource (class in gunpowder)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -677,7 +704,8 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

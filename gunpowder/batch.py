@@ -3,6 +3,8 @@ import multiprocessing
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
+from .array import Array, ArrayKey
+from .points import Points, PointsKey
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +102,7 @@ class Batch(Freezable):
             return key in self.arrays
 
         elif isinstance(key, PointsKey):
-            return key in self.pointss
+            return key in self.points
 
         else:
             raise RuntimeError(

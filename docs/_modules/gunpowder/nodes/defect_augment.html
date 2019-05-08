@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -265,7 +279,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DefectAugment"><a class="viewcode-back" href="../../../api.html#gunpowder.DefectAugment">[docs]</a><span class="k">class</span> <span class="nc">DefectAugment</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Augment intensity arrays section-wise with artifacts like missing</span>
@@ -458,15 +472,14 @@
                                                             <span class="s2">&quot;voxel size&quot;</span><span class="p">)</span>
 
                 <span class="n">artifact_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-                <span class="n">artifact_request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts</span><span class="p">,</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="n">raw_voxel_size</span><span class="p">)</span>
-                <span class="n">artifact_request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts_mask</span><span class="p">,</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="n">alpha_voxel_size</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting artifact batch &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact_request</span><span class="p">))</span>
+                <span class="n">artifact_request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts</span><span class="p">,</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">raw_voxel_size</span><span class="p">,</span> <span class="n">voxel_size</span><span class="o">=</span><span class="n">raw_voxel_size</span><span class="p">)</span>
+                <span class="n">artifact_request</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts_mask</span><span class="p">,</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha_voxel_size</span><span class="p">,</span> <span class="n">voxel_size</span><span class="o">=</span><span class="n">raw_voxel_size</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting artifact batch </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">artifact_request</span><span class="p">)</span>
 
                 <span class="n">artifact_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">artifact_source</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">artifact_request</span><span class="p">)</span>
                 <span class="n">artifact_alpha</span> <span class="o">=</span> <span class="n">artifact_batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts_mask</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
                 <span class="n">artifact_raw</span>   <span class="o">=</span> <span class="n">artifact_batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">artifacts</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
 
-                <span class="k">assert</span> <span class="n">artifact_raw</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">dtype</span>
                 <span class="k">assert</span> <span class="n">artifact_alpha</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
                 <span class="k">assert</span> <span class="n">artifact_alpha</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
                 <span class="k">assert</span> <span class="n">artifact_alpha</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
@@ -607,7 +620,8 @@
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

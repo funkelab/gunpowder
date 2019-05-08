@@ -85,6 +85,12 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing gunpowder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../install.html#installing-using-conda">Installing using <em>conda</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../install.html#using-gunpowder-docker-image">Using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> <em>docker</em> image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../install.html#install-from-github">Install from <em>github</em></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -126,6 +132,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#csvpointssource">CsvPointsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#dvidsource">DvidSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#hdf5source">Hdf5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#zarrsource">ZarrSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#n5source">N5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#klbsource">KlbSource</a></li>
 </ul>
 </li>
@@ -188,6 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -255,18 +269,19 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">ArrayKey</span><span class="p">,</span> <span class="n">Array</span>
 <span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
 <span class="kn">from</span> <span class="nn">gunpowder.nodes.generic_train</span> <span class="k">import</span> <span class="n">GenericTrain</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">ArrayKey</span><span class="p">,</span> <span class="n">Array</span>
+<span class="kn">from</span> <span class="nn">gunpowder.tensorflow.local_server</span> <span class="k">import</span> <span class="n">LocalServer</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Train"><a class="viewcode-back" href="../../../../api.html#gunpowder.tensorflow.Train">[docs]</a><span class="k">class</span> <span class="nc">Train</span><span class="p">(</span><span class="n">GenericTrain</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Tensorflow implementation of :class:`gunpowder.nodes.Train`.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        meta_graph_filename (``string``):</span>
+<span class="sd">        graph (``string``):</span>
 
 <span class="sd">            Filename of a tensorflow meta-graph storing the tensorflow graph</span>
 <span class="sd">            containing an optimizer. A meta-graph file can be created by</span>
@@ -276,7 +291,7 @@
 <span class="sd">                ...</span>
 
 <span class="sd">                # store it</span>
-<span class="sd">                tf.train.export_meta_graph(filename=meta_graph_filename)</span>
+<span class="sd">                tf.train.export_meta_graph(filename=&#39;...&#39;)</span>
 
 <span class="sd">        optimizer (``string`` or function):</span>
 
@@ -347,11 +362,15 @@
 <span class="sd">        log_dir (``string``, optional):</span>
 
 <span class="sd">            Directory for saving tensorboard summaries.</span>
+
+<span class="sd">        log_every (``int``, optional):</span>
+
+<span class="sd">            After how many iterations to write out tensorboard summaries.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
-            <span class="n">meta_graph_filename</span><span class="p">,</span>
+            <span class="n">graph</span><span class="p">,</span>
             <span class="n">optimizer</span><span class="p">,</span>
             <span class="n">loss</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
@@ -360,15 +379,16 @@
             <span class="n">summary</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">array_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">save_every</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
-            <span class="n">log_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+            <span class="n">log_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+            <span class="n">log_every</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">Train</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Train</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">outputs</span><span class="p">,</span>
             <span class="n">gradients</span><span class="p">,</span>
             <span class="n">array_specs</span><span class="p">,</span>
             <span class="n">spawn_subprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">meta_graph_filename</span> <span class="o">=</span> <span class="n">meta_graph_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_graph_filename</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_func</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_loss_names</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="kc">None</span>
@@ -384,17 +404,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">iteration_increment</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary_saver</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="n">log_dir</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_every</span> <span class="o">=</span> <span class="n">log_every</span>
+        <span class="c1"># Check if optimizer is a str in python 2/3 compatible way.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">u</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_loss_names</span> <span class="o">=</span> <span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_func</span> <span class="o">=</span> <span class="n">optimizer</span>
 
+        <span class="c1"># at least for some versions of tensorflow, the checkpoint name has to</span>
+        <span class="c1"># start with a . if it is a relative path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_graph_filename</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">meta_graph_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_graph_filename</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing tf session...&quot;</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">LocalServer</span><span class="o">.</span><span class="n">get_target</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing tf session, connecting to </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__read_meta_graph</span><span class="p">()</span>
@@ -441,7 +471,7 @@
 
         <span class="n">batch</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span>
         <span class="n">batch</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;iteration&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">iteration</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_every</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">batch</span><span class="o">.</span><span class="n">iteration</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">summary_saver</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summaries</span><span class="p">,</span> <span class="n">batch</span><span class="o">.</span><span class="n">iteration</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">batch</span><span class="o">.</span><span class="n">iteration</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">save_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -631,7 +661,8 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

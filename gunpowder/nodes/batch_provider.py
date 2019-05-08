@@ -147,6 +147,8 @@ class BatchProvider(object):
 
         self.check_batch_consistency(batch, request)
 
+        self.remove_unneeded(batch, request)
+
         logger.debug("%s provides %s", self.name(), batch)
 
         return batch
@@ -175,6 +177,7 @@ class BatchProvider(object):
 
                 if request_spec.voxel_size is not None:
                     assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
+                            self.name(),
                             request_spec.voxel_size,
                             key,
                             provided_spec.voxel_size)
@@ -208,17 +211,18 @@ class BatchProvider(object):
                     array_key))
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
-            dims = request_spec.roi.dims()
-            data_shape = Coordinate(array.data.shape[-dims:])
-            voxel_size = self.spec[array_key].voxel_size
-            assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
-                    array_key,
-                    request_spec.roi,
-                    data_shape,
-                    voxel_size,
-                    data_shape*voxel_size,
-                    self.name()
-            )
+            if request_spec.roi is not None:
+                dims = request_spec.roi.dims()
+                data_shape = Coordinate(array.data.shape[-dims:])
+                voxel_size = self.spec[array_key].voxel_size
+                assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
+                        array_key,
+                        request_spec.roi,
+                        data_shape,
+                        voxel_size,
+                        data_shape*voxel_size,
+                        self.name()
+                )
 
         for (points_key, request_spec) in request.points_specs.items():
 
@@ -234,6 +238,13 @@ class BatchProvider(object):
                 assert points.spec.roi.contains(point.location), (
                     "points provided by %s with ROI %s contain point at %s"%(
                         self.name(), points.spec.roi, point.location))
+
+    def remove_unneeded(self, batch, request):
+
+        batch_keys = set(list(batch.arrays.keys()) + list(batch.points.keys()))
+        for key in batch_keys:
+            if key not in request:
+                del batch[key]
 
     def provide(self, request):
         '''To be implemented in subclasses.

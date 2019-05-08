@@ -15,7 +15,8 @@ from .batch_provider import BatchProvider
 logger = logging.getLogger(__name__)
 
 class KlbSource(BatchProvider):
-    '''A KLB data source.
+    '''A `KLB <https://bitbucket.org/fernandoamat/keller-lab-block-filetype>`_
+    data source.
 
     Provides a single array from the given KLB dataset.
 
@@ -73,7 +74,7 @@ class KlbSource(BatchProvider):
 
         batch = Batch()
 
-        _, request_spec = request.array_specs.items()[0]
+        request_spec = request[self.array]
 
         logger.debug("Reading %s in %s...", self.array, request_spec.roi)
 
