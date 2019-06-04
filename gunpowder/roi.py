@@ -4,6 +4,8 @@ from .freezable import Freezable
 import numbers
 import numpy as np
 
+from typing import List
+
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
 
@@ -316,6 +318,17 @@ class Roi(Freezable):
         shape = self.__shape + amount_neg + amount_pos
 
         return Roi(offset, shape)
+
+    def permute(self, permutation: List[int]):
+        assert set(permutation) == set(
+            range(len(self.__offset))
+        ), "{} is an invalid permutation for a vector of length {}".format(
+            permutation, len(self.__offset)
+        )
+        if self.get_offset() is not None:
+            self.__offset = Coordinate(tuple(self.__offset[i] for i in permutation))
+        if self.get_shape() is not None:
+            self.__shape = Coordinate(tuple(self.__shape[i] for i in permutation))
 
     def copy(self):
         '''Create a copy of this ROI.'''
