@@ -9,6 +9,8 @@ from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
 
+from typing import List
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,20 +40,18 @@ class Hdf5LikeSource(BatchProvider):
             is useful to set a missing ``voxel_size``, for example. Only fields
             that are not ``None`` in the given :class:`ArraySpec` will be used.
 
-        channels_first (``bool``, optional):
+        transpose (``list``, optional):
 
-            Specifies the ordering of the dimensions of the HDF5-like data source.
-            If channels_first is set (default), then the input shape is expected
-            to be (channels, spatial dimensions). This is recommended due to
-            better performance. If channels_first is set to false, then the input
-            data is read in channels_last manner and converted to channels_first.
+            Specifies the order in which to permute the axes. Given a tensor
+            of the form xyzc, use transpose=[3,2,1,0] to use the data as if it
+            were in czyx ordering.
     '''
     def __init__(
             self,
             filename,
             datasets,
             array_specs=None,
-            channels_first=True):
+            transpose=None):
 
         self.filename = filename
         self.datasets = datasets
@@ -61,7 +61,7 @@ class Hdf5LikeSource(BatchProvider):
         else:
             self.array_specs = array_specs
 
-        self.channels_first = channels_first
+        self.transpose = transpose
 
         # number of spatial dimensions
         self.ndims = None
@@ -96,6 +96,13 @@ class Hdf5LikeSource(BatchProvider):
                 # scale request roi to voxel units
                 dataset_roi = request_spec.roi / voxel_size
 
+                # permute roi by the inverse of the desired transpose
+                # this allows for slicing then transposing vs transposing then slicing
+                if self.transpose is not None:
+                    dataset_roi.permute(
+                        self._invert_permutation(self.transpose, self.ndims)
+                    )
+
                 # shift request roi into dataset
                 dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset() / voxel_size
 
@@ -103,10 +110,16 @@ class Hdf5LikeSource(BatchProvider):
                 array_spec = self.spec[array_key].copy()
                 array_spec.roi = request_spec.roi
 
+                # read array
+                requested_data = self.__read(
+                    data_file, self.datasets[array_key], dataset_roi
+                )
+                # transpose data
+                if self.transpose is not None:
+                    requested_data = requested_data.transpose(self.transpose)
+
                 # add array to batch
-                batch.arrays[array_key] = Array(
-                    self.__read(data_file, self.datasets[array_key], dataset_roi),
-                    array_spec)
+                batch.arrays[array_key] = Array(requested_data, array_spec)
 
         logger.debug("done")
 
@@ -126,6 +139,17 @@ class Hdf5LikeSource(BatchProvider):
             return Coordinate(dataset.attrs['offset'])
         except Exception:  # todo: make specific when z5py supports it
             return None
+
+    def _invert_permutation(self, permutation: List[int], ndim: int):
+        assert set(permutation) == set(
+            range(ndim)
+        ), "{} is an invalid permutation for a vector of length {}".format(
+            permutation, ndim
+        )
+        inv_transpose = [0] * (ndim)
+        for i in range(0, ndim):
+            inv_transpose[permutation[i]] = i
+        return tuple(inv_transpose)
 
     def __read_spec(self, array_key, data_file, ds_name):
 
@@ -149,16 +173,15 @@ class Hdf5LikeSource(BatchProvider):
         self.ndims = len(spec.voxel_size)
 
         if spec.roi is None:
+            # Leave roi in original coordinate system
             offset = self._get_offset(dataset)
             if offset is None:
                 offset = Coordinate((0,)*self.ndims)
 
-            if self.channels_first:
-                shape = Coordinate(dataset.shape[-self.ndims:])
-            else:
-                shape = Coordinate(dataset.shape[:self.ndims])
-
-            spec.roi = Roi(offset, shape*spec.voxel_size)
+            # What happens if self.ndims < len(dataset.shape)? Is this allowed? 
+            # it will probably ruin the transpose functionality    
+            shape = Coordinate(dataset.shape[: self.ndims])
+            spec.roi = Roi(offset, shape * spec.voxel_size)
 
         if spec.dtype is not None:
             assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
@@ -188,12 +211,9 @@ class Hdf5LikeSource(BatchProvider):
 
         c = len(data_file[ds_name].shape) - self.ndims
 
-        if self.channels_first:
-            array = np.asarray(data_file[ds_name][(slice(None),) * c + roi.to_slices()])
-        else:
-            array = np.asarray(data_file[ds_name][roi.to_slices() + (slice(None),) * c])
-            array = np.transpose(array,
-                                 axes=[i + self.ndims for i in range(c)] + list(range(self.ndims)))
+        array = np.asarray(data_file[ds_name][roi.to_slices() + (slice(None),) * c])
+        array = np.transpose(array,
+                             axes=[i + self.ndims for i in range(c)] + list(range(self.ndims)))
 
         return array
 
