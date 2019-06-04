@@ -96,6 +96,32 @@ class Hdf5LikeSourceTestMixin(object):
             self.assertTrue(batch.arrays[raw_low].spec.interpolatable)
             self.assertFalse(batch.arrays[seg].spec.interpolatable)
 
+    def test_transpose(self):
+        path = self.path_to("test_{0}_source.{0}".format(self.extension))
+
+        x = np.arange(0, 1000, 1).reshape([10, 10, 10])  # axes: hundreds, tens, ones
+        # create a test file
+        with self._open_writable_file(path) as f:
+            self._create_dataset(f, "raw", x)
+
+        # read arrays
+        raw = ArrayKey("RAW")
+        source = self.SourceUnderTest(path, {raw: "raw"}, transpose=[1, 2, 0])
+
+        with build(source):
+            # axes after transpose: tens, ones, hundreds
+            # request 0:30, 1:4, 200:500
+            batch = source.request_batch(
+                BatchRequest({raw: ArraySpec(roi=Roi((0, 1, 2), (3, 3, 3)))})
+            )
+
+            exp_x = np.arange(0,30,10).reshape([3,1,1]) * np.ones([3,3,3])
+            exp_y = np.arange(1,4,1).reshape([1,3,1]) * np.ones([3,3,3])
+            exp_z = np.arange(200,500,100).reshape([1,1,3]) * np.ones([3,3,3]) 
+            expected_data = exp_x + exp_y + exp_z
+
+            self.assertTrue(all((batch.arrays[raw].data == expected_data).flatten()))
+
 
 class TestHdf5Source(ProviderTest, Hdf5LikeSourceTestMixin):
     extension = 'hdf'
