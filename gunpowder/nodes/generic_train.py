@@ -1,5 +1,7 @@
+import glob
 import logging
 import multiprocessing
+import re
 import time
 
 from gunpowder.nodes.batch_filter import BatchFilter
@@ -182,6 +184,28 @@ class GenericTrain(BatchFilter):
         this to tear down you solver and free training hardware.
         '''
         pass
+
+    def _checkpoint_name(self, basename, iteration):
+        return basename + '_checkpoint_' + '%i' % iteration
+
+    def _get_latest_checkpoint(self, basename):
+
+        def atoi(text):
+            return int(text) if text.isdigit() else text
+
+        def natural_keys(text):
+            return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+        checkpoints = glob.glob(basename + '_checkpoint_*')
+        checkpoints.sort(key=natural_keys)
+
+        if len(checkpoints) > 0:
+
+            checkpoint = checkpoints[-1]
+            iteration = int(checkpoint.split('_')[-1])
+            return checkpoint, iteration
+
+        return None, 0
 
     def __produce_train_batch(self):
         '''Process one train batch.'''
