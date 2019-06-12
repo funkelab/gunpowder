@@ -48,6 +48,11 @@ except ImportError as e:
     keras = NoSuchModule('keras')
 
 try:
+    import torch
+except ImportError as e:
+    torch = NoSuchModule('torch')
+
+try:
     import malis
 except ImportError as e:
     malis = NoSuchModule('malis')
