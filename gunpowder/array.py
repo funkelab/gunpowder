@@ -35,7 +35,11 @@ class Array(Freezable):
         if attrs is None:
             self.attrs = {}
 
-        if spec is not None and spec.roi is not None:
+        if (
+                spec is not None and
+                spec.roi is not None and
+                spec.voxel_size is not None):
+
             for d in range(len(spec.voxel_size)):
                 assert spec.voxel_size[d]*data.shape[-spec.roi.dims()+d] == spec.roi.get_shape()[d], \
                         "ROI %s does not align with voxel size %s * data shape %s"%(spec.roi, spec.voxel_size, data.shape)
