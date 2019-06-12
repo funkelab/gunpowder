@@ -43,6 +43,11 @@ except ImportError as e:
     tensorflow = NoSuchModule('tensorflow')
 
 try:
+    import tensorflow.keras as keras
+except ImportError as e:
+    keras = NoSuchModule('keras')
+
+try:
     import malis
 except ImportError as e:
     malis = NoSuchModule('malis')
