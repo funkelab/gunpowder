@@ -83,6 +83,9 @@ class BatchProviderTree(BatchProvider):
             logger.error("encountered exception during internal teardown: " + str(e))
             traceback.print_exc()
 
+    def name(self):
+        return self.output.name()
+
 def batch_provider_add(self, batch_provider):
 
     assert isinstance(batch_provider, BatchProvider), "Can only add BatchProvider to batch providers."
