@@ -144,7 +144,7 @@ class ProviderSpec(Freezable):
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
-                else:
+                elif spec.roi is not None:
                     total_roi = total_roi.union(spec.roi)
         return total_roi
 
@@ -184,6 +184,8 @@ class ProviderSpec(Freezable):
         lcm_voxel_size = None
         for key in array_keys:
             voxel_size = self.array_specs[key].voxel_size
+            if voxel_size is None:
+                continue
             if lcm_voxel_size is None:
                 lcm_voxel_size = voxel_size
             else:
