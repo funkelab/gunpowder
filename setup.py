@@ -42,6 +42,8 @@ setup(
             'gunpowder.caffe.nodes',
             'gunpowder.tensorflow',
             'gunpowder.tensorflow.nodes',
+            'gunpowder.keras',
+            'gunpowder.keras.nodes',
             'gunpowder.contrib',
             'gunpowder.contrib.nodes',
             'gunpowder.ext',

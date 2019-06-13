@@ -1,6 +1,6 @@
 import logging
-import os
 import numpy as np
+import os
 
 from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
@@ -141,28 +141,28 @@ class Train(GenericTrain):
 
     def __collect_provided_inputs(self, batch):
 
-        return self.__collect_provided_arrays(batch, self.x, 'input_')
+        return self.__collect_provided_arrays(batch, self.x, '_input')
 
     def __collect_provided_outputs(self, batch):
 
         return self.__collect_provided_arrays(batch, self.y, '')
 
-    def __collect_provided_arrays(self, batch, reference, prefix):
+    def __collect_provided_arrays(self, batch, reference, suffix):
 
         arrays = {}
 
         for array_name, array_key in reference.items():
             if isinstance(array_key, ArrayKey):
                 if array_key in batch.arrays:
-                    arrays[prefix + array_name] = batch.arrays[array_key].data
+                    arrays[array_name + suffix] = batch.arrays[array_key].data
                 else:
                     logger.warning(
                         "batch does not contain %s, array %s will not be "
                         "set", array_key, array_name)
             elif isinstance(array_key, np.ndarray):
-                arrays[prefix + array_name] = array_key
+                arrays[array_name + suffix] = array_key
             elif isinstance(array_key, str):
-                arrays[prefix + array_name] = getattr(batch, array_key)
+                arrays[array_name + suffix] = getattr(batch, array_key)
             else:
                 raise Exception(
                     "Unknown network array key {}, can't be given to "
