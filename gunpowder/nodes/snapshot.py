@@ -121,10 +121,11 @@ class Snapshot(BatchFilter):
                         dataset = f.create_dataset(name=ds_name, data=array.data.astype(dtype), compression=self.compression_type)
                     else:
                         dataset = f.create_dataset(name=ds_name, data=array.data, compression=self.compression_type)
-                    
-                    if array.spec.roi is not None:
-                        dataset.attrs['offset'] = array.spec.roi.get_offset()
-                    dataset.attrs['resolution'] = self.spec[array_key].voxel_size
+
+                    if not array.spec.nonspatial:
+                        if array.spec.roi is not None:
+                            dataset.attrs['offset'] = array.spec.roi.get_offset()
+                        dataset.attrs['resolution'] = self.spec[array_key].voxel_size
 
                     if self.store_value_range:
                         dataset.attrs['value_range'] = (

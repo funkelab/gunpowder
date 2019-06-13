@@ -93,6 +93,9 @@ class SimpleAugment(BatchFilter):
             if array_key not in request:
                 continue
 
+            if array.spec.nonspatial:
+                continue
+
             num_channels = len(array.data.shape) - self.dims
             channel_slices = (slice(None, None),)*num_channels
 
@@ -127,6 +130,8 @@ class SimpleAugment(BatchFilter):
             for (key, collector) in collection_type.items():
                 if key not in request:
                     continue
+                if collector.spec.roi is None:
+                    continue
                 logger.debug("total ROI: %s"%self.total_roi)
                 logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
@@ -138,12 +143,14 @@ class SimpleAugment(BatchFilter):
     def __mirror_request(self, request, mirror):
 
         for key, spec in request.items():
-            self.__mirror_roi(spec.roi, self.total_roi, mirror)
+            if spec.roi is not None:
+                self.__mirror_roi(spec.roi, self.total_roi, mirror)
 
     def __transpose_request(self, request, transpose):
 
         for key, spec in request.items():
-            self.__transpose_roi(spec.roi, transpose)
+            if spec.roi is not None:
+                self.__transpose_roi(spec.roi, transpose)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
