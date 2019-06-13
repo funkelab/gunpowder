@@ -9,7 +9,8 @@ class Stack(BatchFilter):
     dimension for each array. This is useful to create batches with several
     samples and only makes sense if there is a source of randomness upstream.
 
-    This node only supports batches containing arrays, not points.
+    This node stacks only arrays, not points. The resulting batch will have the
+    same point sets as found in the first batch requested upstream.
 
     Args:
 
@@ -33,12 +34,16 @@ class Stack(BatchFilter):
         ]
 
         batch = Batch()
-        for key, spec in request.items():
+        for key, spec in request.array_specs.items():
 
             data = np.stack([b[key].data for b in batches])
             batch[key] = Array(
                 data,
                 batches[0][key].spec.copy())
+
+        # copy points of first batch requested
+        for key, spec in request.points_specs.items():
+            batch[key] = batches[0][key]
 
         timing.stop()
         batch.profiling_stats.add(timing)
