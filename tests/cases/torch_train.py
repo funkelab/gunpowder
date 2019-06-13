@@ -1,7 +1,8 @@
 from .provider_test import ProviderTest
 from gunpowder import *
-from gunpowder.ext import torch
+from gunpowder.ext import torch, NoSuchModule
 from gunpowder.torch import Train
+from unittest import skipIf
 import numpy as np
 
 class TestTorchTrainSource(BatchProvider):
@@ -45,17 +46,8 @@ class TestTorchTrainSource(BatchProvider):
 
         return batch
 
-class TestModel(torch.nn.Module):
 
-    def __init__(self):
-        super(TestModel, self).__init__()
-        self.linear = torch.nn.Linear(4, 1, False)
-
-    def forward(self, a, b):
-        a = a.reshape(-1)
-        b = b.reshape(-1)
-        return self.linear(a*b)
-
+@skipIf(isinstance(torch, NoSuchModule), 'torch is not installed')
 class TestTorchTrain(ProviderTest):
 
     def test_output(self):
@@ -68,6 +60,17 @@ class TestTorchTrain(ProviderTest):
         ArrayKey('B')
         ArrayKey('C')
         ArrayKey('C_PREDICTED')
+
+        class TestModel(torch.nn.Module):
+
+            def __init__(self):
+                super(TestModel, self).__init__()
+                self.linear = torch.nn.Linear(4, 1, False)
+
+            def forward(self, a, b):
+                a = a.reshape(-1)
+                b = b.reshape(-1)
+                return self.linear(a*b)
 
         model = TestModel()
         loss = torch.nn.MSELoss()
