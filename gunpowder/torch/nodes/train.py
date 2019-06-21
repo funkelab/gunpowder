@@ -111,6 +111,8 @@ class Train(GenericTrain):
 
             logger.info("Starting training from scratch")
 
+        logger.info("Using device %s", self.device)
+
     def train_step(self, batch, request):
 
         inputs = self.__collect_provided_inputs(batch)
@@ -132,6 +134,8 @@ class Train(GenericTrain):
             'output': self.model(**device_inputs)
         }
 
+        logger.debug("model output: %s", outputs['output'])
+        logger.debug("expected output: %s", device_targets['output'])
         loss = self.loss(outputs['output'], device_targets['output'])
         loss.backward()
         self.optimizer.step()
@@ -140,10 +144,10 @@ class Train(GenericTrain):
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(
-                outputs[array_name].detach().numpy(),
+                outputs[array_name].cpu().detach().numpy(),
                 spec)
 
-        batch.loss = loss.detach().numpy()
+        batch.loss = loss.cpu().detach().numpy()
         self.iteration += 1
         batch.iteration = self.iteration
 
