@@ -144,10 +144,10 @@ class Train(GenericTrain):
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(
-                outputs[array_name].detach().numpy(),
+                outputs[array_name].cpu().detach().numpy(),
                 spec)
 
-        batch.loss = loss.detach().numpy()
+        batch.loss = loss.cpu().detach().numpy()
         self.iteration += 1
         batch.iteration = self.iteration
 
