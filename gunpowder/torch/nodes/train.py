@@ -2,7 +2,7 @@ import logging
 import numpy as np
 
 from gunpowder.array import ArrayKey, Array
-from gunpowder.ext import torch
+from gunpowder.ext import torch, tensorboardX, NoSuchModule
 from gunpowder.nodes.generic_train import GenericTrain
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,14 @@ class Train(GenericTrain):
 
             After how many iterations to create a checkpoint to store the
             learnt weights.
+
+        log_dir (``string``, optional):
+
+            Directory for saving tensorboard summaries.
+
+        log_every (``int``, optional):
+
+            After how many iterations to write out tensorboard summaries.
     '''
 
     def __init__(
@@ -66,7 +74,9 @@ class Train(GenericTrain):
             gradients=None,
             array_specs=None,
             checkpoint_basename='model',
-            save_every=2000):
+            save_every=2000,
+            log_dir=None,
+            log_every=1):
 
         outputs = {'output': output}
         targets = {'output': target}
@@ -92,6 +102,14 @@ class Train(GenericTrain):
         self.device = torch.device('cuda' if self.use_cuda else 'cpu')
         self.model = self.model.to(self.device)
         self.iteration = 0
+
+        if not isinstance(tensorboardX, NoSuchModule) and log_dir is not None:
+            self.summary_writer = tensorboardX.SummaryWriter(log_dir)
+            self.log_every = log_every
+        else:
+            self.summary_writer = None
+            if log_dir is not None:
+                logger.warn("log_dir given, but tensorboardX is not installed")
 
     def start(self):
 
@@ -165,6 +183,9 @@ class Train(GenericTrain):
                     'optimizer_state_dict': self.optimizer.state_dict()
                 },
                 checkpoint_name)
+
+        if self.summary_writer and batch.iteration % self.log_every == 0:
+            self.summary_writer.add_scalar('loss', batch.loss, batch.iteration)
 
     def __collect_requested_outputs(self, request):
 

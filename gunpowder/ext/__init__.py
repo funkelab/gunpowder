@@ -56,6 +56,11 @@ except ImportError as e:
     torch = NoSuchModule('torch')
 
 try:
+    import tensorboardX
+except ImportError as e:
+    tensorboardX = NoSuchModule('tensorboardX')
+
+try:
     import malis
 except ImportError as e:
     malis = NoSuchModule('malis')
