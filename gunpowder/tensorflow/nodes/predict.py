@@ -2,6 +2,7 @@ import ctypes
 import logging
 import multiprocessing as mp
 import numpy as np
+import os
 
 from functools import reduce
 from gunpowder.array import ArrayKey, Array
@@ -102,8 +103,13 @@ class Predict(GenericPredict):
         self.predict_sent_outputs = mp.Event()
 
         self.predict_process = mp.Process(target=self.__predict)
+        self.predict_process_crashed = mp.Value('i', False)
         self.predict_process.start()
         self.predict_process_initialized.wait()
+
+        if self.predict_process_crashed.value:
+            print("Predict process crashed while initializing0")
+            exit()
 
     def predict(self, batch, request):
 
@@ -149,13 +155,28 @@ class Predict(GenericPredict):
 
         self.__write_inputs_to_shared(input_data)
         self.worker_sent_inputs.set()
+        if self.predict_process_crashed.value:
+            print("Predict process crashed while initializing1")
+            self.send_lock.release()
+            exit()
 
         self.receive_lock.acquire()
         self.predict_received_inputs.wait()
+        if self.predict_process_crashed.value:
+            print("Predict process crashed while initializing2")
+            self.send_lock.release()
+            self.receive_lock.release()
+            exit()
+
         self.predict_received_inputs.clear()
         self.send_lock.release()
 
         self.predict_sent_outputs.wait()
+        if self.predict_process_crashed.value:
+            print("Predict process crashed while initializing3")
+            self.receive_lock.release()
+            exit()
+
         self.predict_sent_outputs.clear()
 
         output_data = self.__read_outputs_from_shared(output_tensors)
@@ -174,46 +195,56 @@ class Predict(GenericPredict):
     def __predict(self):
         '''The background predict process.'''
 
-        # TODO: is the server still needed?
-        target = LocalServer.get_target()
-        logger.info("Initializing tf session, connecting to %s...", target)
+        # wrap in try block so if crashes, the whole process is brought down
+        try:
+            # TODO: is the server still needed?
+            target = LocalServer.get_target()
+            logger.info("Initializing tf session, connecting to %s...", target)
 
-        self.graph = tf.Graph()
-        self.session = tf.Session(
-            target=target,
-            graph=self.graph)
+            self.graph = tf.Graph()
+            self.session = tf.Session(
+                target=target,
+                graph=self.graph)
 
-        with self.graph.as_default():
-            self.__read_checkpoint()
+            with self.graph.as_default():
+                self.__read_checkpoint()
 
-        if not self.shared_output_arrays:
-            if not self.shared_output_array_config:
-                self.__create_shared_output_array_config()
-            self.__init_shared_output_arrays()
+            if not self.shared_output_arrays:
+                if not self.shared_output_array_config:
+                    self.__create_shared_output_array_config()
+                self.__init_shared_output_arrays()
 
-        # from now on it is save to access the shared array configuration
-        self.predict_process_initialized.set()
+            # from now on it is save to access the shared array configuration
+            self.predict_process_initialized.set()
 
-        # loop predict
-        while True:
+            # loop predict
+            while True:
 
-            # wait for inputs
-            self.worker_sent_inputs.wait()
+                # wait for inputs
+                self.worker_sent_inputs.wait()
+                self.worker_sent_inputs.clear()
+
+                if not self.shared_input_arrays:
+                    self.__init_shared_input_arrays()
+
+                # read inputs
+                input_data = self.__read_inputs_from_shared()
+                self.predict_received_inputs.set()
+
+                # compute outputs
+                output_data = self.session.run({t: t for t in self.outputs.keys()}, feed_dict=input_data)
+
+                # write outputs
+                self.__write_outputs_to_shared(output_data)
+                self.predict_sent_outputs.set()
+        except Exception as e:
+            print("Got exception while running predict() loop: %s" % e)
+            self.predict_process_crashed.value = True
+            self.predict_process_initialized.set()
             self.worker_sent_inputs.clear()
-
-            if not self.shared_input_arrays:
-                self.__init_shared_input_arrays()
-
-            # read inputs
-            input_data = self.__read_inputs_from_shared()
             self.predict_received_inputs.set()
-
-            # compute outputs
-            output_data = self.session.run({t: t for t in self.outputs.keys()}, feed_dict=input_data)
-
-            # write outputs
-            self.__write_outputs_to_shared(output_data)
             self.predict_sent_outputs.set()
+            os._exit(0)
 
     def teardown(self):
 
