@@ -1,6 +1,6 @@
+from copy import copy as shallow_copy
 import logging
 import multiprocessing
-import copy
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
@@ -154,36 +154,39 @@ class Batch(Freezable):
                 r += "%s: %s\n"%(key, obj.spec)
         return r
 
-    def crop(self, request):
-        '''Crop batch to meet the request'''
+    def crop(self, request, copy=False):
+        '''Crop batch to meet the given request.'''
 
-        assert isinstance(request, BatchRequest), "Only BatchRequest can be used for cropping batch"
+        cropped = Batch()
 
-        new_batch = copy.deepcopy(self)
+        for key, val in request.items():
+            assert key in self, "%s not contained in this batch" % key
+            cropped[key] = self[key].crop(val.roi, copy)
 
-        if request.array_specs is not None:
-            for (array_key, request_spec) in request.array_specs.items():
-                if request_spec.roi is not None and self.arrays[array_key].spec.roi.contains(request_spec.roi):
-                    array = self.arrays[array_key].crop(request_spec.roi)
-                    new_batch.arrays[array_key] = array
-
-        if request.points_specs is not None:
-            for (points_key, request_spec) in request.points_specs.items():
-                if request_spec.roi is not None and self.points[points_key].spec.roi.contains(request_spec.roi):
-                    roi = self.points[points_key].spec.roi
-                    new_batch.points[points_key].spec.roi = roi.intersect(request_spec.roi)
-
-        return new_batch
+        return cropped
 
     def merge(self, batch):
-        '''Merge two batches'''
+        '''Merge this batch (``a``) with another batch (``b``).
 
-        assert isinstance(batch, self), "Only two batches can be merged!"
+        This creates a new batch ``c`` containing arrays and point sets from
+        both batches ``a`` and ``b``:
 
-        new_batch = copy.deepcopy(self)
+            * Arrays or points that exist in either ``a`` or ``b`` will be
+              referenced in ``c`` (not copied).
 
-        for (key, val) in batch.items():
-            if val.spec.roi.contains(self[key].spec.roi) or self[key] is None:
-                    new_batch[key] = copy.deepcopy(batch[key])
+            * Arrays that exist in both batches will be merged, as in
+              ``a_array.merge(b_array)`` (which will fail if one array is not
+              contained in the other one). This creates a new array.
 
-        return new_batch
+        All other cases will lead to an exception.
+        '''
+
+        merged = shallow_copy(self)
+
+        for key, val in batch.items():
+            if key not in merged:
+                merged[key] = val
+            else:
+                merged[key] = merged[key].merge(val)
+
+        return merged
