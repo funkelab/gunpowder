@@ -46,22 +46,26 @@ class Array(Freezable):
 
         self.freeze()
 
-    def crop(self, roi, copy=True):
+    def crop(self, roi, copy=False):
         '''Create a cropped copy of this Array.
 
         Args:
 
-            roi(:class:`Roi`):
+            roi (:class:`Roi`):
 
                 ROI in world units to crop to.
 
-            copy(``bool``):
+            copy (``bool``):
 
-                Make a copy of the data (default).
+                Make a copy of the data.
         '''
 
-        assert self.spec.roi.contains(roi), "Requested crop ROI (%s) doesn't fit in array (%s)"\
-        %(roi, self.spec.roi)
+        assert self.spec.roi.contains(roi), (
+            "Requested crop ROI (%s) doesn't fit in array (%s)" %
+            (roi, self.spec.roi))
+
+        if self.spec.roi == roi and not copy:
+            return self
 
         voxel_size = self.spec.voxel_size
         data_roi = (roi - self.spec.roi.get_offset())/voxel_size
