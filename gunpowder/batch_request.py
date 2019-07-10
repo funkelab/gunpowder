@@ -82,15 +82,17 @@ class BatchRequest(ProviderSpec):
         if request.array_specs is not None:
             for key, spec in request.array_specs.items():
                 try:
-                    new_request.array_specs[key].roi = self.array_specs[key].roi.union(request.array_specs[key].roi)
+                    new_request.array_specs[key].roi = self.array_specs[key].roi.union(
+                        request.array_specs[key].roi)
                 except:
                     new_request.array_specs[key] = spec
 
         if request.points_specs is not None:
             for key, spec in request.points_specs.items():
-                try: 
-                    new_request.points_specs[key].roi = self.points_specs[key].roi.union(request.points_specs[key].roi)
+                try:
+                    new_request.points_specs[key].roi = self.points_specs[key].roi.union(
+                        request.points_specs[key].roi)
                 except:
                     new_request.points_specs[key] = spec
-                
+
         return new_request
