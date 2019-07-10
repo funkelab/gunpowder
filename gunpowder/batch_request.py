@@ -75,24 +75,15 @@ class BatchRequest(ProviderSpec):
 
     def merge(self, request):
         '''Merge another request with current request'''
-        assert isinstance(request, self), "Only requests can be merged!"
 
-        new_request = self.copy()
+        assert isinstance(request, BatchRequest)
 
-        if request.array_specs is not None:
-            for key, spec in request.array_specs.items():
-                try:
-                    new_request.array_specs[key].roi = self.array_specs[key].roi.union(
-                        request.array_specs[key].roi)
-                except:
-                    new_request.array_specs[key] = spec
+        merged = self.copy()
 
-        if request.points_specs is not None:
-            for key, spec in request.points_specs.items():
-                try:
-                    new_request.points_specs[key].roi = self.points_specs[key].roi.union(
-                        request.points_specs[key].roi)
-                except:
-                    new_request.points_specs[key] = spec
+        for key, spec in request.items():
+            if key not in merged:
+                merged[key] = spec
+            else:
+                merged[key].roi = merged[key].roi.union(spec.roi)
 
-        return new_request
+        return merged
