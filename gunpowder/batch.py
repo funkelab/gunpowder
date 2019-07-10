@@ -164,19 +164,20 @@ class Batch(Freezable):
         if request.array_specs is not None:
             for (array_key, request_spec) in request.array_specs.items():
                 if request_spec.roi is not None and self.arrays[array_key].spec.roi.contains(request_spec.roi):
-                        array = self.arrays[array_key].crop(request_spec.roi)
-                        new_batch.arrays[array_key] = array
-        
+                    array = self.arrays[array_key].crop(request_spec.roi)
+                    new_batch.arrays[array_key] = array
+
         if request.points_specs is not None:
             for (points_key, request_spec) in request.points_specs.items():
                 if request_spec.roi is not None and self.points[points_key].spec.roi.contains(request_spec.roi):
-                        roi = self.points[points_key].spec.roi
-                        new_batch.points[points_key].spec.roi = roi.intersect(request_spec.roi)
-                
+                    roi = self.points[points_key].spec.roi
+                    new_batch.points[points_key].spec.roi = roi.intersect(request_spec.roi)
+
         return new_batch
 
     def merge(self, batch):
         '''Merge two batches'''
+
         assert isinstance(batch, self), "Only two batches can be merged!"
 
         new_batch = copy.deepcopy(self)
