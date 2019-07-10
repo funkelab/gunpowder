@@ -87,6 +87,59 @@ class Array(Freezable):
         spec.roi = deepcopy(roi)
         return Array(data, spec, attrs)
 
+    def merge(self, array, copy_from_self=False, copy=False):
+        '''Merge this array with another one. The resulting array will have the
+        size of the larger one, with values replaced from ``array``.
+
+        This only works if one of the two arrays is contained in the other. In
+        this case, ``array`` will overwrite values in ``self`` (unless
+        ``copy_from_self`` is set to ``True``).
+
+        A copy will only be made if necessary or ``copy`` is set to ``True``.
+        '''
+
+        self_roi = self.spec.roi
+        array_roi = array.spec.roi
+
+        assert self_roi.contains(array_roi) or array_roi.contains(self_roi), \
+            "Can not merge arrays that are not contained in each other."
+
+        assert self.spec.voxel_size == array.spec.voxel_size, \
+            "Can not merge arrays with different voxel sizes."
+
+        # make sure self contains array
+        if not self_roi.contains(array_roi):
+            return array.merge(self, not copy_from_self, copy)
+
+        # -> here we know that self contains array
+
+        # simple case, self overwrites all of array
+        if copy_from_self:
+            return self if not copy else deepcopy(self)
+
+        # -> here we know that copy_from_self == False
+
+        # simple case, ROIs are the same
+        if self_roi == array_roi:
+            return array if not copy else deepcopy(array)
+
+        # part of self have to be replaced, a copy is needed
+        merged = deepcopy(self)
+
+        voxel_size = self.spec.voxel_size
+        data_roi = (array_roi - self_roi.get_offset())/voxel_size
+        slices = data_roi.get_bounding_box()
+
+        while len(slices) < len(self.data.shape):
+            slices = (slice(None),) + slices
+
+        merged.data[slices] = array.data
+
+        return merged
+
+    def __repr__(self):
+        return str(self.spec)
+
 class ArrayKey(Freezable):
     '''A key to identify arrays in requests, batches, and across nodes.
 
