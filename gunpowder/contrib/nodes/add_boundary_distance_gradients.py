@@ -1,10 +1,11 @@
 import logging
 import numpy as np
 
+from gunpowder.array import Array
+from gunpowder.batch_request import BatchRequest
+from gunpowder.nodes.batch_filter import BatchFilter
 from numpy.lib.stride_tricks import as_strided
 from scipy.ndimage.morphology import distance_transform_edt
-from gunpowder.array import Array
-from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,13 @@ class AddBoundaryDistanceGradients(BatchFilter):
             spec.voxel_size /= 2
             self.provides(self.boundary_array_key, spec)
         self.enable_autoskip()
+
+    def prepare(self, request):
+
+        deps = BatchRequest()
+        deps[self.label_array_key] = request[self.gradient_array_key]
+
+        return deps
 
     def process(self, batch, request):
 

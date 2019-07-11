@@ -3,11 +3,13 @@ import logging
 import numpy as np
 from scipy.spatial import KDTree
 
-from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.morphology import enlarge_binary_map
+from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.points_spec import PointsSpec
 
 logger = logging.getLogger(__name__)
 
@@ -83,21 +85,16 @@ class AddVectorMap(BatchFilter):
 
     def prepare(self, request):
 
+        deps = BatchRequest()
+
         for (array_key, (src_points_key, trg_points_key)) in self.array_to_src_trg_points.items():
             if array_key in request:
                 # increase or set request for points to be array roi + padding for partners outside roi for target points
-                if src_points_key in request:
-                    if not request[src_points_key].roi.contains(request[array_key].roi):
-                        request[src_points_key] = PointsSpec(roi=request[array_key].roi)
-                else:
-                    request[src_points_key] = PointsSpec(request[array_key].roi)
-
+                deps[src_points_key] = PointsSpec(request[array_key].roi)
                 padded_roi = request[array_key].roi.grow((self.pad_for_partners), (self.pad_for_partners))
-                if trg_points_key in request:
-                    if not request[trg_points_key].roi.contains(padded_roi):
-                        request[trg_points_key] = PointsSpec(padded_roi)
-                else:
-                    request[trg_points_key] = PointsSpec(padded_roi)
+                deps[trg_points_key] = PointsSpec(padded_roi)
+
+        return deps
 
     def process(self, batch, request):
 

@@ -143,7 +143,7 @@ class BatchProvider(object):
 
         self.check_request_consistency(request)
 
-        batch = self.provide(copy.deepcopy(request))
+        batch = self.provide(request.copy())
 
         self.check_batch_consistency(batch, request)
 
