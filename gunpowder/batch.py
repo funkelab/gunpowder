@@ -158,10 +158,16 @@ class Batch(Freezable):
         '''Crop batch to meet the given request.'''
 
         cropped = Batch()
+        cropped.profiling_stats = self.profiling_stats
+        cropped.loss = self.loss
+        cropped.iteration = self.iteration
 
         for key, val in request.items():
             assert key in self, "%s not contained in this batch" % key
-            cropped[key] = self[key].crop(val.roi, copy)
+            if val.roi is None:
+                cropped[key] = self[key]
+            else:
+                cropped[key] = self[key].crop(val.roi, copy)
 
         return cropped
 
@@ -184,9 +190,15 @@ class Batch(Freezable):
         merged = shallow_copy(self)
 
         for key, val in batch.items():
-            if key not in merged:
+            if key not in merged or val.spec.roi is None:
                 merged[key] = val
             else:
                 merged[key] = merged[key].merge(val)
+
+        merged.profiling_stats.merge_with(batch.profiling_stats)
+        if batch.loss is not None:
+            merged.loss = batch.loss
+        if batch.iteration is not None:
+            merged.iteration = batch.iteration
 
         return merged
