@@ -157,6 +157,8 @@ class RandomLocation(BatchFilter):
         self.random_shift = random_shift
         self.__shift_request(request, random_shift)
 
+        return request
+
     def process(self, batch, request):
 
         # reset ROIs to request

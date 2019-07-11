@@ -14,8 +14,8 @@ class BatchFilter(BatchProvider):
     as the upstream provider. You can modify the provider spec by calling
     :func:`provides` and :func:`updates` in :func:`setup`.
 
-    Subclasses need to implement at least :func:`prepare` and :func:`process`.
-    Optionally, the following methods can be implemented:
+    Subclasses need to implement at least :func:`process` to modify a passed
+    batch (downstream). Optionally, the following methods can be implemented:
 
         :func:`setup`
 
@@ -25,6 +25,11 @@ class BatchFilter(BatchProvider):
         :func:`teardown`
 
             Destruct this filter, free resources, stop worker processes.
+
+        :func:`prepare`
+
+            Prepare for a batch request. Always called before each 
+            :func:`process`. Used to communicate dependencies.
     '''
 
     def get_upstream_provider(self):
@@ -109,12 +114,17 @@ class BatchFilter(BatchProvider):
         timing_prepare = Timing(self, 'prepare')
         timing_prepare.start()
 
+        downstream_request = request.copy()
+
         if not skip:
             dependencies = self.prepare(request)
-            upstream_request = request.merge(dependencies)
+            if dependencies is not None:
+                upstream_request = request.merge(dependencies)
+            else:
+                upstream_request = request.copy()
             self.remove_provided(upstream_request)
         else:
-            upstream_request = request
+            upstream_request = request.copy()
 
         timing_prepare.stop()
 
@@ -124,9 +134,12 @@ class BatchFilter(BatchProvider):
         timing_process.start()
 
         if not skip:
-            node_batch = batch.crop(dependencies)
-            self.process(node_batch, request)
-            batch = batch.merge(node_batch).crop(request)
+            if dependencies is not None:
+                node_batch = batch.crop(dependencies)
+            else:
+                node_batch = batch
+            self.process(node_batch, downstream_request)
+            batch = batch.merge(node_batch).crop(downstream_request)
 
         timing_process.stop()
 
@@ -166,7 +179,7 @@ class BatchFilter(BatchProvider):
         Prepare for a batch request. Should return a :class:`BatchRequest` of
         needed dependencies.
         '''
-        raise RuntimeError("Class %s does not implement 'prepare'"%type(self).__name__)
+        pass
 
     def process(self, batch, request):
         '''To be implemented in subclasses.

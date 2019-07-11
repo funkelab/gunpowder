@@ -1,5 +1,6 @@
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
+from gunpowder.batch_request import BatchRequest
 import collections
 import itertools
 import logging
@@ -93,6 +94,14 @@ class BalanceLabels(BatchFilter):
         spec.dtype = np.float32
         self.provides(self.scales, spec)
         self.enable_autoskip()
+
+    def prepare(self, request):
+
+        deps = BatchRequest()
+        deps[self.labels] = request[self.scales]
+        for mask in self.masks:
+            deps[mask] = request[self.scales]
+        return deps
 
     def process(self, batch, request):
 

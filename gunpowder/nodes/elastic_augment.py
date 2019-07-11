@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from .batch_filter import BatchFilter
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
@@ -129,7 +130,10 @@ class ElasticAugment(BatchFilter):
         # crop the parts corresponding to the requested ROIs
         self.transformations = {}
         self.target_rois = {}
+        deps = BatchRequest()
         for key, spec in request.items():
+
+            spec = spec.copy()
 
             if spec.roi is None:
                 continue
@@ -193,7 +197,11 @@ class ElasticAugment(BatchFilter):
                 spec.roi.get_begin()[:-self.spatial_dims] + source_roi.get_begin()[-self.spatial_dims:],
                 spec.roi.get_shape()[:-self.spatial_dims] + source_roi.get_shape()[-self.spatial_dims:])
 
+            deps[key] = spec
+
             logger.debug("upstream request roi for %s = %s" % (key, spec.roi))
+
+        return deps
 
     def process(self, batch, request):
 
