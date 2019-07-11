@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from .add_affinities import TestAddAffinities
 from .add_boundary_distance_gradients import TestAddBoundaryDistanceGradients
-from .add_vector_map import TestAddVectorMap
+# from .add_vector_map import TestAddVectorMap
 from .balance_labels import TestBalanceLabels
 from .crop import TestCrop
 from .downsample import TestDownSample
@@ -13,6 +13,7 @@ from .hdf5_write import TestHdf5Write
 from .keras_train import TestKerasTrain
 from .merge_provider import TestMergeProvider
 from .n5_write import TestN5Write
+from .node_dependencies import TestNodeDependencies
 from .normalize import TestNormalize
 from .pad import TestPad
 from .points_keys import TestPointsKeys
