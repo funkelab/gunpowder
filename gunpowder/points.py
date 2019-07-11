@@ -40,9 +40,10 @@ class Points(Freezable):
 
         cropped.data = {
             k: v
-            for k, v in cropped.data
+            for k, v in cropped.data.items()
             if roi.contains(v.location)
         }
+        cropped.spec.roi = roi
 
         return cropped
 
