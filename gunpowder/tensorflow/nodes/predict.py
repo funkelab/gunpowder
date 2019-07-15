@@ -2,7 +2,6 @@ import ctypes
 import logging
 import multiprocessing as mp
 import numpy as np
-import os
 
 from functools import reduce
 from gunpowder.array import ArrayKey, Array
@@ -107,10 +106,6 @@ class Predict(GenericPredict):
         self.predict_process.start()
         self.predict_process_initialized.wait()
 
-        if self.predict_process_crashed.value:
-            print("Predict process crashed while initializing0")
-            exit()
-
     def predict(self, batch, request):
 
         if not self.shared_output_arrays:
@@ -155,27 +150,16 @@ class Predict(GenericPredict):
 
         self.__write_inputs_to_shared(input_data)
         self.worker_sent_inputs.set()
-        if self.predict_process_crashed.value:
-            print("Predict process crashed while initializing1")
-            self.send_lock.release()
-            exit()
 
         self.receive_lock.acquire()
+
         self.predict_received_inputs.wait()
-        if self.predict_process_crashed.value:
-            print("Predict process crashed while initializing2")
-            self.send_lock.release()
-            self.receive_lock.release()
-            exit()
+        self.__check_background_process([self.receive_lock, self.send_lock])
 
         self.predict_received_inputs.clear()
         self.send_lock.release()
 
         self.predict_sent_outputs.wait()
-        if self.predict_process_crashed.value:
-            print("Predict process crashed while initializing3")
-            self.receive_lock.release()
-            exit()
 
         self.predict_sent_outputs.clear()
 
@@ -195,7 +179,6 @@ class Predict(GenericPredict):
     def __predict(self):
         '''The background predict process.'''
 
-        # wrap in try block so if crashes, the whole process is brought down
         try:
             # TODO: is the server still needed?
             target = LocalServer.get_target()
@@ -232,24 +215,37 @@ class Predict(GenericPredict):
                 self.predict_received_inputs.set()
 
                 # compute outputs
-                output_data = self.session.run({t: t for t in self.outputs.keys()}, feed_dict=input_data)
+                output_data = self.session.run(
+                    {t: t for t in self.outputs.keys()},
+                    feed_dict=input_data)
 
                 # write outputs
                 self.__write_outputs_to_shared(output_data)
                 self.predict_sent_outputs.set()
+
         except Exception as e:
-            print("Got exception while running predict() loop: %s" % e)
+
             self.predict_process_crashed.value = True
+
+            # release locks and events
             self.predict_process_initialized.set()
             self.worker_sent_inputs.clear()
             self.predict_received_inputs.set()
             self.predict_sent_outputs.set()
-            os._exit(0)
+            raise e
 
     def teardown(self):
 
         self.predict_process.terminate()
         self.predict_process.join()
+
+    def __check_background_process(self, locks=[]):
+
+        if self.predict_process_crashed.value:
+            # release all locks before raising exception
+            for l in locks:
+                l.release()
+            raise RuntimeError("Background process died.")
 
     def __read_checkpoint(self):
 
