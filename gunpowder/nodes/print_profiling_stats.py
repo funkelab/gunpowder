@@ -58,8 +58,6 @@ class PrintProfilingStats(BatchFilter):
         if not print_stats:
             return
 
-        span_start, span_end = self.accumulated_stats.span()
-
         stats = "\n"
         stats += "Profiling Stats\n"
         stats += "===============\n"
