@@ -171,7 +171,7 @@ class Batch(Freezable):
 
         return cropped
 
-    def merge(self, batch):
+    def merge(self, batch, merge_profiling_stats=True):
         '''Merge this batch (``a``) with another batch (``b``).
 
         This creates a new batch ``c`` containing arrays and point sets from
@@ -195,7 +195,8 @@ class Batch(Freezable):
             else:
                 merged[key] = merged[key].merge(val)
 
-        merged.profiling_stats.merge_with(batch.profiling_stats)
+        if merge_profiling_stats:
+            merged.profiling_stats.merge_with(batch.profiling_stats)
         if batch.loss is not None:
             merged.loss = batch.loss
         if batch.iteration is not None:
