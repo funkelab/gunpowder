@@ -139,7 +139,7 @@ class BatchFilter(BatchProvider):
             else:
                 node_batch = batch
             self.process(node_batch, downstream_request)
-            batch = batch.merge(node_batch).crop(downstream_request)
+            batch = batch.merge(node_batch, merge_profiling_stats=False).crop(downstream_request)
 
         timing_process.stop()
 
