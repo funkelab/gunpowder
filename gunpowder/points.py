@@ -48,7 +48,7 @@ class Points(Freezable):
         return cropped
 
     def merge(self, points, copy_from_self=False, copy=False):
-        '''Merge these points with another set of points. The resulting points
+        """Merge these points with another set of points. The resulting points
         will have the ROI of the larger one.
 
         This only works if one of the two point sets is contained in the other.
@@ -56,13 +56,14 @@ class Points(Freezable):
         ``self`` (unless ``copy_from_self`` is set to ``True``).
 
         A copy will only be made if necessary or ``copy`` is set to ``True``.
-        '''
+        """
 
         self_roi = self.spec.roi
         points_roi = points.spec.roi
 
-        assert self_roi.contains(points_roi) or points_roi.contains(self_roi), \
-            "Can not merge point sets that are not contained in each other."
+        assert self_roi.contains(points_roi) or points_roi.contains(
+            self_roi
+        ), "Can not merge point sets that are not contained in each other."
 
         # make sure self contains points
         if not self_roi.contains(points_roi):
@@ -78,13 +79,37 @@ class Points(Freezable):
 
         # replace points
         if copy:
-            merged = shallow_copy(self)
-            merged.data.update(points.data)
-        else:
             merged = deepcopy(self)
-            merged.data.update(deepcopy(points.data))
-
+            filtered = {
+                point_id: point
+                for point_id, point in merged.data.items()
+                if not points_roi.contains(point.location)
+            }
+            max_point_id = max([point_id for point_id in filtered]) if len(filtered) > 0 else 0
+            for point in points.data:
+                if point not in filtered:
+                    filtered[point] = deepcopy(points.data[point])
+                else:
+                    max_point_id += 1
+                    filtered[max_point_id] = deepcopy(points.data[point])
+            merged.data = filtered
+        else:
+            merged = shallow_copy(self)
+            filtered = {
+                point_id: point
+                for point_id, point in merged.data.items()
+                if not points_roi.contains(point.location)
+            }
+            max_point_id = max([point_id for point_id in filtered]) if len(filtered) > 0 else 0
+            for point in points.data:
+                if point not in filtered:
+                    filtered[point] = deepcopy(points.data[point])
+                else:
+                    max_point_id += 1
+                    filtered[max_point_id] = deepcopy(points.data[point])
+        merged.data = filtered
         return merged
+
 
 class Point(Freezable):
     '''A point with a location, as stored in :class:`Points`.
