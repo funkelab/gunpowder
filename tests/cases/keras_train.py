@@ -1,9 +1,21 @@
 from .provider_test import ProviderTest
-from gunpowder import *
-from gunpowder.keras import Train
-from tensorflow import keras
+from gunpowder import (
+    BatchProvider,
+    Batch,
+    BatchRequest,
+    ArraySpec,
+    ArrayKeys,
+    ArrayKey,
+    Array,
+    Roi,
+    Stack,
+    build
+)
+from gunpowder.ext import keras, NoSuchModule
 import logging
 import numpy as np
+from unittest import skipIf
+
 
 class TestKerasTrainSource(BatchProvider):
 
@@ -38,6 +50,7 @@ class TestKerasTrainSource(BatchProvider):
 
         return batch
 
+@skipIf(isinstance(keras, NoSuchModule), "keras is not installed")
 class TestKerasTrain(ProviderTest):
 
     def create_model(self):
@@ -78,7 +91,7 @@ class TestKerasTrain(ProviderTest):
 
         pipeline = TestKerasTrainSource()
         pipeline += Stack(num_repetitions=10)
-        pipeline += Train(
+        pipeline += keras.Train(
             self.path_to('model'),
             x={x: ArrayKeys.X},
             y={y: ArrayKeys.Y},
