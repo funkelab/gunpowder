@@ -7,8 +7,6 @@ from scipy.spatial import KDTree
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points
-from gunpowder.points_spec import PointsSpec
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
@@ -133,22 +131,14 @@ class RandomLocation(BatchFilter):
 
         shift_roi = self.__get_possible_shifts(request)
 
-        if request.array_specs.keys():
+        lcm_voxel_size = request.get_lcm_voxel_size()
+        shift_roi = shift_roi.snap_to_grid(lcm_voxel_size, mode="shrink")
+        lcm_shift_roi = shift_roi / lcm_voxel_size
 
-            lcm_voxel_size = self.spec.get_lcm_voxel_size(
-                request.array_specs.keys())
-            shift_roi = shift_roi.snap_to_grid(lcm_voxel_size, mode='shrink')
-            lcm_shift_roi = shift_roi/lcm_voxel_size
-            logger.debug("lcm voxel size: %s", lcm_voxel_size)
-
-            logger.debug(
-                "restricting random locations to multiples of voxel size %s",
-                lcm_voxel_size)
-
-        else:
-
-            lcm_voxel_size = Coordinate((1,)*shift_roi.dims())
-            lcm_shift_roi = shift_roi
+        logger.debug("lcm voxel size: %s", lcm_voxel_size)
+        logger.debug(
+            "restricting random locations to multiples of voxel size %s",
+            lcm_voxel_size)
 
         random_shift = self.__select_random_shift(
             request,

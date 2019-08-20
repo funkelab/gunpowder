@@ -301,20 +301,18 @@ class ElasticAugment(BatchFilter):
             points.spec.roi = request[points_key].roi
 
     def __get_common_voxel_size(self, request):
-
-        voxel_size = None
-        prev = None
+        voxel_size = request.get_lcm_voxel_size()
         for array_key in request.array_specs.keys():
-            if voxel_size is None:
-                voxel_size = self.spec[array_key].voxel_size[-self.spatial_dims:]
-            elif self.spec[array_key].voxel_size is not None:
-                assert voxel_size == self.spec[array_key].voxel_size[-self.spatial_dims:], \
-                        "ElasticAugment can only be used with arrays of same voxel sizes, " \
-                        "but %s has %s, and %s has %s."%(
-                                array_key, self.spec[array_key].voxel_size,
-                                prev, self.spec[prev].voxel_size)
-            prev = array_key
-
+            array_voxel_size = request[array_key].voxel_size
+            if array_voxel_size is None:
+                logger.warning(
+                    (
+                        "Assuming voxel size of {} is {}. "
+                        + "Note that elastic transform shouldn't work on arrays "
+                        + "with different voxel sizes."
+                    ).format(array_key)
+                )
+            assert request[array_key].voxel_size == voxel_size
         return voxel_size
 
     def __create_transformation(self, target_shape):

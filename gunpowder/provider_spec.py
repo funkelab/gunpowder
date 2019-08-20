@@ -5,6 +5,12 @@ from gunpowder.points_spec import PointsSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from .freezable import Freezable
+import time
+import logging
+import copy
+
+logger = logging.getLogger(__name__)
+
 
 class ProviderSpec(Freezable):
     '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
@@ -51,10 +57,14 @@ class ProviderSpec(Freezable):
             Contains all points specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, points_specs=None, random_seed: int = None):
 
         self.array_specs = {}
         self.points_specs = {}
+        self.place_holders = {}
+        self._random_seed = (
+            random_seed if random_seed is not None else int(time.time() * 1e6)
+        )
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
@@ -143,7 +153,7 @@ class ProviderSpec(Freezable):
         '''Get the union of all the ROIs.'''
 
         total_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs, self.place_holders]:
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
@@ -155,7 +165,7 @@ class ProviderSpec(Freezable):
         '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs, self.place_holders]:
             for (_, spec) in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi
@@ -173,28 +183,37 @@ class ProviderSpec(Freezable):
                 consider only the given array types.
         '''
 
+        specs = []
         if array_keys is None:
-            array_keys = self.array_specs.keys()
-
-        if not array_keys:
-            raise RuntimeError("Can not compute lcm voxel size -- there are "
-                               "no array specs in this provider spec.")
+            specs = [spec for spec in self.array_specs.values()] + [
+                spec for spec in self.place_holders.values()
+            ]
         else:
-            if not array_keys:
-                raise RuntimeError("Can not compute lcm voxel size -- list of "
-                                   "given array specs is empty.")
+            specs = [
+                self.array_specs[k] if k in self.array_specs else self.place_holders
+                for k in array_keys
+            ]
 
-        lcm_voxel_size = None
-        for key in array_keys:
-            voxel_size = self.array_specs[key].voxel_size
+        lcm_voxel_size = Coordinate((1,) * self.get_total_roi().dims())
+
+        if not specs:
+            logger.warning(
+                (
+                    "Can not compute lcm voxel size -- there are "
+                    "no array specs in this provider spec.\nAssuming a voxel size of {}"
+                ).format(lcm_voxel_size)
+            )
+            return lcm_voxel_size
+
+        for spec in specs:
+            if not isinstance(spec, ArraySpec):
+                continue
+            voxel_size = spec.voxel_size
             if voxel_size is None:
                 continue
-            if lcm_voxel_size is None:
-                lcm_voxel_size = voxel_size
-            else:
                 lcm_voxel_size = Coordinate(
-                    (a * b // math.gcd(a, b)
-                     for a, b in zip(lcm_voxel_size, voxel_size)))
+                (a * b // math.gcd(a, b) for a, b in zip(lcm_voxel_size, voxel_size))
+            )
 
         return lcm_voxel_size
 

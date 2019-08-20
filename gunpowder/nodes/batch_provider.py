@@ -1,5 +1,6 @@
 import copy
 import logging
+import itertools
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
@@ -126,6 +127,8 @@ class BatchProvider(object):
         for key in self.provided_items:
             if key in request:
                 del request[key]
+            if key in request.place_holders:
+                del request.place_holders[key]
 
     def request_batch(self, request):
         '''Request a batch from this provider.
@@ -183,6 +186,51 @@ class BatchProvider(object):
                             request_spec.voxel_size,
                             key,
                             provided_spec.voxel_size)
+                elif provided_spec.voxel_size is not None:
+                    request_spec.voxel_size = provided_spec.voxel_size
+
+                if (
+                        request_roi is not None and
+                        provided_spec.voxel_size is not None):
+
+                    for d in range(request_roi.dims()):
+                        assert request_roi.get_shape()[d]%provided_spec.voxel_size[d] == 0, \
+                                "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
+                                        request,
+                                        d,
+                                        key,
+                                        provided_spec.voxel_size[d])
+        
+        for (key, request_spec) in request.place_holders.items():
+            assert key in self.spec, "{}: Asked for {} which this node does not provide".format(self.name, key)
+            assert (
+                isinstance(request_spec, ArraySpec) or
+                isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
+                                                        "%s"%(
+                                                            key,
+                                                            type(request_spec)))
+
+            provided_spec = self.spec[key]
+
+            provided_roi = provided_spec.roi
+            request_roi = request_spec.roi
+
+            # Skip this test for now. Since batch filter handles cropping the
+            # output of process, it should be possible to automatically update the rois
+            logger.debug("placeholder roi consistency checks skipped!")
+            if False and provided_roi is not None:
+                assert provided_roi.contains(request_roi), "%s: %s's ROI %s outside of my ROI %s"%(self.name(), key, request_roi, provided_roi)
+
+            if isinstance(key, ArrayKey):
+
+                if request_spec.voxel_size is not None:
+                    assert provided_spec.voxel_size == request_spec.voxel_size, "%s: voxel size %s requested for %s, but this node provides %s"%(
+                            self.name(),
+                            request_spec.voxel_size,
+                            key,
+                            provided_spec.voxel_size)
+                elif provided_spec.voxel_size is not None:
+                    request_spec.voxel_size = provided_spec.voxel_size
 
                 if (
                         request_roi is not None and

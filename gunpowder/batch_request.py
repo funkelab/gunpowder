@@ -16,7 +16,7 @@ class BatchRequest(ProviderSpec):
     batch.
     '''
 
-    def add(self, key, shape, voxel_size=None):
+    def add(self, key, shape, voxel_size=None, placeholder=False):
         '''Convenience method to add an array or point spec by providing only
         the shape of a ROI (in world units).
 
@@ -52,7 +52,10 @@ class BatchRequest(ProviderSpec):
         if voxel_size is not None:
             spec.voxel_size = voxel_size
 
-        self[key] = spec
+        if placeholder:
+            self.place_holders[key] = spec
+        else:
+            self[key] = spec
         self.__center_rois()
 
     def copy(self):

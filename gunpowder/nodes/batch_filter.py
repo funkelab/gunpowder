@@ -122,9 +122,11 @@ class BatchFilter(BatchProvider):
                 upstream_request = request.merge(dependencies)
             else:
                 upstream_request = request.copy()
-            self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
+        # should remove provided regardless of skip since the provided
+        # roi could be in the place_holders
+        self.remove_provided(upstream_request)
 
         timing_prepare.stop()
 
