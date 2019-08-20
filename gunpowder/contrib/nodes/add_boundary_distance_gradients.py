@@ -177,7 +177,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
             shift_n = [slice(None)]*dims
             shift_n[d] = slice(0, in_shape[d] - 1)
 
-            diff = (labels[shift_p] - labels[shift_n]) != 0
+            diff = (labels[tuple(shift_p)] - labels[tuple(shift_n)]) != 0
 
             logger.debug("diff shape is %s", diff.shape)
 
@@ -186,7 +186,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
 
             logger.debug("target slices are %s", target)
 
-            boundaries[target] = diff
+            boundaries[tuple(target)] = diff
 
         return boundaries
 

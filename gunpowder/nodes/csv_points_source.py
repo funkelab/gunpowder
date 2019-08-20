@@ -110,11 +110,11 @@ class CsvPointsSource(BatchProvider):
         used.
         '''
 
-        points = np.array(
-            [
-                [ float(t.strip(',')) for t in line.split() ]
-                for line in open(self.filename, 'r')
-            ], dtype=np.float32)
+        with open(self.filename, "r") as f:
+            points = np.array(
+                [[float(t.strip(",")) for t in line.split()] for line in f],
+                dtype=np.float32,
+            )
 
         if ndims == 0:
             ndims = points.shape[1]
