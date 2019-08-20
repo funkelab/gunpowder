@@ -46,6 +46,11 @@ class ProviderSpec(Freezable):
 
             Initial points specs.
 
+        random_seed (``int``, optional):
+
+            A random seed to use for this request. Makes sure
+            that requests can be repeated.
+
     Attributes:
 
         array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`):
@@ -55,6 +60,11 @@ class ProviderSpec(Freezable):
         points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
 
             Contains all points specs contained in this provider spec.
+        
+        place_holders (``dict``, :class:`PointsKey` -> :class: `PointsSpec` or `ArrayKey` -> :class:`ArraySpec`)
+
+            Contains all placeholders. Used only for checking request consistency
+            and calculating request lcm voxel size and rois.
     '''
 
     def __init__(self, array_specs=None, points_specs=None, random_seed: int = None):
