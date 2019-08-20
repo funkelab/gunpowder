@@ -186,11 +186,11 @@ class ProviderSpec(Freezable):
         specs = []
         if array_keys is None:
             specs = [spec for spec in self.array_specs.values()] + [
-                spec for spec in self.place_holders.values()
+                spec for spec in self.place_holders.values() if isinstance(spec, ArraySpec)
             ]
         else:
             specs = [
-                self.array_specs[k] if k in self.array_specs else self.place_holders
+                self.array_specs[k] if k in self.array_specs else self.place_holders[k]
                 for k in array_keys
             ]
 
@@ -206,14 +206,13 @@ class ProviderSpec(Freezable):
             return lcm_voxel_size
 
         for spec in specs:
-            if not isinstance(spec, ArraySpec):
-                continue
             voxel_size = spec.voxel_size
             if voxel_size is None:
                 continue
+            else:
                 lcm_voxel_size = Coordinate(
-                (a * b // math.gcd(a, b) for a, b in zip(lcm_voxel_size, voxel_size))
-            )
+                    (a * b // math.gcd(a, b) for a, b in zip(lcm_voxel_size, voxel_size))
+                )
 
         return lcm_voxel_size
 

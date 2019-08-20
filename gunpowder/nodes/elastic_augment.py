@@ -312,7 +312,7 @@ class ElasticAugment(BatchFilter):
                         + "with different voxel sizes."
                     ).format(array_key)
                 )
-            assert request[array_key].voxel_size == voxel_size
+            assert request[array_key].voxel_size == voxel_size, "voxel size mismatch: got {} expected {}".format(request[array_key].voxel_size, voxel_size)
         return voxel_size
 
     def __create_transformation(self, target_shape):
