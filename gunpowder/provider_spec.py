@@ -66,6 +66,9 @@ class ProviderSpec(Freezable):
             for key, spec in points_specs.items():
                 self[key] = spec
 
+    @property
+    def random_seed(self):
+        return self._random_seed % (2 ** 32)
 
     def __setitem__(self, key, spec):
 
@@ -195,10 +198,17 @@ class ProviderSpec(Freezable):
 
         return lcm_voxel_size
 
+    def _update_random_seed(self):
+        self._random_seed = hash((self._random_seed + 1) ** 2)
+
     def __eq__(self, other):
 
         if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
+            other_dict = copy.deepcopy(other.__dict__)
+            self_dict = copy.deepcopy(self.__dict__)
+            other_dict.pop("_random_seed")
+            self_dict.pop("_random_seed")
+            return self_dict == other_dict
         return NotImplemented
 
     def __ne__(self, other):

@@ -1,4 +1,4 @@
-from random import randrange
+from random import randrange, seed
 import logging
 import numpy as np
 
@@ -72,6 +72,8 @@ class SpecifiedLocation(BatchFilter):
             self.updates(key, spec)
 
     def prepare(self, request):
+        seed(request.random_seed)
+        
         lcm_voxel_size = self.spec.get_lcm_voxel_size(
             request.array_specs.keys())
 

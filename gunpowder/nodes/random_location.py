@@ -1,6 +1,6 @@
 import math
 import logging
-from random import random, randint, choice
+from random import random, randint, choice, seed
 
 import numpy as np
 from scipy.spatial import KDTree
@@ -126,6 +126,7 @@ class RandomLocation(BatchFilter):
                 self.updates(key, spec)
 
     def prepare(self, request):
+        seed(request.random_seed)
 
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)

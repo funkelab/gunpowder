@@ -141,6 +141,8 @@ class BatchProvider(object):
 
         logger.debug("%s got request %s", self.name(), request)
 
+        request._update_random_seed()
+
         self.check_request_consistency(request)
 
         batch = self.provide(request.copy())

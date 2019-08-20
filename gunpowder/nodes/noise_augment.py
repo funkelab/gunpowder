@@ -34,6 +34,10 @@ class NoiseAugment(BatchFilter):
         self.clip = clip
         self.kwargs = kwargs
 
+    def prepare(self, request):
+        # TODO: move all randomness into the prepare method
+        np.random.seed(request.random_seed)
+
     def process(self, batch, request):
 
         raw = batch.arrays[self.array]
