@@ -226,7 +226,7 @@ class ElasticAugment(BatchFilter):
             ])
 
             data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            array.data = data.reshape(channel_shape + data_roi.get_shape())
+            array.data = data.reshape(channel_shape + data_roi.get_shape()[-self.spatial_dims:])
 
             # restore original ROIs
             array.spec.roi = request[array_key].roi
