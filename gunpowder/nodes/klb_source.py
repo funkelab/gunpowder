@@ -45,11 +45,10 @@ class KlbSource(BatchProvider):
         num_threads (``int``):
 
             An optional integer to pass to pyklb reader indicating the number
-            of threads to use when reading klb files. Default of none causes
-            no value to be passed, and uses the pyklb default, which now is
-            based on the number of cores in the machine. This is bad for
-            jobs on the cluster that are limited to the number of cores requested,
-            and passing 1 is recommended for distributed jobs.
+            of threads to use when reading klb files. Entering None causes
+            uses the pyklb default, which now is based on the number of cores
+            in the machine. This pyklb default is bad for jobs on the cluster that
+            are limited to the number of cores requested, and 1 is recommended.
 
     '''
 
@@ -58,7 +57,7 @@ class KlbSource(BatchProvider):
             filename,
             array,
             array_spec=None,
-            num_threads=None):
+            num_threads=1):
 
         self.filename = filename
         self.array = array
