@@ -1,3 +1,4 @@
+import copy
 import logging
 import math
 import numpy as np
@@ -10,9 +11,8 @@ from gunpowder.roi import Roi
 
 logger = logging.getLogger(__name__)
 
-
 class ElasticAugment(BatchFilter):
-    '''Elasticly deform a batch. Requests larger batches upstream to avoid data
+    '''Elasticly deform a batch. Requests larger batches upstream to avoid data 
     loss due to rotation and jitter.
 
     Args:
@@ -93,7 +93,7 @@ class ElasticAugment(BatchFilter):
 
         # get the total ROI of all requests
         total_roi = request.get_total_roi()
-        logger.debug("total ROI is %s" % total_roi)
+        logger.debug("total ROI is %s"%total_roi)
 
         # First, get the total ROI of the request in spatial dimensions only.
         # Channels and time don't matter. This is our master ROI.
@@ -103,19 +103,19 @@ class ElasticAugment(BatchFilter):
             total_roi.get_begin()[-self.spatial_dims:],
             total_roi.get_shape()[-self.spatial_dims:])
         self.spatial_dims = master_roi.dims()
-        logger.debug("master ROI is %s" % master_roi)
+        logger.debug("master ROI is %s"%master_roi)
 
         # make sure the master ROI aligns with the voxel size
         master_roi = master_roi.snap_to_grid(self.voxel_size, mode='grow')
-        logger.debug("master ROI aligned with voxel size is %s" % master_roi)
+        logger.debug("master ROI aligned with voxel size is %s"%master_roi)
 
         # get master roi in voxels
         master_roi_voxels = master_roi/self.voxel_size
-        logger.debug("master ROI in voxels is %s" % master_roi_voxels)
+        logger.debug("master ROI in voxels is %s"%master_roi_voxels)
 
         # Second, create a master transformation. This is a transformation that
-        # covers all voxels of the all requested ROIs. The master
-        # transformation is zero-based.
+        # covers all voxels of the all requested ROIs. The master transformation
+        # is zero-based.
 
         # create a transformation with the size of the master ROI in voxels
         self.master_transformation = self.__create_transformation(
@@ -226,8 +226,6 @@ class ElasticAugment(BatchFilter):
             ])
 
             data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            logger.debug("Channel shape: %s   data roi shape spatial_dims: %s"
-                         % (str(channel_shape), str(data_roi.get_shape()[-self.spatial_dims:])))
             array.data = data.reshape(channel_shape + data_roi.get_shape()[-self.spatial_dims:])
 
             # restore original ROIs
