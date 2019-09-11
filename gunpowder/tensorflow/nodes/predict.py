@@ -102,6 +102,7 @@ class Predict(GenericPredict):
         self.predict_sent_outputs = mp.Event()
 
         self.predict_process = mp.Process(target=self.__predict)
+        self.predict_process_crashed = mp.Value('i', False)
         self.predict_process.start()
         self.predict_process_initialized.wait()
 
@@ -151,11 +152,15 @@ class Predict(GenericPredict):
         self.worker_sent_inputs.set()
 
         self.receive_lock.acquire()
+
         self.predict_received_inputs.wait()
+        self.__check_background_process([self.receive_lock, self.send_lock])
+
         self.predict_received_inputs.clear()
         self.send_lock.release()
 
         self.predict_sent_outputs.wait()
+
         self.predict_sent_outputs.clear()
 
         output_data = self.__read_outputs_from_shared(output_tensors)
@@ -174,51 +179,73 @@ class Predict(GenericPredict):
     def __predict(self):
         '''The background predict process.'''
 
-        # TODO: is the server still needed?
-        target = LocalServer.get_target()
-        logger.info("Initializing tf session, connecting to %s...", target)
+        try:
+            # TODO: is the server still needed?
+            target = LocalServer.get_target()
+            logger.info("Initializing tf session, connecting to %s...", target)
 
-        self.graph = tf.Graph()
-        self.session = tf.Session(
-            target=target,
-            graph=self.graph)
+            self.graph = tf.Graph()
+            self.session = tf.Session(
+                target=target,
+                graph=self.graph)
 
-        with self.graph.as_default():
-            self.__read_checkpoint()
+            with self.graph.as_default():
+                self.__read_checkpoint()
 
-        if not self.shared_output_arrays:
-            if not self.shared_output_array_config:
-                self.__create_shared_output_array_config()
-            self.__init_shared_output_arrays()
+            if not self.shared_output_arrays:
+                if not self.shared_output_array_config:
+                    self.__create_shared_output_array_config()
+                self.__init_shared_output_arrays()
 
-        # from now on it is save to access the shared array configuration
-        self.predict_process_initialized.set()
+            # from now on it is save to access the shared array configuration
+            self.predict_process_initialized.set()
 
-        # loop predict
-        while True:
+            # loop predict
+            while True:
 
-            # wait for inputs
-            self.worker_sent_inputs.wait()
+                # wait for inputs
+                self.worker_sent_inputs.wait()
+                self.worker_sent_inputs.clear()
+
+                if not self.shared_input_arrays:
+                    self.__init_shared_input_arrays()
+
+                # read inputs
+                input_data = self.__read_inputs_from_shared()
+                self.predict_received_inputs.set()
+
+                # compute outputs
+                output_data = self.session.run(
+                    {t: t for t in self.outputs.keys()},
+                    feed_dict=input_data)
+
+                # write outputs
+                self.__write_outputs_to_shared(output_data)
+                self.predict_sent_outputs.set()
+
+        except Exception as e:
+
+            self.predict_process_crashed.value = True
+
+            # release locks and events
+            self.predict_process_initialized.set()
             self.worker_sent_inputs.clear()
-
-            if not self.shared_input_arrays:
-                self.__init_shared_input_arrays()
-
-            # read inputs
-            input_data = self.__read_inputs_from_shared()
             self.predict_received_inputs.set()
-
-            # compute outputs
-            output_data = self.session.run({t: t for t in self.outputs.keys()}, feed_dict=input_data)
-
-            # write outputs
-            self.__write_outputs_to_shared(output_data)
             self.predict_sent_outputs.set()
+            raise e
 
     def teardown(self):
 
         self.predict_process.terminate()
         self.predict_process.join()
+
+    def __check_background_process(self, locks=[]):
+
+        if self.predict_process_crashed.value:
+            # release all locks before raising exception
+            for l in locks:
+                l.release()
+            raise RuntimeError("Background process died.")
 
     def __read_checkpoint(self):
 
