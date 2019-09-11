@@ -10,7 +10,7 @@ from .dvid_source import TestDvidSource
 from .elastic_augment_points import TestElasticAugment
 from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
-from .shift_augment import TestShiftAugment2D
+from .keras_train import TestKerasTrain
 from .merge_provider import TestMergeProvider
 from .n5_write import TestN5Write
 from .normalize import TestNormalize
@@ -24,5 +24,7 @@ from .random_location import TestRandomLocation
 from .random_location_points import TestRandomLocationPoints
 from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
+from .shift_augment import TestShiftAugment2D
 from .tensorflow_train import TestTensorflowTrain
+from .torch_train import TestTorchTrain
 from .zarr_write import TestZarrWrite

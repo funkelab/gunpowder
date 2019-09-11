@@ -131,6 +131,9 @@ class ElasticAugment(BatchFilter):
         self.target_rois = {}
         for key, spec in request.items():
 
+            if spec.roi is None:
+                continue
+
             target_roi = Roi(
                 spec.roi.get_begin()[-self.spatial_dims:],
                 spec.roi.get_shape()[-self.spatial_dims:])
@@ -196,6 +199,9 @@ class ElasticAugment(BatchFilter):
 
         for (array_key, array) in batch.arrays.items():
 
+            if array_key not in self.target_rois:
+                continue
+
             # for arrays, the target ROI and the requested ROI should be the
             # same in spatial coordinates
             assert (
@@ -220,7 +226,7 @@ class ElasticAugment(BatchFilter):
             ])
 
             data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            array.data = data.reshape(channel_shape + data_roi.get_shape())
+            array.data = data.reshape(channel_shape + data_roi.get_shape()[-self.spatial_dims:])
 
             # restore original ROIs
             array.spec.roi = request[array_key].roi
@@ -289,7 +295,7 @@ class ElasticAugment(BatchFilter):
         for array_key in request.array_specs.keys():
             if voxel_size is None:
                 voxel_size = self.spec[array_key].voxel_size[-self.spatial_dims:]
-            else:
+            elif self.spec[array_key].voxel_size is not None:
                 assert voxel_size == self.spec[array_key].voxel_size[-self.spatial_dims:], \
                         "ElasticAugment can only be used with arrays of same voxel sizes, " \
                         "but %s has %s, and %s has %s."%(

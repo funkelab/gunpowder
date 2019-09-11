@@ -182,7 +182,10 @@ class BatchProvider(object):
                             key,
                             provided_spec.voxel_size)
 
-                if request_roi is not None:
+                if (
+                        request_roi is not None and
+                        provided_spec.voxel_size is not None):
+
                     for d in range(request_roi.dims()):
                         assert request_roi.get_shape()[d]%provided_spec.voxel_size[d] == 0, \
                                 "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(

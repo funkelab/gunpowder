@@ -41,17 +41,28 @@ class KlbSource(BatchProvider):
             automatically determined from the KLB file. This is useful to set
             ``voxel_size``, for example. Only fields that are not ``None`` in
             the given :class:`ArraySpec` will be used.
+
+        num_threads (``int``):
+
+            An optional integer to pass to pyklb reader indicating the number
+            of threads to use when reading klb files. Entering None causes
+            uses the pyklb default, which now is based on the number of cores
+            in the machine. This pyklb default is bad for jobs on the cluster that
+            are limited to the number of cores requested, and 1 is recommended.
+
     '''
 
     def __init__(
             self,
             filename,
             array,
-            array_spec=None):
+            array_spec=None,
+            num_threads=1):
 
         self.filename = filename
         self.array = array
         self.array_spec = array_spec
+        self.num_threads = num_threads
 
         self.files = None
         self.ndims = None
@@ -193,10 +204,17 @@ class KlbSource(BatchProvider):
 
         # pyklb reads max-inclusive, gunpowder rois are max exclusive ->
         # subtract (1, 1, ...) from max coordinate
-        return pyklb.readroi(
-            filename,
-            roi.get_begin(),
-            roi.get_end() - (1,)*roi.dims())
+        if self.num_threads:
+            return pyklb.readroi(
+                filename,
+                roi.get_begin(),
+                roi.get_end() - (1,)*roi.dims(),
+                numthreads=self.num_threads)
+        else:
+            return pyklb.readroi(
+                filename,
+                roi.get_begin(),
+                roi.get_end() - (1,)*roi.dims())
 
     def __repr__(self):
 
