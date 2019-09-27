@@ -83,6 +83,20 @@ class SimpleAugment(BatchFilter):
 
     def process(self, batch, request):
 
+        # mirror and transpose ROIs of arrays & points in batch
+        for collection_type in [batch.arrays, batch.points]:
+            for (key, collector) in collection_type.items():
+                if key not in request:
+                    continue
+                if collector.spec.roi is None:
+                    continue
+                logger.debug("total ROI: %s"%self.total_roi)
+                logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
+                self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
+                logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
+                self.__transpose_roi(collector.spec.roi, self.transpose)
+                logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
+
         mirror = tuple(
                 slice(None, None, -1 if m else 1)
                 for m in self.mirror
@@ -124,20 +138,6 @@ class SimpleAugment(BatchFilter):
                 # could fall on the upper one, which excludes them from the ROI
                 if not points.spec.roi.contains(syn_point.location):
                     del points.data[loc_id]
-
-        # arrays & points
-        for collection_type in [batch.arrays, batch.points]:
-            for (key, collector) in collection_type.items():
-                if key not in request:
-                    continue
-                if collector.spec.roi is None:
-                    continue
-                logger.debug("total ROI: %s"%self.total_roi)
-                logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
-                self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
-                logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
-                self.__transpose_roi(collector.spec.roi, self.transpose)
-                logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
 
     def __mirror_request(self, request, mirror):
