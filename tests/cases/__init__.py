@@ -27,4 +27,5 @@ from .scan import TestScan
 from .shift_augment import TestShiftAugment2D
 from .tensorflow_train import TestTensorflowTrain
 from .torch_train import TestTorchTrain
+from .upsample import TestUpSample
 from .zarr_write import TestZarrWrite
