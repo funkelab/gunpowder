@@ -157,3 +157,27 @@ class Coordinate(tuple):
         else:
 
             raise TypeError("division of Coordinate with type %s not supported" % type(other))
+
+    def __mod__(self, other):
+
+        if isinstance(other, tuple):
+
+            assert self.dims() == len(other), "can only mod Coordinate of equal dimensions"
+
+            return Coordinate(
+                a%b
+                if a is not None and b is not None
+                else None
+                for a,b in zip(self, other))
+
+        elif isinstance(other, numbers.Number):
+
+            return Coordinate(
+                a%other
+                if a is not None
+                else None
+                for a in self)
+
+        else:
+
+            raise TypeError("mod of Coordinate with type %s not supported" % type(other))
