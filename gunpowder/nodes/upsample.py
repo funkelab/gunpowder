@@ -62,6 +62,10 @@ class UpSample(BatchFilter):
 
         request_roi = request[self.target].roi
         logger.debug("request ROI is %s"%request_roi)
+        # expand to source voxel size
+        source_voxel_size = self.spec[self.source].voxel_size
+        request_roi = request_roi.snap_to_grid(source_voxel_size, mode='grow')
+        logger.debug("expanded request ROI is %s"%request_roi)
 
         # add or merge to batch request
         if self.source in request:
@@ -73,6 +77,7 @@ class UpSample(BatchFilter):
             request[self.source] = ArraySpec(roi=request_roi)
             logger.debug("adding as new request")
 
+
     def process(self, batch, request):
 
         if self.target not in request:
@@ -81,22 +86,27 @@ class UpSample(BatchFilter):
         input_roi = batch.arrays[self.source].spec.roi
         request_roi = request[self.target].roi
 
-        assert input_roi.contains(request_roi)
+        # get roi expanded to source voxel size
+        source_voxel_size = self.spec[self.source].voxel_size
+        expanded_request_roi = request_roi.snap_to_grid(source_voxel_size, mode='grow')
+        logger.debug("expanded request ROI is %s"%request_roi)
+        assert input_roi.contains(expanded_request_roi)
 
-        # upsample
-
-        logger.debug("upsampling %s with %s", self.source, self.factor)
-
-        crop = batch.arrays[self.source].crop(request_roi)
+        # crop to necessary region
+        crop = batch.arrays[self.source].crop(expanded_request_roi)
         data = crop.data
 
+        # upsample
+        logger.debug("upsampling %s with %s", self.source, self.factor)
         for d, f in enumerate(self.factor):
             data = np.repeat(data, f, axis=d)
 
         # create output array
         spec = self.spec[self.target].copy()
-        spec.roi = request_roi
-        batch.arrays[self.target] = Array(data, spec)
+        spec.roi = expanded_request_roi
+        expanded_array = Array(data, spec)
+        array = expanded_array.crop(request_roi)
+        batch.arrays[self.target] = array
 
         if self.source in request:
 
