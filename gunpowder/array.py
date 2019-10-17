@@ -43,6 +43,10 @@ class Array(Freezable):
             for d in range(len(spec.voxel_size)):
                 assert spec.voxel_size[d]*data.shape[-spec.roi.dims()+d] == spec.roi.get_shape()[d], \
                         "ROI %s does not align with voxel size %s * data shape %s"%(spec.roi, spec.voxel_size, data.shape)
+                if spec.roi.get_offset()[d] is not None:
+                    assert spec.roi.get_offset()[d] % spec.voxel_size[d] == 0,\
+                            "ROI offset %s must be a multiple of voxel size %s"\
+                            % (spec.roi.get_offset(), spec.voxel_size)
 
         self.freeze()
 
