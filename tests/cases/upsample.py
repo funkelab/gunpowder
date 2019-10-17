@@ -1,10 +1,6 @@
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
-import logging
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 class UpSampleTestSource(BatchProvider):
