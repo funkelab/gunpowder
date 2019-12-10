@@ -58,7 +58,7 @@ class Predict(GenericPredict):
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model,
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[str, int], ArrayKey],
         array_specs: Dict[ArrayKey, ArraySpec] = {},
