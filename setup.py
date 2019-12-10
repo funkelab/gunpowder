@@ -7,6 +7,7 @@ except ImportError:
 
 extras_require = {
     'tensorflow': ['tensorflow'],
+    'pytorch': ['torch'],
 }
 
 
