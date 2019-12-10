@@ -53,6 +53,7 @@ class Predict(GenericPredict):
         use_gpus: (``list``, ``int``):
 
             Which gpu's to use for prediction.
+            Not yet implemented.
     """
 
     def __init__(
