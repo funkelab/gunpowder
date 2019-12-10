@@ -138,6 +138,7 @@ class TestTorchPredict(ProviderTest):
         b = ArrayKey("B")
         c = ArrayKey("C")
         c_pred = ArrayKey("C_PREDICTED")
+        d_pred = ArrayKey("D_PREDICTED")
 
         class TestModel(torch.nn.Module):
             def __init__(self):
@@ -148,7 +149,9 @@ class TestTorchPredict(ProviderTest):
             def forward(self, a, b):
                 a = a.reshape(-1)
                 b = b.reshape(-1)
-                return self.linear(a * b)
+                c_pred = self.linear(a * b)
+                d_pred = c_pred * 2
+                return d_pred
 
         model = TestModel()
 
@@ -156,10 +159,11 @@ class TestTorchPredict(ProviderTest):
         predict = Predict(
             model=model,
             inputs={"a": a, "b": b},
-            outputs={0: c_pred},
+            outputs={"linear": c_pred, 0: d_pred},
             array_specs={
                 c: ArraySpec(nonspatial=True),
                 c_pred: ArraySpec(nonspatial=True),
+                d_pred: ArraySpec(nonspatial=True),
             },
         )
         pipeline = source + predict
@@ -170,6 +174,7 @@ class TestTorchPredict(ProviderTest):
                 b: ArraySpec(roi=Roi((0, 0), (2, 2))),
                 c: ArraySpec(nonspatial=True),
                 c_pred: ArraySpec(nonspatial=True),
+                d_pred: ArraySpec(nonspatial=True),
             }
         )
 
@@ -181,3 +186,4 @@ class TestTorchPredict(ProviderTest):
 
             assert np.isclose(batch1[c_pred].data, batch2[c_pred].data)
             assert np.isclose(batch1[c_pred].data, 1 + 4 + 9)
+            assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 + 9))
