@@ -101,6 +101,7 @@ class Predict(GenericPredict):
     def create_hook(self, key):
         def save_layer(module, input, output):
             self.intermediate_layers[key] = output
+        return save_layer
 
     def get_outputs(self, module_out):
         outputs = {}
