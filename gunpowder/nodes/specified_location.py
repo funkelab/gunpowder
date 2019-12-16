@@ -140,7 +140,7 @@ class SpecifiedLocation(BatchFilter):
             for point_id, point in batch.points[points_key].data.items():
                 batch.points[points_key].data[point_id].location -= self.specified_shift
 
-    def _get_next_shift(self, center_shift):
+    def _get_next_shift(self, center_shift, shift_roi):
         # gets next coordinate from list
 
         if self.choose_randomly:
@@ -150,6 +150,10 @@ class SpecifiedLocation(BatchFilter):
             if self.loc_i >= len(self.coordinates):
                 self.loc_i = 0
                 logger.warning('Ran out of specified locations, looping list')
-
-        next_shift = Coordinate(self.coordinates[self.loc_i] - center_shift)
+        if shift_roi.contains(self.coordinates[self.loc_i]):
+            next_shift = Coordinate(self.coordinates[self.loc_i] - center_shift)
+        else:
+            logger.warn("Skipping point %s, outside of shift roi %s" %
+                        (self.coordinates[self.loc_i], shift_roi))
+            next_shift = self._get_next_shift(center_shift, shift_roi)
         return next_shift
