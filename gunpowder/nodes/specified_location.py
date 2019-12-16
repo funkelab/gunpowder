@@ -101,7 +101,8 @@ class SpecifiedLocation(BatchFilter):
         logger.debug("valid shifts for request in " + str(shift_roi))
 
         # shift to center
-        center_shift = spec.roi.get_shape()/2 + spec.roi.get_offset()
+        total_roi = request.get_total_roi()
+        center_shift = total_roi.get_shape()/2 + total_roi.get_offset()
 
         self.specified_shift = self._get_next_shift(center_shift)
         if self.jitter is not None:
