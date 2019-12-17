@@ -144,7 +144,7 @@ class SpecifiedLocation(BatchFilter):
                     "Requested %s, but upstream does not provide it."%key)
             shifted_roi = request_roi.shift(self.specified_shift)
             if not provided_roi.contains(shifted_roi):
-                logger.debug("Provided roi %s for key %s does not contain shifted roi %s"
+                logger.warning("Provided roi %s for key %s does not contain shifted roi %s"
                              % (provided_roi, key, shifted_roi))
                 return False
         return True
