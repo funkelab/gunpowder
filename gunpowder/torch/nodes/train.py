@@ -7,8 +7,9 @@ from gunpowder.nodes.generic_train import GenericTrain
 
 logger = logging.getLogger(__name__)
 
+
 class Train(GenericTrain):
-    '''Torch implementation of :class:`gunpowder.nodes.GenericTrain`.
+    """Torch implementation of :class:`gunpowder.nodes.GenericTrain`.
 
     Args:
 
@@ -61,35 +62,33 @@ class Train(GenericTrain):
         log_every (``int``, optional):
 
             After how many iterations to write out tensorboard summaries.
-    '''
+    """
 
     def __init__(
-            self,
-            model,
-            loss,
-            optimizer,
-            inputs,
-            output,
-            target,
-            gradients=None,
-            array_specs=None,
-            checkpoint_basename='model',
-            save_every=2000,
-            log_dir=None,
-            log_every=1):
+        self,
+        model,
+        loss,
+        optimizer,
+        inputs,
+        output,
+        target,
+        gradients=None,
+        array_specs=None,
+        checkpoint_basename="model",
+        save_every=2000,
+        log_dir=None,
+        log_every=1,
+    ):
 
-        outputs = {'output': output}
-        targets = {'output': target}
+        outputs = {"output": output}
+        targets = {"output": target}
 
         # not yet implemented
         gradients = {}
 
         super(Train, self).__init__(
-            inputs,
-            outputs,
-            gradients,
-            array_specs,
-            spawn_subprocess=False)
+            inputs, outputs, gradients, array_specs, spawn_subprocess=False
+        )
 
         self.model = model
         self.loss = loss
@@ -99,7 +98,7 @@ class Train(GenericTrain):
         self.save_every = save_every
 
         self.use_cuda = torch.cuda.is_available()
-        self.device = torch.device('cuda' if self.use_cuda else 'cpu')
+        self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = self.model.to(self.device)
         self.iteration = 0
 
@@ -113,8 +112,9 @@ class Train(GenericTrain):
 
     def start(self):
 
-        checkpoint, self.iteration = \
-            self._get_latest_checkpoint(self.checkpoint_basename)
+        checkpoint, self.iteration = self._get_latest_checkpoint(
+            self.checkpoint_basename
+        )
 
         if checkpoint is not None:
 
@@ -122,8 +122,8 @@ class Train(GenericTrain):
             logger.info("Loading %s", checkpoint)
 
             checkpoint = torch.load(checkpoint)
-            self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.model.load_state_dict(checkpoint["model_state_dict"])
+            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
         else:
 
@@ -138,23 +138,19 @@ class Train(GenericTrain):
         requested_outputs = self.__collect_requested_outputs(request)
 
         device_inputs = {
-            k: torch.as_tensor(v, device=self.device)
-            for k, v in inputs.items()
+            k: torch.as_tensor(v, device=self.device) for k, v in inputs.items()
         }
 
         device_targets = {
-            k: torch.as_tensor(v, device=self.device)
-            for k, v in targets.items()
+            k: torch.as_tensor(v, device=self.device) for k, v in targets.items()
         }
 
         self.optimizer.zero_grad()
-        outputs = {
-            'output': self.model(**device_inputs)
-        }
+        outputs = {"output": self.model(**device_inputs)}
 
-        logger.debug("model output: %s", outputs['output'])
-        logger.debug("expected output: %s", device_targets['output'])
-        loss = self.loss(outputs['output'], device_targets['output'])
+        logger.debug("model output: %s", outputs["output"])
+        logger.debug("expected output: %s", device_targets["output"])
+        loss = self.loss(outputs["output"], device_targets["output"])
         loss.backward()
         self.optimizer.step()
 
@@ -162,30 +158,31 @@ class Train(GenericTrain):
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(
-                outputs[array_name].cpu().detach().numpy(),
-                spec)
+                outputs[array_name].cpu().detach().numpy(), spec
+            )
 
         batch.loss = loss.cpu().detach().numpy()
         self.iteration += 1
         batch.iteration = self.iteration
 
-        if batch.iteration%self.save_every == 0:
+        if batch.iteration % self.save_every == 0:
 
             checkpoint_name = self._checkpoint_name(
-                self.checkpoint_basename,
-                batch.iteration)
+                self.checkpoint_basename, batch.iteration
+            )
 
             logger.info("Creating checkpoint %s", checkpoint_name)
 
             torch.save(
                 {
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict()
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
                 },
-                checkpoint_name)
+                checkpoint_name,
+            )
 
         if self.summary_writer and batch.iteration % self.log_every == 0:
-            self.summary_writer.add_scalar('loss', batch.loss, batch.iteration)
+            self.summary_writer.add_scalar("loss", batch.loss, batch.iteration)
 
     def __collect_requested_outputs(self, request):
 
@@ -214,8 +211,11 @@ class Train(GenericTrain):
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
                 else:
-                    logger.warn("batch does not contain %s, array %s will not "
-                                "be set", array_key, array_name)
+                    logger.warn(
+                        "batch does not contain %s, array %s will not " "be set",
+                        array_key,
+                        array_name,
+                    )
             elif isinstance(array_key, np.ndarray):
                 arrays[array_name] = array_key
             elif isinstance(array_key, str):
@@ -223,6 +223,7 @@ class Train(GenericTrain):
             else:
                 raise Exception(
                     "Unknown network array key {}, can't be given to "
-                    "network".format(array_key))
+                    "network".format(array_key)
+                )
 
         return arrays
