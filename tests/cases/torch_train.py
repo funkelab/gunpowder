@@ -92,8 +92,8 @@ class TestTorchTrain(ProviderTest):
             optimizer=optimizer,
             loss=loss,
             inputs={"a": ArrayKeys.A, "b": ArrayKeys.B},
-            target=ArrayKeys.C,
-            output=ArrayKeys.C_PREDICTED,
+            loss_inputs={0: ArrayKeys.C_PREDICTED, 1: ArrayKeys.C},
+            outputs={0: ArrayKeys.C_PREDICTED},
             checkpoint_basename=checkpoint_basename,
             save_every=100,
         )
