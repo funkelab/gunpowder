@@ -80,7 +80,7 @@ class Predict(GenericPredict):
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)
         out = self.model.forward(**inputs)
-        outputs = self.get_outputs(out)
+        outputs = self.get_outputs(out, request)
         self.update_batch(batch, request, outputs)
 
     def get_inputs(self, batch):
@@ -101,25 +101,28 @@ class Predict(GenericPredict):
             self.intermediate_layers[key] = output
         return save_layer
 
-    def get_outputs(self, module_out):
+    def get_outputs(self, module_out, request):
         outputs = {}
         if isinstance(module_out, tuple):
             module_outs = module_out
         else:
             module_outs = (module_out,)
         for key, value in self.outputs.items():
-            if isinstance(key, str):
-                outputs[value] = \
-                    self.intermediate_layers[key].cpu().detach().numpy()
-            elif isinstance(key, int):
-                outputs[value] = module_outs[key].cpu().detach().numpy()
+            if key in request:
+                if isinstance(key, str):
+                    outputs[value] = \
+                        self.intermediate_layers[key]
+                elif isinstance(key, int):
+                    outputs[value] = module_outs[key]
         return outputs
 
-    def update_batch(self, batch, request, outputs):
-        for key, data in outputs.items():
-            spec = self.spec[key].copy()
-            spec.roi = request[key].roi
-            batch[key] = Array(data, spec)
+    def update_batch(self, batch, request, requested_outputs):
+        for array_key, array_name in requested_outputs.items():
+            spec = self.spec[array_key].copy()
+            spec.roi = request[array_key].roi
+            batch.arrays[array_key] = Array(
+                requested_outputs[array_name].cpu().detach().numpy(), spec
+            )
 
     def stop(self):
         pass
