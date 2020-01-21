@@ -9,6 +9,8 @@ import sys
 import time
 import traceback
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 class NoResult(Exception):
@@ -120,6 +122,7 @@ class ProducerPool(object):
         logger.debug("parent PID " + str(parent_pid))
 
         result = None
+        np.random.seed(None)
         while True:
 
             if os.getppid() != parent_pid:
