@@ -122,7 +122,9 @@ class Predict(GenericPredict):
 
     def update_batch(self, batch, request, outputs):
         for key, data in outputs.items():
-            batch[key] = Array(data, spec=self.array_specs.get(key, request[key]))
+            spec = self.spec[key].copy()
+            spec.roi = request[key].roi
+            batch[key] = Array(data, spec)
 
     def stop(self):
         pass
