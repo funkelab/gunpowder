@@ -68,7 +68,9 @@ class Predict(GenericPredict):
 
         super(Predict, self).__init__(inputs, outputs, array_specs)
 
-        self.model = model
+        self.use_cuda = torch.cuda.is_available()
+        self.device = torch.device('cuda' if self.use_cuda else 'cpu')
+        self.model = model.to(self.device)
         self.checkpoint = checkpoint
         self.gpus = gpus
 
@@ -88,7 +90,7 @@ class Predict(GenericPredict):
 
     def get_inputs(self, batch):
         model_inputs = {
-            key: torch.from_numpy(batch[value].data)
+            key: torch.as_tensor(batch[value].data, device=self.device)
             for key, value in self.inputs.items()
         }
         return model_inputs
@@ -112,9 +114,10 @@ class Predict(GenericPredict):
             module_outs = (module_out,)
         for key, value in self.outputs.items():
             if isinstance(key, str):
-                outputs[value] = self.intermediate_layers[key].detach().numpy()
+                outputs[value] = \
+                    self.intermediate_layers[key].cpu().detach().numpy()
             elif isinstance(key, int):
-                outputs[value] = module_outs[key].detach().numpy()
+                outputs[value] = module_outs[key].cpu().detach().numpy()
         return outputs
 
     def update_batch(self, batch, request, outputs):
