@@ -299,22 +299,23 @@ class Train(GenericTrain):
 
     def __collect_provided_loss_inputs(self, batch):
 
-        return self.__collect_provided_arrays(self.loss_inputs, batch)
+        return self.__collect_provided_arrays(
+            self.loss_inputs, batch, expect_missing_arrays=True
+        )
 
-    def __collect_provided_arrays(self, reference, batch):
+    def __collect_provided_arrays(self, reference, batch, expect_missing_arrays=False):
 
         arrays = {}
 
         for array_name, array_key in reference.items():
             if isinstance(array_key, ArrayKey):
+                msg = "batch does not contain {array_key}, array {array_name} will not be set"
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
+                elif not expect_missing_arrays:
+                    logger.warn(msg)
                 else:
-                    logger.warn(
-                        "batch does not contain %s, array %s will not " "be set",
-                        array_key,
-                        array_name,
-                    )
+                    logger.debug(msg)
             elif isinstance(array_key, np.ndarray):
                 arrays[array_name] = array_key
             elif isinstance(array_key, str):
