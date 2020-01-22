@@ -197,7 +197,7 @@ class Train(GenericTrain):
                 outputs[array_name].cpu().detach().numpy(), spec
             )
 
-        loss_inputs = self.__collect_provided_targets(batch)
+        loss_inputs = self.__collect_provided_loss_inputs(batch)
 
         device_loss_inputs = {
             k: torch.as_tensor(v, device=self.device) for k, v in loss_inputs.items()
@@ -283,9 +283,9 @@ class Train(GenericTrain):
 
         return self.__collect_provided_arrays(self.inputs, batch)
 
-    def __collect_provided_targets(self, batch):
+    def __collect_provided_loss_inputs(self, batch):
 
-        return self.__collect_provided_arrays(self.targets, batch)
+        return self.__collect_provided_arrays(self.loss_inputs, batch)
 
     def __collect_provided_arrays(self, reference, batch):
 
