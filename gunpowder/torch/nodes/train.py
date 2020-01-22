@@ -173,10 +173,12 @@ class Train(GenericTrain):
         inputs = self.__collect_provided_inputs(batch)
         requested_outputs = self.__collect_requested_outputs(request)
 
+        # keys are argument names of model forward pass
         device_inputs = {
             k: torch.as_tensor(v, device=self.device) for k, v in inputs.items()
         }
 
+        # get outputs. Keys are tuple indices or model attr names as in self.outputs
         self.optimizer.zero_grad()
         model_outputs = self.model(**device_inputs)
         if isinstance(model_outputs, tuple):
@@ -190,18 +192,22 @@ class Train(GenericTrain):
             )
         outputs.update(self.intermediate_layers)
 
-        for array_key, array_name in requested_outputs.items():
-            spec = self.spec[array_key].copy()
-            spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                outputs[array_name].cpu().detach().numpy(), spec
-            )
-
-        loss_inputs = self.__collect_provided_loss_inputs(batch)
+        # Some inputs to the loss should come from the batch, not the model
+        provided_loss_inputs = self.__collect_provided_loss_inputs(batch)
 
         device_loss_inputs = {
-            k: torch.as_tensor(v, device=self.device) for k, v in loss_inputs.items()
+            k: torch.as_tensor(v, device=self.device)
+            for k, v in provided_loss_inputs.items()
         }
+
+        # Some inputs to the loss function should come from the outputs of the model
+        # Update device loss inputs with tensors from outputs if available
+        flipped_outputs = {v: outputs[k] for k, v in self.outputs.items()}
+        device_loss_inputs = {
+            k: flipped_outputs.get(v, device_loss_inputs.get(k))
+            for k, v in self.loss_inputs.items()
+        }
+
         device_loss_args = []
         for i in range(len(device_loss_inputs)):
             if i in device_loss_inputs:
@@ -223,6 +229,14 @@ class Train(GenericTrain):
         loss = self.loss(*device_loss_args, **device_loss_kwargs)
         loss.backward()
         self.optimizer.step()
+
+        # add requested model outputs to batch
+        for array_key, array_name in requested_outputs.items():
+            spec = self.spec[array_key].copy()
+            spec.roi = request[array_key].roi
+            batch.arrays[array_key] = Array(
+                outputs[array_name].cpu().detach().numpy(), spec
+            )
 
         for array_name, array_key in self.gradients.items():
             if array_key not in request:
