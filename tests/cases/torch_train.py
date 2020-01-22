@@ -71,6 +71,7 @@ class TestTorchTrain(ProviderTest):
         ArrayKey("B")
         ArrayKey("C")
         ArrayKey("C_PREDICTED")
+        ArrayKey("C_GRADIENT")
 
         class TestModel(torch.nn.Module):
             def __init__(self):
@@ -94,6 +95,7 @@ class TestTorchTrain(ProviderTest):
             inputs={"a": ArrayKeys.A, "b": ArrayKeys.B},
             loss_inputs={0: ArrayKeys.C_PREDICTED, 1: ArrayKeys.C},
             outputs={0: ArrayKeys.C_PREDICTED},
+            gradients={0: ArrayKeys.C_GRADIENT},
             checkpoint_basename=checkpoint_basename,
             save_every=100,
         )
@@ -105,6 +107,7 @@ class TestTorchTrain(ProviderTest):
                 ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
                 ArrayKeys.C: ArraySpec(nonspatial=True),
                 ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
+                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True)
             }
         )
 
