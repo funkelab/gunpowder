@@ -87,7 +87,7 @@ class GenericPredict(BatchFilter):
             else:
                 spec = ArraySpec()
 
-            if spec.voxel_size is None:
+            if spec.voxel_size is None and not spec.nonspatial:
 
                 assert common_voxel_size is not None, (
                     "There is no common voxel size of the inputs, and no "
