@@ -70,7 +70,11 @@ class Predict(GenericPredict):
         self.gpus = gpus
 
         if self.checkpoint is not None:
-            self.model.load_state_dict(torch.load(self.checkpoint))
+            checkpoint = torch.load(self.checkpoint)
+            if 'model_state_dict' in checkpoint:
+                self.model.load_state_dict(checkpoint['model_state_dict'])
+            else:
+                self.model.load_state_dict()
         self.intermediate_layers = {}
         self.register_hooks()
 
