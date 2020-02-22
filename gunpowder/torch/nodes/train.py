@@ -108,6 +108,7 @@ class Train(GenericTrain):
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = self.model.to(self.device)
+        self.loss = self.loss.to(self.device)
         self.iteration = 0
 
         if not isinstance(tensorboardX, NoSuchModule) and log_dir is not None:
