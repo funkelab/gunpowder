@@ -77,7 +77,7 @@ class Train(GenericTrain):
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model,
         loss,
         optimizer,
         inputs: Dict[str, ArrayKey],
