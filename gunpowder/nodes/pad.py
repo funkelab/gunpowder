@@ -7,6 +7,7 @@ from gunpowder.array import ArrayKey
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import PointsKey
 from gunpowder.roi import Roi
+from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class Pad(BatchFilter):
         self.value = value
 
     def setup(self):
+        self.enable_autoskip()
 
         assert self.key in self.spec, (
             "Asked to pad %s, but is not provided upstream."%self.key)
@@ -61,6 +63,7 @@ class Pad(BatchFilter):
         logger.debug("request: %s"%request)
         logger.debug("upstream spec: %s"%upstream_spec)
 
+        # TODO: remove this?
         if self.key not in request:
             return
 
@@ -82,6 +85,10 @@ class Pad(BatchFilter):
             )
 
         logger.debug("new request: %s"%request)
+
+        deps = BatchRequest()
+        deps[self.key] = request[self.key]
+        return deps
 
     def process(self, batch, request):
 
