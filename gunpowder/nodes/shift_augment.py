@@ -4,6 +4,7 @@ import numpy as np
 import random
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
+from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 
@@ -29,6 +30,7 @@ class ShiftAugment(BatchFilter):
         self.lcm_voxel_size = None
 
     def prepare(self, request):
+
         self.ndim = request.get_total_roi().dims()
         assert self.shift_axis in range(self.ndim)
 
@@ -76,6 +78,9 @@ class ShiftAugment(BatchFilter):
             spec.roi.set_offset(updated_roi.get_offset())
             spec.roi.set_shape(updated_roi.get_shape())
             request[key] = spec
+
+        deps = request
+        return deps
 
     def process(self, batch, request):
         for array_key, array in batch.arrays.items():
