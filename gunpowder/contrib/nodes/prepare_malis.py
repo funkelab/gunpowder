@@ -4,6 +4,7 @@ import numpy as np
 
 from gunpowder.array import Array
 from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +39,15 @@ class PrepareMalis(BatchFilter):
         self.enable_autoskip()
 
     def prepare(self, request):
+        deps = BatchRequest()
+        deps[self.labels_array_key] = request[self.malis_comp_array_key]
 
+        # TODO: remove this? This filter will be skipped if not asked for.
         assert self.labels_array_key in request, (
             "PrepareMalis requires %s, but they are not in request"%
             self.labels_array_key)
+
+        return deps
 
     def process(self, batch, request):
 
