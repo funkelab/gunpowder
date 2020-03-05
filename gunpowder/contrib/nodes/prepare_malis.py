@@ -3,8 +3,8 @@ import logging
 import numpy as np
 
 from gunpowder.array import Array
-from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
+from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +40,9 @@ class PrepareMalis(BatchFilter):
 
     def prepare(self, request):
         deps = BatchRequest()
-        deps[self.labels_array_key] = request[self.malis_comp_array_key]
-
-        # TODO: remove this? This filter will be skipped if not asked for.
-        assert self.labels_array_key in request, (
-            "PrepareMalis requires %s, but they are not in request"%
-            self.labels_array_key)
-
+        deps[self.labels_array_key] = copy.deepcopy(request[self.labels_array_key])
+        if self.ignore_array_key is not None:
+            deps[self.ignore_array_key] = copy.deepcopy(request[self.labels_array_key])
         return deps
 
     def process(self, batch, request):
@@ -56,7 +52,7 @@ class PrepareMalis(BatchFilter):
 
         gt_pos_pass = gt_labels.data
 
-        if self.ignore_array_key and self.ignore_array_key in batch.arrays:
+        if self.ignore_array_key is not None:
 
             gt_neg_pass = np.array(gt_labels.data)
             gt_neg_pass[
