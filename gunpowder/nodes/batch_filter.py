@@ -121,6 +121,7 @@ class BatchFilter(BatchProvider):
             if dependencies is not None:
                 upstream_request = request.merge(dependencies)
             else:
+                raise Exception(f"{self.__class__} doesn't properly handle dependencies")
                 upstream_request = request.copy()
             self.remove_provided(upstream_request)
         else:
