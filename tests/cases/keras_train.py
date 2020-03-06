@@ -77,7 +77,8 @@ class TestKerasTrain(ProviderTest):
 
         return ['input', 'output']
 
-    @unittest.expectedFailure("Conv2DCustomBackpropFilterOp only supports NHWC")
+    # Conv2DCustomBackpropFilterOp only supports NHWC
+    @unittest.expectedFailure
     def test_output(self):
 
         logging.getLogger('gunpowder.keras.nodes.train').setLevel(logging.INFO)
