@@ -3,6 +3,7 @@ import logging
 import math
 import numpy as np
 import random
+from scipy import ndimage
 
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
