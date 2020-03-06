@@ -146,6 +146,36 @@ class Snapshot(BatchFilter):
                     for attribute_name, attribute in array.attrs.items():
                         dataset.attrs[attribute_name] = attribute
 
+                for (points_key, points) in batch.points.items():
+                    if points_key not in self.dataset_names:
+                        continue
+
+                    ds_name = self.dataset_names[points_key]
+
+                    data = []
+                    for u in points.graph.nodes:
+                        preds = list(points.graph.predecessors(u))
+                        for v in preds:
+                            row = []
+                            row.append(u)
+                            for x in points.data[u].location:
+                                row.append(x)
+                            row.append(v)
+                            data.append(row)
+                        if len(preds) == 0:
+                            row = []
+                            row.append(u)
+                            for x in points.data[u].location:
+                                row.append(x)
+                            row.append(-1)
+                            data.append(row)
+
+                    data = np.array(data)
+
+                    f.create_dataset(
+                        name=ds_name, data=data, compression=self.compression_type
+                    )
+
                 if batch.loss is not None:
                     f['/'].attrs['loss'] = batch.loss
 
