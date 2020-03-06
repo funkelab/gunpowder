@@ -6,6 +6,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,12 @@ class GenericPredict(BatchFilter):
 
         if self.spawn_subprocess:
             self.worker.start()
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        for key in self.inputs.values():
+            deps[key] = request[key]
+        return deps
 
     def teardown(self):
         if self.spawn_subprocess:
