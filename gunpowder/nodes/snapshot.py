@@ -152,28 +152,23 @@ class Snapshot(BatchFilter):
 
                     ds_name = self.dataset_names[points_key]
 
-                    data = []
-                    for u in points.graph.nodes:
-                        preds = list(points.graph.predecessors(u))
-                        for v in preds:
-                            row = []
-                            row.append(u)
-                            for x in points.data[u].location:
-                                row.append(x)
-                            row.append(v)
-                            data.append(row)
-                        if len(preds) == 0:
-                            row = []
-                            row.append(u)
-                            for x in points.data[u].location:
-                                row.append(x)
-                            row.append(-1)
-                            data.append(row)
-
-                    data = np.array(data)
+                    node_ids = []
+                    locations = []
+                    edges = []
+                    for node_id, attrs in points.graph.nodes().items():
+                        node_ids.append(node_id)
+                        locations.append(attrs["location"])
+                    for edge in points.graph.edges():
+                        edges.append(edge)
 
                     f.create_dataset(
-                        name=ds_name, data=data, compression=self.compression_type
+                        name=f"{ds_name}-ids", data = np.array(node_ids, dtype=int), compression=self.compression_type
+                    )
+                    f.create_dataset(
+                        name=f"{ds_name}-locations", data = np.array(locations), compression=self.compression_type
+                    )
+                    f.create_dataset(
+                        name=f"{ds_name}-edges", data = np.array(edges), compression=self.compression_type
                     )
 
                 if batch.loss is not None:
