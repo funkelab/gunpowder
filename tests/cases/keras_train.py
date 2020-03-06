@@ -9,8 +9,9 @@ from gunpowder import (
     Array,
     Roi,
     Stack,
-    build
+    build,
 )
+from gunpowder.keras.nodes import Train
 from gunpowder.ext import keras, NoSuchModule
 import logging
 import numpy as np
@@ -91,7 +92,7 @@ class TestKerasTrain(ProviderTest):
 
         pipeline = TestKerasTrainSource()
         pipeline += Stack(num_repetitions=10)
-        pipeline += keras.Train(
+        pipeline += Train(
             self.path_to('model'),
             x={x: ArrayKeys.X},
             y={y: ArrayKeys.Y},
