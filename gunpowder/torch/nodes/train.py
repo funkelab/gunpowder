@@ -117,7 +117,7 @@ class Train(GenericTrain):
         else:
             self.summary_writer = None
             if log_dir is not None:
-                logger.warn("log_dir given, but tensorboardX is not installed")
+                logger.warning("log_dir given, but tensorboardX is not installed")
 
         self.intermediate_layers = {}
         self.register_hooks()

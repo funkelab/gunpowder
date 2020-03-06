@@ -109,7 +109,7 @@ class Batch(Freezable):
         else:
             raise RuntimeError(
                 "Only ArrayKey or PointsKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
 
     def __delitem__(self, key):
 
