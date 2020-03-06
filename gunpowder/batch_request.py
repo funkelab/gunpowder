@@ -84,6 +84,9 @@ class BatchRequest(ProviderSpec):
             if key not in merged:
                 merged[key] = spec
             else:
-                merged[key].roi = merged[key].roi.union(spec.roi)
+                if isinstance(spec, PointsSpec) or not merged[key].nonspatial:
+                    merged[key].roi = merged[key].roi.union(spec.roi)
+                else:
+                    merged[key] = spec
 
         return merged
