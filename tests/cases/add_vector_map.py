@@ -1,6 +1,6 @@
 import unittest
 from .provider_test import ProviderTest
-from gunpowder import *
+from gunpowder import ArrayKeys, ArraySpec, PointsSpec, Roi, Array, PointsKeys, Batch, BatchProvider, Points, Coordinate, ArrayKey, PointsKey, BatchRequest, build
 from gunpowder.contrib import AddVectorMap
 from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 

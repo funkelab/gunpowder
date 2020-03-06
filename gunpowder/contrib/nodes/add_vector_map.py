@@ -94,6 +94,10 @@ class AddVectorMap(BatchFilter):
                 padded_roi = request[array_key].roi.grow((self.pad_for_partners), (self.pad_for_partners))
                 deps[trg_points_key] = PointsSpec(padded_roi)
 
+        for (array_key, stayinside_array_key) in self.array_keys_to_stayinside_array_keys.items():
+            if array_key in request:
+                deps[stayinside_array_key] = copy.deepcopy(request[array_key])
+
         return deps
 
     def process(self, batch, request):
