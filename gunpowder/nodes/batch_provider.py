@@ -226,6 +226,12 @@ class BatchProvider(object):
                         data_shape*voxel_size,
                         self.name()
                 )
+            if request_spec.dtype is not None:
+                assert batch[array_key].data.dtype == request_spec.dtype, \
+                    "dtype of array %s (%s) does not match requested dtype %s" % (
+                        array_key,
+                        batch[array_key].data.dtype,
+                        request_spec.dtype)
 
         for (points_key, request_spec) in request.points_specs.items():
 
@@ -239,8 +245,8 @@ class BatchProvider(object):
 
             for _, point in points.data.items():
                 assert points.spec.roi.contains(point.location), (
-                    "points provided by %s with ROI %s contain point at %s"%(
-                        self.name(), points.spec.roi, point.location))
+                    "points %s provided by %s with ROI %s contain point at %s"%(
+                        points_key, self.name(), points.spec.roi, point.location))
 
     def remove_unneeded(self, batch, request):
 

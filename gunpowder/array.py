@@ -48,6 +48,10 @@ class Array(Freezable):
                             "ROI offset %s must be a multiple of voxel size %s"\
                             % (spec.roi.get_offset(), spec.voxel_size)
 
+        if spec.dtype is not None:
+            assert data.dtype == spec.dtype, \
+                "data dtype %s does not match spec dtype %s" % (data.dtype, spec.dtype)
+
         self.freeze()
 
     def crop(self, roi, copy=False):
