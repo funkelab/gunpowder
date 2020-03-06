@@ -93,7 +93,7 @@ class Snapshot(BatchFilter):
     def prepare(self, request):
         deps = BatchRequest()
 
-        self.record_snapshot = self.n%self.every == 0
+        self.record_snapshot = self.n % self.every == 0 and self.output_filename is not None
 
         # append additional array requests, don't overwrite existing ones
         for array_key, spec in self.additional_request.array_specs.items():
