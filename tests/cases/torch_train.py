@@ -96,6 +96,10 @@ class TestTorchTrain(ProviderTest):
             loss_inputs={0: ArrayKeys.C_PREDICTED, 1: ArrayKeys.C},
             outputs={0: ArrayKeys.C_PREDICTED},
             gradients={0: ArrayKeys.C_GRADIENT},
+            array_specs={
+                ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
+                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
+            },
             checkpoint_basename=checkpoint_basename,
             save_every=100,
         )
@@ -107,7 +111,7 @@ class TestTorchTrain(ProviderTest):
                 ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
                 ArrayKeys.C: ArraySpec(nonspatial=True),
                 ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
-                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True)
+                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
             }
         )
 
