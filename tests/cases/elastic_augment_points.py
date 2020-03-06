@@ -131,10 +131,10 @@ class DensePointTestSource3D(BatchProvider):
 
         roi_points = request[PointsKeys.TEST_POINTS].roi
         roi_array = request[ArrayKeys.TEST_LABELS].roi
-        roi_voxel = roi_array//self.spec[ArrayKeys.TEST_LABELS].voxel_size
+        roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
-        data[:,::2] = 100
+        data[:, ::2] = 100
 
         for i, point in self.points.items():
             loc = self.point_to_voxel(roi_array, point.location)
@@ -142,23 +142,20 @@ class DensePointTestSource3D(BatchProvider):
 
         spec = self.spec[ArrayKeys.TEST_LABELS].copy()
         spec.roi = roi_array
-        batch.arrays[ArrayKeys.TEST_LABELS] = Array(
-            data,
-            spec=spec)
+        batch.arrays[ArrayKeys.TEST_LABELS] = Array(data, spec=spec)
 
         points = {}
         for i, point in self.points.items():
             if roi_points.contains(point.location):
                 points[i] = point
         batch.points[PointsKeys.TEST_POINTS] = Points(
-            points,
-            PointsSpec(roi=roi_points))
+            points, PointsSpec(roi=roi_points)
+        )
 
         return batch
 
 
 class TestElasticAugment(ProviderTest):
-
     def test_3d_basics(self):
 
         test_labels = ArrayKey("TEST_LABELS")
