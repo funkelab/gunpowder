@@ -107,12 +107,6 @@ class GenericPredict(BatchFilter):
         if self.spawn_subprocess:
             self.worker.start()
 
-    def prepare(self, request):
-        deps = BatchRequest()
-        for key in self.inputs.values():
-            deps[key] = request[key]
-        return deps
-
     def teardown(self):
         if self.spawn_subprocess:
             # signal "stop"
@@ -130,6 +124,12 @@ class GenericPredict(BatchFilter):
         if not self.initialized and not self.spawn_subprocess:
             self.start()
             self.initialized = True
+
+        deps = BatchRequest()
+        for key in self.inputs.values():
+            deps[key] = request[key]
+        return deps
+
 
     def process(self, batch, request):
 
