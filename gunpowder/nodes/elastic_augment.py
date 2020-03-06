@@ -67,15 +67,18 @@ class ElasticAugment(BatchFilter):
     '''
 
     def __init__(
-            self,
-            control_point_spacing,
-            jitter_sigma,
-            rotation_interval,
-            prob_slip=0,
-            prob_shift=0,
-            max_misalign=0,
-            subsample=1,
-            spatial_dims=3):
+        self,
+        control_point_spacing,
+        jitter_sigma,
+        rotation_interval,
+        prob_slip=0,
+        prob_shift=0,
+        max_misalign=0,
+        subsample=1,
+        spatial_dims=3,
+        use_fast_points_transform=False,
+        recompute_missing_points=True,
+    ):
 
         self.control_point_spacing = control_point_spacing
         self.jitter_sigma = jitter_sigma
@@ -86,6 +89,8 @@ class ElasticAugment(BatchFilter):
         self.max_misalign = max_misalign
         self.subsample = subsample
         self.spatial_dims = spatial_dims
+        self.use_fast_points_transform = use_fast_points_transform
+        self.recompute_missing_points = recompute_missing_points
 
     def prepare(self, request):
         seed = request.random_seed
@@ -245,9 +250,25 @@ class ElasticAugment(BatchFilter):
 
         for (graph_key, graph) in batch.graphs.items():
 
-            for node in list(graph.nodes):
+            point_data = points.data
 
-                logger.debug("projecting %s", node.location)
+            if self.use_fast_points_transform:
+                missing_points = self.__fast_point_projection(
+                    self.transformations[points_key],
+                    point_data,
+                    points.spec.roi,
+                    target_roi=self.target_rois[points_key],
+                )
+                if not self.recompute_missing_points:
+                    for point_id in missing_points:
+                        points.remove(point_id)
+                    missing_points = []
+            else:
+                missing_points = list(point_data.keys())
+
+            for point_id in missing_points:
+                point = point_data[point_id]
+                # logger.debug("projecting %s", point.location)
 
                 # get location relative to beginning of upstream ROI
                 location = node.location - graph.spec.roi.get_begin()
@@ -270,8 +291,8 @@ class ElasticAugment(BatchFilter):
                     projected_voxels)
 
                 if projected_voxels is None:
-                    logger.debug("node outside of target, skipping")
-                    graph.remove_node(node)
+                    logger.debug("point outside of target, skipping")
+                    points.remove(point_id)
                     continue
 
                 # convert to world units (now in float again)
@@ -292,10 +313,12 @@ class ElasticAugment(BatchFilter):
                 # finally, it can happen that a node no longer is contained in
                 # the requested ROI (because larger ROIs than necessary have
                 # been requested upstream)
-                if not request[graph_key].roi.contains(node.location):
-                    logger.debug("node outside of target, skipping")
-                    graph.remove_node(node)
+                if not request[points_key].roi.contains(point.location):
+                    logger.debug("point outside of target, skipping")
+                    points.remove(point_id)
                     continue
+
+            points._update_graph(point_data)
 
             # restore original ROIs
             graph.spec.roi = request[graph_key].roi
@@ -344,6 +367,68 @@ class ElasticAugment(BatchFilter):
             self.__misalign(transformation)
 
         return transformation
+
+    def __fast_point_projection(
+        self, transformation, point_data, source_roi, target_roi
+    ):
+        if len(point_data) < 1:
+            return []
+        # rasterize the points into an array
+        ids, locs = zip(
+            *[
+                (
+                    point_id,
+                    (np.floor(point.location).astype(int) - source_roi.get_begin())
+                    // self.voxel_size,
+                )
+                for point_id, point in point_data.items()
+            ]
+        )
+        ids, locs = np.array(ids), tuple(zip(*locs))
+        points_array = np.zeros(
+            source_roi.get_shape() / self.voxel_size, dtype=np.int64
+        )
+        points_array[locs] = ids
+
+        # reshape array data into (channels,) + spatial dims
+        shape = points_array.shape
+        data = points_array.reshape((-1,) + shape[-self.spatial_dims :])
+
+        # apply transformation on each channel
+        data = np.array(
+            [
+                augment.apply_transformation(
+                    data[c], transformation, interpolate="nearest"
+                )
+                for c in range(data.shape[0])
+            ]
+        )
+
+        missing_points = []
+        projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
+        projected_locs = [
+            np.array(loc[-self.spatial_dims :]) * self.voxel_size
+            + target_roi.get_begin()
+            for loc in projected_locs
+        ]
+        for point_id, proj_loc in zip(ids, projected_locs):
+            point = point_data[point_id]
+            if not any([np.isnan(x) for x in proj_loc]):
+                assert (
+                    len(proj_loc) == self.spatial_dims
+                ), "projected location has wrong number of dimensions: {}, expected: {}".format(
+                    len(proj_loc), self.spatial_dims
+                )
+                point.location[-self.spatial_dims :] = proj_loc
+            else:
+                missing_points.append(point_id)
+        logger.debug(
+            "{} of {} points lost in fast points projection".format(
+                len(missing_points), len(ids)
+            )
+        )
+
+        return missing_points
 
     def __project(self, transformation, location):
         '''Find the projection of location given by transformation. Returns None
