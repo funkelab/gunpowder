@@ -83,14 +83,24 @@ class Snapshot(BatchFilter):
         else:
             self.dataset_dtypes = dataset_dtypes
 
+    def setup(self):
+
+        for array_key, spec in self.additional_request.array_specs.items():
+            self.updates(array_key, spec)
+
+        self.enable_autoskip()
+
     def prepare(self, request):
+        deps = BatchRequest()
 
         self.record_snapshot = self.n%self.every == 0
 
         # append additional array requests, don't overwrite existing ones
         for array_key, spec in self.additional_request.array_specs.items():
             if array_key not in request.array_specs:
-                request.array_specs[array_key] = spec
+                deps[array_key] = spec
+
+        return deps
 
     def process(self, batch, request):
 

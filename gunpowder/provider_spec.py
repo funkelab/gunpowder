@@ -1,4 +1,4 @@
-import fractions
+import math
 from gunpowder.coordinate import Coordinate
 from gunpowder.points import PointsKey
 from gunpowder.points_spec import PointsSpec
@@ -190,7 +190,7 @@ class ProviderSpec(Freezable):
                 lcm_voxel_size = voxel_size
             else:
                 lcm_voxel_size = Coordinate(
-                    (a * b // fractions.gcd(a, b)
+                    (a * b // math.gcd(a, b)
                      for a, b in zip(lcm_voxel_size, voxel_size)))
 
         return lcm_voxel_size

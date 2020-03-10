@@ -1,3 +1,4 @@
+from copy import copy as shallow_copy
 import logging
 import multiprocessing
 
@@ -5,6 +6,7 @@ from .freezable import Freezable
 from .profiling import ProfilingStats
 from .array import Array, ArrayKey
 from .points import Points, PointsKey
+from .batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +109,7 @@ class Batch(Freezable):
         else:
             raise RuntimeError(
                 "Only ArrayKey or PointsKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
 
     def __delitem__(self, key):
 
@@ -151,3 +153,53 @@ class Batch(Freezable):
             for (key, obj) in collection_type.items():
                 r += "%s: %s\n"%(key, obj.spec)
         return r
+
+    def crop(self, request, copy=False):
+        '''Crop batch to meet the given request.'''
+
+        cropped = Batch()
+        cropped.profiling_stats = self.profiling_stats
+        cropped.loss = self.loss
+        cropped.iteration = self.iteration
+
+        for key, val in request.items():
+            assert key in self, "%s not contained in this batch" % key
+            if val.roi is None:
+                cropped[key] = self[key]
+            else:
+                cropped[key] = self[key].crop(val.roi, copy)
+
+        return cropped
+
+    def merge(self, batch, merge_profiling_stats=True):
+        '''Merge this batch (``a``) with another batch (``b``).
+
+        This creates a new batch ``c`` containing arrays and point sets from
+        both batches ``a`` and ``b``:
+
+            * Arrays or points that exist in either ``a`` or ``b`` will be
+              referenced in ``c`` (not copied).
+
+            * Arrays that exist in both batches will be merged, as in
+              ``a_array.merge(b_array)`` (which will fail if one array is not
+              contained in the other one). This creates a new array.
+
+        All other cases will lead to an exception.
+        '''
+
+        merged = shallow_copy(self)
+
+        for key, val in batch.items():
+            if key not in merged or val.spec.roi is None:
+                merged[key] = val
+            else:
+                merged[key] = merged[key].merge(val)
+
+        if merge_profiling_stats:
+            merged.profiling_stats.merge_with(batch.profiling_stats)
+        if batch.loss is not None:
+            merged.loss = batch.loss
+        if batch.iteration is not None:
+            merged.iteration = batch.iteration
+
+        return merged

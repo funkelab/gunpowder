@@ -62,6 +62,17 @@ class Hdf5LikeWrite(BatchFilter):
 
         self.dataset_offsets = {}
 
+    def setup(self):
+        for key in self.dataset_names.keys():
+            self.updates(key, self.spec[key])
+        self.enable_autoskip()
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        for key in self.dataset_names.keys():
+            deps[key] = request[key]
+        return deps
+
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
 

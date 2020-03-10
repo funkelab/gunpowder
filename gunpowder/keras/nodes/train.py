@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import os
+import copy
 
 from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
@@ -55,8 +56,11 @@ class Train(GenericTrain):
             array_specs=None,
             save_every=2000):
 
+        inputs = copy.deepcopy(x)
+        inputs.update(y)
+
         super(Train, self).__init__(
-            x,
+            inputs,
             outputs,
             {},  # no gradients for Keras node
             array_specs,

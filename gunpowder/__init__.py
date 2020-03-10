@@ -20,3 +20,4 @@ import gunpowder.caffe
 import gunpowder.tensorflow
 import gunpowder.contrib
 import gunpowder.zoo
+import gunpowder.torch

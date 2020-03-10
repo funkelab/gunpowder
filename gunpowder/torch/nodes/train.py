@@ -77,7 +77,7 @@ class Train(GenericTrain):
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model,
         loss,
         optimizer,
         inputs: Dict[str, ArrayKey],
@@ -93,6 +93,9 @@ class Train(GenericTrain):
 
         # not yet implemented
         gradients = gradients
+        inputs.update(
+            {k: v for k, v in loss_inputs.items() if v not in outputs.values()}
+        )
 
         super(Train, self).__init__(
             inputs, outputs, gradients, array_specs, spawn_subprocess=False
@@ -117,7 +120,7 @@ class Train(GenericTrain):
         else:
             self.summary_writer = None
             if log_dir is not None:
-                logger.warn("log_dir given, but tensorboardX is not installed")
+                logger.warning("log_dir given, but tensorboardX is not installed")
 
         self.intermediate_layers = {}
         self.register_hooks()
@@ -252,7 +255,9 @@ class Train(GenericTrain):
                 )
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(tensor.grad.cpu().numpy(), spec)
+            batch.arrays[array_key] = Array(
+                tensor.grad.cpu().detach().numpy(), spec
+            )
 
         for array_key, array_name in requested_outputs.items():
             spec = self.spec[array_key].copy()
@@ -296,7 +301,9 @@ class Train(GenericTrain):
 
     def __collect_provided_inputs(self, batch):
 
-        return self.__collect_provided_arrays(self.inputs, batch)
+        return self.__collect_provided_arrays(
+            {k: v for k, v in self.inputs.items() if k not in self.loss_inputs}, batch
+        )
 
     def __collect_provided_loss_inputs(self, batch):
 

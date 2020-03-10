@@ -11,6 +11,9 @@ class DelayNode(BatchFilter):
     def prepare(self, request):
         time.sleep(self.time_prepare)
 
+        deps = request
+        return deps
+
     def process(self, batch, request):
         time.sleep(self.time_process)
 

@@ -6,6 +6,7 @@ from scipy.ndimage.filters import gaussian_filter
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map, create_ball_kernel
@@ -160,7 +161,9 @@ class RasterizePoints(BatchFilter):
 
         # however, restrict the request to the points actually provided
         points_roi = points_roi.intersect(self.spec[self.points].roi)
-        request[self.points] = PointsSpec(roi=points_roi)
+
+        deps = BatchRequest()
+        deps[self.points] = PointsSpec(roi=points_roi)
 
         if self.settings.mask is not None:
 
@@ -169,12 +172,9 @@ class RasterizePoints(BatchFilter):
                 "Voxel size of mask and rasterized volume need to be equal")
 
             new_mask_roi = points_roi.snap_to_grid(mask_voxel_size)
-            if self.settings.mask in request:
-                request[self.settings.mask].roi = \
-                    request[self.settings.mask].roi.union(new_mask_roi)
-            else:
-                request[self.settings.mask] = \
-                    ArraySpec(roi=new_mask_roi)
+            deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
+
+        return deps
 
     def process(self, batch, request):
 
@@ -262,17 +262,7 @@ class RasterizePoints(BatchFilter):
         rasterized_points = Array(
             data=rasterized_points_data,
             spec=spec)
-        batch.arrays[self.array] = rasterized_points.crop(request[self.array].roi)
-
-        # restore requested ROI of points
-        if self.points in request:
-            request_roi = request[self.points].roi
-            points.spec.roi = request_roi
-            points.data = {i: p for i, p in points.data.items() if request_roi.contains(p.location)}
-
-        # restore requested mask
-        if mask is not None:
-            batch.arrays[mask] = batch.arrays[mask].crop(request[mask].roi)
+        batch[self.array] = rasterized_points.crop(request[self.array].roi)
 
     def __rasterize(self, points, data_roi, voxel_size, dtype, settings, mask_array=None):
         '''Rasterize 'points' into an array with the given 'voxel_size'''

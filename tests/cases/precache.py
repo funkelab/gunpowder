@@ -6,6 +6,7 @@ class Delay(BatchFilter):
 
     def prepare(self, request):
         time.sleep(1)
+        return request
 
     def process(self, batch, request):
         pass

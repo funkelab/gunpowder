@@ -72,3 +72,21 @@ class BatchRequest(ProviderSpec):
             for key in specs_type:
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())
+
+    def merge(self, request):
+        '''Merge another request with current request'''
+
+        assert isinstance(request, BatchRequest)
+
+        merged = self.copy()
+
+        for key, spec in request.items():
+            if key not in merged:
+                merged[key] = spec
+            else:
+                if isinstance(spec, PointsSpec) or not merged[key].nonspatial:
+                    merged[key].roi = merged[key].roi.union(spec.roi)
+                else:
+                    merged[key] = spec
+
+        return merged

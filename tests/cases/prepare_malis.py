@@ -61,34 +61,40 @@ class TestPrepareMalis(ProviderTest):
 
         ArrayKey('MALIS_COMP_LABEL')
 
-        pipeline = (
+        pipeline_with_ignore = (
             TestSourcePrepareMalis() +
             PrepareMalis(
                 ArrayKeys.GT_LABELS,
                 ArrayKeys.MALIS_COMP_LABEL,
                 ignore_array_key=ArrayKeys.GT_IGNORE)
         )
+        pipeline_without_ignore = (
+            TestSourcePrepareMalis() +
+            PrepareMalis(
+                ArrayKeys.GT_LABELS,
+                ArrayKeys.MALIS_COMP_LABEL,)
+        )
 
         # test that MALIS_COMP_LABEL not in batch if not in request
-        with build(pipeline):
+        with build(pipeline_with_ignore):
             request = BatchRequest()
             request.add(ArrayKeys.GT_LABELS, (90, 90, 90))
             request.add(ArrayKeys.GT_IGNORE, (90, 90, 90))
 
-            batch = pipeline.request_batch(request)
+            batch = pipeline_with_ignore.request_batch(request)
 
             # test if array added to batch
             self.assertTrue(ArrayKeys.MALIS_COMP_LABEL not in batch.arrays)
 
         # test usage with gt_ignore
-        with build(pipeline):
+        with build(pipeline_with_ignore):
 
             request = BatchRequest()
             request.add(ArrayKeys.GT_LABELS, (90, 90, 90))
             request.add(ArrayKeys.GT_IGNORE, (90, 90, 90))
             request.add(ArrayKeys.MALIS_COMP_LABEL, (90, 90, 90))
 
-            batch = pipeline.request_batch(request)
+            batch = pipeline_with_ignore.request_batch(request)
 
             # test if array added to batch
             self.assertTrue(ArrayKeys.MALIS_COMP_LABEL in batch.arrays)
@@ -104,14 +110,33 @@ class TestPrepareMalis(ProviderTest):
             self.assertTrue((np.array_equal(batch.arrays[ArrayKeys.MALIS_COMP_LABEL].data[1, ...],
                                             batch.arrays[ArrayKeys.GT_LABELS].data)))
 
+            # Test ignore without requesting ignore array
+            request = BatchRequest()
+            request.add(ArrayKeys.GT_LABELS, (90, 90, 90))
+            request.add(ArrayKeys.MALIS_COMP_LABEL, (90, 90, 90))
+
+            batch = pipeline_with_ignore.request_batch(request)
+
+            # test if array added to batch
+            self.assertTrue(ArrayKeys.MALIS_COMP_LABEL in batch.arrays)
+            
+            # gt_neg_pass
+            self.assertTrue((batch.arrays[ArrayKeys.MALIS_COMP_LABEL].data[0,...][ignored_locations] == 3).all())
+            self.assertFalse((np.array_equal(batch.arrays[ArrayKeys.MALIS_COMP_LABEL].data[0, ...],
+                                            batch.arrays[ArrayKeys.GT_LABELS].data)))
+            # gt_pos_pass
+            self.assertFalse((batch.arrays[ArrayKeys.MALIS_COMP_LABEL].data[1,...][ignored_locations] == 3).all())
+            self.assertTrue((np.array_equal(batch.arrays[ArrayKeys.MALIS_COMP_LABEL].data[1, ...],
+                                            batch.arrays[ArrayKeys.GT_LABELS].data)))
+
         # test usage without gt_ignore
-        with build(pipeline):
+        with build(pipeline_without_ignore):
 
             request = BatchRequest()
             request.add(ArrayKeys.GT_LABELS, (90, 90, 90))
             request.add(ArrayKeys.MALIS_COMP_LABEL, (90, 90, 90))
 
-            batch = pipeline.request_batch(request)
+            batch = pipeline_without_ignore.request_batch(request)
 
             # test if array added to batch
             self.assertTrue(ArrayKeys.MALIS_COMP_LABEL in batch.arrays)

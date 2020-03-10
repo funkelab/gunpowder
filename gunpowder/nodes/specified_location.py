@@ -3,6 +3,8 @@ import logging
 import numpy as np
 
 from gunpowder.coordinate import Coordinate
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -93,6 +95,9 @@ class SpecifiedLocation(BatchFilter):
 
         logger.debug("{}'th ({}) shift selected: {}".format(
             self.loc_i, self.coordinates[self.loc_i], self.specified_shift))
+
+        deps = request
+        return deps
 
     def process(self, batch, request):
         # reset ROIs to request
