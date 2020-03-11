@@ -4,7 +4,13 @@ from gunpowder.points import PointsKey
 from gunpowder.points_spec import PointsSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.graph import GraphKey
+from gunpowder.graph_spec import GraphSpec
 from .freezable import Freezable
+
+import logging
+
+logger = logging.getLogger(__file__)
 
 class ProviderSpec(Freezable):
     '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
@@ -51,10 +57,11 @@ class ProviderSpec(Freezable):
             Contains all points specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, points_specs=None, graph_specs=None):
 
         self.array_specs = {}
         self.points_specs = {}
+        self.graph_specs = {}
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
@@ -64,6 +71,9 @@ class ProviderSpec(Freezable):
                 self[key] = spec
         if points_specs is not None:
             for key, spec in points_specs.items():
+                self[key] = spec
+        if graph_specs is not None:
+            for key, spec in graph_specs.items():
                 self[key] = spec
 
 
@@ -75,6 +85,12 @@ class ProviderSpec(Freezable):
                                                         "ArraySpec value.")
             self.array_specs[key] = spec.copy()
 
+        elif isinstance(spec, GraphSpec):
+            assert isinstance(
+                key, GraphKey
+            ), f"Only A GraphKey (not a {type(spec).__name__}) is allowed as key for a GraphSpec value."
+            self.graph_specs[key] = spec.copy()
+
         elif isinstance(spec, PointsSpec):
             assert isinstance(key, PointsKey), ("Only a PointsKey is "
                                                         "allowed as key for a "
@@ -82,8 +98,8 @@ class ProviderSpec(Freezable):
             self.points_specs[key] = spec.copy()
 
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be set in a "
-                               "%s."%type(self).__name__)
+            raise RuntimeError(f"Only ArraySpec or PointsSpec, (not {type(spec).__name__}) can be set in a "
+                               f"{type(self).__name__}.")
 
     def __getitem__(self, key):
 
@@ -91,16 +107,20 @@ class ProviderSpec(Freezable):
             return self.array_specs[key]
 
         elif isinstance(key, PointsKey):
+            logger.warning("Points are depricated")
             return self.points_specs[key]
+
+        elif isinstance(key, GraphKey):
+            return self.graph_specs[key]
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def __len__(self):
 
-        return len(self.array_specs) + len(self.points_specs)
+        return len(self.array_specs) + len(self.points_specs) + len(self.graph_specs)
 
     def __contains__(self, key):
 
@@ -109,6 +129,9 @@ class ProviderSpec(Freezable):
 
         elif isinstance(key, PointsKey):
             return key in self.points_specs
+
+        elif isinstance(key, GraphKey):
+            return key in self.graph_specs
 
         else:
             raise RuntimeError(
@@ -134,6 +157,8 @@ class ProviderSpec(Freezable):
         for (k, v) in self.array_specs.items():
             yield k, v
         for (k, v) in self.points_specs.items():
+            yield k, v
+        for (k, v) in self.graph_specs.items():
             yield k, v
 
     def get_total_roi(self):

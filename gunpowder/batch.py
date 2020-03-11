@@ -6,6 +6,7 @@ from .freezable import Freezable
 from .profiling import ProfilingStats
 from .array import Array, ArrayKey
 from .points import Points, PointsKey
+from .graph import Graph, GraphKey
 from .batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,7 @@ class Batch(Freezable):
         self.profiling_stats = ProfilingStats()
         self.arrays = {}
         self.points  = {}
+        self.graphs = {}
         self.affinity_neighborhood = None
         self.loss = None
         self.iteration = None
@@ -77,6 +79,12 @@ class Batch(Freezable):
                 "Only a PointsKey is allowed as key for a Points value.")
             self.points[key] = value
 
+        elif isinstance(value, Graph):
+            assert isinstance(
+                key, GraphKey
+            ), f"Only a GraphKey is allowed as key for Graph value."
+            self.graphs[key] = value
+
         else:
             raise RuntimeError(
                 "Only Array or Points can be set in a %s."%type(self).__name__)
@@ -88,6 +96,9 @@ class Batch(Freezable):
 
         elif isinstance(key, PointsKey):
             return self.points[key]
+
+        elif isinstance(key, GraphKey):
+            return self.graphs[key]
 
         else:
             raise RuntimeError(
@@ -105,6 +116,9 @@ class Batch(Freezable):
 
         elif isinstance(key, PointsKey):
             return key in self.points
+
+        elif isinstance(key, GraphKey):
+            return key in self.graphs
 
         else:
             raise RuntimeError(
@@ -128,6 +142,8 @@ class Batch(Freezable):
         '''Provides a generator iterating over key/value pairs.'''
 
         for (k, v) in self.arrays.items():
+            yield k, v
+        for (k, v) in self.graphs.items():
             yield k, v
         for (k, v) in self.points.items():
             yield k, v

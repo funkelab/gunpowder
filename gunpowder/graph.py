@@ -275,8 +275,6 @@ class Graph(Freezable):
         else:
             cropped = self
 
-        print(f"cropping graph: {cropped} with roi: {roi}")
-
         contained_nodes = set(
             [v.id for v in cropped.vertices if roi.contains(v.location)]
         )
@@ -301,11 +299,9 @@ class Graph(Freezable):
 
         for vertex in list(cropped.vertices):
             if vertex.id not in all_nodes:
-                print(f"Removing vertex: {vertex}")
                 cropped.remove_vertex(vertex)
         for edge in list(cropped.edges):
             if edge not in all_contained_edges:
-                print(f"Removing edge: {edge}")
                 cropped.remove_edge(edge)
 
         return cropped
@@ -326,8 +322,6 @@ class Graph(Freezable):
         """
 
         trimmed = self.copy()
-
-        print(f"Trimming graph: {trimmed} with roi: {roi}")
 
         contained_nodes = set(
             [v.id for v in trimmed.vertices if roi.contains(v.location)]
@@ -357,8 +351,6 @@ class Graph(Freezable):
             roi,
             node_id=itertools.count(max(all_nodes) + 1),
         )
-
-        print(f"post trimming graph: {trimmed}")
 
         return trimmed
 
