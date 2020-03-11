@@ -239,17 +239,17 @@ class ElasticAugment(BatchFilter):
             # restore original ROIs
             array.spec.roi = request[array_key].roi
 
-        for (points_key, points) in batch.points.items():
+        for (graph_key, graph) in batch.graphs.items():
 
-            for point_id, point in list(points.data.items()):
+            for vertex in list(graph.vertices):
 
-                logger.debug("projecting %s", point.location)
+                logger.debug("projecting %s", vertex.location)
 
                 # get location relative to beginning of upstream ROI
-                location = point.location - points.spec.roi.get_begin()
+                location = vertex.location - graph.spec.roi.get_begin()
                 logger.debug("relative to upstream ROI: %s", location)
 
-                # get spatial coordinates of point in voxels
+                # get spatial coordinates of vertex in voxels
                 location_voxels = location[-self.spatial_dims:]/self.voxel_size
                 logger.debug(
                     "relative to upstream ROI in voxels: %s",
@@ -258,7 +258,7 @@ class ElasticAugment(BatchFilter):
                 # get projected location in transformation data space, this
                 # yields voxel coordinates relative to target ROI
                 projected_voxels = self.__project(
-                    self.transformations[points_key],
+                    self.transformations[graph_key],
                     location_voxels)
 
                 logger.debug(
@@ -266,8 +266,8 @@ class ElasticAugment(BatchFilter):
                     projected_voxels)
 
                 if projected_voxels is None:
-                    logger.debug("point outside of target, skipping")
-                    del points.data[point_id]
+                    logger.debug("vertex outside of target, skipping")
+                    graph.remove_vertex(vertex)
                     continue
 
                 # convert to world units (now in float again)
@@ -278,23 +278,23 @@ class ElasticAugment(BatchFilter):
                     projected)
 
                 # get global coordinates
-                projected += np.array(self.target_rois[points_key].get_begin())
+                projected += np.array(self.target_rois[graph_key].get_begin())
 
-                # update spatial coordinates of point location
-                point.location[-self.spatial_dims:] = projected
+                # update spatial coordinates of vertex location
+                vertex.location[-self.spatial_dims:] = projected
 
-                logger.debug("final location: %s", point.location)
+                logger.debug("final location: %s", vertex.location)
 
-                # finally, it can happen that a point no longer is contained in
+                # finally, it can happen that a vertex no longer is contained in
                 # the requested ROI (because larger ROIs than necessary have
                 # been requested upstream)
-                if not request[points_key].roi.contains(point.location):
-                    logger.debug("point outside of target, skipping")
-                    del points.data[point_id]
+                if not request[graph_key].roi.contains(vertex.location):
+                    logger.debug("vertex outside of target, skipping")
+                    graph.remove_vertex(vertex)
                     continue
 
             # restore original ROIs
-            points.spec.roi = request[points_key].roi
+            graph.spec.roi = request[graph_key].roi
 
     def __get_common_voxel_size(self, request):
 
