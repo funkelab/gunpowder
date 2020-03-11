@@ -212,6 +212,9 @@ class Graph(Freezable):
         for vertex_id, vertex_attrs in self.__graph.nodes.items():
             yield Vertex.from_attrs(vertex_attrs)
 
+    def num_vertices(self):
+        return self.__graph.number_of_nodes()
+
     @property
     def edges(self):
         for (u, v), attrs in self.__graph.edges.items():
