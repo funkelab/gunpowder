@@ -146,7 +146,9 @@ class BatchFilter(BatchProvider):
 
         if not skip:
             if dependencies is not None:
-                node_batch = batch.crop(dependencies)
+                # Should this be set to copy=True? If not is there a point
+                # in the batch.merge call since data will be modified in place?
+                node_batch = batch.crop(dependencies, copy=True)
             else:
                 node_batch = batch
             processed_batch = self.process(node_batch, downstream_request)
