@@ -165,7 +165,7 @@ class ProviderSpec(Freezable):
         '''Get the union of all the ROIs.'''
 
         total_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
@@ -177,7 +177,7 @@ class ProviderSpec(Freezable):
         '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.points_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi
