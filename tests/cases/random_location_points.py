@@ -1,52 +1,57 @@
 from .provider_test import ProviderTest
-from gunpowder import *
+from gunpowder import (
+    BatchProvider,
+    Graph,
+    Vertex,
+    GraphSpec,
+    GraphKey,
+    GraphKeys,
+    Roi,
+    Batch,
+    BatchRequest,
+    RandomLocation,
+    build,
+)
 import numpy as np
 
-class TestSourceRandomLocation(BatchProvider):
 
+class TestSourceRandomLocation(BatchProvider):
     def __init__(self):
 
-        self.points = Points(
-            {
-                1: Point([1, 1, 1]),
-                2: Point([500, 500, 500]),
-                3: Point([550, 550, 550]),
-            },
-            PointsSpec(
-                roi=Roi((0, 0, 0), (1000, 1000, 1000))))
+        self.graph = Graph(
+            [
+                Vertex(id=1, location=np.array([1, 1, 1])),
+                Vertex(id=2, location=np.array([500, 500, 500])),
+                Vertex(id=3, location=np.array([550, 550, 550])),
+            ],
+            [],
+            GraphSpec(roi=Roi((0, 0, 0), (1000, 1000, 1000))),
+        )
 
     def setup(self):
 
-        self.provides(
-            PointsKeys.TEST_POINTS,
-            self.points.spec)
+        self.provides(GraphKeys.TEST_GRAPH, self.graph.spec)
 
     def provide(self, request):
 
         batch = Batch()
 
-        roi = request[PointsKeys.TEST_POINTS].roi
-        points = Points({}, PointsSpec(roi))
-
-        for point_id, point in self.points.data.items():
-            if roi.contains(point.location):
-                points.data[point_id] = point.copy()
-        batch[PointsKeys.TEST_POINTS] = points
+        roi = request[GraphKeys.TEST_GRAPH].roi
+        batch[GraphKeys.TEST_GRAPH] = self.graph.crop(roi, copy=True).trim(roi)
 
         return batch
 
-class TestRandomLocationPoints(ProviderTest):
 
+class TestRandomLocationGraph(ProviderTest):
     def test_output(self):
 
-        PointsKey('TEST_POINTS')
+        GraphKey("TEST_GRAPH")
 
-        pipeline = (
-            TestSourceRandomLocation() +
-            RandomLocation(ensure_nonempty=PointsKeys.TEST_POINTS)
+        pipeline = TestSourceRandomLocation() + RandomLocation(
+            ensure_nonempty=GraphKeys.TEST_GRAPH
         )
 
-        # count the number of times we get each point
+        # count the number of times we get each vertex
         histogram = {}
 
         with build(pipeline):
@@ -55,24 +60,31 @@ class TestRandomLocationPoints(ProviderTest):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
-                            PointsKeys.TEST_POINTS: PointsSpec(
-                                roi=Roi((0, 0, 0), (100, 100, 100)))
-                        }))
+                            GraphKeys.TEST_GRAPH: GraphSpec(
+                                roi=Roi((0, 0, 0), (100, 100, 100))
+                            )
+                        }
+                    )
+                )
 
-                points = batch[PointsKeys.TEST_POINTS].data
+                vertices = list(batch[GraphKeys.TEST_GRAPH].vertices)
+                vertex_ids = [v.id for v in vertices]
 
-                self.assertTrue(len(points) > 0)
-                self.assertTrue((1 in points) != (2 in points or 3 in points), points)
+                self.assertTrue(len(vertices) > 0)
+                self.assertTrue(
+                    (1 in vertex_ids) != (2 in vertex_ids or 3 in vertex_ids),
+                    vertex_ids,
+                )
 
-                for point_id in batch[PointsKeys.TEST_POINTS].data.keys():
-                    if point_id not in histogram:
-                        histogram[point_id] = 1
+                for vertex in batch[GraphKeys.TEST_GRAPH].vertices:
+                    if vertex.id not in histogram:
+                        histogram[vertex.id] = 1
                     else:
-                        histogram[point_id] += 1
+                        histogram[vertex.id] += 1
 
         total = sum(histogram.values())
         for k, v in histogram.items():
-            histogram[k] = float(v)/total
+            histogram[k] = float(v) / total
 
         # we should get roughly the same count for each point
         for i in histogram.keys():
