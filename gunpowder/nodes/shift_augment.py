@@ -155,23 +155,21 @@ class ShiftAugment(BatchFilter):
         :return a Points object with the updated point locations and ROI
         """
 
-        data = points.data
+        vertices = list(points.vertices)
         spec = points.spec
         shift_axis_start_pos = spec.roi.get_offset()[shift_axis]
 
         shifted_data = {}
-        for id_, point in data.items():
-            loc = Coordinate(point.location)
+        for vertex in vertices:
+            loc = vertex.location
             shift_axis_position = loc[shift_axis]
             shift_array_index = (shift_axis_position - shift_axis_start_pos) // lcm_voxel_size[shift_axis]
             assert(shift_array_index >= 0)
             shift = Coordinate(sub_shift_array[shift_array_index])
-            new_loc = loc + shift
-            if request_roi.contains(new_loc):
-                point.location = new_loc
-                shifted_data[id_] = point
+            loc += shift
+            if not request_roi.contains(loc):
+                points.remove_vertex(vertex)
 
-        points.data = shifted_data
         points.spec.roi = request_roi
         return points
 
