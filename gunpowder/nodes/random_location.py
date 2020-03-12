@@ -167,11 +167,15 @@ class RandomLocation(BatchFilter):
             batch.arrays[array_key].spec.roi = spec.roi
         for (points_key, spec) in request.points_specs.items():
             batch.points[points_key].spec.roi = spec.roi
+        for (graph_key, spec) in request.graph_specs.items():
+            batch.graphs[graph_key].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
         for points_key in request.points_specs.keys():
             for point_id, _ in batch.points[points_key].data.items():
                 batch.points[points_key].data[point_id].location -= self.random_shift
+        for graph_key in request.graph_specs.keys():
+            batch.graphs[graph_key].shift(-self.random_shift)
 
     def accepts(self, request):
         '''Should return True if the randomly chosen location is acceptable
