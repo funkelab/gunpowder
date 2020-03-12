@@ -285,7 +285,7 @@ class RandomLocation(BatchFilter):
     def __shift_request(self, request, shift):
 
         # shift request ROIs
-        for specs_type in [request.array_specs, request.points_specs]:
+        for specs_type in [request.array_specs, request.points_specs, request.graph_specs]:
             for (key, spec) in specs_type.items():
                 if spec.roi is None:
                     continue
