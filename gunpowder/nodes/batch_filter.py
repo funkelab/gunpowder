@@ -148,7 +148,11 @@ class BatchFilter(BatchProvider):
             if dependencies is not None:
                 # Should this be set to copy=True? If not is there a point
                 # in the batch.merge call since data will be modified in place?
-                node_batch = batch.crop(dependencies, copy=True)
+                # cannot copy in general. Consider RandomLocation, it needs to
+                # update the batch Roi's. If we copy here, it will change the
+                # Roi's on the copy, and then try to merge two arrays that
+                # have different rois.
+                node_batch = batch.crop(dependencies)
             else:
                 node_batch = batch
             processed_batch = self.process(node_batch, downstream_request)
