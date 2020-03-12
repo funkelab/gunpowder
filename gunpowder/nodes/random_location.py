@@ -105,16 +105,17 @@ class RandomLocation(BatchFilter):
 
             assert self.ensure_nonempty in self.upstream_spec, (
                 "Upstream provider does not have %s"%self.ensure_nonempty)
-            points_spec = self.upstream_spec.points_specs[self.ensure_nonempty]
+            graph_spec = self.upstream_spec.graph_specs[self.ensure_nonempty]
+
 
             logger.info("requesting all %s points...", self.ensure_nonempty)
 
-            points_request = BatchRequest({self.ensure_nonempty: points_spec})
-            points_batch = upstream.request_batch(points_request)
+            nonempty_request = BatchRequest({self.ensure_nonempty: graph_spec})
+            nonempty_batch = upstream.request_batch(nonempty_request)
 
             self.points = KDTree([
-                p.location
-                for p in points_batch[self.ensure_nonempty].data.values()])
+                v.location
+                for v in nonempty_batch[self.ensure_nonempty].vertices])
 
             logger.info("retrieved %d points", len(self.points.data))
 
@@ -412,7 +413,7 @@ class RandomLocation(BatchFilter):
                 "%s"%(point, points))
             num_points = len(points)
 
-            # accept this shift with p=1/num_points
+            # accept this shift with v=1/num_points
             #
             # This is to compensate the bias introduced by close-by points.
             accept = random() <= 1.0/num_points
