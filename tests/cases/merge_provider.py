@@ -20,7 +20,7 @@ from gunpowder.graph import GraphKeys, Graph
 import numpy as np
 
 
-class PointTestSource(BatchProvider):
+class GraphTestSource(BatchProvider):
     def __init__(self, voxel_size):
         self.voxel_size = voxel_size
 
@@ -30,9 +30,9 @@ class PointTestSource(BatchProvider):
 
     def provide(self, request):
         batch = Batch()
-        roi_points = request[GraphKeys.PRESYN].roi
+        graph_roi = request[GraphKeys.PRESYN].roi
 
-        batch.graphs[GraphKeys.PRESYN] = Graph([], [], GraphSpec(roi=roi_points))
+        batch.graphs[GraphKeys.PRESYN] = Graph([], [], GraphSpec(roi=graph_roi))
         return batch
 
 
@@ -64,9 +64,9 @@ class TestMergeProvider(unittest.TestCase):
         voxel_size = (1, 1, 1)
         GraphKey("PRESYN")
         ArrayKey("GT_LABELS")
-        pointssource = PointTestSource(voxel_size)
+        graphsource = GraphTestSource(voxel_size)
         arraysource = ArrayTestSoure(voxel_size)
-        pipeline = (pointssource, arraysource) + MergeProvider() + RandomLocation()
+        pipeline = (graphsource, arraysource) + MergeProvider() + RandomLocation()
         window_request = Coordinate((50, 50, 50))
         with build(pipeline):
             # Check basic merging.
