@@ -1,5 +1,4 @@
 from .provider_test import ProviderTest
-import unittest
 from gunpowder import (
     BatchProvider,
     BatchRequest,
@@ -67,12 +66,6 @@ class GrowFilter(BatchFilter):
 
 class TestGraphs(ProviderTest):
     def test_output(self):
-        """
-        Request a roi, which gets grown, and includes a point not
-        in the original request. Cropping should lead to new
-        nodes begin placed at the intersection between the
-        requested roi, and the edge crossing the bounding box.
-        """
 
         GraphKey("TEST_GRAPH")
 
