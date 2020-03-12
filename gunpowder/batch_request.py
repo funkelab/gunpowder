@@ -5,6 +5,8 @@ from .provider_spec import ProviderSpec
 from .roi import Roi
 from .array import ArrayKey
 from .array_spec import ArraySpec
+from .graph import GraphKey
+from .graph_spec import GraphSpec
 
 class BatchRequest(ProviderSpec):
     '''A collection of (possibly partial) :class:`ArraySpec` and
@@ -44,6 +46,8 @@ class BatchRequest(ProviderSpec):
             spec = ArraySpec()
         elif isinstance(key, PointsKey):
             spec = PointsSpec()
+        elif isinstance(key, GraphKey):
+            spec = GraphSpec()
         else:
             raise RuntimeError("Only ArrayKey or PointsKey can be added.")
 
