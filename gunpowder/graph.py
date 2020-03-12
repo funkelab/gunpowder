@@ -62,6 +62,10 @@ class Vertex(Freezable):
     def location(self):
         return self.__location
 
+    @location.setter
+    def location(self, new_location):
+        self.__location = new_location
+
     @property
     def attrs(self):
         return self.__attrs
