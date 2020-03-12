@@ -277,10 +277,16 @@ class Graph(Freezable):
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
         """
 
+        # Current implementation removes nodes from cropped if outside the roi,
+        # Thus if copy is set to False, it actually modifies the input structre,
+        # rather than just providing a view into a subset of the data
+        copy = True
+
         if copy:
             cropped = self.copy()
         else:
             cropped = self
+        cropped.__spec = self.__spec
 
         contained_nodes = set(
             [v.id for v in cropped.vertices if roi.contains(v.location)]
@@ -312,6 +318,10 @@ class Graph(Freezable):
                 cropped.remove_edge(edge)
 
         return cropped
+
+    def shift(self, offset):
+        for vertex in self.vertices:
+            vertex.location += offset
 
     def new_graph(self):
         if self.directed():
