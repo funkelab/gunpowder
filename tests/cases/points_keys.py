@@ -1,12 +1,12 @@
 from __future__ import print_function
-from gunpowder import *
+from gunpowder import GraphKey, GraphKeys
 import unittest
 
-class TestPointsKeys(unittest.TestCase):
 
+class TestGraphKeys(unittest.TestCase):
     def test_register(self):
 
-        PointsKey('TEST_POINTS1')
+        GraphKey("TEST_GRAPH")
 
-        self.assertTrue(PointsKeys.TEST_POINTS1)
-        self.assertRaises(AttributeError, getattr, PointsKeys, "TEST_POINTS2")
+        self.assertTrue(GraphKeys.TEST_GRAPH)
+        self.assertRaises(AttributeError, getattr, GraphKeys, "TEST_GRAPH_2")
