@@ -7,7 +7,7 @@ from .balance_labels import TestBalanceLabels
 from .crop import TestCrop
 from .downsample import TestDownSample
 from .dvid_source import TestDvidSource
-from .elastic_augment_points import TestElasticAugment
+from .elastic_augment import TestElasticAugment
 from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
 from .keras_train import TestKerasTrain
@@ -16,13 +16,13 @@ from .n5_write import TestN5Write
 from .node_dependencies import TestNodeDependencies
 from .normalize import TestNormalize
 from .pad import TestPad
-from .points_keys import TestPointsKeys
+from .graph_keys import TestGraphKeys
 from .precache import TestPreCache
 from .prepare_malis import TestPrepareMalis
 from .profiling import TestProfiling
 from .provider_test import ProviderTest
 from .random_location import TestRandomLocation
-from .random_location_points import TestRandomLocationPoints
+from .random_location_graph import TestRandomLocationGraph
 from .rasterize_points import TestRasterizePoints
 from .scan import TestScan
 from .shift_augment import TestShiftAugment2D
