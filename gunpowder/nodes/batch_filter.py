@@ -149,8 +149,10 @@ class BatchFilter(BatchProvider):
                 node_batch = batch.crop(dependencies)
             else:
                 node_batch = batch
-            self.process(node_batch, downstream_request)
-            batch = batch.merge(node_batch, merge_profiling_stats=False).crop(
+            processed_batch = self.process(node_batch, downstream_request)
+            if processed_batch is None:
+                processed_batch = node_batch
+            batch = batch.merge(processed_batch, merge_profiling_stats=False).crop(
                 downstream_request
             )
 
