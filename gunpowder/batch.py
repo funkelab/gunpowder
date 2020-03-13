@@ -180,9 +180,8 @@ class Batch(Freezable):
             * Arrays or points that exist in either ``a`` or ``b`` will be
               referenced in ``c`` (not copied).
 
-            * Arrays that exist in both batches will be merged, as in
-              ``a_array.merge(b_array)`` (which will fail if one array is not
-              contained in the other one). This creates a new array.
+            * Arrays that exist in both batches will be referenced in ``c``, and
+              the reference will point to the version of the array in ``b``.
 
         All other cases will lead to an exception.
         '''
@@ -190,10 +189,12 @@ class Batch(Freezable):
         merged = shallow_copy(self)
 
         for key, val in batch.items():
+            # TODO: What is the goal of `val.spec.roi is None`? Why should that
+            # mean that the key in merged gets overwritten?
             if key not in merged or val.spec.roi is None:
                 merged[key] = val
-            else:
-                merged[key] = merged[key].merge(val)
+            elif key in merged:
+                merged[key] = val
 
         if merge_profiling_stats:
             merged.profiling_stats.merge_with(batch.profiling_stats)
