@@ -3,6 +3,7 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 import logging
 import numbers
 import numpy as np
@@ -71,6 +72,7 @@ class UpSample(BatchFilter):
         return deps
 
     def process(self, batch, request):
+        outputs = Batch()
 
         if self.target not in request:
             return
@@ -93,4 +95,5 @@ class UpSample(BatchFilter):
         # create output array
         spec = self.spec[self.target].copy()
         spec.roi = request_roi
-        batch.arrays[self.target] = Array(data, spec)
+        outputs.arrays[self.target] = Array(data, spec)
+        return outputs

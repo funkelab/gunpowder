@@ -1,11 +1,9 @@
 from .batch_filter import BatchFilter
 from gunpowder.array import ArrayKey, Array
-from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
+from gunpowder.batch import Batch
 import logging
 import numbers
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +51,7 @@ class DownSample(BatchFilter):
         return deps
 
     def process(self, batch, request):
+        outputs = Batch()
 
         # downsample
         if isinstance(self.factor, tuple):
@@ -71,4 +70,6 @@ class DownSample(BatchFilter):
         # create output array
         spec = self.spec[self.target].copy()
         spec.roi = request[self.target].roi
-        batch.arrays[self.target] = Array(data, spec)
+        outputs.arrays[self.target] = Array(data, spec)
+        
+        return outputs

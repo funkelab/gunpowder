@@ -1,22 +1,31 @@
 from .provider_test import ProviderTest
-from gunpowder import *
+from gunpowder import (
+    BatchProvider,
+    BatchFilter,
+    BatchRequest,
+    Batch,
+    ArrayKeys,
+    ArraySpec,
+    ArrayKey,
+    Array,
+    Roi,
+    build,
+)
 import numpy as np
 
-class NodeDependenciesTestSource(BatchProvider):
 
+class NodeDependenciesTestSource(BatchProvider):
     def setup(self):
 
         self.provides(
             ArrayKeys.A,
-            ArraySpec(
-                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
-                voxel_size=(4, 4, 4)))
+            ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
+        )
 
         self.provides(
             ArrayKeys.B,
-            ArraySpec(
-                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
-                voxel_size=(4, 4, 4)))
+            ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
+        )
 
     def provide(self, request):
 
@@ -28,26 +37,27 @@ class NodeDependenciesTestSource(BatchProvider):
             roi = spec.roi
 
             for d in range(3):
-                assert roi.get_begin()[d]%4 == 0, "roi %s does not align with voxels"
+                assert roi.get_begin()[d] % 4 == 0, "roi %s does not align with voxels"
 
-            data_roi = roi/4
+            data_roi = roi / 4
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(data_roi.get_begin()[0], data_roi.get_end()[0]),
-                    range(data_roi.get_begin()[1], data_roi.get_end()[1]),
-                    range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
+                range(data_roi.get_begin()[0], data_roi.get_end()[0]),
+                range(data_roi.get_begin()[1], data_roi.get_end()[1]),
+                range(data_roi.get_begin()[2], data_roi.get_end()[2]),
+                indexing="ij",
+            )
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             spec = self.spec[array_key].copy()
             spec.roi = roi
-            batch.arrays[array_key] = Array(
-                    data,
-                    spec)
+            batch.arrays[array_key] = Array(data, spec)
         return batch
 
+
 class NodeDependenciesTestNode(BatchFilter):
-    '''Creates C from B.'''
+    """Creates C from B."""
 
     def __init__(self):
 
@@ -63,11 +73,13 @@ class NodeDependenciesTestNode(BatchFilter):
 
         dependencies = BatchRequest()
         dependencies[ArrayKeys.B] = ArraySpec(
-            request[ArrayKeys.C].roi.grow(self.context, self.context))
+            request[ArrayKeys.C].roi.grow(self.context, self.context)
+        )
 
         return dependencies
 
     def process(self, batch, request):
+        outputs = Batch()
 
         # make sure a ROI is what we requested
         b_roi = request[ArrayKeys.C].roi.grow(self.context, self.context)
@@ -75,15 +87,16 @@ class NodeDependenciesTestNode(BatchFilter):
 
         # add C to batch
         c = batch[ArrayKeys.B].crop(request[ArrayKeys.C].roi)
-        batch[ArrayKeys.C] = c
+        outputs[ArrayKeys.C] = c
+        return outputs
+
 
 class TestNodeDependencies(ProviderTest):
-
     def test_dependecies(self):
 
-        ArrayKey('A')
-        ArrayKey('B')
-        ArrayKey('C')
+        ArrayKey("A")
+        ArrayKey("B")
+        ArrayKey("C")
 
         pipeline = NodeDependenciesTestSource()
         pipeline += NodeDependenciesTestNode()
