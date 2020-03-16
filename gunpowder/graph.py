@@ -1,13 +1,12 @@
 from .graph_spec import GraphSpec
 from .roi import Roi
-from .coordinate import Coordinate
 from .freezable import Freezable
 
 import numpy as np
 import networkx as nx
 
 from copy import deepcopy
-from typing import Dict, List, Tuple, Optional, Set, Iterator, Any
+from typing import Dict, Optional, Set, Iterator, Any
 import logging
 import itertools
 
@@ -214,7 +213,9 @@ class Graph(Freezable):
     @property
     def vertices(self):
         for vertex_id, vertex_attrs in self.__graph.nodes.items():
-            yield Vertex.from_attrs(vertex_attrs)
+            v = Vertex.from_attrs(vertex_attrs)
+            assert v.location.dtype == self.spec.dtype
+            yield v
 
     def num_vertices(self):
         return self.__graph.number_of_nodes()
@@ -256,6 +257,7 @@ class Graph(Freezable):
         If a vertex exists with the same id as the vertex you are adding,
         its attributes will be overwritten.
         """
+        vertex.location = vertex.location.astype(self.spec.dtype)
         self.__graph.add_node(vertex.id, **vertex.all)
 
     def remove_edge(self, edge: Edge):
