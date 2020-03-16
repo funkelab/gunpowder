@@ -12,26 +12,26 @@ logger = logging.getLogger(__name__)
 
 class Batch(Freezable):
     '''Contains the requested batch as a collection of :class:`Arrays<Array>`
-    and :class:`Points` that is passed through the pipeline from sources to
+    and :class:`Graph` that is passed through the pipeline from sources to
     sinks.
 
     This collection mimics a dictionary. Items can be added with::
 
         batch = Batch()
         batch[array_key] = Array(...)
-        batch[points_key] = Points(...)
+        batch[graph_key] = Graph(...)
 
-    Here, ``array_key`` and ``points_key`` are :class:`ArrayKey` and
-    :class:`PointsKey`. The items can be queried with::
+    Here, ``array_key`` and ``graph_key`` are :class:`ArrayKey` and
+    :class:`GraphKey`. The items can be queried with::
 
         array = batch[array_key]
-        points = batch[points_key]
+        graph = batch[graph_key]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``batch.items()``.
 
-    To access only arrays or point sets, use the dictionaries ``batch.arrays``
-    or ``batch.points``, respectively.
+    To access only arrays or graphs, use the dictionaries ``batch.arrays``
+    or ``batch.graphs``, respectively.
 
     Attributes:
 
@@ -39,9 +39,9 @@ class Batch(Freezable):
 
             Contains all arrays that have been requested for this batch.
 
-        points (dict from :class:`PointsKey` to :class:`Points`):
+        graphs (dict from :class:`GraphKey` to :class:`Graph`):
 
-            Contains all point sets that have been requested for this batch.
+            Contains all graphs that have been requested for this batch.
     '''
 
     __next_id = multiprocessing.Value('L')
@@ -80,7 +80,7 @@ class Batch(Freezable):
 
         else:
             raise RuntimeError(
-                "Only Array or Points can be set in a %s."%type(self).__name__)
+                "Only Array or Graph can be set in a %s."%type(self).__name__)
 
     def __getitem__(self, key):
 
@@ -92,7 +92,7 @@ class Batch(Freezable):
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def __len__(self):
@@ -122,7 +122,7 @@ class Batch(Freezable):
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     @property
@@ -182,14 +182,14 @@ class Batch(Freezable):
     def merge(self, batch, merge_profiling_stats=True):
         '''Merge this batch (``a``) with another batch (``b``).
 
-        This creates a new batch ``c`` containing arrays and point sets from
+        This creates a new batch ``c`` containing arrays and graphs from
         both batches ``a`` and ``b``:
 
-            * Arrays or points that exist in either ``a`` or ``b`` will be
+            * Arrays or Graphs that exist in either ``a`` or ``b`` will be
               referenced in ``c`` (not copied).
 
-            * Arrays that exist in both batches will be referenced in ``c``, and
-              the reference will point to the version of the array in ``b``.
+            * Arrays or Graphs that exist in both batches will keep only
+              a reference to the version in ``b`` in ``c``.
 
         All other cases will lead to an exception.
         '''

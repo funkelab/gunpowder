@@ -11,7 +11,7 @@ class GraphSpec(Freezable):
 
         roi (:class:`Roi`):
 
-            The region of interested represented by this set of points.
+            The region of interested represented by this graph.
 
         directed (``bool``):
 

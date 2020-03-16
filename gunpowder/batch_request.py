@@ -1,6 +1,4 @@
 import copy
-from .points import PointsKey
-from .points_spec import PointsSpec
 from .provider_spec import ProviderSpec
 from .roi import Roi
 from .array import ArrayKey
@@ -10,7 +8,7 @@ from .graph_spec import GraphSpec
 
 class BatchRequest(ProviderSpec):
     '''A collection of (possibly partial) :class:`ArraySpec` and
-    :class:`PointsSpec` forming a request.
+    :class:`GraphSpec` forming a request.
 
     Inherits from :class:`ProviderSpec`.
 
@@ -19,7 +17,7 @@ class BatchRequest(ProviderSpec):
     '''
 
     def add(self, key, shape, voxel_size=None):
-        '''Convenience method to add an array or point spec by providing only
+        '''Convenience method to add an array or graph spec by providing only
         the shape of a ROI (in world units).
 
         A ROI with zero-offset will be generated. If more than one request is
@@ -28,7 +26,7 @@ class BatchRequest(ProviderSpec):
 
         Args:
 
-            key (:class:`ArrayKey` or :class:`PointsKey`):
+            key (:class:`ArrayKey` or :class:`GraphKey`):
 
                 The key for which to add a spec.
 
@@ -44,12 +42,10 @@ class BatchRequest(ProviderSpec):
 
         if isinstance(key, ArrayKey):
             spec = ArraySpec()
-        elif isinstance(key, PointsKey):
-            spec = PointsSpec()
         elif isinstance(key, GraphKey):
             spec = GraphSpec()
         else:
-            raise RuntimeError("Only ArrayKey or PointsKey can be added.")
+            raise RuntimeError("Only ArrayKey or GraphKey can be added.")
 
         spec.roi = Roi((0,)*len(shape), shape)
 

@@ -1,7 +1,5 @@
 import math
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import PointsKey
-from gunpowder.points_spec import PointsSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph import GraphKey
@@ -15,26 +13,26 @@ logger = logging.getLogger(__file__)
 
 class ProviderSpec(Freezable):
     '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
-    :class:`PointsSpecs<PointsSpec>` describing a
-    :class:`BatchProvider's<BatchProvider>` offered arrays and points.
+    :class:`GraphSpecs<GraphSpec>` describing a
+    :class:`BatchProvider's<BatchProvider>` offered arrays and graphs.
 
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
         provider_spec[array_key] = ArraySpec(...)
-        provider_spec[points_key] = PointsSpec(...)
+        provider_spec[graph_key] = GraphSpec(...)
 
-    Here, ``array_key`` and ``points_key`` are :class:`ArrayKey` and
-    :class:`PointsKey`. The specs can be queried with::
+    Here, ``array_key`` and ``graph_key`` are :class:`ArrayKey` and
+    :class:`GraphKey`. The specs can be queried with::
 
         array_spec = provider_spec[array_key]
-        points_spec = provider_spec[points_key]
+        graph_spec = provider_spec[graph_key]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``provider_spec.items()``.
 
-    To access only array or points specs, use the dictionaries
-    ``provider_spec.array_specs`` or ``provider_spec.points_specs``,
+    To access only array or graph specs, use the dictionaries
+    ``provider_spec.array_specs`` or ``provider_spec.graph_specs``,
     respectively.
 
     Args:
@@ -43,9 +41,9 @@ class ProviderSpec(Freezable):
 
             Initial array specs.
 
-        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+        graph_specs (``dict``, :class:`GraphKey` -> :class:`GraphSpec`):
 
-            Initial points specs.
+            Initial graph specs.
 
     Attributes:
 
@@ -53,9 +51,9 @@ class ProviderSpec(Freezable):
 
             Contains all array specs contained in this provider spec.
 
-        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+        graph_specs (``dict``, :class:`GraphKey` -> :class:`GraphSpec`):
 
-            Contains all points specs contained in this provider spec.
+            Contains all graph specs contained in this provider spec.
     '''
 
     def __init__(self, array_specs=None,  graph_specs=None, points_specs=None):
@@ -78,6 +76,7 @@ class ProviderSpec(Freezable):
 
     @property
     def points_specs(self):
+        # Alias to graphs
         warnings.warn(
             "points_specs are depricated. Please use graph_specs", DeprecationWarning
         )
@@ -128,7 +127,7 @@ class ProviderSpec(Freezable):
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def __delitem__(self, key):
