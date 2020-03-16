@@ -316,11 +316,11 @@ class Scan(BatchFilter):
                         spec.array_specs[array_key].roi, array.spec.roi,
                         self.spec[array_key].voxel_size)
 
-        for (points_key, points) in chunk.points.items():
-            if points_key not in spec:
+        for (graph_key, graphs) in chunk.graphs.items():
+            if graph_key not in spec:
                 continue
-            self.__fill_points(self.batch.points[points_key].data, points.data,
-                               spec.points_specs[points_key].roi, points.roi)
+            self.__fill_points(self.batch.graphs[graph_key].data, graphs.data,
+                               spec.graph_specs[graph_key].roi, graphs.roi)
 
     def __setup_batch(self, batch_spec, chunk):
         '''Allocate a batch matching the sizes of ``batch_spec``, using
@@ -344,11 +344,11 @@ class Scan(BatchFilter):
             batch.arrays[array_key] = Array(data=np.zeros(shape),
                                                 spec=spec)
 
-        for (points_key, spec) in batch_spec.points_specs.items():
+        for (graph_key, spec) in batch_spec.graph_specs.items():
             roi = spec.roi
-            spec = self.spec[points_key].copy()
+            spec = self.spec[graph_key].copy()
             spec.roi = roi
-            batch.points[points_key] = Points(data={}, spec=spec)
+            batch.graphs[graph_key] = Points(data={}, spec=spec)
 
         logger.debug("setup batch to fill %s", batch)
 

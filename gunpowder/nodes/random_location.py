@@ -165,15 +165,10 @@ class RandomLocation(BatchFilter):
         # reset ROIs to request
         for (array_key, spec) in request.array_specs.items():
             batch.arrays[array_key].spec.roi = spec.roi
-        for (points_key, spec) in request.points_specs.items():
-            batch.points[points_key].spec.roi = spec.roi
         for (graph_key, spec) in request.graph_specs.items():
             batch.graphs[graph_key].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
-        for points_key in request.points_specs.keys():
-            for point_id, _ in batch.points[points_key].data.items():
-                batch.points[points_key].data[point_id].location -= self.random_shift
         for graph_key in request.graph_specs.keys():
             batch.graphs[graph_key].shift(-self.random_shift)
 
@@ -290,7 +285,7 @@ class RandomLocation(BatchFilter):
     def __shift_request(self, request, shift):
 
         # shift request ROIs
-        for specs_type in [request.array_specs, request.points_specs, request.graph_specs]:
+        for specs_type in [request.array_specs, request.graph_specs]:
             for (key, spec) in specs_type.items():
                 if spec.roi is None:
                     continue
