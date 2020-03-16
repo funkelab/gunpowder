@@ -60,7 +60,6 @@ class ProviderSpec(Freezable):
     def __init__(self, array_specs=None, points_specs=None, graph_specs=None):
 
         self.array_specs = {}
-        self.points_specs = {}
         self.graph_specs = {}
         self.freeze()
 
@@ -68,9 +67,6 @@ class ProviderSpec(Freezable):
         # are run
         if array_specs is not None:
             for key, spec in array_specs.items():
-                self[key] = spec
-        if points_specs is not None:
-            for key, spec in points_specs.items():
                 self[key] = spec
         if graph_specs is not None:
             for key, spec in graph_specs.items():
@@ -91,14 +87,8 @@ class ProviderSpec(Freezable):
             ), f"Only A GraphKey (not a {type(spec).__name__}) is allowed as key for a GraphSpec value."
             self.graph_specs[key] = spec.copy()
 
-        elif isinstance(spec, PointsSpec):
-            assert isinstance(key, PointsKey), ("Only a PointsKey is "
-                                                        "allowed as key for a "
-                                                        "PointsSpec value.")
-            self.points_specs[key] = spec.copy()
-
         else:
-            raise RuntimeError(f"Only ArraySpec or PointsSpec, (not {type(spec).__name__}) can be set in a "
+            raise RuntimeError(f"Only ArraySpec or GraphSpec, (not {type(spec).__name__}) can be set in a "
                                f"{type(self).__name__}.")
 
     def __getitem__(self, key):
@@ -106,13 +96,8 @@ class ProviderSpec(Freezable):
         if isinstance(key, ArrayKey):
             return self.array_specs[key]
 
-        elif isinstance(key, PointsKey):
-            logger.warning("Points are depricated")
-            return self.points_specs[key]
-
         elif isinstance(key, GraphKey):
             return self.graph_specs[key]
-
         else:
             raise RuntimeError(
                 "Only ArrayKey or GraphKey can be used as keys in a "
@@ -120,15 +105,12 @@ class ProviderSpec(Freezable):
 
     def __len__(self):
 
-        return len(self.array_specs) + len(self.points_specs) + len(self.graph_specs)
+        return len(self.array_specs) + len(self.graph_specs)
 
     def __contains__(self, key):
 
         if isinstance(key, ArrayKey):
             return key in self.array_specs
-
-        elif isinstance(key, PointsKey):
-            return key in self.points_specs
 
         elif isinstance(key, GraphKey):
             return key in self.graph_specs
@@ -143,20 +125,18 @@ class ProviderSpec(Freezable):
         if isinstance(key, ArrayKey):
             del self.array_specs[key]
 
-        elif isinstance(key, PointsKey):
-            del self.points_specs[key]
+        elif isinstance(key, GraphKey):
+            del self.graph_specs[key]
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
 
         for (k, v) in self.array_specs.items():
-            yield k, v
-        for (k, v) in self.points_specs.items():
             yield k, v
         for (k, v) in self.graph_specs.items():
             yield k, v
@@ -165,7 +145,7 @@ class ProviderSpec(Freezable):
         '''Get the union of all the ROIs.'''
 
         total_roi = None
-        for specs_type in [self.array_specs, self.points_specs, self.graph_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
@@ -177,7 +157,7 @@ class ProviderSpec(Freezable):
         '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-        for specs_type in [self.array_specs, self.points_specs, self.graph_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi

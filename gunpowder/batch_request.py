@@ -72,7 +72,7 @@ class BatchRequest(ProviderSpec):
 
         center = total_roi.get_center()
 
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for key in specs_type:
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())

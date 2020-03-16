@@ -235,24 +235,33 @@ class BatchProvider(object):
                         batch[array_key].data.dtype,
                         request_spec.dtype)
 
-        for (points_key, request_spec) in request.points_specs.items():
+        for (graph_key, request_spec) in request.graph_specs.items():
 
-            assert points_key in batch.points, "%s requested, but %s did not provide it."%(points_key,self.name())
-            points = batch.points[points_key]
-            assert points.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                                            points_key,
+            assert graph_key in batch.graphs, "%s requested, but %s did not provide it."%(graph_key,self.name())
+            graph = batch.graphs[graph_key]
+            assert graph.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                                            graph_key,
                                             request_spec.roi,
-                                            points.spec.roi,
+                                            graph.spec.roi,
                                             self.name())
 
-            for _, point in points.data.items():
-                assert points.spec.roi.contains(point.location), (
-                    "points %s provided by %s with ROI %s contain point at %s"%(
-                        points_key, self.name(), points.spec.roi, point.location))
+            for vertex in graph.vertices:
+                contained = graph.spec.roi.contains(vertex.location)
+                dangling = not contained or all(
+                    [
+                        graph.spec.roi.contains(v.location)
+                        for v in graph.neighbors(vertex)
+                    ]
+                )
+                assert contained or dangling, (
+                    f"graph {graph_key} provided by {self.name()} with ROI {graph.spec.roi} "
+                    f"contain point at {vertex.location} which is neither contained nor "
+                    f"'dangling'"
+                )
 
     def remove_unneeded(self, batch, request):
 
-        batch_keys = set(list(batch.arrays.keys()) + list(batch.points.keys()))
+        batch_keys = set(list(batch.arrays.keys()) + list(batch.graphs.keys()))
         for key in batch_keys:
             if key not in request:
                 del batch[key]

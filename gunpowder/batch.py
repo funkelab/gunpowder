@@ -59,7 +59,6 @@ class Batch(Freezable):
         self.id = Batch.get_next_id()
         self.profiling_stats = ProfilingStats()
         self.arrays = {}
-        self.points  = {}
         self.graphs = {}
         self.affinity_neighborhood = None
         self.loss = None
@@ -73,11 +72,6 @@ class Batch(Freezable):
             assert isinstance(key, ArrayKey), (
                 "Only a ArrayKey is allowed as key for an Array value.")
             self.arrays[key] = value
-
-        elif isinstance(value, Points):
-            assert isinstance(key, PointsKey), (
-                "Only a PointsKey is allowed as key for a Points value.")
-            self.points[key] = value
 
         elif isinstance(value, Graph):
             assert isinstance(
@@ -94,9 +88,6 @@ class Batch(Freezable):
         if isinstance(key, ArrayKey):
             return self.arrays[key]
 
-        elif isinstance(key, PointsKey):
-            return self.points[key]
-
         elif isinstance(key, GraphKey):
             return self.graphs[key]
 
@@ -107,22 +98,19 @@ class Batch(Freezable):
 
     def __len__(self):
 
-        return len(self.arrays) + len(self.points)
+        return len(self.arrays) + len(self.graphs)
 
     def __contains__(self, key):
 
         if isinstance(key, ArrayKey):
             return key in self.arrays
 
-        elif isinstance(key, PointsKey):
-            return key in self.points
-
         elif isinstance(key, GraphKey):
             return key in self.graphs
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
 
     def __delitem__(self, key):
@@ -130,8 +118,8 @@ class Batch(Freezable):
         if isinstance(key, ArrayKey):
             del self.arrays[key]
 
-        elif isinstance(key, PointsKey):
-            del self.points[key]
+        elif isinstance(key, GraphKey):
+            del self.graphs[key]
 
         else:
             raise RuntimeError(
@@ -145,15 +133,13 @@ class Batch(Freezable):
             yield k, v
         for (k, v) in self.graphs.items():
             yield k, v
-        for (k, v) in self.points.items():
-            yield k, v
 
     def get_total_roi(self):
         '''Get the union of all the array ROIs in the batch.'''
 
         total_roi = None
 
-        for collection_type in [self.arrays, self.points]:
+        for collection_type in [self.arrays, self.graphs]:
             for (key, obj) in collection_type.items():
                 if total_roi is None:
                     total_roi = obj.spec.roi
@@ -165,7 +151,7 @@ class Batch(Freezable):
     def __repr__(self):
 
         r = ""
-        for collection_type in [self.arrays, self.points]:
+        for collection_type in [self.arrays, self.graphs]:
             for (key, obj) in collection_type.items():
                 r += "%s: %s\n"%(key, obj.spec)
         return r
