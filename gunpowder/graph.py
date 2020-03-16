@@ -196,6 +196,10 @@ class Graph(Freezable):
     def spec(self):
         return self.__spec
 
+    @spec.setter
+    def spec(self, new_spec):
+        self.__spec = new_spec
+
     @property
     def directed(self):
         return self.spec.directed
@@ -250,10 +254,16 @@ class Graph(Freezable):
         return str(self)
 
     def vertex(self, id: int):
+        """
+        Get vertex with a specific id
+        """
         attrs = self.__graph.nodes[id]
         return Vertex.from_attrs(attrs)
 
     def remove_vertex(self, vertex: Vertex):
+        """
+        Remove a vertex
+        """
         self.__graph.remove_node(vertex.id)
 
     def add_vertex(self, vertex: Vertex):
@@ -266,6 +276,9 @@ class Graph(Freezable):
         self.__graph.add_node(vertex.id, **vertex.all)
 
     def remove_edge(self, edge: Edge):
+        """
+        Remove an edge from the graph.
+        """
         self.__graph.remove_edge(edge.u, edge.v)
 
     def add_edge(self, edge: Edge):
@@ -279,7 +292,7 @@ class Graph(Freezable):
     def copy(self):
         return deepcopy(self)
 
-    def crop(self, roi: Roi, copy: bool = False):
+    def crop(self, roi: Roi, copy: bool = True):
         """
         Will remove all vertices from self that are not contained in `roi` except for
         "dangling" vertices. This means that if there are vertices A, B s.t. there
@@ -291,10 +304,8 @@ class Graph(Freezable):
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
         """
 
-        # Current implementation removes nodes from cropped if outside the roi,
-        # Thus if copy is set to False, it actually modifies the input structre,
-        # rather than just providing a view into a subset of the data
-        copy = True
+        if not copy:
+            raise NotImplementedError("subgraph view not yet supported")
 
         if copy:
             cropped = self.copy()
