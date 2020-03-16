@@ -379,6 +379,11 @@ class Graph(Freezable):
             node_id=itertools.count(max(all_nodes) + 1),
         )
 
+        for vertex in trimmed.vertices:
+            assert roi.contains(
+                vertex.location
+            ), f"Failed to properly contain vertex {vertex.id} at {vertex.location}"
+
         return trimmed
 
     def _handle_boundaries(
@@ -433,14 +438,17 @@ class Graph(Freezable):
                     (np.asarray(bb.get_begin()) - inside) / offset,
                     (np.asarray(bb.get_end()) - inside) / offset,
                 ],
-                dtype=float,
+                dtype=self.spec.dtype,
             )
 
         with np.errstate(invalid="ignore"):
             s = np.min(bb_x[np.logical_and((bb_x >= 0), (bb_x <= 1))])
 
         new_location = inside + s * distance * direction
-        new_location = np.clip(new_location, bb.get_begin(), bb.get_end())
+        upper = np.array(bb.get_end(), dtype=self.spec.dtype)
+        new_location = np.clip(
+            new_location, bb.get_begin(), upper - upper * np.finfo(self.spec.dtype).eps
+        )
         return new_location
 
     def merge(self, other, copy_from_self=False, copy=False):
@@ -483,12 +491,12 @@ class Graph(Freezable):
             merged = base
 
         for vertex in list(merged.vertices):
-            if merged.spec.roi.contains_point(vertex.location):
+            if merged.spec.roi.contains(vertex.location):
                 merged.remove_vertex(vertex)
         for edge in list(merged.edges):
-            if merged.spec.roi.contains_point(
+            if merged.spec.roi.contains(
                 merged.vertex(edge.u)
-            ) or merged.spec.roi.contains_point(merged.vertex(edge.v)):
+            ) or merged.spec.roi.contains(merged.vertex(edge.v)):
                 merged.remove_edge(edge)
         for vertex in addition.vertices:
             merged.add_vertex(vertex)

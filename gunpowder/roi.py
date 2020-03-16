@@ -189,18 +189,6 @@ class Roi(Freezable):
             for p, b, e in zip(other, self.get_begin(), self.get_end() )
         ])
 
-    def contains_point(self, other):
-        """
-        Test if this ROI contains ``other``, which can be another
-        :class:`Roi` or a :class:`Coordinate`.
-        """
-        return all([
-            (b is None or p is not None and p >= b)
-            and
-            (e is None or p is not None and p <= e)
-            for p, b, e in zip(other, self.get_begin(), self.get_end() )
-        ])
-
     def intersects(self, other):
         '''Test if this ROI intersects with another :class:`Roi`.'''
 
