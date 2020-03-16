@@ -30,7 +30,7 @@ class TestSourceRandomLocation(BatchProvider):
 
         for point_id, point in self.points.data.items():
             if roi.contains(point.location):
-                points.data[point_id] = point.copy()
+                points.add_vertex(Vertex(point_id, point.location))
         batch[PointsKeys.TEST_POINTS] = points
 
         return batch
