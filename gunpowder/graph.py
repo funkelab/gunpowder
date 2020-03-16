@@ -457,6 +457,11 @@ class Graph(Freezable):
         A copy will only be made if necessary or ``copy`` is set to ``True``.
         """
 
+        # It is unclear how to merge points in all cases. Consider a 10x10 graph,
+        # you crop out a 5x5 area, do a shift augment, and attempt to merge.
+        # What does that mean? specs have changed. It should be a new key.
+        raise NotImplementedError("Merge function should not be used!")
+
         self_roi = self.spec.roi
         other_roi = other.spec.roi
 

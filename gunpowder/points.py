@@ -58,6 +58,10 @@ class Points(Freezable):
         A copy will only be made if necessary or ``copy`` is set to ``True``.
         """
 
+        raise NotImplementedError(
+            "It is unclear how to merge points. This function should not be used!"
+        )
+        
         self_roi = self.spec.roi
         points_roi = points.spec.roi
 
