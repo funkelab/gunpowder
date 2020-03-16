@@ -1,5 +1,5 @@
 from .freezable import Freezable
-from .graph import Graph, Vertex
+from .graph import Graph, Vertex, GraphKey, GraphKeys
 
 import logging
 import numpy as np
@@ -24,12 +24,16 @@ class Points(Graph):
     def __init__(self, data, spec):
         vertices = [Vertex(id=i, location=p.location) for i, p in data.items()]
         super().__init__(vertices, [], spec)
-        self.spec = spec
+        self.__spec = spec
         self.freeze()
 
     @property
     def data(self):
         return {v.id: Point(v.location) for v in self.vertices}
+
+    @property
+    def directed(self):
+        return True
 
     def __repr__(self):
         return "%s, %s" % (self.data, self.spec)
@@ -55,51 +59,6 @@ class Point(Freezable):
     def copy(self):
         return Point(self.location)
 
+PointsKey = GraphKey
 
-class PointsKey(Freezable):
-    """A key to identify lists of points in requests, batches, and across
-    nodes.
-
-    Used as key in :class:`BatchRequest` and :class:`Batch` to retrieve specs
-    or lists of points.
-
-    Args:
-
-        identifier (``string``):
-
-            A unique, human readable identifier for this points key. Will be
-            used in log messages and to look up points in requests and batches.
-            Should be upper case (like ``CENTER_POINTS``). The identifier is
-            unique: Two points keys with the same identifier will refer to the
-            same points.
-    """
-
-    def __init__(self, identifier):
-        self.identifier = identifier
-        self.hash = hash(identifier)
-        self.freeze()
-        logger.debug("Registering points type %s", self)
-        setattr(PointsKeys, self.identifier, self)
-
-    def __eq__(self, other):
-        return hasattr(other, "identifier") and self.identifier == other.identifier
-
-    def __hash__(self):
-        return self.hash
-
-    def __repr__(self):
-        return self.identifier
-
-
-class PointsKeys:
-    """Convenience access to all created :class:`PointsKey`s. A key generated
-    with::
-
-        centers = PointsKey('CENTER_POINTS')
-
-    can be retrieved as::
-
-        PointsKeys.CENTER_POINTS
-    """
-
-    pass
+PointsKeys = GraphKeys
