@@ -59,6 +59,7 @@ class Vertex(Freezable):
 
     @property
     def location(self):
+        assert isinstance(self.__location, np.ndarray)
         return self.__location
 
     @location.setter
@@ -205,6 +206,9 @@ class Graph(Freezable):
         else:
             graph = nx.Graph()
 
+        for vertex in vertices:
+            vertex.location = vertex.location.astype(self.spec.dtype)
+
         vs = [(v.id, v.all) for v in vertices]
         graph.add_nodes_from(vs)
         graph.add_edges_from([(e.u, e.v, e.all) for e in edges])
@@ -214,7 +218,8 @@ class Graph(Freezable):
     def vertices(self):
         for vertex_id, vertex_attrs in self.__graph.nodes.items():
             v = Vertex.from_attrs(vertex_attrs)
-            assert v.location.dtype == self.spec.dtype
+            if not np.issubdtype(v.location.dtype, self.spec.dtype):
+                raise Exception()
             yield v
 
     def num_vertices(self):
