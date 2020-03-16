@@ -224,6 +224,13 @@ class Graph(Freezable):
         for (u, v), attrs in self.__graph.edges.items():
             yield Edge(u, v, attrs)
 
+    def neighbors(self, vertex):
+        for neighbor in self.__graph.successors(vertex.id):
+            yield Vertex.from_attrs(self.__graph.nodes[neighbor])
+        if self.directed:
+            for neighbor in self.__graph.predecessors(vertex.id):
+                yield Vertex.from_attrs(self.__graph.nodes[neighbor])
+
     def __str__(self):
         string = "Vertices:\n"
         for vertex in self.vertices:
@@ -317,6 +324,7 @@ class Graph(Freezable):
             if edge not in all_contained_edges:
                 cropped.remove_edge(edge)
 
+        cropped.spec.roi = roi
         return cropped
 
     def shift(self, offset):
