@@ -2,6 +2,7 @@ from .freezable import Freezable
 from .graph import Graph, Vertex, GraphKey, GraphKeys
 
 import logging
+import warnings
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,9 @@ class Points(Graph):
     """
 
     def __init__(self, data, spec):
+        warnings.warn(
+            "Points are depricated. Please use Graph"
+        )
         vertices = [Vertex(id=i, location=p.location) for i, p in data.items()]
         super().__init__(vertices, [], spec)
         self.__spec = spec

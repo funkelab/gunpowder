@@ -1,13 +1,12 @@
 from copy import copy as shallow_copy
 import logging
 import multiprocessing
+import warnings
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
 from .array import Array, ArrayKey
-from .points import Points, PointsKey
 from .graph import Graph, GraphKey
-from .batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +124,13 @@ class Batch(Freezable):
             raise RuntimeError(
                 "Only ArrayKey or PointsKey can be used as keys in a "
                 "%s."%type(self).__name__)
+
+    @property
+    def points(self):
+        warnings.warn(
+            "points are depricated. Please use graphs", DeprecationWarning
+        )
+        return self.graphs
 
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
