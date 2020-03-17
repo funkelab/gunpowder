@@ -105,16 +105,17 @@ class RandomLocation(BatchFilter):
 
             assert self.ensure_nonempty in self.upstream_spec, (
                 "Upstream provider does not have %s"%self.ensure_nonempty)
-            points_spec = self.upstream_spec.points_specs[self.ensure_nonempty]
+            graph_spec = self.upstream_spec.graph_specs[self.ensure_nonempty]
+
 
             logger.info("requesting all %s points...", self.ensure_nonempty)
 
-            points_request = BatchRequest({self.ensure_nonempty: points_spec})
-            points_batch = upstream.request_batch(points_request)
+            nonempty_request = BatchRequest({self.ensure_nonempty: graph_spec})
+            nonempty_batch = upstream.request_batch(nonempty_request)
 
             self.points = KDTree([
-                p.location
-                for p in points_batch[self.ensure_nonempty].data.values()])
+                v.location
+                for v in nonempty_batch[self.ensure_nonempty].nodes])
 
             logger.info("retrieved %d points", len(self.points.data))
 
@@ -164,13 +165,12 @@ class RandomLocation(BatchFilter):
         # reset ROIs to request
         for (array_key, spec) in request.array_specs.items():
             batch.arrays[array_key].spec.roi = spec.roi
-        for (points_key, spec) in request.points_specs.items():
-            batch.points[points_key].spec.roi = spec.roi
+        for (graph_key, spec) in request.graph_specs.items():
+            batch.graphs[graph_key].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
-        for points_key in request.points_specs.keys():
-            for point_id, _ in batch.points[points_key].data.items():
-                batch.points[points_key].data[point_id].location -= self.random_shift
+        for graph_key in request.graph_specs.keys():
+            batch.graphs[graph_key].shift(-self.random_shift)
 
     def accepts(self, request):
         '''Should return True if the randomly chosen location is acceptable
@@ -285,7 +285,7 @@ class RandomLocation(BatchFilter):
     def __shift_request(self, request, shift):
 
         # shift request ROIs
-        for specs_type in [request.array_specs, request.points_specs]:
+        for specs_type in [request.array_specs, request.graph_specs]:
             for (key, spec) in specs_type.items():
                 if spec.roi is None:
                     continue
@@ -412,7 +412,7 @@ class RandomLocation(BatchFilter):
                 "%s"%(point, points))
             num_points = len(points)
 
-            # accept this shift with p=1/num_points
+            # accept this shift with v=1/num_points
             #
             # This is to compensate the bias introduced by close-by points.
             accept = random() <= 1.0/num_points

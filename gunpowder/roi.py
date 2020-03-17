@@ -4,6 +4,10 @@ from .freezable import Freezable
 import numbers
 import numpy as np
 
+import logging
+
+logger = logging.getLogger(__file__)
+
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
 

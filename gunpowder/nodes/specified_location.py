@@ -88,7 +88,7 @@ class SpecifiedLocation(BatchFilter):
             self.specified_shift = self._get_next_shift(request_center, lcm_voxel_size)
 
         # Set shift for all requests
-        for specs_type in [request.array_specs, request.points_specs]:
+        for specs_type in [request.array_specs, request.graph_specs]:
             for (key, spec) in specs_type.items():
                 roi = spec.roi.shift(self.specified_shift)
                 specs_type[key].roi = roi
@@ -107,13 +107,12 @@ class SpecifiedLocation(BatchFilter):
                 batch.arrays[array_key].attrs['specified_location_extra_data'] =\
                  self.extra_data[self.loc_i]
 
-        for (points_key, spec) in request.points_specs.items():
-            batch.points[points_key].spec.roi = spec.roi
+        for (graph_key, spec) in request.graph_specs.items():
+            batch.points[graph_key].spec.roi = spec.roi
 
         # change shift point locations to lie within roi
-        for points_key in request.points_specs.keys():
-            for point_id, point in batch.points[points_key].data.items():
-                batch.points[points_key].data[point_id].location -= self.specified_shift
+        for graph_key in request.graph_specs.keys():
+            batch.points[graph_key].shift(-self.specified_shift)
 
     def _get_next_shift(self, center_shift, voxel_size):
         # gets next coordinate from list

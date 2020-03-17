@@ -96,7 +96,7 @@ class ShiftAugment(BatchFilter):
                     request[array_key].roi.get_shape(), array.data.shape)
             batch[array_key] = array
 
-        for points_key, points in batch.points.items():
+        for points_key, points in batch.graphs.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), points.spec.roi,
                                                        self.shift_array, self.shift_axis, self.lcm_voxel_size)
             points = self.shift_points(points,
@@ -155,23 +155,20 @@ class ShiftAugment(BatchFilter):
         :return a Points object with the updated point locations and ROI
         """
 
-        data = points.data
+        nodes = list(points.nodes)
         spec = points.spec
         shift_axis_start_pos = spec.roi.get_offset()[shift_axis]
 
-        shifted_data = {}
-        for id_, point in data.items():
-            loc = Coordinate(point.location)
+        for node in nodes:
+            loc = node.location
             shift_axis_position = loc[shift_axis]
-            shift_array_index = (shift_axis_position - shift_axis_start_pos) // lcm_voxel_size[shift_axis]
+            shift_array_index = int((shift_axis_position - shift_axis_start_pos) // lcm_voxel_size[shift_axis])
             assert(shift_array_index >= 0)
             shift = Coordinate(sub_shift_array[shift_array_index])
-            new_loc = loc + shift
-            if request_roi.contains(new_loc):
-                point.location = new_loc
-                shifted_data[id_] = point
+            loc += shift
+            if not request_roi.contains(loc):
+                points.remove_node(node)
 
-        points.data = shifted_data
         points.spec.roi = request_roi
         return points
 
