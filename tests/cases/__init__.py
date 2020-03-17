@@ -10,7 +10,6 @@ from .dvid_source import TestDvidSource
 from .elastic_augment import TestElasticAugment
 from .hdf5_source import TestHdf5Source, TestN5Source, TestZarrSource
 from .hdf5_write import TestHdf5Write
-from .keras_train import TestKerasTrain
 from .merge_provider import TestMergeProvider
 from .n5_write import TestN5Write
 from .node_dependencies import TestNodeDependencies
