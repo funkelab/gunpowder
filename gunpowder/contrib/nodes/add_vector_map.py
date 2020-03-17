@@ -28,7 +28,7 @@ class AddVectorMap(BatchFilter):
         
         Args:
             src_and_trg_points (dict):      Dictionary from :class:``ArrayKey`` of the vector map to be created
-                                            to a tuple (:class:``PointsKeys`` of the source points, :class:``PointsKeys``
+                                            to a tuple (:class:``GraphKey`` of the source points, :class:``GraphKey``
                                             of the target points) which define the source and target points.
             voxel_sizes (dict):             Dictionary from
                                             :class:``ArrayKey`` of the vector
