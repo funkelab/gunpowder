@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/funkey/gunpowder.svg?branch=master)](https://travis-ci.org/funkey/gunpowder)
 
-A library to facilitate machine learning on multi-dimensional images.
+A library to facilitate machine learning on large, multi-dimensional images.
 
 `gunpowder` allows you to assemble a pipeline from
 [data loading](http://funkey.science/gunpowder/api.html#source-nodes)
@@ -16,7 +16,8 @@ over
 on arbitrarily large volumes of
 multi-dimensional images. `gunpowder` is not tied to a particular learning
 framework, and thus complements libraries like
-[`tensorflow`](https://www.tensorflow.org/) or
+[`torch`](https://pytorch.org/),
+[`tensorflow`](https://www.tensorflow.org/), or
 [`caffe`](http://caffe.berkeleyvision.org/).
 
 The full documentation can be found [here](https://funkey.github.io/gunpowder).

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.batch_filter &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>gunpowder.nodes.batch_filter &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -85,6 +85,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -98,10 +99,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -170,10 +171,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
@@ -261,13 +264,15 @@
 <span></span><span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">.batch_provider</span> <span class="k">import</span> <span class="n">BatchProvider</span>
-<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span>
+<span class="kn">from</span> <span class="nn">.batch_provider</span> <span class="kn">import</span> <span class="n">BatchProvider</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="kn">import</span> <span class="n">BatchRequest</span>
+<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="kn">import</span> <span class="n">Timing</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="BatchFilter"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter">[docs]</a><span class="k">class</span> <span class="nc">BatchFilter</span><span class="p">(</span><span class="n">BatchProvider</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Convenience wrapper for :class:`BatchProviders&lt;BatchProvider&gt;` with</span>
+    <span class="sd">&quot;&quot;&quot;Convenience wrapper for :class:`BatchProviders&lt;BatchProvider&gt;` with</span>
 <span class="sd">    exactly one input provider.</span>
 
 <span class="sd">    By default, a node of this class will expose the same :class:`ProviderSpec`</span>
@@ -289,39 +294,43 @@
 <span class="sd">        :func:`prepare`</span>
 
 <span class="sd">            Prepare for a batch request. Always called before each </span>
-<span class="sd">            :func:`process`. Use it to modify a batch request to be passed</span>
-<span class="sd">            upstream.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">            :func:`process`. Used to communicate dependencies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_upstream_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;BatchFilters need to have exactly one upstream provider&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">&quot;BatchFilters need to have exactly one upstream provider&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="BatchFilter.updates"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.updates">[docs]</a>    <span class="k">def</span> <span class="nf">updates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Update an output provided by this :class:`BatchFilter`.</span>
+        <span class="sd">&quot;&quot;&quot;Update an output provided by this :class:`BatchFilter`.</span>
 
 <span class="sd">        Implementations should call this in their :func:`setup` method, which</span>
 <span class="sd">        will be called when the pipeline is build.</span>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            key (:class:`ArrayKey` or :class:`PointsKey`):</span>
+<span class="sd">            key (:class:`ArrayKey` or :class:`GraphKey`):</span>
 
 <span class="sd">                The array or point set key this filter updates.</span>
 
-<span class="sd">            spec (:class:`ArraySpec` or :class:`PointsSpec`):</span>
+<span class="sd">            spec (:class:`ArraySpec` or :class:`GraphSpec`):</span>
 
 <span class="sd">                The updated spec of the array or point set.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s2">&quot;Node </span><span class="si">%s</span><span class="s2"> is trying to change the spec for </span><span class="si">%s</span><span class="s2">, but is not provided upstream.&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Node </span><span class="si">%s</span><span class="s2"> is trying to change the spec for </span><span class="si">%s</span><span class="s2">, but is not provided upstream.&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> updates </span><span class="si">%s</span><span class="s2"> with </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">))</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> updates </span><span class="si">%s</span><span class="s2"> with </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="BatchFilter.enable_autoskip"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.enable_autoskip">[docs]</a>    <span class="k">def</span> <span class="nf">enable_autoskip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Enable automatic skipping of this :class:`BatchFilter`, based on</span>
+        <span class="sd">&quot;&quot;&quot;Enable automatic skipping of this :class:`BatchFilter`, based on</span>
 <span class="sd">        given :func:`updates` and :func:`provides` calls. Has to be called in</span>
 <span class="sd">        :func:`setup`.</span>
 
@@ -330,13 +339,13 @@
 <span class="sd">        enabled, :class:`BatchFilters&lt;BatchFilter&gt;` will only be run if the</span>
 <span class="sd">        request contains at least one key reported earlier with</span>
 <span class="sd">        :func:`updates` or :func:`provides`.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_autoskip_enabled</span> <span class="o">=</span> <span class="n">skip</span></div>
 
     <span class="k">def</span> <span class="nf">_init_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># default for BatchFilters is to provide the same as upstream</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_spec&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_spec&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">internal_teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -349,13 +358,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">updated_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get a list of the keys that are updated by this `BatchFilter`.</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of the keys that are updated by this `BatchFilter`.</span>
 
 <span class="sd">        This list is only available after the pipeline has been build. Before</span>
 <span class="sd">        that, it is empty.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_updated_items&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_updated_items&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_updated_items</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated_items</span>
@@ -363,35 +372,52 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">autoskip_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_autoskip_enabled&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_autoskip_enabled&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_autoskip_enabled</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autoskip_enabled</span>
 
     <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="c1"># operate on a copy of the request, to provide the original request to</span>
-        <span class="c1"># &#39;process&#39; for convenience</span>
-        <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-
         <span class="n">skip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__can_skip</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 
-        <span class="n">timing_prepare</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare&#39;</span><span class="p">)</span>
+        <span class="n">timing_prepare</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;prepare&quot;</span><span class="p">)</span>
         <span class="n">timing_prepare</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
+        <span class="n">downstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">upstream_request</span><span class="p">)</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dependencies</span><span class="p">,</span> <span class="n">BatchRequest</span><span class="p">):</span>
+                <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">dependencies</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2"> does not return a BatchRequest &quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;containing its dependencies.&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_provided</span><span class="p">(</span><span class="n">upstream_request</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="n">timing_prepare</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
         <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">upstream_request</span><span class="p">)</span>
 
-        <span class="n">timing_process</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;process&#39;</span><span class="p">)</span>
+        <span class="n">timing_process</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;process&quot;</span><span class="p">)</span>
         <span class="n">timing_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dependencies</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node_batch</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">dependencies</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node_batch</span> <span class="o">=</span> <span class="n">batch</span>
+            <span class="n">processed_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">node_batch</span><span class="p">,</span> <span class="n">downstream_request</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">processed_batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">processed_batch</span> <span class="o">=</span> <span class="n">node_batch</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">processed_batch</span><span class="p">,</span> <span class="n">merge_profiling_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span>
+                <span class="n">downstream_request</span>
+            <span class="p">)</span>
 
         <span class="n">timing_process</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
@@ -401,7 +427,7 @@
         <span class="k">return</span> <span class="n">batch</span>
 
     <span class="k">def</span> <span class="nf">__can_skip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Check if this filter needs to be run for the given request.&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;Check if this filter needs to be run for the given request.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">autoskip_enabled</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -415,26 +441,26 @@
         <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="BatchFilter.setup"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+        <span class="sd">&quot;&quot;&quot;To be implemented in subclasses.</span>
 
 <span class="sd">        Called during initialization of the DAG. Callees can assume that all</span>
 <span class="sd">        upstream providers are set up already.</span>
 
 <span class="sd">        In setup, call :func:`provides` or :func:`updates` to announce the</span>
 <span class="sd">        arrays and points provided or changed by this node.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="BatchFilter.prepare"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+        <span class="sd">&quot;&quot;&quot;To be implemented in subclasses.</span>
 
-<span class="sd">        Prepare for a batch request. Change the request as needed, it will be</span>
-<span class="sd">        passed on upstream.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        Prepare for a batch request. Should return a :class:`BatchRequest` of</span>
+<span class="sd">        needed dependencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="BatchFilter.process"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;To be implemented in subclasses.</span>
+        <span class="sd">&quot;&quot;&quot;To be implemented in subclasses.</span>
 
 <span class="sd">        Filter a batch, will be called after :func:`prepare`. Change batch as</span>
 <span class="sd">        needed, it will be passed downstream. ``request`` is the same as passed</span>
@@ -450,8 +476,11 @@
 
 <span class="sd">                The request this node received. The updated batch should meet</span>
 <span class="sd">                this request.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;process&#39;&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div></div>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;process&#39;&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="p">)</span></div></div>
+
 </pre></div>
 
            </div>
@@ -464,7 +493,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -486,7 +515,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

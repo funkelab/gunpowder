@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.random_location &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>gunpowder.nodes.random_location &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -85,6 +85,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -98,10 +99,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -170,10 +171,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
@@ -260,17 +263,17 @@
   <h1>Source code for gunpowder.nodes.random_location</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">choice</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">choice</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">KDTree</span>
-<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">integral_image</span><span class="p">,</span> <span class="n">integrate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="k">import</span> <span class="n">BatchRequest</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">Points</span>
-<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
-<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
-<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">KDTree</span>
+<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="kn">import</span> <span class="n">integral_image</span><span class="p">,</span> <span class="n">integrate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="kn">import</span> <span class="n">BatchRequest</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="kn">import</span> <span class="n">Points</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="kn">import</span> <span class="n">PointsSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="kn">import</span> <span class="n">Roi</span>
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="kn">import</span> <span class="n">BatchFilter</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -319,7 +322,7 @@
 <span class="sd">            Default value is 1.0.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_masked</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ensure_nonempty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_nonempty</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_masked</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ensure_nonempty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_nonempty</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">min_masked</span> <span class="o">=</span> <span class="n">min_masked</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
@@ -365,24 +368,26 @@
 
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">,</span> <span class="p">(</span>
                 <span class="s2">&quot;Upstream provider does not have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">)</span>
-            <span class="n">points_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">points_specs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span>
+            <span class="n">graph_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="o">.</span><span class="n">graph_specs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span>
+
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;requesting all </span><span class="si">%s</span><span class="s2"> points...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">)</span>
 
-            <span class="n">points_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span> <span class="n">points_spec</span><span class="p">})</span>
-            <span class="n">points_batch</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">points_request</span><span class="p">)</span>
+            <span class="n">nonempty_request</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">:</span> <span class="n">graph_spec</span><span class="p">})</span>
+            <span class="n">nonempty_batch</span> <span class="o">=</span> <span class="n">upstream</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">nonempty_request</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">([</span>
-                <span class="n">p</span><span class="o">.</span><span class="n">location</span>
-                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points_batch</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">location</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nonempty_batch</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ensure_nonempty</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">])</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;retrieved </span><span class="si">%d</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
 
         <span class="c1"># clear bounding boxes of all provided arrays and points --</span>
         <span class="c1"># RandomLocation does not have limits (offsets are ignored)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
@@ -416,18 +421,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span> <span class="o">=</span> <span class="n">random_shift</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__shift_request</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">random_shift</span><span class="p">)</span>
 
+        <span class="k">return</span> <span class="n">request</span>
+
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
         <span class="c1"># reset ROIs to request</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">array_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">array_key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">points_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">graph_key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">graph_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="n">graph_key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="c1"># change shift point locations to lie within roi</span>
-        <span class="k">for</span> <span class="n">points_key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">point_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_id</span><span class="p">]</span><span class="o">.</span><span class="n">location</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span>
+        <span class="k">for</span> <span class="n">graph_key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">graph_specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="n">graph_key</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">random_shift</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">accepts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Should return True if the randomly chosen location is acceptable</span>
@@ -442,6 +448,9 @@
         <span class="n">total_shift_roi</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
 
             <span class="n">request_roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
             <span class="n">provided_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_spec</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
@@ -539,8 +548,10 @@
     <span class="k">def</span> <span class="nf">__shift_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
 
         <span class="c1"># shift request ROIs</span>
-        <span class="k">for</span> <span class="n">specs_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">specs_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">graph_specs</span><span class="p">]:</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="n">specs_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 <span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
                 <span class="n">specs_type</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
 
@@ -664,7 +675,7 @@
                 <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">points</span><span class="p">))</span>
             <span class="n">num_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
-            <span class="c1"># accept this shift with p=1/num_points</span>
+            <span class="c1"># accept this shift with v=1/num_points</span>
             <span class="c1">#</span>
             <span class="c1"># This is to compensate the bias introduced by close-by points.</span>
             <span class="n">accept</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">num_points</span>
@@ -707,7 +718,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -729,7 +740,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

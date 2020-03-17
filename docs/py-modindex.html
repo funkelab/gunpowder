@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python Module Index &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>Python Module Index &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -88,6 +88,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -101,10 +102,10 @@
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -173,10 +174,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
@@ -273,23 +276,22 @@
        <td><img src="_static/minus.png" class="toggler"
               id="toggle-1" style="display: none" alt="-" /></td>
        <td>
-       <a href="tutorial.html#module-gunpowder"><code class="xref">gunpowder</code></a></td><td>
+       <a href="pipeline.html#module-gunpowder"><code class="xref">gunpowder</code></a></td><td>
        <em></em></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-2" style="display: none" alt="-" /></td>
-       <td>
-       <code class="xref">gunpowder</code></td><td>
-       <em></em></td></tr>
-     <tr class="cg-2">
+     <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="api.html#module-gunpowder.caffe"><code class="xref">gunpowder.caffe</code></a></td><td>
        <em></em></td></tr>
-     <tr class="cg-2">
+     <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="api.html#module-gunpowder.tensorflow"><code class="xref">gunpowder.tensorflow</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="api.html#module-gunpowder.torch"><code class="xref">gunpowder.torch</code></a></td><td>
        <em></em></td></tr>
    </table>
 
@@ -304,7 +306,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -326,7 +328,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

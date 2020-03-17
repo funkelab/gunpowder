@@ -53,8 +53,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'gunpowder'
-author = u'Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape'
-copyright = u'2019, ' + author
+author = u'Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape'
+copyright = u'2020, ' + author
 
 here = os.path.abspath(os.path.dirname(__file__))
 version_info = {}

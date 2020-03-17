@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: boundary prediction for instance segmentation &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>Tutorial: boundary prediction for instance segmentation &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -86,6 +86,7 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -99,10 +100,10 @@
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -171,10 +172,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
@@ -263,7 +266,7 @@
   <div class="section" id="tutorial-boundary-prediction-for-instance-segmentation">
 <span id="sec-tutorial"></span><h1>Tutorial: boundary prediction for instance segmentation<a class="headerlink" href="#tutorial-boundary-prediction-for-instance-segmentation" title="Permalink to this headline">¶</a></h1>
 <p>(written by Sherry Ding)</p>
-<span class="target" id="module-gunpowder"></span><p>This is a tutorial about how to use <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> to assemble pipelines to train and test a neural network. As an
+<p>This is a tutorial about how to use <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> to assemble pipelines to train and test a neural network. As an
 example, here we do neuron segmentation on the <a class="reference external" href="https://cremi.org/data/">cremi dataset</a> using a <em>3D U-Net</em>. To segment
 neurons, we predict inter-voxel affinities from volumes of raw data. A <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> processing pipeline consists
 of nodes that can be chained together using <strong>+</strong>. The major nodes of our training pipeline in this example includes
@@ -289,7 +292,7 @@ a network for training and a larger network for faster prediction/testing.</p>
 <h2>Assemble the training pipeline<a class="headerlink" href="#assemble-the-training-pipeline" title="Permalink to this headline">¶</a></h2>
 <p>Now we can assemble the training pipeline using <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">gunpowder</span> <span class="kn">as</span> <span class="nn">gp</span>
+<span class="kn">import</span> <span class="nn">gunpowder</span> <span class="k">as</span> <span class="nn">gp</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -401,7 +404,7 @@ augmentation, transpose and mirror augmentation, as well as scaling and shifting
     <span class="n">scale_max</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span>
     <span class="n">shift_min</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="n">shift_max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">z_section_wise</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span>
+    <span class="n">z_section_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span>
 </pre></div>
 </div>
 <p>We also need to process the ground truth labels and affinities, e.g., grow a boundary between labels, convert labels
@@ -410,7 +413,7 @@ into affinities, and balance samples.</p>
 <span class="n">gp</span><span class="o">.</span><span class="n">GrowBoundary</span><span class="p">(</span>
     <span class="n">gt_labels</span><span class="p">,</span>
     <span class="n">steps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">only_xy</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span>
+    <span class="n">only_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span>
 
 <span class="c1"># convert labels into affinities between voxels</span>
 <span class="n">gp</span><span class="o">.</span><span class="n">AddAffinities</span><span class="p">(</span>
@@ -466,7 +469,7 @@ requests quickly.</p>
             <span class="n">pred_affs_gradients</span><span class="p">:</span> <span class="s1">&#39;/volumes/pred_affs_gradients&#39;</span>
         <span class="p">},</span>
         <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;snapshots&#39;</span><span class="p">,</span>
-        <span class="n">output_filename</span><span class="o">=</span><span class="s1">&#39;batch_{iteration}.hdf&#39;</span><span class="p">,</span>
+        <span class="n">output_filename</span><span class="o">=</span><span class="s1">&#39;batch_</span><span class="si">{iteration}</span><span class="s1">.hdf&#39;</span><span class="p">,</span>
         <span class="n">every</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">additional_request</span><span class="o">=</span><span class="n">snapshot_request</span><span class="p">,</span>
         <span class="n">compression_type</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span> <span class="o">+</span>
@@ -477,13 +480,13 @@ requests quickly.</p>
 </pre></div>
 </div>
 <p>The final thing we need to do is requesting batches for the pipeline.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="s2">&quot;Training for&quot;</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="s2">&quot;iterations&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training for&quot;</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="s2">&quot;iterations&quot;</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">gp</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">pipeline</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
         <span class="n">pipeline</span><span class="o">.</span><span class="n">request_batch</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Let’s put all above codes into a function called <em>train</em>, with an input parameter <em>iterations</em>. One iteration means
@@ -502,7 +505,7 @@ training on one batch once.</p>
 <h2>Assemble the testing pipeline<a class="headerlink" href="#assemble-the-testing-pipeline" title="Permalink to this headline">¶</a></h2>
 <p>After trained the network, we also use <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> to assemble the testing pipeline.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">gunpowder</span> <span class="kn">as</span> <span class="nn">gp</span>
+<span class="kn">import</span> <span class="nn">gunpowder</span> <span class="k">as</span> <span class="nn">gp</span>
 <span class="kn">import</span> <span class="nn">json</span>
 </pre></div>
 </div>
@@ -622,7 +625,7 @@ of time consuming.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -644,7 +647,7 @@ of time consuming.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

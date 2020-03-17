@@ -6,6 +6,7 @@ Tutorial: boundary prediction for instance segmentation
 (written by Sherry Ding)
 
 .. automodule:: gunpowder
+   :noindex:
 
 This is a tutorial about how to use ``gunpowder`` to assemble pipelines to train and test a neural network. As an 
 example, here we do neuron segmentation on the `cremi dataset <https://cremi.org/data/>`_ using a *3D U-Net*. To segment 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.array &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>gunpowder.array &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -85,6 +85,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#creating-a-source">Creating a source</a></li>
@@ -98,10 +99,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -170,10 +171,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#output-nodes">Output Nodes</a><ul>
@@ -258,10 +261,10 @@
            <div itemprop="articleBody">
             
   <h1>Source code for gunpowder.array</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">.freezable</span> <span class="k">import</span> <span class="n">Freezable</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
+<span></span><span class="kn">from</span> <span class="nn">.freezable</span> <span class="kn">import</span> <span class="n">Freezable</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="kn">import</span> <span class="n">Roi</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -286,7 +289,7 @@
 <span class="sd">            Optional attributes to describe this array.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -295,29 +298,45 @@
         <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
             <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)):</span>
                 <span class="k">assert</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">dims</span><span class="p">()</span><span class="o">+</span><span class="n">d</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="n">d</span><span class="p">],</span> \
                         <span class="s2">&quot;ROI </span><span class="si">%s</span><span class="s2"> does not align with voxel size </span><span class="si">%s</span><span class="s2"> * data shape </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()[</span><span class="n">d</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()[</span><span class="n">d</span><span class="p">]</span> <span class="o">%</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>\
+                            <span class="s2">&quot;ROI offset </span><span class="si">%s</span><span class="s2"> must be a multiple of voxel size </span><span class="si">%s</span><span class="s2">&quot;</span>\
+                            <span class="o">%</span> <span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">(),</span> <span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> \
+                <span class="s2">&quot;data dtype </span><span class="si">%s</span><span class="s2"> does not match spec dtype </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Array.crop"><a class="viewcode-back" href="../../api.html#gunpowder.Array.crop">[docs]</a>    <span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Array.crop"><a class="viewcode-back" href="../../api.html#gunpowder.Array.crop">[docs]</a>    <span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Create a cropped copy of this Array.</span>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            roi(:class:`Roi`):</span>
+<span class="sd">            roi (:class:`Roi`):</span>
 
 <span class="sd">                ROI in world units to crop to.</span>
 
-<span class="sd">            copy(``bool``):</span>
+<span class="sd">            copy (``bool``):</span>
 
-<span class="sd">                Make a copy of the data (default).</span>
+<span class="sd">                Make a copy of the data.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">),</span> <span class="s2">&quot;Requested crop ROI (</span><span class="si">%s</span><span class="s2">) doesn&#39;t fit in array (</span><span class="si">%s</span><span class="s2">)&quot;</span>\
-        <span class="o">%</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">roi</span><span class="p">),</span> <span class="p">(</span>
+            <span class="s2">&quot;Requested crop ROI (</span><span class="si">%s</span><span class="s2">) doesn&#39;t fit in array (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span> <span class="n">roi</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span>
         <span class="n">data_roi</span> <span class="o">=</span> <span class="p">(</span><span class="n">roi</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">/</span><span class="n">voxel_size</span>
@@ -333,7 +352,64 @@
         <span class="n">spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
         <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">Array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Array.merge"><a class="viewcode-back" href="../../api.html#gunpowder.Array.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">copy_from_self</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Merge this array with another one. The resulting array will have the</span>
+<span class="sd">        size of the larger one, with values replaced from ``array``.</span>
+
+<span class="sd">        This only works if one of the two arrays is contained in the other. In</span>
+<span class="sd">        this case, ``array`` will overwrite values in ``self`` (unless</span>
+<span class="sd">        ``copy_from_self`` is set to ``True``).</span>
+
+<span class="sd">        A copy will only be made if necessary or ``copy`` is set to ``True``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># It is unclear how to merge arrays in all cases. Consider a 10x10 array,</span>
+        <span class="c1"># you crop out a 5x5 area, do a shift augment, and attempt to merge.</span>
+        <span class="c1"># What does that mean? specs have changed. It should be a new key.</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Merge function should not be used!&quot;</span><span class="p">)</span>
+
+        <span class="n">self_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+        <span class="n">array_roi</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span>
+
+        <span class="k">assert</span> <span class="n">self_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">array_roi</span><span class="p">)</span> <span class="ow">or</span> <span class="n">array_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">self_roi</span><span class="p">),</span> \
+            <span class="s2">&quot;Can not merge arrays that are not contained in each other.&quot;</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">==</span> <span class="n">array</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> \
+            <span class="s2">&quot;Can not merge arrays with different voxel sizes.&quot;</span>
+
+        <span class="c1"># make sure self contains array</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">self_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">array_roi</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">array</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="ow">not</span> <span class="n">copy_from_self</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>
+
+        <span class="c1"># -&gt; here we know that self contains array</span>
+
+        <span class="c1"># simple case, self overwrites all of array</span>
+        <span class="k">if</span> <span class="n">copy_from_self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span> <span class="k">else</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># -&gt; here we know that copy_from_self == False</span>
+
+        <span class="c1"># simple case, ROIs are the same</span>
+        <span class="k">if</span> <span class="n">self_roi</span> <span class="o">==</span> <span class="n">array_roi</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">array</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span> <span class="k">else</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+        <span class="c1"># part of self have to be replaced, a copy is needed</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">voxel_size</span>
+        <span class="n">data_roi</span> <span class="o">=</span> <span class="p">(</span><span class="n">array_roi</span> <span class="o">-</span> <span class="n">self_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">())</span><span class="o">/</span><span class="n">voxel_size</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_bounding_box</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">+</span> <span class="n">slices</span>
+
+        <span class="n">merged</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">slices</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="k">return</span> <span class="n">merged</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ArrayKey"><a class="viewcode-back" href="../../api.html#gunpowder.ArrayKey">[docs]</a><span class="k">class</span> <span class="nc">ArrayKey</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;A key to identify arrays in requests, batches, and across nodes.</span>
@@ -352,20 +428,20 @@
 <span class="sd">            the same array.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Registering array key </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">ArrayKeys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;identifier&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">identifier</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span></div>
 
 <span class="k">class</span> <span class="nc">ArrayKeys</span><span class="p">:</span>
@@ -391,7 +467,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -413,7 +489,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

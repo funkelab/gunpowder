@@ -4,6 +4,7 @@ First steps
 ===========
 
 .. automodule:: gunpowder
+   :noindex:
 
 Declaring arrays
 ----------------
@@ -116,7 +117,7 @@ Going Further
 
 ``gunpowder`` provides much more nodes to chain together, including a
 :ref:`pre-cache<sec_api_precache>` node for easy parallel fetching of batches,
-several :ref:`augmentation nodes<sec_api_augmentation>`, and nodes for
+several :ref:`augmentation nodes<sec_api_augmentation_nodes>`, and nodes for
 :ref:`profiling<sec_api_profiling>` and :ref:`inspection<sec_api_snapshot>`.
 For a complete list see the :ref:`API reference<sec_api>`.
 

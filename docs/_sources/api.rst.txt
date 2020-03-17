@@ -4,6 +4,7 @@ API Reference
 =============
 
 .. automodule:: gunpowder
+   :noindex:
 
 Data Containers
 ---------------
@@ -18,23 +19,23 @@ Array
   .. autoclass:: Array
     :members:
 
-Points
-^^^^^^
-  .. autoclass:: Points
+Graph
+^^^^^
+  .. autoclass:: Graph
     :members:
 
-Point
-^^^^^
-  .. autoclass:: Point
+Node
+^^^^
+  .. autoclass:: Node
     :members:
 
 ArrayKey
 ^^^^^^^^
   .. autoclass:: ArrayKey
 
-PointsKey
-^^^^^^^^^
-  .. autoclass:: PointsKey
+GraphKey
+^^^^^^^^
+  .. autoclass:: GraphKey
 
 Requests and Specifications
 ---------------------------
@@ -85,6 +86,8 @@ BatchFilter
   .. autoclass:: BatchFilter
     :members: setup, updates, provides, enable_autoskip, prepare, process, teardown, spec, request_batch
 
+.. _sec_api_source_nodes:
+
 Source Nodes
 ------------
 
@@ -112,7 +115,7 @@ KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource
 
-.. _sec_api_augmentation:
+.. _sec_api_augmentation_nodes:
 
 Augmentation Nodes
 ------------------
@@ -144,6 +147,8 @@ Pad
 ^^^
   .. autoclass:: Pad
 
+.. _sec_api_random_location:
+
 RandomLocation
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomLocation
@@ -159,6 +164,8 @@ Scan
 SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
   .. autoclass:: SpecifiedLocation
+
+.. _sec_api_image_processing_nodes:
 
 Image Processing Nodes
 ----------------------
@@ -217,18 +224,21 @@ RandomProvider
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomProvider
 
+.. _sec_api_training_and_prediction_nodes:
+
 Training and Prediction Nodes
 -----------------------------
-  .. automodule:: gunpowder.caffe
 
-caffe.Train
+  .. automodule:: gunpowder.torch
+
+torch.Train
 ^^^^^^^^^^^
   .. autoclass:: Train
-  .. autoclass:: SolverParameters
 
-caffe.Predict
+torch.Predict
 ^^^^^^^^^^^^^
   .. autoclass:: Predict
+
 
   .. automodule:: gunpowder.tensorflow
 
@@ -240,7 +250,23 @@ tensorflow.Predict
 ^^^^^^^^^^^^^^^^^^
   .. autoclass:: Predict
 
+
+  .. automodule:: gunpowder.caffe
+
+caffe.Train
+^^^^^^^^^^^
+  .. autoclass:: Train
+  .. autoclass:: SolverParameters
+
+caffe.Predict
+^^^^^^^^^^^^^
+  .. autoclass:: Predict
+
+
   .. automodule:: gunpowder
+     :noindex:
+
+.. _sec_api_output_nodes:
 
 Output Nodes
 ------------
@@ -254,6 +280,8 @@ Hdf5Write
 Snapshot
 ^^^^^^^^
   .. autoclass:: Snapshot
+
+.. _sec_api_performance_nodes:
 
 Performance Nodes
 -----------------

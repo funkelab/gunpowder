@@ -57,7 +57,7 @@ class Snapshot(BatchFilter):
 
         store_value_range (``bool``):
 
-            If set to ``True`, store range of values in data set attributes.
+            If set to ``True``, store range of values in data set attributes.
         '''
 
     def __init__(

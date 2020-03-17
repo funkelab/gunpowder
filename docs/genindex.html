@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>Index &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -86,6 +86,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
@@ -99,10 +100,10 @@
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#node">Node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -171,10 +172,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
@@ -287,12 +290,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.BatchRequest.add">add() (gunpowder.BatchRequest method)</a>
 </li>
-      <li><a href="api.html#gunpowder.AddAffinities">AddAffinities (class in gunpowder)</a>
+      <li><a href="api.html#gunpowder.Graph.add_edge">add_edge() (gunpowder.Graph method)</a>
 </li>
-      <li><a href="api.html#gunpowder.Array">Array (class in gunpowder)</a>
+      <li><a href="api.html#gunpowder.Graph.add_node">add_node() (gunpowder.Graph method)</a>
+</li>
+      <li><a href="api.html#gunpowder.AddAffinities">AddAffinities (class in gunpowder)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.Array">Array (class in gunpowder)</a>
+</li>
       <li><a href="api.html#gunpowder.ProviderSpec.array_specs">array_specs (gunpowder.ProviderSpec attribute)</a>
 </li>
       <li><a href="api.html#gunpowder.ArrayKey">ArrayKey (class in gunpowder)</a>
@@ -334,8 +341,6 @@
       <li><a href="api.html#gunpowder.ArraySpec.copy">copy() (gunpowder.ArraySpec method)</a>
 
       <ul>
-        <li><a href="api.html#gunpowder.PointsSpec.copy">(gunpowder.PointsSpec method)</a>
-</li>
         <li><a href="api.html#gunpowder.Roi.copy">(gunpowder.Roi method)</a>
 </li>
       </ul></li>
@@ -344,7 +349,11 @@
       <li><a href="api.html#gunpowder.Crop">Crop (class in gunpowder)</a>
 </li>
       <li><a href="api.html#gunpowder.Array.crop">crop() (gunpowder.Array method)</a>
+
+      <ul>
+        <li><a href="api.html#gunpowder.Graph.crop">(gunpowder.Graph method)</a>
 </li>
+      </ul></li>
       <li><a href="api.html#gunpowder.CsvPointsSource">CsvPointsSource (class in gunpowder)</a>
 </li>
   </ul></td>
@@ -391,17 +400,27 @@
 </li>
       <li><a href="api.html#gunpowder.Roi.get_end">get_end() (gunpowder.Roi method)</a>
 </li>
-      <li><a href="api.html#gunpowder.Roi.grow">grow() (gunpowder.Roi method)</a>
+      <li><a href="api.html#gunpowder.Graph">Graph (class in gunpowder)</a>
+</li>
+      <li><a href="api.html#gunpowder.ProviderSpec.graph_specs">graph_specs (gunpowder.ProviderSpec attribute)</a>
+</li>
+      <li><a href="api.html#gunpowder.GraphKey">GraphKey (class in gunpowder)</a>
+</li>
+      <li><a href="api.html#gunpowder.Batch.graphs">graphs (gunpowder.Batch attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.Roi.grow">grow() (gunpowder.Roi method)</a>
+</li>
       <li><a href="api.html#gunpowder.GrowBoundary">GrowBoundary (class in gunpowder)</a>
 </li>
-      <li><a href="api.html#module-gunpowder">gunpowder (module)</a>, <a href="api.html#module-gunpowder">[1]</a>, <a href="first_steps.html#module-gunpowder">[2]</a>, <a href="install.html#module-gunpowder">[3]</a>, <a href="pipeline.html#module-gunpowder">[4]</a>, <a href="tutorial.html#module-gunpowder">[5]</a>
+      <li><a href="pipeline.html#module-gunpowder">gunpowder (module)</a>
 </li>
       <li><a href="api.html#module-gunpowder.caffe">gunpowder.caffe (module)</a>
 </li>
       <li><a href="api.html#module-gunpowder.tensorflow">gunpowder.tensorflow (module)</a>
+</li>
+      <li><a href="api.html#module-gunpowder.torch">gunpowder.torch (module)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -453,6 +472,14 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.Array.merge">merge() (gunpowder.Array method)</a>
+
+      <ul>
+        <li><a href="api.html#gunpowder.Graph.merge">(gunpowder.Graph method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.MergeProvider">MergeProvider (class in gunpowder)</a>
 </li>
   </ul></td>
@@ -463,8 +490,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.N5Source">N5Source (class in gunpowder)</a>
 </li>
+      <li><a href="api.html#gunpowder.Node">Node (class in gunpowder)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.Graph.node">node() (gunpowder.Graph method)</a>
+</li>
+      <li><a href="api.html#gunpowder.ArraySpec.nonspatial">nonspatial (gunpowder.ArraySpec attribute)</a>
+</li>
       <li><a href="api.html#gunpowder.Normalize">Normalize (class in gunpowder)</a>
 </li>
   </ul></td>
@@ -475,28 +508,20 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.Pad">Pad (class in gunpowder)</a>
 </li>
-      <li><a href="api.html#gunpowder.Point">Point (class in gunpowder)</a>
-</li>
-      <li><a href="api.html#gunpowder.Points">Points (class in gunpowder)</a>
-</li>
-      <li><a href="api.html#gunpowder.Batch.points">points (gunpowder.Batch attribute)</a>
-</li>
-      <li><a href="api.html#gunpowder.ProviderSpec.points_specs">points_specs (gunpowder.ProviderSpec attribute)</a>
-</li>
-      <li><a href="api.html#gunpowder.PointsKey">PointsKey (class in gunpowder)</a>
-</li>
-      <li><a href="api.html#gunpowder.PointsSpec">PointsSpec (class in gunpowder)</a>
+      <li><a href="api.html#gunpowder.PointsSpec">PointsSpec (in module gunpowder)</a>
 </li>
       <li><a href="api.html#gunpowder.PreCache">PreCache (class in gunpowder)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.caffe.Predict">Predict (class in gunpowder.caffe)</a>
 
       <ul>
         <li><a href="api.html#gunpowder.tensorflow.Predict">(class in gunpowder.tensorflow)</a>
 </li>
+        <li><a href="api.html#gunpowder.torch.Predict">(class in gunpowder.torch)</a>
+</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.BatchFilter.prepare">prepare() (gunpowder.BatchFilter method)</a>
 </li>
       <li><a href="api.html#gunpowder.PrintProfilingStats">PrintProfilingStats (class in gunpowder)</a>
@@ -529,10 +554,14 @@
 </li>
       <li><a href="api.html#gunpowder.Reject">Reject (class in gunpowder)</a>
 </li>
-      <li><a href="api.html#gunpowder.RenumberConnectedComponents">RenumberConnectedComponents (class in gunpowder)</a>
+      <li><a href="api.html#gunpowder.Graph.remove_edge">remove_edge() (gunpowder.Graph method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#gunpowder.Graph.remove_node">remove_node() (gunpowder.Graph method)</a>
+</li>
+      <li><a href="api.html#gunpowder.RenumberConnectedComponents">RenumberConnectedComponents (class in gunpowder)</a>
+</li>
       <li><a href="api.html#gunpowder.BatchFilter.request_batch">request_batch() (gunpowder.BatchFilter method)</a>
 
       <ul>
@@ -544,11 +573,7 @@
       <li><a href="api.html#gunpowder.Roi">Roi (class in gunpowder)</a>
 </li>
       <li><a href="api.html#gunpowder.ArraySpec.roi">roi (gunpowder.ArraySpec attribute)</a>
-
-      <ul>
-        <li><a href="api.html#gunpowder.PointsSpec.roi">(gunpowder.PointsSpec attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -583,10 +608,10 @@
 </li>
       <li><a href="api.html#gunpowder.caffe.SolverParameters">SolverParameters (class in gunpowder.caffe)</a>
 </li>
-      <li><a href="api.html#gunpowder.BatchFilter.spec">spec (gunpowder.BatchFilter attribute)</a>
+      <li><a href="api.html#gunpowder.BatchFilter.spec">spec() (gunpowder.BatchFilter property)</a>
 
       <ul>
-        <li><a href="api.html#gunpowder.BatchProvider.spec">(gunpowder.BatchProvider attribute)</a>
+        <li><a href="api.html#gunpowder.BatchProvider.spec">(gunpowder.BatchProvider property)</a>
 </li>
       </ul></li>
       <li><a href="api.html#gunpowder.SpecifiedLocation">SpecifiedLocation (class in gunpowder)</a>
@@ -610,12 +635,16 @@
       <ul>
         <li><a href="api.html#gunpowder.tensorflow.Train">(class in gunpowder.tensorflow)</a>
 </li>
+        <li><a href="api.html#gunpowder.torch.Train">(class in gunpowder.torch)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#gunpowder.caffe.SolverParameters.train_net">train_net (gunpowder.caffe.SolverParameters attribute)</a>
 </li>
       <li><a href="api.html#gunpowder.caffe.SolverParameters.train_state">train_state (gunpowder.caffe.SolverParameters attribute)</a>
+</li>
+      <li><a href="api.html#gunpowder.Graph.trim">trim() (gunpowder.Graph method)</a>
 </li>
       <li><a href="api.html#gunpowder.caffe.SolverParameters.type">type (gunpowder.caffe.SolverParameters attribute)</a>
 </li>
@@ -664,7 +693,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -686,7 +715,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
