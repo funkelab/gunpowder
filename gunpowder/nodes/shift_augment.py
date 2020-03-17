@@ -152,7 +152,7 @@ class ShiftAugment(BatchFilter):
         :param sub_shift_array: the cropped section of the global shift array that applies to this specific request
         :param shift_axis: the axis to perform the shift along
         :param lcm_voxel_size: the least common voxel size for the arrays in the request
-        :return a Points object with the updated point locations and ROI
+        :return a Graph object with the updated point locations and ROI
         """
 
         nodes = list(points.nodes)

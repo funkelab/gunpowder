@@ -18,7 +18,7 @@ class Pad(BatchFilter):
 
     Args:
 
-        key (:class:`ArrayKey` or :class:`PointsKey`):
+        key (:class:`ArrayKey` or :class:`GraphKey`):
 
             The array or points set to pad.
 

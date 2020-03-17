@@ -13,7 +13,7 @@ class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
     A :class:`BatchProvider` provides :class:`Batches<Batch>` containing
-    :class:`Arrays<Array>` and/or :class:`Points`. The available data is
+    :class:`Arrays<Array>` and/or :class:`Graph`. The available data is
     specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.
 
     To create a new node, subclass this class and implement (at least)
@@ -61,11 +61,11 @@ class BatchProvider(object):
 
         Args:
 
-            key (:class:`ArrayKey` or :class:`PointsKey`):
+            key (:class:`ArrayKey` or :class:`GraphKey`):
 
                 The array or point set key provided.
 
-            spec (:class:`ArraySpec` or :class:`PointsSpec`):
+            spec (:class:`ArraySpec` or :class:`GraphSpec`):
 
                 The spec of the array or point set provided.
         '''
@@ -137,7 +137,7 @@ class BatchProvider(object):
 
                 A request containing (possibly partial)
                 :class:`ArraySpecs<ArraySpec>` and
-                :class:`PointSpecs<PointsSpec>`.
+                :class:`GraphSpecs<GraphSpec>`.
         '''
 
         logger.debug("%s got request %s", self.name(), request)

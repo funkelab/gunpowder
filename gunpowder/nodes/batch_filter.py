@@ -48,11 +48,11 @@ class BatchFilter(BatchProvider):
 
         Args:
 
-            key (:class:`ArrayKey` or :class:`PointsKey`):
+            key (:class:`ArrayKey` or :class:`GraphKey`):
 
                 The array or point set key this filter updates.
 
-            spec (:class:`ArraySpec` or :class:`PointsSpec`):
+            spec (:class:`ArraySpec` or :class:`GraphSpec`):
 
                 The updated spec of the array or point set.
         """

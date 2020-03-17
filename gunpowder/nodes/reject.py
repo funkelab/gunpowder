@@ -21,7 +21,7 @@ class Reject(BatchFilter):
             The minimal required ratio of masked-in vs. masked-out voxels.
             Defaults to 0.5.
 
-        ensure_nonempty (:class:`PointKey`, optional)
+        ensure_nonempty (:class:`GraphKey`, optional)
 
             Ensures there is at least one point in the batch.
 

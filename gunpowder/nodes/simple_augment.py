@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SimpleAugment(BatchFilter):
     '''Randomly mirror and transpose all :class:`Arrays<Array>` and
-    :class:`Points` in a batch.
+    :class:`Graph` in a batch.
 
     Args:
 

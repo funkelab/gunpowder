@@ -27,7 +27,7 @@ class DaisyRequestBlocks(BatchFilter):
             A reference :class:`BatchRequest`. This request will be shifted
             according to blocks distributed by ``daisy``.
 
-        roi_map (``dict`` from :class:`ArrayKey` or :class:`PointsKey` to
+        roi_map (``dict`` from :class:`ArrayKey` or :class:`GraphKey` to
         ``string``):
 
             A map indicating which daisy block ROI (``read_roi`` or

@@ -20,7 +20,7 @@ class CsvPointsSource(BatchProvider):
 
             The file to read from.
 
-        points (:class:`PointsKey`):
+        points (:class:`GraphKey`):
 
             The key of the points set to create.
 
