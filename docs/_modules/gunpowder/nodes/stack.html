@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.crop &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>gunpowder.nodes.stack &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
   
 
   
@@ -247,7 +247,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>gunpowder.nodes.crop</li>
+      <li>gunpowder.nodes.stack</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -262,96 +262,58 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for gunpowder.nodes.crop</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+  <h1>Source code for gunpowder.nodes.stack</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="kn">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="kn">import</span> <span class="n">Array</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="kn">import</span> <span class="n">Batch</span>
+<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="kn">import</span> <span class="n">Timing</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="kn">import</span> <span class="n">BatchFilter</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
+<div class="viewcode-block" id="Stack"><a class="viewcode-back" href="../../../api.html#gunpowder.Stack">[docs]</a><span class="k">class</span> <span class="nc">Stack</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Request several batches and stack them together, introducing a new</span>
+<span class="sd">    dimension for each array. This is useful to create batches with several</span>
+<span class="sd">    samples and only makes sense if there is a source of randomness upstream.</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Crop"><a class="viewcode-back" href="../../../api.html#gunpowder.Crop">[docs]</a><span class="k">class</span> <span class="nc">Crop</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Limits provided ROIs by either giving a new :class:`Roi` or crop</span>
-<span class="sd">    fractions from either face of the provided ROI.</span>
+<span class="sd">    This node stacks only arrays, not points. The resulting batch will have the</span>
+<span class="sd">    same point sets as found in the first batch requested upstream.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        key (:class:`ArrayKey` or :class:`GraphKey`):</span>
+<span class="sd">        num_repetitions (``int``):</span>
 
-<span class="sd">            The key of the array or points set to modify.</span>
-
-<span class="sd">        roi (:class:`Roi` or ``None``):</span>
-
-<span class="sd">            The ROI to crop to.</span>
-
-<span class="sd">        fraction_negative (``tuple`` of ``float``):</span>
-
-<span class="sd">            Relative crop starting from the negative end of the provided ROI.</span>
-
-<span class="sd">        fraction_positive (``tuple`` of ``float``):</span>
-
-<span class="sd">            Relative crop starting from the positive end of the provided ROI.</span>
+<span class="sd">            How many upstream batches to stack.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">key</span><span class="p">,</span>
-            <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">fraction_negative</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">fraction_positive</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="n">fraction_positive</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span>
-                <span class="n">fraction_negative</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;&#39;roi&#39; and &#39;fraction_...&#39; arguments can not be given together&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_repetitions</span> <span class="o">=</span> <span class="n">num_repetitions</span>
 
-        <span class="k">if</span> <span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">fraction_positive</span><span class="p">,</span> <span class="n">fraction_negative</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;One of &#39;roi&#39; and &#39;fraction_...&#39; has to be given&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="n">fraction_negative</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fraction_positive</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">fraction_positive</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">fraction_negative</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">fraction_positive</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fraction_negative</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">fraction_negative</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">fraction_positive</span><span class="p">)</span>
+        <span class="n">timing</span> <span class="o">=</span> <span class="n">Timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">timing</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fraction_negative</span> <span class="o">=</span> <span class="n">fraction_negative</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fraction_positive</span> <span class="o">=</span> <span class="n">fraction_positive</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_repetitions</span><span class="p">)</span>
+        <span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">array_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">])</span>
+            <span class="n">batch</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="n">batches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># copy points of first batch requested</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">points_specs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">batch</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">batches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
 
-            <span class="k">assert</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">),</span> <span class="p">(</span>
-                <span class="s2">&quot;Crop ROI is not contained in upstream ROI.&quot;</span><span class="p">)</span>
+        <span class="n">timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">profiling_stats</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">timing</span><span class="p">)</span>
 
-            <span class="n">cropped_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="n">total_fraction</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">n</span> <span class="o">+</span> <span class="n">p</span>
-                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fraction_negative</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fraction_positive</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">total_fraction</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Sum of crop fractions exeeds 1&quot;</span><span class="p">)</span>
-
-            <span class="n">crop_positive</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">fraction_positive</span>
-            <span class="n">crop_negative</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">fraction_negative</span>
-            <span class="n">cropped_roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span>
-                <span class="o">-</span><span class="n">crop_positive</span><span class="p">,</span>
-                <span class="o">-</span><span class="n">crop_negative</span><span class="p">)</span>
-
-        <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">cropped_roi</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="k">pass</span></div>
+        <span class="k">return</span> <span class="n">batch</span></div>
 </pre></div>
 
            </div>

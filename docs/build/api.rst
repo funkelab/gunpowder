@@ -174,6 +174,10 @@ DownSample
 ^^^^^^^^^^
   .. autoclass:: DownSample
 
+UpSample
+^^^^^^^^
+  .. autoclass:: UpSample
+
 IntensityScaleShift
 ^^^^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityScaleShift
@@ -228,6 +232,10 @@ RandomProvider
 
 Training and Prediction Nodes
 -----------------------------
+
+Stack
+^^^^^
+  .. autoclass:: Stack
 
   .. automodule:: gunpowder.torch
 

@@ -151,6 +151,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#image-processing-nodes">Image Processing Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upsample">UpSample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#intensityscaleshift">IntensityScaleShift</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#normalize">Normalize</a></li>
 </ul>
@@ -173,6 +174,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stack">Stack</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#torch-train">torch.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tensorflow-train">tensorflow.Train</a></li>
@@ -1670,6 +1672,26 @@ direction.</p></li>
 
 </div></blockquote>
 </div>
+<div class="section" id="upsample">
+<h3>UpSample<a class="headerlink" href="#upsample" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.UpSample">
+<em class="property">class </em><code class="sig-prename descclassname">gunpowder.</code><code class="sig-name descname">UpSample</code><span class="sig-paren">(</span><em class="sig-param">source</em>, <em class="sig-param">factor</em>, <em class="sig-param">target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/upsample.html#UpSample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.UpSample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upsample arrays in a batch by given factors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayKey</span></code></a>) – The key of the array to upsample.</p></li>
+<li><p><strong>factor</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">tuple</span></code> of <code class="docutils literal notranslate"><span class="pre">int</span></code>) – The factor to upsample with.</p></li>
+<li><p><strong>target</strong> (<a class="reference internal" href="#gunpowder.ArrayKey" title="gunpowder.ArrayKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayKey</span></code></a>) – The key of the array to store the upsampled <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
 <div class="section" id="intensityscaleshift">
 <h3>IntensityScaleShift<a class="headerlink" href="#intensityscaleshift" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -1965,8 +1987,26 @@ is <code class="docutils literal notranslate"><span class="pre">None</span></cod
 </div>
 <div class="section" id="training-and-prediction-nodes">
 <span id="sec-api-training-and-prediction-nodes"></span><h2>Training and Prediction Nodes<a class="headerlink" href="#training-and-prediction-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="stack">
+<h3>Stack<a class="headerlink" href="#stack" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><span class="target" id="module-gunpowder.torch"></span></div></blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Stack">
+<em class="property">class </em><code class="sig-prename descclassname">gunpowder.</code><code class="sig-name descname">Stack</code><span class="sig-paren">(</span><em class="sig-param">num_repetitions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/stack.html#Stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request several batches and stack them together, introducing a new
+dimension for each array. This is useful to create batches with several
+samples and only makes sense if there is a source of randomness upstream.</p>
+<p>This node stacks only arrays, not points. The resulting batch will have the
+same point sets as found in the first batch requested upstream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>num_repetitions</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code>) – How many upstream batches to stack.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-gunpowder.torch"></span></div></blockquote>
+</div>
 <div class="section" id="torch-train">
 <h3>torch.Train<a class="headerlink" href="#torch-train" title="Permalink to this headline">¶</a></h3>
 <blockquote>
