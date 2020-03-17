@@ -103,6 +103,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#array">Array</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#graph">Graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge">Edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#arraykey">ArrayKey</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#graphkey">GraphKey</a></li>
 </ul>
@@ -379,13 +380,13 @@ this case, <code class="docutils literal notranslate"><span class="pre">array</s
 <div><dl class="class">
 <dt id="gunpowder.Graph">
 <em class="property">class </em><code class="sig-prename descclassname">gunpowder.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param">nodes: Iterator[gunpowder.graph.Node], edges: Iterator[gunpowder.graph.Edge], spec: gunpowder.graph_spec.GraphSpec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>A structure containing a list of <a class="reference internal" href="#gunpowder.Node" title="gunpowder.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, a list of <code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code>,
+<dd><p>A structure containing a list of <a class="reference internal" href="#gunpowder.Node" title="gunpowder.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, a list of <a class="reference internal" href="#gunpowder.Edge" title="gunpowder.Edge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code></a>,
 and a specification describing the data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nodes</strong> (<code class="docutils literal notranslate"><span class="pre">iterator</span></code>, <a class="reference internal" href="#gunpowder.Node" title="gunpowder.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>) – An iterator containing Vertices.</p></li>
-<li><p><strong>edges</strong> (<code class="docutils literal notranslate"><span class="pre">iterator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code>) – An iterator containing Edges.</p></li>
+<li><p><strong>edges</strong> (<code class="docutils literal notranslate"><span class="pre">iterator</span></code>, <a class="reference internal" href="#gunpowder.Edge" title="gunpowder.Edge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code></a>) – An iterator containing Edges.</p></li>
 <li><p><strong>spec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSpec</span></code>) – A spec describing the data.</p></li>
 </ul>
 </dd>
@@ -483,6 +484,25 @@ of viewing the data with a limited scope. These nodes
 are only guaranteed to have an id different from those
 in the same Graph, but may have conflicts if you request
 multiple graphs from the same source with different rois.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="edge">
+<h3>Edge<a class="headerlink" href="#edge" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="class">
+<dt id="gunpowder.Edge">
+<em class="property">class </em><code class="sig-prename descclassname">gunpowder.</code><code class="sig-name descname">Edge</code><span class="sig-paren">(</span><em class="sig-param">u: int</em>, <em class="sig-param">v: int</em>, <em class="sig-param">attrs: Optional[Dict[str</em>, <em class="sig-param">Any]] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>A structure representing edges in a graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code>) – The id of the ‘u’ node of this edge</p></li>
+<li><p><strong>v</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code>) – the id of the <cite>v</cite> node of this edge</p></li>
 </ul>
 </dd>
 </dl>

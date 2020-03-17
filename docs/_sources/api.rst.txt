@@ -29,6 +29,11 @@ Node
   .. autoclass:: Node
     :members:
 
+Edge
+^^^^
+  .. autoclass:: Edge
+    :members:
+
 ArrayKey
 ^^^^^^^^
   .. autoclass:: ArrayKey

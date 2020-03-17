@@ -101,6 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#array">Array</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#graph">Graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#edge">Edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#arraykey">ArrayKey</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#graphkey">GraphKey</a></li>
 </ul>
@@ -378,7 +379,7 @@
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">Edge</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
+<div class="viewcode-block" id="Edge"><a class="viewcode-back" href="../../api.html#gunpowder.Edge">[docs]</a><span class="k">class</span> <span class="nc">Edge</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A structure representing edges in a graph.</span>
 
@@ -430,7 +431,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">u</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span>
 
     <span class="k">def</span> <span class="nf">undirected_eq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="n">other</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="n">other</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../api.html#gunpowder.Graph">[docs]</a><span class="k">class</span> <span class="nc">Graph</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
