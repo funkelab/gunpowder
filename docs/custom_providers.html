@@ -103,6 +103,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#array">Array</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#graph">Graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#edge">Edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#arraykey">ArrayKey</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#graphkey">GraphKey</a></li>
 </ul>
@@ -151,6 +152,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#image-processing-nodes">Image Processing Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#upsample">UpSample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#intensityscaleshift">IntensityScaleShift</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#normalize">Normalize</a></li>
 </ul>
@@ -173,6 +175,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#stack">Stack</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#torch-train">torch.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
@@ -273,23 +276,31 @@ override <a class="reference internal" href="api.html#gunpowder.BatchFilter.prep
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleFilter</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
 
   <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-    <span class="k">pass</span>
+    <span class="c1"># create a new request for this node&#39;s dependencies</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
+    <span class="c1"># [...]</span>
+    <span class="k">return</span> <span class="n">dependencies</span>
 
   <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-    <span class="k">pass</span>
+    <span class="c1"># create a new batch for this node&#39;s output</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
+    <span class="c1"># [...]</span>
+    <span class="k">return</span> <span class="n">output</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code> will be called in an alternating fashion.
 <code class="docutils literal notranslate"><span class="pre">prepare</span></code> is called first, when a <code class="docutils literal notranslate"><span class="pre">BatchRequest</span></code> is passed upstream through
-the filter. Your filter is free to change the request in any way it needs to,
-for example, by increasing the requested sizes. After <code class="docutils literal notranslate"><span class="pre">prepare</span></code>, <code class="docutils literal notranslate"><span class="pre">process</span></code>
-will be called with a batch going downstream, which is the upstream’s response
-to the request you modified in <code class="docutils literal notranslate"><span class="pre">prepare</span></code>. In <code class="docutils literal notranslate"><span class="pre">process</span></code>, your filter should
-make all necessary changes to the batch and ensure it meets the original
-downstream request earlier communicated to <code class="docutils literal notranslate"><span class="pre">prepare</span></code> (given as <code class="docutils literal notranslate"><span class="pre">request</span></code>
-parameter in <code class="docutils literal notranslate"><span class="pre">process</span></code> for convenience).</p>
-<p>For an example of a batch filter changing both the spec going upstream and the
-batch going downstream, see <a class="reference internal" href="api.html#gunpowder.ElasticAugment" title="gunpowder.ElasticAugment"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticAugment</span></code></a>.</p>
+the filter. Your filter has to formulate a new request, stating the
+dependencies needed by this filter, e.g., by increasing the requested sizes of
+existing arrays in the request.
+After <code class="docutils literal notranslate"><span class="pre">prepare</span></code>, <code class="docutils literal notranslate"><span class="pre">process</span></code> will be called with a batch going downstream,
+which is the upstream’s response to the your request you returned in
+<code class="docutils literal notranslate"><span class="pre">prepare</span></code>. In <code class="docutils literal notranslate"><span class="pre">process</span></code>, your filter has to create a new batch with
+expected outputs and ensure it meets the original downstream request earlier
+communicated to <code class="docutils literal notranslate"><span class="pre">prepare</span></code> (given as <code class="docutils literal notranslate"><span class="pre">request</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">process</span></code> for
+convenience).</p>
+<p>For a simple example of a batch filter following this scheme, see
+the source code of <a class="reference internal" href="api.html#gunpowder.DownSample" title="gunpowder.DownSample"><code class="xref py py-class docutils literal notranslate"><span class="pre">DownSample</span></code></a>.</p>
 </div>
 
 
