@@ -1,5 +1,5 @@
 __major__   = 1
-__minor__   = 0
+__minor__   = 1
 __patch__   = 0
 __tag__     = 'rc0.dev0'
 __version__ = '{}.{}.{}{}'.format(__major__, __minor__, __patch__, __tag__).strip('.')
