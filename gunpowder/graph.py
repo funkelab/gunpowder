@@ -9,20 +9,21 @@ from copy import deepcopy
 from typing import Dict, Optional, Set, Iterator, Any
 import logging
 import itertools
+import warnings
 
 
 logger = logging.getLogger(__name__)
 
 
-class Vertex(Freezable):
+class Node(Freezable):
     """
-    A stucture representing each vertex in a Graph.
+    A stucture representing each node in a Graph.
 
     Args:
 
         id (``int``):
 
-            A unique identifier for this Vertex
+            A unique identifier for this Node
 
         location (``np.ndarray``):
 
@@ -32,7 +33,7 @@ class Vertex(Freezable):
 
             A dictionary containing a mapping from attribute to value.
             Used to store any extra attributes associated with the
-            Vertex such as color, size, etc.
+            Node such as color, size, etc.
 
         Optional temporary (bool):
 
@@ -97,16 +98,16 @@ class Vertex(Freezable):
     @classmethod
     def from_attrs(cls, attrs: Dict[str, Any]):
         special_attrs = ["id", "location", "temporary"]
-        vertex_id = attrs["id"]
+        node_id = attrs["id"]
         location = attrs["location"]
         temporary = attrs["temporary"]
         remaining_attrs = {k: v for k, v in attrs.items() if k not in special_attrs}
         return cls(
-            id=vertex_id, location=location, temporary=temporary, attrs=remaining_attrs
+            id=node_id, location=location, temporary=temporary, attrs=remaining_attrs
         )
 
     def __str__(self):
-        return f"Vertex({self.temporary}) ({self.id}) at ({self.location})"
+        return f"Node({self.temporary}) ({self.id}) at ({self.location})"
 
     def __repr__(self):
         return str(self)
@@ -168,12 +169,12 @@ class Edge(Freezable):
 
 
 class Graph(Freezable):
-    """A structure containing a list of :class:`Vertex`, a list of :class:'Edge',
+    """A structure containing a list of :class:`Node`, a list of :class:'Edge',
     and a specification describing the data.
 
     Args:
 
-        vertices (``iterator``, :class:`Vertex`):
+        nodes (``iterator``, :class:`Node`):
 
             An iterator containing Vertices.
 
@@ -187,10 +188,10 @@ class Graph(Freezable):
     """
 
     def __init__(
-        self, vertices: Iterator[Vertex], edges: Iterator[Edge], spec: GraphSpec
+        self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec
     ):
         self.__spec = spec
-        self.__graph = self.create_graph(vertices, edges)
+        self.__graph = self.create_graph(nodes, edges)
 
     @property
     def spec(self):
@@ -204,24 +205,24 @@ class Graph(Freezable):
     def directed(self):
         return self.spec.directed
 
-    def create_graph(self, vertices: Iterator[Vertex], edges: Iterator[Edge]):
+    def create_graph(self, nodes: Iterator[Node], edges: Iterator[Edge]):
         if self.directed:
             graph = nx.DiGraph()
         else:
             graph = nx.Graph()
 
-        for vertex in vertices:
-            vertex.location = vertex.location.astype(self.spec.dtype)
+        for node in nodes:
+            node.location = node.location.astype(self.spec.dtype)
 
-        vs = [(v.id, v.all) for v in vertices]
+        vs = [(v.id, v.all) for v in nodes]
         graph.add_nodes_from(vs)
         graph.add_edges_from([(e.u, e.v, e.all) for e in edges])
         return graph
 
     @property
-    def vertices(self):
-        for vertex_id, vertex_attrs in self.__graph.nodes.items():
-            v = Vertex.from_attrs(vertex_attrs)
+    def nodes(self):
+        for node_id, node_attrs in self.__graph.nodes.items():
+            v = Node.from_attrs(node_attrs)
             if not np.issubdtype(v.location.dtype, self.spec.dtype):
                 raise Exception()
             yield v
@@ -234,17 +235,17 @@ class Graph(Freezable):
         for (u, v), attrs in self.__graph.edges.items():
             yield Edge(u, v, attrs)
 
-    def neighbors(self, vertex):
-        for neighbor in self.__graph.successors(vertex.id):
-            yield Vertex.from_attrs(self.__graph.nodes[neighbor])
+    def neighbors(self, node):
+        for neighbor in self.__graph.successors(node.id):
+            yield Node.from_attrs(self.__graph.nodes[neighbor])
         if self.directed:
-            for neighbor in self.__graph.predecessors(vertex.id):
-                yield Vertex.from_attrs(self.__graph.nodes[neighbor])
+            for neighbor in self.__graph.predecessors(node.id):
+                yield Node.from_attrs(self.__graph.nodes[neighbor])
 
     def __str__(self):
         string = "Vertices:\n"
-        for vertex in self.vertices:
-            string += f"{vertex}\n"
+        for node in self.nodes:
+            string += f"{node}\n"
         string += "Edges:\n"
         for edge in self.edges:
             string += f"{edge}\n"
@@ -253,27 +254,27 @@ class Graph(Freezable):
     def __repr__(self):
         return str(self)
 
-    def vertex(self, id: int):
+    def node(self, id: int):
         """
-        Get vertex with a specific id
+        Get node with a specific id
         """
         attrs = self.__graph.nodes[id]
-        return Vertex.from_attrs(attrs)
+        return Node.from_attrs(attrs)
 
-    def remove_vertex(self, vertex: Vertex):
+    def remove_node(self, node: Node):
         """
-        Remove a vertex
+        Remove a node
         """
-        self.__graph.remove_node(vertex.id)
+        self.__graph.remove_node(node.id)
 
-    def add_vertex(self, vertex: Vertex):
+    def add_node(self, node: Node):
         """
-        Adds a vertex to the graph.
-        If a vertex exists with the same id as the vertex you are adding,
+        Adds a node to the graph.
+        If a node exists with the same id as the node you are adding,
         its attributes will be overwritten.
         """
-        vertex.location = vertex.location.astype(self.spec.dtype)
-        self.__graph.add_node(vertex.id, **vertex.all)
+        node.location = node.location.astype(self.spec.dtype)
+        self.__graph.add_node(node.id, **node.all)
 
     def remove_edge(self, edge: Edge):
         """
@@ -294,27 +295,27 @@ class Graph(Freezable):
 
     def crop(self, roi: Roi, copy: bool = True):
         """
-        Will remove all vertices from self that are not contained in `roi` except for
-        "dangling" vertices. This means that if there are vertices A, B s.t. there
+        Will remove all nodes from self that are not contained in `roi` except for
+        "dangling" nodes. This means that if there are nodes A, B s.t. there
         is an edge (A, B) and A is contained in `roi` but B is not, the edge (A, B)
-        is considered contained in the `roi` and thus vertex B will be kept as a
-        "dangling" vertex.
+        is considered contained in the `roi` and thus node B will be kept as a
+        "dangling" node.
 
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
         """
-
+        
         if not copy:
-            raise NotImplementedError("subgraph view not yet supported")
+            warnings.warn("subgraph view not yet supported, graphs are copied on crop.")
 
         if copy:
             cropped = self.copy()
         else:
-            cropped = self
+            cropped = self.copy()
         cropped.__spec = self.__spec
 
         contained_nodes = set(
-            [v.id for v in cropped.vertices if roi.contains(v.location)]
+            [v.id for v in cropped.nodes if roi.contains(v.location)]
         )
         all_contained_edges = set(
             [
@@ -335,9 +336,9 @@ class Graph(Freezable):
         all_nodes = contained_edge_nodes | contained_nodes
         dangling_nodes = all_nodes - contained_nodes
 
-        for vertex in list(cropped.vertices):
-            if vertex.id not in all_nodes:
-                cropped.remove_vertex(vertex)
+        for node in list(cropped.nodes):
+            if node.id not in all_nodes:
+                cropped.remove_node(node)
         for edge in list(cropped.edges):
             if edge not in all_contained_edges:
                 cropped.remove_edge(edge)
@@ -346,8 +347,8 @@ class Graph(Freezable):
         return cropped
 
     def shift(self, offset):
-        for vertex in self.vertices:
-            vertex.location += offset
+        for node in self.nodes:
+            node.location += offset
 
     def new_graph(self):
         if self.directed():
@@ -357,17 +358,17 @@ class Graph(Freezable):
 
     def trim(self, roi: Roi):
         """
-        Create a copy of self and replace "dangling" vertices with contained vertices.
+        Create a copy of self and replace "dangling" nodes with contained nodes.
 
-        A "dangling" vertex is defined by: Let A, B be vertices s.t. there exists an
+        A "dangling" node is defined by: Let A, B be nodes s.t. there exists an
         edge (A, B) and A is contained in `roi` but B is not. Edge (A, B) is considered
-        contained, and thus B is kept as a "dangling" vertex.
+        contained, and thus B is kept as a "dangling" node.
         """
 
         trimmed = self.copy()
 
         contained_nodes = set(
-            [v.id for v in trimmed.vertices if roi.contains(v.location)]
+            [v.id for v in trimmed.nodes if roi.contains(v.location)]
         )
         all_contained_edges = set(
             [
@@ -395,10 +396,10 @@ class Graph(Freezable):
             node_id=itertools.count(max(all_nodes) + 1),
         )
 
-        for vertex in trimmed.vertices:
+        for node in trimmed.nodes:
             assert roi.contains(
-                vertex.location
-            ), f"Failed to properly contain vertex {vertex.id} at {vertex.location}"
+                node.location
+            ), f"Failed to properly contain node {node.id} at {node.location}"
 
         return trimmed
 
@@ -410,15 +411,15 @@ class Graph(Freezable):
         node_id: Iterator[int],
     ):
         for e in crossing_edges:
-            u, v = self.vertex(e.u), self.vertex(e.v)
+            u, v = self.node(e.u), self.node(e.v)
             u_in = u.id in contained_nodes
             v_in, v_out = (u, v) if u_in else (v, u)
             in_location, out_location = (v_in.location, v_out.location)
             new_location = self._roi_intercept(in_location, out_location, roi)
             if not all(np.isclose(new_location, in_location)):
-                # use deepcopy because modifying this vertex should not modify original
+                # use deepcopy because modifying this node should not modify original
                 new_attrs = deepcopy(v_out.attrs)
-                new_v = Vertex(
+                new_v = Node(
                     id=next(node_id),
                     location=new_location,
                     attrs=new_attrs,
@@ -427,10 +428,10 @@ class Graph(Freezable):
                 new_e = Edge(
                     u=v_in.id if u_in else new_v.id, v=new_v.id if u_in else v_in.id
                 )
-                self.add_vertex(new_v)
+                self.add_node(new_v)
                 self.add_edge(new_e)
             self.remove_edge(e)
-            self.remove_vertex(v_out)
+            self.remove_node(v_out)
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi
@@ -473,7 +474,7 @@ class Graph(Freezable):
         of the larger one.
 
         This only works if one of the two graphs contains the other.
-        In this case, ``other`` will overwrite edges and vertices with the same
+        In this case, ``other`` will overwrite edges and nodes with the same
         ID in ``self`` (unless ``copy_from_self`` is set to ``True``).
         Vertices and edges in ``self`` that are contained in the Roi of ``other``
         will be removed (vice versa for ``copy_from_self``)
@@ -497,7 +498,7 @@ class Graph(Freezable):
         if not self_roi.contains(other_roi):
             return other.merge(self, not copy_from_self, copy)
 
-        # edges and vertices in addition are guaranteed to be in merged
+        # edges and nodes in addition are guaranteed to be in merged
         base = other if copy_from_self else self
         addition = self if copy_from_self else other
 
@@ -506,16 +507,16 @@ class Graph(Freezable):
         else:
             merged = base
 
-        for vertex in list(merged.vertices):
-            if merged.spec.roi.contains(vertex.location):
-                merged.remove_vertex(vertex)
+        for node in list(merged.nodes):
+            if merged.spec.roi.contains(node.location):
+                merged.remove_node(node)
         for edge in list(merged.edges):
             if merged.spec.roi.contains(
-                merged.vertex(edge.u)
-            ) or merged.spec.roi.contains(merged.vertex(edge.v)):
+                merged.node(edge.u)
+            ) or merged.spec.roi.contains(merged.node(edge.v)):
                 merged.remove_edge(edge)
-        for vertex in addition.vertices:
-            merged.add_vertex(vertex)
+        for node in addition.nodes:
+            merged.add_node(node)
         for edge in addition.edges:
             merged.add_edge(edge)
 

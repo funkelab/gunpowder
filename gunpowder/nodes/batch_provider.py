@@ -245,17 +245,17 @@ class BatchProvider(object):
                                             graph.spec.roi,
                                             self.name())
 
-            for vertex in graph.vertices:
-                contained = graph.spec.roi.contains(vertex.location)
+            for node in graph.nodes:
+                contained = graph.spec.roi.contains(node.location)
                 dangling = not contained or all(
                     [
                         graph.spec.roi.contains(v.location)
-                        for v in graph.neighbors(vertex)
+                        for v in graph.neighbors(node)
                     ]
                 )
                 assert contained or dangling, (
                     f"graph {graph_key} provided by {self.name()} with ROI {graph.spec.roi} "
-                    f"contain point at {vertex.location} which is neither contained nor "
+                    f"contain point at {node.location} which is neither contained nor "
                     f"'dangling'"
                 )
 

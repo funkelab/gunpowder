@@ -10,7 +10,7 @@ from .build import build
 from .coordinate import Coordinate
 from .points import Points, Point, PointsKey, PointsKeys
 from .points_spec import PointsSpec
-from .graph import Graph, Vertex, Edge, GraphKey, GraphKeys
+from .graph import Graph, Node, Edge, GraphKey, GraphKeys
 from .graph_spec import GraphSpec
 from .producer_pool import ProducerPool
 from .provider_spec import ProviderSpec

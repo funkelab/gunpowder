@@ -11,7 +11,7 @@ from gunpowder import (
     GraphKey,
     GraphSpec,
     Graph,
-    Vertex,
+    Node,
     RandomLocation,
     Coordinate,
     Roi,
@@ -164,7 +164,7 @@ class TestShiftAugment2D(unittest.TestCase):
 
         target_vals = [self.fake_data[point[0]][point[1]] for point in self.fake_points]
         result_data = request[array_key].data
-        result_points = list(request[points_key].vertices)
+        result_points = list(request[points_key].nodes)
         result_vals = [
             result_data[int(point.location[0])][int(point.location[1])]
             for point in result_points
@@ -291,16 +291,16 @@ class TestShiftAugment2D(unittest.TestCase):
         return True
 
     def test_points_equal(self):
-        points1 = [Vertex(id=1, location=np.array([0, 1]))]
-        points2 = [Vertex(id=1, location=np.array([0, 1]))]
+        points1 = [Node(id=1, location=np.array([0, 1]))]
+        points2 = [Node(id=1, location=np.array([0, 1]))]
         self.assertTrue(self.points_equal(points1, points2))
 
-        points1 = [Vertex(id=2, location=np.array([1, 2]))]
-        points2 = [Vertex(id=2, location=np.array([2, 1]))]
+        points1 = [Node(id=2, location=np.array([1, 2]))]
+        points2 = [Node(id=2, location=np.array([2, 1]))]
         self.assertFalse(self.points_equal(points1, points2))
 
     def test_shift_points1(self):
-        data = [Vertex(id=1, location=np.array([0, 1]))]
+        data = [Node(id=1, location=np.array([0, 1]))]
         spec = GraphSpec(Roi(offset=(0, 0), shape=(5, 5)))
         points = Graph(data, [], spec)
         request_roi = Roi(offset=(0, 1), shape=(5, 3))
@@ -316,11 +316,11 @@ class TestShiftAugment2D(unittest.TestCase):
             lcm_voxel_size=lcm_voxel_size,
         )
         # print(result)
-        self.assertTrue(self.points_equal(result.vertices, shifted_points.vertices))
+        self.assertTrue(self.points_equal(result.nodes, shifted_points.nodes))
         self.assertTrue(result.spec == GraphSpec(request_roi))
 
     def test_shift_points2(self):
-        data = [Vertex(id=1, location=np.array([0, 1]))]
+        data = [Node(id=1, location=np.array([0, 1]))]
         spec = GraphSpec(Roi(offset=(0, 0), shape=(5, 5)))
         points = Graph(data, [], spec)
         request_roi = Roi(offset=(0, 1), shape=(5, 3))
@@ -335,18 +335,18 @@ class TestShiftAugment2D(unittest.TestCase):
             lcm_voxel_size=lcm_voxel_size,
         )
         # print("test 2", result.data, data)
-        self.assertTrue(self.points_equal(result.vertices, data))
+        self.assertTrue(self.points_equal(result.nodes, data))
         self.assertTrue(result.spec == GraphSpec(request_roi))
 
     def test_shift_points3(self):
-        data = [Vertex(id=1, location=np.array([0, 1]))]
+        data = [Node(id=1, location=np.array([0, 1]))]
         spec = GraphSpec(Roi(offset=(0, 0), shape=(5, 5)))
         points = Graph(data, [], spec)
         request_roi = Roi(offset=(0, 1), shape=(5, 3))
         shift_array = np.array([[0, 1], [0, -1], [0, 0], [0, 0], [0, 1]], dtype=int)
         lcm_voxel_size = Coordinate((1, 1))
 
-        shifted_points = Graph([Vertex(id=1, location=np.array([0, 2]))], [], GraphSpec(request_roi))
+        shifted_points = Graph([Node(id=1, location=np.array([0, 2]))], [], GraphSpec(request_roi))
         result = ShiftAugment.shift_points(
             points,
             request_roi,
@@ -355,16 +355,16 @@ class TestShiftAugment2D(unittest.TestCase):
             lcm_voxel_size=lcm_voxel_size,
         )
         # print("test 3", result.data, shifted_points.data)
-        self.assertTrue(self.points_equal(result.vertices, shifted_points.vertices))
+        self.assertTrue(self.points_equal(result.nodes, shifted_points.nodes))
         self.assertTrue(result.spec == GraphSpec(request_roi))
 
     def test_shift_points4(self):
         data = [
-            Vertex(id=0, location=np.array([1, 0])),
-            Vertex(id=1, location=np.array([1, 1])),
-            Vertex(id=2, location=np.array([1, 2])),
-            Vertex(id=3, location=np.array([1, 3])),
-            Vertex(id=4, location=np.array([1, 4])),
+            Node(id=0, location=np.array([1, 0])),
+            Node(id=1, location=np.array([1, 1])),
+            Node(id=2, location=np.array([1, 2])),
+            Node(id=3, location=np.array([1, 3])),
+            Node(id=4, location=np.array([1, 4])),
         ]
         spec = GraphSpec(Roi(offset=(0, 0), shape=(5, 5)))
         points = Graph(data, [], spec)
@@ -373,9 +373,9 @@ class TestShiftAugment2D(unittest.TestCase):
 
         lcm_voxel_size = Coordinate((1, 1))
         shifted_data = [
-            Vertex(id=0, location=np.array([2, 0])),
-            Vertex(id=2, location=np.array([1, 2])),
-            Vertex(id=4, location=np.array([2, 4])),
+            Node(id=0, location=np.array([2, 0])),
+            Node(id=2, location=np.array([1, 2])),
+            Node(id=4, location=np.array([2, 4])),
         ]
         result = ShiftAugment.shift_points(
             points,
@@ -385,16 +385,16 @@ class TestShiftAugment2D(unittest.TestCase):
             lcm_voxel_size=lcm_voxel_size,
         )
         # print("test 4", result.data, shifted_data)
-        self.assertTrue(self.points_equal(result.vertices, shifted_data))
+        self.assertTrue(self.points_equal(result.nodes, shifted_data))
         self.assertTrue(result.spec == GraphSpec(request_roi))
 
     def test_shift_points5(self):
         data = [
-            Vertex(id=0, location=np.array([3, 0])),
-            Vertex(id=1, location=np.array([3, 2])),
-            Vertex(id=2, location=np.array([3, 4])),
-            Vertex(id=3, location=np.array([3, 6])),
-            Vertex(id=4, location=np.array([3, 8])),
+            Node(id=0, location=np.array([3, 0])),
+            Node(id=1, location=np.array([3, 2])),
+            Node(id=2, location=np.array([3, 4])),
+            Node(id=3, location=np.array([3, 6])),
+            Node(id=4, location=np.array([3, 8])),
         ]
         spec = GraphSpec(Roi(offset=(0, 0), shape=(15, 10)))
         points = Graph(data, [], spec)
@@ -403,9 +403,9 @@ class TestShiftAugment2D(unittest.TestCase):
 
         lcm_voxel_size = Coordinate((3, 2))
         shifted_data = [
-            Vertex(id=0, location=np.array([6, 0])),
-            Vertex(id=2, location=np.array([3, 4])),
-            Vertex(id=4, location=np.array([6, 8])),
+            Node(id=0, location=np.array([6, 0])),
+            Node(id=2, location=np.array([3, 4])),
+            Node(id=4, location=np.array([6, 8])),
         ]
         result = ShiftAugment.shift_points(
             points,
@@ -415,7 +415,7 @@ class TestShiftAugment2D(unittest.TestCase):
             lcm_voxel_size=lcm_voxel_size,
         )
         # print("test 4", result.data, shifted_data)
-        self.assertTrue(self.points_equal(result.vertices, shifted_data))
+        self.assertTrue(self.points_equal(result.nodes, shifted_data))
         self.assertTrue(result.spec == GraphSpec(request_roi))
 
     #######################

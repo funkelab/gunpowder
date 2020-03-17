@@ -3,7 +3,7 @@ import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.graph import Vertex, Graph
+from gunpowder.graph import Node, Graph
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
@@ -96,7 +96,7 @@ class CsvPointsSource(BatchProvider):
         ids = np.arange(len(self.data))[point_filter]
 
         return [
-            Vertex(id=i, location=p)
+            Node(id=i, location=p)
             for i, p in zip(ids, filtered)
         ]
 

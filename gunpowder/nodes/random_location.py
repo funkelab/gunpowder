@@ -115,7 +115,7 @@ class RandomLocation(BatchFilter):
 
             self.points = KDTree([
                 v.location
-                for v in nonempty_batch[self.ensure_nonempty].vertices])
+                for v in nonempty_batch[self.ensure_nonempty].nodes])
 
             logger.info("retrieved %d points", len(self.points.data))
 

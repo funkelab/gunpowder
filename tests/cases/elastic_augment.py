@@ -16,7 +16,7 @@ from gunpowder import (
     ElasticAugment,
     build,
 )
-from gunpowder.graph import GraphKeys, Graph, Vertex
+from gunpowder.graph import GraphKeys, Graph, Node
 from .provider_test import ProviderTest
 
 import numpy as np
@@ -26,13 +26,13 @@ import math
 class GraphTestSource3D(BatchProvider):
     def setup(self):
 
-        self.vertices = [
-            Vertex(id=0, location=np.array([0, 0, 0])),
-            Vertex(id=1, location=np.array([0, 10, 0])),
-            Vertex(id=2, location=np.array([0, 20, 0])),
-            Vertex(id=3, location=np.array([0, 30, 0])),
-            Vertex(id=4, location=np.array([0, 40, 0])),
-            Vertex(id=5, location=np.array([0, 50, 0])),
+        self.nodes = [
+            Node(id=0, location=np.array([0, 0, 0])),
+            Node(id=1, location=np.array([0, 10, 0])),
+            Node(id=2, location=np.array([0, 20, 0])),
+            Node(id=3, location=np.array([0, 30, 0])),
+            Node(id=4, location=np.array([0, 40, 0])),
+            Node(id=5, location=np.array([0, 50, 0])),
         ]
 
         self.provides(
@@ -49,7 +49,7 @@ class GraphTestSource3D(BatchProvider):
             ),
         )
 
-    def vertex_to_voxel(self, array_roi, location):
+    def node_to_voxel(self, array_roi, location):
 
         # location is in world units, get it into voxels
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
@@ -70,20 +70,20 @@ class GraphTestSource3D(BatchProvider):
         data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
         data[:, ::2] = 100
 
-        for vertex in self.vertices:
-            loc = self.vertex_to_voxel(roi_array, vertex.location)
-            data[loc] = vertex.id
+        for node in self.nodes:
+            loc = self.node_to_voxel(roi_array, node.location)
+            data[loc] = node.id
 
         spec = self.spec[ArrayKeys.TEST_LABELS].copy()
         spec.roi = roi_array
         batch.arrays[ArrayKeys.TEST_LABELS] = Array(data, spec=spec)
 
-        vertices = []
-        for vertex in self.vertices:
-            if roi_graph.contains(vertex.location):
-                vertices.append(vertex)
+        nodes = []
+        for node in self.nodes:
+            if roi_graph.contains(node.location):
+                nodes.append(node)
         batch.graphs[GraphKeys.TEST_GRAPH] = Graph(
-            vertices=vertices, edges=[], spec=GraphSpec(roi=roi_graph)
+            nodes=nodes, edges=[], spec=GraphSpec(roi=roi_graph)
         )
 
         return batch
@@ -135,13 +135,13 @@ class TestElasticAugment(ProviderTest):
                 labels = batch[test_labels]
                 graph = batch[test_graph]
 
-                # the vertex at (0, 0, 0) should not have moved
-                # The vertex at (0,0,0) seems to have moved
+                # the node at (0, 0, 0) should not have moved
+                # The node at (0,0,0) seems to have moved
                 # self.assertIn(
-                #     Vertex(id=0, location=np.array([0, 0, 0])), list(graph.vertices)
+                #     Node(id=0, location=np.array([0, 0, 0])), list(graph.nodes)
                 # )
                 self.assertIn(
-                    0, [v.id for v in graph.vertices]
+                    0, [v.id for v in graph.nodes]
                 )
 
                 labels_data_roi = (
@@ -149,9 +149,9 @@ class TestElasticAugment(ProviderTest):
                 ) / labels.spec.voxel_size
 
                 # graph should have moved together with the voxels
-                for vertex in graph.vertices:
-                    loc = vertex.location - labels.spec.roi.get_begin()
+                for node in graph.nodes:
+                    loc = node.location - labels.spec.roi.get_begin()
                     loc = loc / labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):
-                        self.assertEqual(labels.data[loc], vertex.id)
+                        self.assertEqual(labels.data[loc], node.id)

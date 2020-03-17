@@ -2,7 +2,7 @@ from .provider_test import ProviderTest
 from gunpowder import (
     BatchProvider,
     Graph,
-    Vertex,
+    Node,
     GraphSpec,
     GraphKey,
     GraphKeys,
@@ -20,9 +20,9 @@ class TestSourceRandomLocation(BatchProvider):
 
         self.graph = Graph(
             [
-                Vertex(id=1, location=np.array([1, 1, 1])),
-                Vertex(id=2, location=np.array([500, 500, 500])),
-                Vertex(id=3, location=np.array([550, 550, 550])),
+                Node(id=1, location=np.array([1, 1, 1])),
+                Node(id=2, location=np.array([500, 500, 500])),
+                Node(id=3, location=np.array([550, 550, 550])),
             ],
             [],
             GraphSpec(roi=Roi((0, 0, 0), (1000, 1000, 1000))),
@@ -51,7 +51,7 @@ class TestRandomLocationGraph(ProviderTest):
             ensure_nonempty=GraphKeys.TEST_GRAPH
         )
 
-        # count the number of times we get each vertex
+        # count the number of times we get each node
         histogram = {}
 
         with build(pipeline):
@@ -67,20 +67,20 @@ class TestRandomLocationGraph(ProviderTest):
                     )
                 )
 
-                vertices = list(batch[GraphKeys.TEST_GRAPH].vertices)
-                vertex_ids = [v.id for v in vertices]
+                nodes = list(batch[GraphKeys.TEST_GRAPH].nodes)
+                node_ids = [v.id for v in nodes]
 
-                self.assertTrue(len(vertices) > 0)
+                self.assertTrue(len(nodes) > 0)
                 self.assertTrue(
-                    (1 in vertex_ids) != (2 in vertex_ids or 3 in vertex_ids),
-                    vertex_ids,
+                    (1 in node_ids) != (2 in node_ids or 3 in node_ids),
+                    node_ids,
                 )
 
-                for vertex in batch[GraphKeys.TEST_GRAPH].vertices:
-                    if vertex.id not in histogram:
-                        histogram[vertex.id] = 1
+                for node in batch[GraphKeys.TEST_GRAPH].nodes:
+                    if node.id not in histogram:
+                        histogram[node.id] = 1
                     else:
-                        histogram[vertex.id] += 1
+                        histogram[node.id] += 1
 
         total = sum(histogram.values())
         for k, v in histogram.items():

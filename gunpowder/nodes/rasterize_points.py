@@ -190,8 +190,8 @@ class RasterizePoints(BatchFilter):
         data_roi = Roi(offset, shape)
 
         logger.debug("Points in %s", graph.spec.roi)
-        for vertex in graph.vertices:
-            logger.debug("%d, %s", vertex.id, vertex.location)
+        for node in graph.nodes:
+            logger.debug("%d, %s", node.id, node.location)
         logger.debug("Data roi in voxels: %s", data_roi)
         logger.debug("Data roi in world units: %s", data_roi*voxel_size)
 
@@ -296,10 +296,10 @@ class RasterizePoints(BatchFilter):
                     shape=Coordinate(ball_kernel.shape))
 
         # Rasterize volume either with single voxel or with defined struct elememt
-        for vertex in graph.vertices:
+        for node in graph.nodes:
 
             # get the voxel coordinate, 'Coordinate' ensures integer
-            v = Coordinate(vertex.location/voxel_size)
+            v = Coordinate(node.location/voxel_size)
 
             # get the voxel coordinate relative to output array start
             v -= data_roi.get_begin()
@@ -309,9 +309,9 @@ class RasterizePoints(BatchFilter):
                 continue
 
             logger.debug(
-                "Rasterizing vertex %s at %s",
-                vertex.location,
-                vertex.location/voxel_size - data_roi.get_begin())
+                "Rasterizing node %s at %s",
+                node.location,
+                node.location/voxel_size - data_roi.get_begin())
 
             if use_fast_rasterization:
 

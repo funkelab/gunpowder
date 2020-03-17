@@ -4,7 +4,7 @@ from gunpowder import (
     BatchRequest,
     BatchFilter,
     Batch,
-    Vertex,
+    Node,
     Edge,
     Graph,
     GraphSpec,
@@ -23,9 +23,9 @@ class TestGraphSource(BatchProvider):
 
         self.dtype = float
         self.__vertices = [
-            Vertex(id=1, location=np.array([1, 1, 1], dtype=self.dtype)),
-            Vertex(id=2, location=np.array([500, 500, 500], dtype=self.dtype)),
-            Vertex(id=3, location=np.array([550, 550, 550], dtype=self.dtype)),
+            Node(id=1, location=np.array([1, 1, 1], dtype=self.dtype)),
+            Node(id=2, location=np.array([500, 500, 500], dtype=self.dtype)),
+            Node(id=3, location=np.array([550, 550, 550], dtype=self.dtype)),
         ]
         self.__edges = [Edge(1, 2), Edge(2, 3)]
         self.__spec = GraphSpec(
@@ -81,14 +81,14 @@ class TestGraphs(ProviderTest):
 
             graph = batch[GraphKeys.TEST_GRAPH]
             expected_vertices = (
-                Vertex(id=1, location=np.array([1.0, 1.0, 1.0], dtype=float)),
-                Vertex(
+                Node(id=1, location=np.array([1.0, 1.0, 1.0], dtype=float)),
+                Node(
                     id=2,
                     location=np.array([50.0, 50.0, 50.0], dtype=float),
                     temporary=True,
                 ),
             )
-            seen_vertices = tuple(graph.vertices)
+            seen_vertices = tuple(graph.nodes)
             self.assertCountEqual(
                 [v.original_id for v in expected_vertices],
                 [v.original_id for v in seen_vertices],
@@ -111,19 +111,19 @@ class TestGraphs(ProviderTest):
 
             graph = batch[GraphKeys.TEST_GRAPH]
             expected_vertices = (
-                Vertex(
+                Node(
                     id=1,
                     location=np.array([25.0, 25.0, 25.0], dtype=float),
                     temporary=True,
                 ),
-                Vertex(id=2, location=np.array([500.0, 500.0, 500.0], dtype=float)),
-                Vertex(
+                Node(id=2, location=np.array([500.0, 500.0, 500.0], dtype=float)),
+                Node(
                     id=3,
                     location=np.array([525.0, 525.0, 525.0], dtype=float),
                     temporary=True,
                 ),
             )
-            seen_vertices = tuple(graph.vertices)
+            seen_vertices = tuple(graph.nodes)
             self.assertCountEqual(
                 [v.original_id for v in expected_vertices],
                 [v.original_id for v in seen_vertices],

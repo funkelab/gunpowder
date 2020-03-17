@@ -1,5 +1,5 @@
 from .freezable import Freezable
-from .graph import Graph, Vertex, GraphKey, GraphKeys
+from .graph import Graph, Node, GraphKey, GraphKeys
 
 import logging
 import warnings
@@ -24,14 +24,14 @@ class Points(Graph):
 
     def __init__(self, data, spec):
         warnings.warn("Points are depricated. Please use Graph")
-        vertices = [Vertex(id=i, location=p.location) for i, p in data.items()]
-        super().__init__(vertices, [], spec)
+        nodes = [Node(id=i, location=p.location) for i, p in data.items()]
+        super().__init__(nodes, [], spec)
         self.__spec = spec
         self.freeze()
 
     @property
     def data(self):
-        return {v.id: Point(v.location) for v in self.vertices}
+        return {v.id: Point(v.location) for v in self.nodes}
 
     @property
     def directed(self):

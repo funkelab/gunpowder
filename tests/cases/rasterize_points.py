@@ -14,7 +14,7 @@ from gunpowder import (
     RasterizationSettings,
     build,
 )
-from gunpowder.graph import GraphKeys, GraphKey, Graph, Vertex
+from gunpowder.graph import GraphKeys, GraphKey, Graph, Node
 
 import numpy as np
 import math
@@ -26,19 +26,19 @@ class GraphTestSource3D(BatchProvider):
 
         self.voxel_size = Coordinate((40, 4, 4))
 
-        self.vertices = [
+        self.nodes = [
             # corners
-            Vertex(id=1, location=np.array((-200, -200, -200))),
-            Vertex(id=2, location=np.array((-200, -200, 199))),
-            Vertex(id=3, location=np.array((-200, 199, -200))),
-            Vertex(id=4, location=np.array((-200, 199, 199))),
-            Vertex(id=5, location=np.array((199, -200, -200))),
-            Vertex(id=6, location=np.array((199, -200, 199))),
-            Vertex(id=7, location=np.array((199, 199, -200))),
-            Vertex(id=8, location=np.array((199, 199, 199))),
+            Node(id=1, location=np.array((-200, -200, -200))),
+            Node(id=2, location=np.array((-200, -200, 199))),
+            Node(id=3, location=np.array((-200, 199, -200))),
+            Node(id=4, location=np.array((-200, 199, 199))),
+            Node(id=5, location=np.array((199, -200, -200))),
+            Node(id=6, location=np.array((199, -200, 199))),
+            Node(id=7, location=np.array((199, 199, -200))),
+            Node(id=8, location=np.array((199, 199, 199))),
             # center
-            Vertex(id=9, location=np.array((0, 0, 0))),
-            Vertex(id=10, location=np.array((-1, -1, -1))),
+            Node(id=9, location=np.array((0, 0, 0))),
+            Node(id=10, location=np.array((-1, -1, -1))),
         ]
 
         self.graph_spec = GraphSpec(roi=Roi((-100, -100, -100), (300, 300, 300)))
@@ -46,7 +46,7 @@ class GraphTestSource3D(BatchProvider):
                 roi=Roi((-200, -200, -200), (400, 400, 400)), voxel_size=self.voxel_size
             )
 
-        self.graph = Graph(self.vertices, [], self.graph_spec)
+        self.graph = Graph(self.nodes, [], self.graph_spec)
 
     def setup(self):
 
