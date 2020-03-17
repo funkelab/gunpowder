@@ -169,7 +169,7 @@ class Edge(Freezable):
 
 
 class Graph(Freezable):
-    """A structure containing a list of :class:`Node`, a list of :class:'Edge',
+    """A structure containing a list of :class:`Node`, a list of :class:`Edge`,
     and a specification describing the data.
 
     Args:
