@@ -52,6 +52,7 @@ class SimpleAugment(BatchFilter):
             self.transpose_dims = self.transpose_only
 
     def prepare(self, request):
+        random.seed(request.random_seed)
 
         self.total_roi = request.get_total_roi()
 
