@@ -1,14 +1,12 @@
 import math
 import logging
-from random import random, randint, choice
+from random import random, randint, choice, seed
 
 import numpy as np
 from scipy.spatial import KDTree
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points
-from gunpowder.points_spec import PointsSpec
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
@@ -127,6 +125,7 @@ class RandomLocation(BatchFilter):
                 self.updates(key, spec)
 
     def prepare(self, request):
+        seed(request.random_seed)
 
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)

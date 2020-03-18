@@ -1,6 +1,7 @@
 import copy
 import logging
 import multiprocessing
+import time
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
@@ -70,5 +71,6 @@ class PreCache(BatchFilter):
         return batch
 
     def __run_worker(self, i):
-
-        return self.get_upstream_provider().request_batch(self.current_request)
+        request = copy.deepcopy(self.current_request)
+        request._random_seed = (request.random_seed * int(time.time() * 1000)) % 2 ** 32
+        return self.get_upstream_provider().request_batch(request)

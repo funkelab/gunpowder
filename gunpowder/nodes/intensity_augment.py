@@ -36,6 +36,15 @@ class IntensityAugment(BatchFilter):
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
 
+    def setup(self):
+        self.enable_autoskip()
+        self.updates(self.array, self.spec[self.array])
+
+    def prepare(self, request):
+        # TODO: move all randomness into the prepare method
+        # TODO: write a test for this node
+        np.random.seed(request.random_seed)
+
     def process(self, batch, request):
 
         raw = batch.arrays[self.array]
