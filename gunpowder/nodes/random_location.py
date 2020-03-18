@@ -1,9 +1,10 @@
 import math
 import logging
-from random import random, randint, choice, seed
+from random import random, randint, choices, seed
+import itertools
 
 import numpy as np
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
@@ -11,6 +12,7 @@ from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
+
 
 class RandomLocation(BatchFilter):
     """Choses a batch at a random location in the bounding box of the upstream
@@ -55,11 +57,20 @@ class RandomLocation(BatchFilter):
             If ``ensure_nonempty`` is set, it defines the probability that a
             request for ``ensure_nonempty`` will contain at least one point.
             Default value is 1.0.
-
+            
         ensure_centered (``bool``, optional):
 
             if ``ensure_nonempty`` is set, ``ensure_centered`` guarantees
             that the center voxel of the roi contains a point.
+
+        point_balance_radius (``int``):
+
+            if ``ensure_nonempty`` is set, ``point_balance_radius`` defines
+            a radius s.t. for every point `p` in ``ensure_nonempty``, the
+            probability of picking p is inversely related to the number of
+            other points within a distance of ``point_balance_radius`` to p.
+            This helps avoid oversampling of dense regions of the graph, and
+            undersampling of sparse regions. 
     """
 
     def __init__(
@@ -69,6 +80,7 @@ class RandomLocation(BatchFilter):
         ensure_nonempty=None,
         p_nonempty=1.0,
         ensure_centered=None,
+        point_balance_radius=1,
     ):
 
         self.min_masked = min_masked
@@ -81,6 +93,7 @@ class RandomLocation(BatchFilter):
         self.upstream_spec = None
         self.random_shift = None
         self.ensure_centered = ensure_centered
+        self.point_balance_radius = point_balance_radius
 
     def setup(self):
 
@@ -124,11 +137,18 @@ class RandomLocation(BatchFilter):
             nonempty_request = BatchRequest({self.ensure_nonempty: graph_spec})
             nonempty_batch = upstream.request_batch(nonempty_request)
 
-            self.points = KDTree([
-                v.location
-                for v in nonempty_batch[self.ensure_nonempty].nodes])
+            self.points = cKDTree(
+                [p.location for p in nonempty_batch[self.ensure_nonempty].nodes]
+            )
 
-            logger.info("retrieved %d points", len(self.points.data))
+            point_counts = self.points.query_ball_point(
+                [p.location for p in nonempty_batch[self.ensure_nonempty].nodes],
+                r=self.point_balance_radius,
+            )
+            weights = [1 / len(point_count) for point_count in point_counts]
+            self.cumulative_weights = list(itertools.accumulate(weights))
+
+            logger.debug("retrieved %d points", len(self.points.data))
 
         # clear bounding boxes of all provided arrays and points --
         # RandomLocation does not have limits (offsets are ignored)
@@ -367,7 +387,7 @@ class RandomLocation(BatchFilter):
             #                 request.shape-1
 
             # pick a random point
-            point = choice(self.points.data)
+            point = choices(self.points.data, cum_weights=self.cumulative_weights)[0]
 
             logger.debug("select random point at %s", point)
 
@@ -445,12 +465,7 @@ class RandomLocation(BatchFilter):
                 "%s"%(point, points))
             num_points = len(points)
 
-            # accept this shift with v=1/num_points
-            #
-            # This is to compensate the bias introduced by close-by points.
-            accept = random() <= 1.0/num_points
-            if accept:
-                return random_shift
+            return random_shift
 
     def __select_random_location(self, lcm_shift_roi, lcm_voxel_size):
 
