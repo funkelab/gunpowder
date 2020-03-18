@@ -5,6 +5,12 @@ from gunpowder.array_spec import ArraySpec
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from .freezable import Freezable
+import time
+import logging
+import copy
+
+logger = logging.getLogger(__name__)
+
 
 import logging
 import warnings
@@ -45,6 +51,11 @@ class ProviderSpec(Freezable):
 
             Initial graph specs.
 
+        random_seed (``int``, optional):
+
+            A random seed to use for this request. Makes sure
+            that requests can be repeated.
+
     Attributes:
 
         array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`):
@@ -56,10 +67,13 @@ class ProviderSpec(Freezable):
             Contains all graph specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None,  graph_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, graph_specs=None, points_specs=None, random_seed: int = None):
 
         self.array_specs = {}
         self.graph_specs = {}
+        self._random_seed = (
+            random_seed if random_seed is not None else int(time.time() * 1e6)
+        )
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
@@ -82,6 +96,9 @@ class ProviderSpec(Freezable):
         )
         return self.graph_specs
 
+    @property
+    def random_seed(self):
+        return self._random_seed % (2 ** 32)
 
     def __setitem__(self, key, spec):
 
@@ -127,8 +144,8 @@ class ProviderSpec(Freezable):
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or GraphKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "Only ArrayKey or GraphKey, can be used as keys in a "
+                "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
 
     def __delitem__(self, key):
 
@@ -210,10 +227,17 @@ class ProviderSpec(Freezable):
 
         return lcm_voxel_size
 
+    def _update_random_seed(self):
+        self._random_seed = hash((self._random_seed + 1) ** 2)
+
     def __eq__(self, other):
 
         if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
+            other_dict = copy.deepcopy(other.__dict__)
+            self_dict = copy.deepcopy(self.__dict__)
+            other_dict.pop("_random_seed")
+            self_dict.pop("_random_seed")
+            return self_dict == other_dict
         return NotImplemented
 
     def __ne__(self, other):
