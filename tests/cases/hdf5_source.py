@@ -3,7 +3,7 @@ from unittest import skipIf
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
-from gunpowder.ext import h5py, zarr, ZarrFile, z5py, NoSuchModule
+from gunpowder.ext import h5py, zarr, ZarrFile, NoSuchModule
 
 
 class Hdf5LikeSourceTestMixin(object):
@@ -112,12 +112,3 @@ class TestZarrSource(ProviderTest, Hdf5LikeSourceTestMixin):
 
     def _open_writable_file(self, path):
         return ZarrFile(path, mode='w')
-
-
-@skipIf(isinstance(z5py, NoSuchModule), 'z5py is not installed')
-class TestN5Source(ProviderTest, Hdf5LikeSourceTestMixin):
-    extension = 'n5'
-    SourceUnderTest = N5Source
-
-    def _open_writable_file(self, path):
-        return z5py.File(path, use_zarr_format=False)
