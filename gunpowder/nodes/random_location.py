@@ -13,7 +13,7 @@ from .batch_filter import BatchFilter
 logger = logging.getLogger(__name__)
 
 class RandomLocation(BatchFilter):
-    '''Choses a batch at a random location in the bounding box of the upstream
+    """Choses a batch at a random location in the bounding box of the upstream
     provider.
 
     The random location is chosen such that the batch request ROI lies entirely
@@ -24,7 +24,7 @@ class RandomLocation(BatchFilter):
     than using the :class:`Reject` node, at the expense of storing an integral
     array of the complete mask.
 
-    If ``ensure_nonempty`` is set to a :class:`PointsKey`, only batches are
+    If ``ensure_nonempty`` is set to a :class:`GraphKey`, only batches are
     returned that have at least one point of this point collection within the
     requested ROI.
 
@@ -45,7 +45,7 @@ class RandomLocation(BatchFilter):
 
             The array to use for mask checks.
 
-        ensure_nonempty (:class:`PointsKey`, optional):
+        ensure_nonempty (:class:`GraphKey`, optional):
 
             Ensures that when finding a random location, a request for
             ``ensure_nonempty`` will contain at least one point.
@@ -55,9 +55,21 @@ class RandomLocation(BatchFilter):
             If ``ensure_nonempty`` is set, it defines the probability that a
             request for ``ensure_nonempty`` will contain at least one point.
             Default value is 1.0.
-    '''
 
-    def __init__(self, min_masked=0, mask=None, ensure_nonempty=None, p_nonempty=1.0):
+        ensure_centered (``bool``, optional):
+
+            if ``ensure_nonempty`` is set, ``ensure_centered`` guarantees
+            that the center voxel of the roi contains a point.
+    """
+
+    def __init__(
+        self,
+        min_masked=0,
+        mask=None,
+        ensure_nonempty=None,
+        p_nonempty=1.0,
+        ensure_centered=None,
+    ):
 
         self.min_masked = min_masked
         self.mask = mask
@@ -68,6 +80,7 @@ class RandomLocation(BatchFilter):
         self.p_nonempty = p_nonempty
         self.upstream_spec = None
         self.random_shift = None
+        self.ensure_centered = ensure_centered
 
     def setup(self):
 
@@ -205,12 +218,13 @@ class RandomLocation(BatchFilter):
 
         logger.debug("valid shifts for request in " + str(total_shift_roi))
 
-        assert not total_shift_roi.unbounded(), (
+        assert not total_shift_roi.unbounded() or self.ensure_nonempty is not None, (
             "Can not pick a random location, intersection of upstream ROIs is "
-            "unbounded.")
-        assert total_shift_roi.size() > 0, (
-            "Can not satisfy batch request, no location covers all requested "
-            "ROIs.")
+            "unbounded, and no finite set of points to choose from is provided"
+        )
+        assert total_shift_roi.size() is None or total_shift_roi.size() > 0, (
+            "Can not satisfy batch request, no location covers all requested ROIs."
+        )
 
         return total_shift_roi
 
@@ -297,7 +311,17 @@ class RandomLocation(BatchFilter):
             lcm_shift_roi,
             lcm_voxel_size):
 
-        request_points_roi = request[self.ensure_nonempty].roi
+        request_points = request.graph_specs.get(self.ensure_nonempty)
+        if request_points is None:
+            total_roi = request.get_total_roi()
+            logger.warning(
+                f"Requesting non empty {self.ensure_nonempty}, however {self.ensure_nonempty} "
+                f"has not been requested. Falling back on using the total roi of the "
+                f"request {total_roi} for {self.ensure_nonempty}."
+            )
+            request_points_roi = total_roi
+        else:
+            request_points_roi = request_points.roi
 
         while True:
 
@@ -378,13 +402,23 @@ class RandomLocation(BatchFilter):
 
             # get all possible starting points of lcm_roi_shape that contain
             # lcm_location
-            lcm_shift_roi_begin = (
-                lcm_location - lcm_roi_begin - lcm_roi_shape +
-                Coordinate((1,)*len(lcm_location))
-            )
-            lcm_shift_roi_shape = (
-                lcm_roi_shape + lower_boundary_correction
-            )
+            if self.ensure_centered:
+                lcm_shift_roi_begin = (
+                    lcm_location
+                    - lcm_roi_begin
+                    - lcm_roi_shape / 2
+                    + Coordinate((1,) * len(lcm_location))
+                    + lower_boundary_correction
+                )
+                lcm_shift_roi_shape = Coordinate((1,) * len(lcm_location))
+            else:
+                lcm_shift_roi_begin = (
+                    lcm_location
+                    - lcm_roi_begin
+                    - lcm_roi_shape
+                    + Coordinate((1,) * len(lcm_location))
+                )
+                lcm_shift_roi_shape = lcm_roi_shape + lower_boundary_correction
             lcm_point_shift_roi = Roi(lcm_shift_roi_begin, lcm_shift_roi_shape)
             logger.debug("lcm point shift roi: %s", lcm_point_shift_roi)
 
