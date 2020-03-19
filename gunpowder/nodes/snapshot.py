@@ -93,7 +93,7 @@ class Snapshot(BatchFilter):
     def prepare(self, request):
         deps = BatchRequest()
 
-        self.record_snapshot = self.n%self.every == 0
+        self.record_snapshot = self.n % self.every == 0 and self.output_filename is not None
 
         # append additional array requests, don't overwrite existing ones
         for array_key, spec in self.additional_request.array_specs.items():
@@ -114,10 +114,11 @@ class Snapshot(BatchFilter):
             snapshot_name = os.path.join(
                 self.output_dir,
                 self.output_filename.format(
-                    id=str(batch.id).zfill(8),
-                    iteration=int(batch.iteration or 0)))
-            logger.info('saving to %s' %snapshot_name)
-            with h5py.File(snapshot_name, 'w') as f:
+                    id=str(batch.id).zfill(8), iteration=int(batch.iteration or 0)
+                ),
+            )
+            logger.info("saving to %s" % snapshot_name)
+            with h5py.File(snapshot_name, "w") as f:
 
                 for (array_key, array) in batch.arrays.items():
 
@@ -128,26 +129,61 @@ class Snapshot(BatchFilter):
 
                     if array_key in self.dataset_dtypes:
                         dtype = self.dataset_dtypes[array_key]
-                        dataset = f.create_dataset(name=ds_name, data=array.data.astype(dtype), compression=self.compression_type)
+                        dataset = f.create_dataset(
+                            name=ds_name,
+                            data=array.data.astype(dtype),
+                            compression=self.compression_type,
+                        )
+
                     else:
-                        dataset = f.create_dataset(name=ds_name, data=array.data, compression=self.compression_type)
+                        dataset = f.create_dataset(
+                            name=ds_name,
+                            data=array.data,
+                            compression=self.compression_type,
+                        )
 
                     if not array.spec.nonspatial:
                         if array.spec.roi is not None:
-                            dataset.attrs['offset'] = array.spec.roi.get_offset()
-                        dataset.attrs['resolution'] = self.spec[array_key].voxel_size
+                            dataset.attrs["offset"] = array.spec.roi.get_offset()
+                        dataset.attrs["resolution"] = self.spec[array_key].voxel_size
 
                     if self.store_value_range:
-                        dataset.attrs['value_range'] = (
+                        dataset.attrs["value_range"] = (
                             np.asscalar(array.data.min()),
-                            np.asscalar(array.data.max()))
+                            np.asscalar(array.data.max()),
+                        )
 
                     # if array has attributes, add them to the dataset
                     for attribute_name, attribute in array.attrs.items():
                         dataset.attrs[attribute_name] = attribute
 
+                for (points_key, points) in batch.points.items():
+                    if points_key not in self.dataset_names:
+                        continue
+
+                    ds_name = self.dataset_names[points_key]
+
+                    node_ids = []
+                    locations = []
+                    edges = []
+                    for node_id, attrs in points.graph.nodes().items():
+                        node_ids.append(node_id)
+                        locations.append(attrs["location"])
+                    for edge in points.graph.edges():
+                        edges.append(edge)
+
+                    f.create_dataset(
+                        name=f"{ds_name}-ids", data = np.array(node_ids, dtype=int), compression=self.compression_type
+                    )
+                    f.create_dataset(
+                        name=f"{ds_name}-locations", data = np.array(locations), compression=self.compression_type
+                    )
+                    f.create_dataset(
+                        name=f"{ds_name}-edges", data = np.array(edges), compression=self.compression_type
+                    )
+
                 if batch.loss is not None:
-                    f['/'].attrs['loss'] = batch.loss
+                    f["/"].attrs["loss"] = batch.loss
 
         self.n += 1
 

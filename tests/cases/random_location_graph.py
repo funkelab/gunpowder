@@ -21,8 +21,8 @@ class TestSourceRandomLocation(BatchProvider):
         self.graph = Graph(
             [
                 Node(id=1, location=np.array([1, 1, 1])),
-                Node(id=2, location=np.array([500, 500, 500])),
-                Node(id=3, location=np.array([550, 550, 550])),
+                Node(id=2, location=np.array([450, 450, 450])),
+                Node(id=3, location=np.array([551, 551, 551])),
             ],
             [],
             GraphSpec(roi=Roi((0, 0, 0), (1000, 1000, 1000))),
