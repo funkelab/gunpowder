@@ -1,12 +1,12 @@
 import copy
 import logging
-import itertools
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.batch import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,10 @@ class BatchProvider(object):
         upstream_request = request.copy()
         if self.remove_placeholders:
             upstream_request.remove_placeholders()
-        batch = self.provide(upstream_request)
+        if len(upstream_request) == 0:
+            batch = Batch()
+        else:
+            batch = self.provide(upstream_request)
 
         self.check_batch_consistency(batch, request)
 

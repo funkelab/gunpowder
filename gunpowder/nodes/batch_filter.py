@@ -34,7 +34,7 @@ class BatchFilter(BatchProvider):
             :func:`process`. Used to communicate dependencies.
     """
 
-    remove_placeholders=True
+    remove_placeholders = True
 
     def get_upstream_provider(self):
         assert (
