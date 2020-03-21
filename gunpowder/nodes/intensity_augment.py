@@ -44,6 +44,7 @@ class IntensityAugment(BatchFilter):
         # TODO: move all randomness into the prepare method
         # TODO: write a test for this node
         np.random.seed(request.random_seed)
+        return request
 
     def process(self, batch, request):
 
