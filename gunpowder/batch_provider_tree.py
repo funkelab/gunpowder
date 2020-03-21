@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 class BatchProviderTree(BatchProvider):
 
+    _remove_placeholders = False
+
     def __init__(self, inputs=None, output=None):
         self.inputs = inputs
         self.output = output

@@ -26,8 +26,6 @@ class BatchProvider(object):
     instead.
     '''
 
-    remove_placeholders = True
-
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
         return provider
@@ -36,6 +34,12 @@ class BatchProvider(object):
         if not hasattr(self, 'upstream_providers'):
             self.upstream_providers = []
         return self.upstream_providers
+
+    @property
+    def remove_placeholders(self):
+        if not hasattr(self, '_remove_placeholders'):
+            return True
+        return self._remove_placeholders
 
     def setup(self):
         '''To be implemented in subclasses.
@@ -156,6 +160,8 @@ class BatchProvider(object):
             batch = Batch()
         else:
             batch = self.provide(upstream_request)
+
+        request.remove_placeholders()
 
         self.check_batch_consistency(batch, request)
 
@@ -278,7 +284,7 @@ class BatchProvider(object):
                 del batch[key]
 
     def enable_placeholders(self):
-        self.remove_placeholders = False
+        self._remove_placeholders = False
 
     def provide(self, request):
         '''To be implemented in subclasses.

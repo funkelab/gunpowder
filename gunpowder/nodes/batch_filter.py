@@ -34,7 +34,11 @@ class BatchFilter(BatchProvider):
             :func:`process`. Used to communicate dependencies.
     """
 
-    remove_placeholders = True
+    @property
+    def remove_placeholders(self):
+        if not hasattr(self, '_remove_placeholders'):
+            return False
+        return self._remove_placeholders
 
     def get_upstream_provider(self):
         assert (
