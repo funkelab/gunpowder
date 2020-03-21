@@ -1,5 +1,6 @@
 import copy
 import logging
+import itertools
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
@@ -24,6 +25,8 @@ class BatchProvider(object):
     exactly one upstream provider, consider subclassing :class:`BatchFilter`
     instead.
     '''
+
+    remove_placeholders = True
 
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
@@ -146,7 +149,10 @@ class BatchProvider(object):
 
         self.check_request_consistency(request)
 
-        batch = self.provide(request.copy())
+        upstream_request = request.copy()
+        if self.remove_placeholders:
+            upstream_request.remove_placeholders()
+        batch = self.provide(upstream_request)
 
         self.check_batch_consistency(batch, request)
 
@@ -267,6 +273,9 @@ class BatchProvider(object):
         for key in batch_keys:
             if key not in request:
                 del batch[key]
+
+    def enable_placeholders(self):
+        self.remove_placeholders = False
 
     def provide(self, request):
         '''To be implemented in subclasses.
