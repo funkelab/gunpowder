@@ -146,9 +146,11 @@ class BatchFilter(BatchProvider):
 
         if not skip:
             if dependencies is not None:
+                dependencies.remove_placeholders()
                 node_batch = batch.crop(dependencies)
             else:
                 node_batch = batch
+            downstream_request.remove_placeholders()
             processed_batch = self.process(node_batch, downstream_request)
             if processed_batch is None:
                 processed_batch = node_batch

@@ -160,6 +160,10 @@ class ProviderSpec(Freezable):
                 "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
+    def remove_placeholders(self):
+        self.array_specs = {k: v for k, v in self.array_specs if not v.placeholder}
+        self.graph_specs = {k: v for k, v in self.graph_specs if not v.placeholder}
+
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
 
