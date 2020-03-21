@@ -139,9 +139,9 @@ class BatchFilter(BatchProvider):
                     "containing its dependencies.",
                 )
                 upstream_request = request.copy()
-            self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
+        self.remove_provided(upstream_request)
 
         timing_prepare.stop()
 
@@ -177,7 +177,9 @@ class BatchFilter(BatchProvider):
         if not self.autoskip_enabled:
             return False
 
-        for key, _ in request.items():
+        for key, spec in request.items():
+            if spec.placeholder:
+                continue
             if key in self.provided_items:
                 return False
             if key in self.updated_items:
