@@ -6,6 +6,7 @@ from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.batch import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,12 @@ class BatchProvider(object):
         if not hasattr(self, 'upstream_providers'):
             self.upstream_providers = []
         return self.upstream_providers
+
+    @property
+    def remove_placeholders(self):
+        if not hasattr(self, '_remove_placeholders'):
+            return True
+        return self._remove_placeholders
 
     def setup(self):
         '''To be implemented in subclasses.
@@ -146,7 +153,15 @@ class BatchProvider(object):
 
         self.check_request_consistency(request)
 
-        batch = self.provide(request.copy())
+        upstream_request = request.copy()
+        if self.remove_placeholders:
+            upstream_request.remove_placeholders()
+        if len(upstream_request) == 0:
+            batch = Batch()
+        else:
+            batch = self.provide(upstream_request)
+
+        request.remove_placeholders()
 
         self.check_batch_consistency(batch, request)
 
@@ -267,6 +282,9 @@ class BatchProvider(object):
         for key in batch_keys:
             if key not in request:
                 del batch[key]
+
+    def enable_placeholders(self):
+        self._remove_placeholders = False
 
     def provide(self, request):
         '''To be implemented in subclasses.

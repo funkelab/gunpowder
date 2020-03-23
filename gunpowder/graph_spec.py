@@ -21,11 +21,12 @@ class GraphSpec(Freezable):
             Whether the graph is directed or not.
     """
 
-    def __init__(self, roi=None, directed=True, dtype=np.float32):
+    def __init__(self, roi=None, directed=True, dtype=np.float32, placeholder=False):
 
         self.roi = roi
         self.directed = directed
         self.dtype = dtype
+        self.placeholder = placeholder
 
         self.freeze()
 
@@ -47,5 +48,8 @@ class GraphSpec(Freezable):
 
     def __repr__(self):
         r = ""
-        r += "ROI: " + str(self.roi)
+        r += "ROI: " + str(self.roi) + ", "
+        r += "dtype: " + str(self.dtype) + ", "
+        r += "directed: " + str(self.directed) + ", "
+        r += "placeholder: " + str(self.placeholder)
         return r

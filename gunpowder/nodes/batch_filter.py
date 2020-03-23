@@ -34,6 +34,12 @@ class BatchFilter(BatchProvider):
             :func:`process`. Used to communicate dependencies.
     """
 
+    @property
+    def remove_placeholders(self):
+        if not hasattr(self, '_remove_placeholders'):
+            return False
+        return self._remove_placeholders
+
     def get_upstream_provider(self):
         assert (
             len(self.get_upstream_providers()) == 1
@@ -133,9 +139,9 @@ class BatchFilter(BatchProvider):
                     "containing its dependencies.",
                 )
                 upstream_request = request.copy()
-            self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
+        self.remove_provided(upstream_request)
 
         timing_prepare.stop()
 
@@ -146,9 +152,11 @@ class BatchFilter(BatchProvider):
 
         if not skip:
             if dependencies is not None:
+                dependencies.remove_placeholders()
                 node_batch = batch.crop(dependencies)
             else:
                 node_batch = batch
+            downstream_request.remove_placeholders()
             processed_batch = self.process(node_batch, downstream_request)
             if processed_batch is None:
                 processed_batch = node_batch
@@ -169,7 +177,9 @@ class BatchFilter(BatchProvider):
         if not self.autoskip_enabled:
             return False
 
-        for key, _ in request.items():
+        for key, spec in request.items():
+            if spec.placeholder:
+                continue
             if key in self.provided_items:
                 return False
             if key in self.updated_items:

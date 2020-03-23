@@ -1,4 +1,3 @@
-import copy
 import logging
 import math
 import numpy as np
@@ -10,6 +9,7 @@ from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
+from gunpowder.array import ArrayKey
 
 logger = logging.getLogger(__name__)
 
@@ -353,6 +353,9 @@ class ElasticAugment(BatchFilter):
                                 array_key, self.spec[array_key].voxel_size,
                                 prev, self.spec[prev].voxel_size)
             prev = array_key
+
+        if voxel_size is None:
+            raise RuntimeError("voxel size must not be None")
 
         return voxel_size
 
