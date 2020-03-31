@@ -455,12 +455,12 @@ class Graph(Freezable):
             try:
                 self.remove_node(node)
             except nx.exception.NetworkXError:
-                logger.warning("Failed to remove node %s", str(node))
+                logger.debug("Failed to remove node %s", str(node))
         for edge in edges_to_remove:
             try:
                 self.remove_edge(edge)
             except nx.exception.NetworkXError:
-                logger.warning("Failed to remove edge %s", str(edge))
+                logger.debug("Failed to remove edge %s", str(edge))
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi
