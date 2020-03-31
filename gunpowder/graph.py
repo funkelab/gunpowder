@@ -112,6 +112,9 @@ class Node(Freezable):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        return isinstance(other, Node) and self.id == other.id
+
 
 class Edge(Freezable):
     """
