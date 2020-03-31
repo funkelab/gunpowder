@@ -115,3 +115,4 @@ ENV/
 
 # vscode
 .vscode
+.pytest_cache
