@@ -6,6 +6,7 @@ from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
 from .crop import Crop
 from .csv_points_source import CsvPointsSource
+from .daisy_graph_provider import DaisyGraphProvider
 from .daisy_request_blocks import DaisyRequestBlocks
 from .defect_augment import DefectAugment
 from .downsample import DownSample
