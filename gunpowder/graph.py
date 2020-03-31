@@ -236,10 +236,14 @@ class Graph(Freezable):
             yield Edge(u, v, attrs)
 
     def neighbors(self, node):
-        for neighbor in self.__graph.successors(node.id):
-            yield Node.from_attrs(self.__graph.nodes[neighbor])
         if self.directed:
-            for neighbor in self.__graph.predecessors(node.id):
+            for neighbor in self.__graph.successors(node.id):
+                yield Node.from_attrs(self.__graph.nodes[neighbor])
+            if self.directed:
+                for neighbor in self.__graph.predecessors(node.id):
+                    yield Node.from_attrs(self.__graph.nodes[neighbor])
+        else:
+            for neighbor in self.__graph.neighbors(node.id):
                 yield Node.from_attrs(self.__graph.nodes[neighbor])
 
     def __str__(self):

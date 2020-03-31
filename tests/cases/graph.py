@@ -133,3 +133,28 @@ class TestGraphs(ProviderTest):
                 sorted(seen_vertices, key=lambda v: tuple(v.location)),
             ):
                 assert all(np.isclose(expected.location, actual.location))
+
+    def test_neighbors(self):
+        # directed
+        d_spec = GraphSpec(
+            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
+        )
+        # undirected
+        ud_spec = GraphSpec(
+            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=False
+        )
+        nodes = [
+            Node(0, location=np.array([0, 0, 0], dtype=d_spec.dtype)),
+            Node(1, location=np.array([1, 1, 1], dtype=d_spec.dtype)),
+            Node(2, location=np.array([2, 2, 2], dtype=d_spec.dtype)),
+            Node(3, location=np.array([3, 3, 3], dtype=d_spec.dtype)),
+            Node(4, location=np.array([4, 4, 4], dtype=d_spec.dtype)),
+        ]
+        edges = [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
+
+        directed = Graph(nodes, edges, d_spec)
+        undirected = Graph(nodes, edges, ud_spec)
+
+        self.assertCountEqual(
+            directed.neighbors(nodes[0]), undirected.neighbors(nodes[0])
+        )
