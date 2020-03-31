@@ -395,11 +395,13 @@ class Graph(Freezable):
         all_nodes = contained_edge_nodes | contained_nodes
         dangling_nodes = all_nodes - contained_nodes
 
+        next_node = 0 if len(all_nodes) == 0 else max(all_nodes) + 1
+
         trimmed._handle_boundaries(
             partially_contained_edges,
             contained_nodes,
             roi,
-            node_id=itertools.count(max(all_nodes) + 1),
+            node_id=itertools.count(next_node),
         )
 
         for node in trimmed.nodes:
