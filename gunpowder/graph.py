@@ -190,9 +190,7 @@ class Graph(Freezable):
             A spec describing the data.
     """
 
-    def __init__(
-        self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec
-    ):
+    def __init__(self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec):
         self.__spec = spec
         self.__graph = self.create_graph(nodes, edges)
 
@@ -273,6 +271,21 @@ class Graph(Freezable):
         Remove a node
         """
         self.__graph.remove_node(node.id)
+
+    def extract_node(self, node: Node):
+        """
+        Remove a node, while preserving its neighboring edges.
+        Given graph: a->b->c, extracting `b` would leave us
+        with a->c
+        """
+        predecessors = self.predecessors(node)
+        successors = self.successors(node)
+
+        for pred_id in predecessors:
+            for succ_id in successors:
+                if pred_id != succ_id:
+                    self.add_edge(Edge(pred_id, succ_id))
+        self.remove_node(node)
 
     def add_node(self, node: Node):
         """
@@ -373,9 +386,7 @@ class Graph(Freezable):
 
         trimmed = self.copy()
 
-        contained_nodes = set(
-            [v.id for v in trimmed.nodes if roi.contains(v.location)]
-        )
+        contained_nodes = set([v.id for v in trimmed.nodes if roi.contains(v.location)])
         all_contained_edges = set(
             [
                 e
@@ -539,6 +550,58 @@ class Graph(Freezable):
             merged.add_edge(edge)
 
         return merged
+
+    def to_nx_graph(self):
+        """
+        returns a pure networkx graph containing data from
+        this Graph.
+        """
+        return deepcopy(self.__graph)
+
+    @classmethod
+    def from_nx_graph(cls, graph, spec):
+        """
+        Create a gunpowder graph from a networkx graph
+        """
+        nodes = [
+            Node(id=node, location=attrs["location"], attrs=attrs)
+            for node, attrs in graph.nodes().items()
+        ]
+        edges = [Edge(u, v) for u, v in graph.edges]
+        directed = graph.is_directed()
+        spec.directed = directed
+        return cls(nodes, edges, spec)
+
+    def relabel_connected_components(self):
+        """
+        create a new attribute "component" for each node
+        in this Graph
+        """
+        for i, wcc in enumerate(self.connected_components):
+            for node in wcc:
+                self.__graph.nodes[node]["component"] = i
+
+    @property
+    def connected_components(self):
+        if not self.directed:
+            return nx.connected_components(self.__graph)
+        else:
+            return nx.weakly_connected_components(self.__graph)
+
+    def in_degree(self):
+        return self.__graph.in_degree()
+
+    def successors(self, node):
+        if self.directed:
+            return self.__graph.successors(node.id)
+        else:
+            return self.__graph.neighbors(node.id)
+
+    def predecessors(self, node):
+        if self.directed:
+            return self.__graph.predecessors(node.id)
+        else:
+            return self.__graph.neighbors(node.id)
 
 
 class GraphKey(Freezable):
