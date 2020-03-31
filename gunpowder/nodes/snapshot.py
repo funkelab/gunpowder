@@ -86,6 +86,7 @@ class Snapshot(BatchFilter):
     def setup(self):
 
         for array_key, spec in self.additional_request.array_specs.items():
+            spec = self.spec[array_key]
             self.updates(array_key, spec)
 
         self.enable_autoskip()
