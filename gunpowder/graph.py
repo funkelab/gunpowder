@@ -418,6 +418,8 @@ class Graph(Freezable):
         roi: Roi,
         node_id: Iterator[int],
     ):
+        nodes_to_remove = []
+        edges_to_remove = []
         for e in crossing_edges:
             u, v = self.node(e.u), self.node(e.v)
             u_in = u.id in contained_nodes
@@ -427,19 +429,27 @@ class Graph(Freezable):
             if not all(np.isclose(new_location, in_location)):
                 # use deepcopy because modifying this node should not modify original
                 new_attrs = deepcopy(v_out.attrs)
-                new_v = Node(
-                    id=next(node_id),
-                    location=new_location,
-                    attrs=new_attrs,
-                    temporary=True,
-                )
+                new_attrs["id"] = next(node_id)
+                new_attrs["location"] = new_location
+                new_attrs["temporary"] = True
+                new_v = Node.from_attrs(new_attrs)
                 new_e = Edge(
                     u=v_in.id if u_in else new_v.id, v=new_v.id if u_in else v_in.id
                 )
                 self.add_node(new_v)
                 self.add_edge(new_e)
-            self.remove_edge(e)
-            self.remove_node(v_out)
+            edges_to_remove.append(e)
+            nodes_to_remove.append(v_out)
+        for node in nodes_to_remove:
+            try:
+                self.remove_node(node)
+            except nx.exception.NetworkXError:
+                logger.warning("Failed to remove node %s", str(node))
+        for edge in edges_to_remove:
+            try:
+                self.remove_edge(edge)
+            except nx.exception.NetworkXError:
+                logger.warning("Failed to remove edge %s", str(edge))
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi
