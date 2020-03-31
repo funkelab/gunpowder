@@ -282,8 +282,8 @@ class ElasticAugment(BatchFilter):
                     target_roi=self.target_rois[graph_key],
                 )
                 if not self.recompute_missing_points:
-                    for point_id in missed_nodes:
-                        graph.remove(point_id)
+                    for node in set(missed_nodes):
+                        graph.extract_node(node)
                     missed_nodes = []
             else:
                 missed_nodes = nodes
@@ -310,7 +310,7 @@ class ElasticAugment(BatchFilter):
 
                 if projected_voxels is None:
                     logger.debug("node outside of target, skipping")
-                    graph.remove_node(node)
+                    graph.extract_node(node)
                     continue
 
                 # convert to world units (now in float again)
@@ -333,7 +333,7 @@ class ElasticAugment(BatchFilter):
                 # been requested upstream)
                 if not request[graph_key].roi.contains(node.location):
                     logger.debug("node outside of target, skipping")
-                    graph.remove_node(node)
+                    graph.extract_node(node)
                     continue
 
             # restore original ROIs
@@ -432,7 +432,7 @@ class ElasticAugment(BatchFilter):
         ]
         node_dict = {node.id:node for node in nodes}
         for point_id, proj_loc in zip(ids, projected_locs):
-            point = node_dict[point_id]
+            point = node_dict.pop(point_id)
             if not any([np.isnan(x) for x in proj_loc]):
                 assert (
                     len(proj_loc) == self.spatial_dims
@@ -442,6 +442,8 @@ class ElasticAugment(BatchFilter):
                 point.location[-self.spatial_dims :] = proj_loc
             else:
                 missing_points.append(point)
+        for node in node_dict.values():
+            missing_points.append(point)
         logger.debug(
             "{} of {} points lost in fast points projection".format(
                 len(missing_points), len(ids)
