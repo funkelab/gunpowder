@@ -4,12 +4,13 @@ from daisy.persistence import MongoDbGraphProvider
 
 from gunpowder.batch import Batch
 from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.points import PointsKey
-from gunpowder.graph_points import GraphPoints, SpatialGraph
-from gunpowder.points_spec import PointsSpec
+from gunpowder.graph import Graph, GraphKey
+from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
 from gunpowder.profiling import Timing
+
+import networkx as nx
 
 import logging
 from typing import Tuple, List, Optional, Union
@@ -29,8 +30,8 @@ class DaisyGraphProvider(BatchProvider):
         self,
         dbname: str,
         url: str,
-        points: List[PointsKey],
-        points_specs: Optional[Union[PointsSpec, List[PointsSpec]]] = None,
+        points: List[GraphKey],
+        points_specs: Optional[Union[GraphSpec, List[GraphSpec]]] = None,
         directed: bool = False,
         total_roi: Roi = None,
         nodes_collection: str = "nodes",
@@ -45,7 +46,7 @@ class DaisyGraphProvider(BatchProvider):
         points_specs = (
             points_specs
             if points_specs is not None
-            else PointsSpec(Roi(Coordinate([None] * 3), Coordinate([None] * 3)))
+            else GraphSpec(Roi(Coordinate([None] * 3), Coordinate([None] * 3)))
         )
         specs = (
             points_specs
@@ -93,7 +94,7 @@ class DaisyGraphProvider(BatchProvider):
             logger.debug(
                 f"got {len(requested_graph.nodes)} nodes and {len(requested_graph.edges)} edges"
             )
-            graph = SpatialGraph()
+            graph = nx.DiGraph()
             for node, attrs in requested_graph.nodes.items():
                 loc = attrs.pop(self.position_attribute)
                 graph.add_node(node, location=np.array(loc), **attrs)
@@ -103,7 +104,7 @@ class DaisyGraphProvider(BatchProvider):
                 for v, d in nbrs.items()
                 if u in graph.nodes and v in graph.nodes
             )
-            points = GraphPoints._from_graph(graph, spec)
+            points = Graph.from_nx_graph(graph, spec)
             points.crop(spec.roi)
             batch[key] = points
 
