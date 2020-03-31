@@ -1,6 +1,12 @@
 from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
+import itertools
+
+
+def coordinate_to_id(i, j, k):
+    i, j, k = (i-20000) // 100, (j-2000) // 10, (k-2000) // 10
+    return i + j * 20 + k * 400
 
 class ScanTestSource(BatchProvider):
 
@@ -16,6 +22,12 @@ class ScanTestSource(BatchProvider):
             ArraySpec(
                 roi=Roi((20100,2010,2010), (1800,180,180)),
                 voxel_size=(20, 2, 2)))
+        self.provides(
+            GraphKeys.GT_GRAPH,
+            GraphSpec(
+                roi=Roi((20000,2000,2000), (2000,200,200)),
+            )
+        )
 
     def provide(self, request):
 
@@ -44,6 +56,25 @@ class ScanTestSource(BatchProvider):
             batch.arrays[array_key] = Array(
                     data,
                     spec)
+        
+        for graph_key, spec in request.graph_specs.items():
+            # node at x, y, z if x%100==0, y%10==0, z%10==0
+            roi = self.spec[graph_key].roi
+            nodes = []
+            start = spec.roi.get_begin() - tuple(x % s for x, s in zip(spec.roi.get_begin(), [100,10,10]))
+            for i, j, k in itertools.product(
+                *[
+                    range(a, b, s)
+                    for a, b, s in zip(start, spec.roi.get_end(), [100, 10, 10])
+                ]
+            ):
+                location = np.array([i, j, k])
+                if spec.roi.contains(location):
+                    nodes.append(Node(id=coordinate_to_id(i, j, k), location=location))
+            batch.graphs[graph_key] = Graph(
+                nodes, [], spec
+            )
+
 
         return batch
 
@@ -56,6 +87,7 @@ class TestScan(ProviderTest):
         chunk_request = BatchRequest()
         chunk_request.add(ArrayKeys.RAW, (400,30,34))
         chunk_request.add(ArrayKeys.GT_LABELS, (200,10,14))
+        chunk_request.add(GraphKeys.GT_GRAPH, (400, 30, 34))
 
         pipeline = ScanTestSource() + Scan(chunk_request, num_workers=10)
 
@@ -63,10 +95,12 @@ class TestScan(ProviderTest):
 
             raw_spec = pipeline.spec[ArrayKeys.RAW]
             labels_spec = pipeline.spec[ArrayKeys.GT_LABELS]
+            graph_spec = pipeline.spec[GraphKeys.GT_GRAPH]
 
             full_request = BatchRequest({
                     ArrayKeys.RAW: raw_spec,
-                    ArrayKeys.GT_LABELS: labels_spec
+                    ArrayKeys.GT_LABELS: labels_spec,
+                    GraphKeys.GT_GRAPH: graph_spec,
                 }
             )
 
@@ -85,6 +119,12 @@ class TestScan(ProviderTest):
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             self.assertTrue((array.data == data).all())
+
+        for (graph_key, graph) in batch.graphs.items():
+
+            roi = graph.spec.roi
+            for i, j, k in itertools.product(range(20000, 22000, 100), range(2000, 2200, 10), range(2000, 2200, 10)):
+                assert all(np.isclose(graph.node(coordinate_to_id(i, j, k)).location, np.array([i, j, k])))
 
         assert(batch.arrays[ArrayKeys.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
 
