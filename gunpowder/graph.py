@@ -311,7 +311,7 @@ class Graph(Freezable):
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
         """
-        
+
         if not copy:
             warnings.warn("subgraph view not yet supported, graphs are copied on crop.")
 
@@ -319,7 +319,6 @@ class Graph(Freezable):
             cropped = self.copy()
         else:
             cropped = self.copy()
-        cropped.__spec = self.__spec
 
         contained_nodes = set(
             [v.id for v in cropped.nodes if roi.contains(v.location)]
