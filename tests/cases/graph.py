@@ -65,6 +65,29 @@ class GrowFilter(BatchFilter):
 
 
 class TestGraphs(ProviderTest):
+    @property
+    def edges(self):
+
+        return [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
+
+    @property
+    def nodes(self):
+
+        return [
+            Node(0, location=np.array([0, 0, 0], dtype=self.spec.dtype)),
+            Node(1, location=np.array([1, 1, 1], dtype=self.spec.dtype)),
+            Node(2, location=np.array([2, 2, 2], dtype=self.spec.dtype)),
+            Node(3, location=np.array([3, 3, 3], dtype=self.spec.dtype)),
+            Node(4, location=np.array([4, 4, 4], dtype=self.spec.dtype)),
+        ]
+
+    @property
+    def spec(self):
+
+        return GraphSpec(
+            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
+        )
+
     def test_output(self):
 
         GraphKey("TEST_GRAPH")
@@ -133,3 +156,30 @@ class TestGraphs(ProviderTest):
                 sorted(seen_vertices, key=lambda v: tuple(v.location)),
             ):
                 assert all(np.isclose(expected.location, actual.location))
+
+    def test_neighbors(self):
+        # directed
+        d_spec = self.spec
+        # undirected
+        ud_spec = self.spec
+        ud_spec.directed = False
+
+        directed = Graph(self.nodes, self.edges, d_spec)
+        undirected = Graph(self.nodes, self.edges, ud_spec)
+
+        self.assertCountEqual(
+            directed.neighbors(self.nodes[0]), undirected.neighbors(self.nodes[0])
+        )
+
+    def test_crop(self):
+        g = Graph(self.nodes, self.edges, self.spec)
+
+        sub_g = g.crop(Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3])))
+        self.assertEqual(g.spec.roi, self.spec.roi)
+        self.assertEqual(
+            sub_g.spec.roi, Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3]))
+        )
+
+        sub_g.spec.directed = False
+        self.assertTrue(g.spec.directed)
+        self.assertFalse(sub_g.spec.directed)

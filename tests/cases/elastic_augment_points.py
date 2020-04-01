@@ -355,7 +355,6 @@ class TestElasticAugment(ProviderTest):
             missing = 0
             for point_id, point in points_reference.items():
                 if point_id not in points_fast:
-                    print("{} at {}".format(point_id, point.location))
                     missing += 1
                     continue
                 diff = point.location - points_fast[point_id].location

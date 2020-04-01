@@ -86,6 +86,7 @@ class Snapshot(BatchFilter):
     def setup(self):
 
         for array_key, spec in self.additional_request.array_specs.items():
+            spec = self.spec[array_key]
             self.updates(array_key, spec)
 
         self.enable_autoskip()
@@ -97,8 +98,9 @@ class Snapshot(BatchFilter):
 
         # append additional array requests, don't overwrite existing ones
         for array_key, spec in self.additional_request.array_specs.items():
-            if array_key not in request.array_specs:
-                deps[array_key] = spec
+            deps[array_key] = spec
+        for graph_key, spec in self.additional_request.graph_specs.items():
+            deps[graph_key] = spec
 
         return deps
 
@@ -157,29 +159,35 @@ class Snapshot(BatchFilter):
                     for attribute_name, attribute in array.attrs.items():
                         dataset.attrs[attribute_name] = attribute
 
-                for (points_key, points) in batch.points.items():
-                    if points_key not in self.dataset_names:
+                for (graph_key, graph) in batch.graphs.items():
+                    if graph_key not in self.dataset_names:
                         continue
 
-                    ds_name = self.dataset_names[points_key]
+                    ds_name = self.dataset_names[graph_key]
 
                     node_ids = []
                     locations = []
                     edges = []
-                    for node_id, attrs in points.graph.nodes().items():
-                        node_ids.append(node_id)
-                        locations.append(attrs["location"])
-                    for edge in points.graph.edges():
-                        edges.append(edge)
+                    for node in graph.nodes:
+                        node_ids.append(node.id)
+                        locations.append(node.location)
+                    for edge in graph.edges:
+                        edges.append((edge.u, edge.v))
 
                     f.create_dataset(
-                        name=f"{ds_name}-ids", data = np.array(node_ids, dtype=int), compression=self.compression_type
+                        name=f"{ds_name}-ids",
+                        data=np.array(node_ids, dtype=int),
+                        compression=self.compression_type,
                     )
                     f.create_dataset(
-                        name=f"{ds_name}-locations", data = np.array(locations), compression=self.compression_type
+                        name=f"{ds_name}-locations",
+                        data=np.array(locations),
+                        compression=self.compression_type,
                     )
                     f.create_dataset(
-                        name=f"{ds_name}-edges", data = np.array(edges), compression=self.compression_type
+                        name=f"{ds_name}-edges",
+                        data=np.array(edges),
+                        compression=self.compression_type,
                     )
 
                 if batch.loss is not None:
