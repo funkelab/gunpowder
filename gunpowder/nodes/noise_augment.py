@@ -39,8 +39,7 @@ class NoiseAugment(BatchFilter):
         self.updates(self.array, self.spec[self.array])
 
     def prepare(self, request):
-        # TODO: move all randomness into the prepare method
-        np.random.seed(request.random_seed)
+        return request
 
     def process(self, batch, request):
 
