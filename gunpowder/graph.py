@@ -430,8 +430,7 @@ class Graph(Freezable):
         roi: Roi,
         node_id: Iterator[int],
     ):
-        nodes_to_remove = []
-        edges_to_remove = []
+        nodes_to_remove = set([])
         for e in crossing_edges:
             u, v = self.node(e.u), self.node(e.v)
             u_in = u.id in contained_nodes
@@ -450,18 +449,9 @@ class Graph(Freezable):
                 )
                 self.add_node(new_v)
                 self.add_edge(new_e)
-            edges_to_remove.append(e)
-            nodes_to_remove.append(v_out)
+            nodes_to_remove.add(v_out)
         for node in nodes_to_remove:
-            try:
-                self.remove_node(node)
-            except nx.exception.NetworkXError:
-                logger.debug("Failed to remove node %s", str(node))
-        for edge in edges_to_remove:
-            try:
-                self.remove_edge(edge)
-            except nx.exception.NetworkXError:
-                logger.debug("Failed to remove edge %s", str(edge))
+            self.remove_node(node)
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi
