@@ -115,6 +115,9 @@ class Node(Freezable):
     def __eq__(self, other):
         return isinstance(other, Node) and self.id == other.id
 
+    def __hash__(self):
+        return hash(self.id)
+
 
 class Edge(Freezable):
     """
