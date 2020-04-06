@@ -266,26 +266,27 @@ class Graph(Freezable):
         attrs = self.__graph.nodes[id]
         return Node.from_attrs(attrs)
 
-    def remove_node(self, node: Node):
+    def remove_node(self, node: Node, retain_connectivity=False):
         """
-        Remove a node
+        Remove a node.
+        
+        retain_connectivity: preserve removed nodes neighboring edges.
+        Given graph: a->b->c, removing `b` without retain_connectivity
+        would leave us with two connected components, {'a'} and {'b'}.
+        removing 'b' with retain_connectivity flag set to True would
+        leave us with the graph: a->c, and only one connected component
+        {a, c}, thus preserving the connectivity of 'a' and 'c'
         """
+        if retain_connectivity:
+            predecessors = self.predecessors(node)
+            successors = self.successors(node)
+
+            for pred_id in predecessors:
+                for succ_id in successors:
+                    if pred_id != succ_id:
+                        self.add_edge(Edge(pred_id, succ_id))
         self.__graph.remove_node(node.id)
 
-    def extract_node(self, node: Node):
-        """
-        Remove a node, while preserving its neighboring edges.
-        Given graph: a->b->c, extracting `b` would leave us
-        with a->c
-        """
-        predecessors = self.predecessors(node)
-        successors = self.successors(node)
-
-        for pred_id in predecessors:
-            for succ_id in successors:
-                if pred_id != succ_id:
-                    self.add_edge(Edge(pred_id, succ_id))
-        self.remove_node(node)
 
     def add_node(self, node: Node):
         """
