@@ -317,7 +317,7 @@ class Graph(Freezable):
     def copy(self):
         return deepcopy(self)
 
-    def crop(self, roi: Roi, copy: bool = True):
+    def crop(self, roi: Roi):
         """
         Will remove all nodes from self that are not contained in `roi` except for
         "dangling" nodes. This means that if there are nodes A, B s.t. there
@@ -327,19 +327,17 @@ class Graph(Freezable):
 
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
+        
+        Args:
+
+            roi (:class:`Roi`):
+
+                ROI in world units to crop to.
         """
 
-        if not copy:
-            warnings.warn("subgraph view not yet supported, graphs are copied on crop.")
+        cropped = self.copy()
 
-        if copy:
-            cropped = self.copy()
-        else:
-            cropped = self.copy()
-
-        contained_nodes = set(
-            [v.id for v in cropped.nodes if roi.contains(v.location)]
-        )
+        contained_nodes = set([v.id for v in cropped.nodes if roi.contains(v.location)])
         all_contained_edges = set(
             [
                 e

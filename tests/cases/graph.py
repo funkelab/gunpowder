@@ -43,7 +43,7 @@ class TestGraphSource(BatchProvider):
 
         roi = request[GraphKeys.TEST_GRAPH].roi
 
-        sub_graph = self.graph.crop(roi, copy=True)
+        sub_graph = self.graph.crop(roi)
 
         batch[GraphKeys.TEST_GRAPH] = sub_graph
 

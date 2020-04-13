@@ -66,7 +66,7 @@ class GraphTestSource3D(BatchProvider):
 
         graph_roi = request[GraphKeys.TEST_GRAPH].roi
 
-        batch.graphs[GraphKeys.TEST_GRAPH] = self.graph.crop(graph_roi, copy=True).trim(graph_roi)
+        batch.graphs[GraphKeys.TEST_GRAPH] = self.graph.crop(graph_roi).trim(graph_roi)
 
         roi_array = request[ArrayKeys.GT_LABELS].roi
 
