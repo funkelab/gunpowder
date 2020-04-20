@@ -1,5 +1,7 @@
 import numpy as np
 
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 class IntensityAugment(BatchFilter):
@@ -41,7 +43,9 @@ class IntensityAugment(BatchFilter):
         self.updates(self.array, self.spec[self.array])
 
     def prepare(self, request):
-        return request
+        deps = BatchRequest()
+        deps[self.array] = request[self.array].copy()
+        return deps
 
     def process(self, batch, request):
 
