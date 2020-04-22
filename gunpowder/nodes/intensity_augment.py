@@ -1,5 +1,7 @@
 import numpy as np
 
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 class IntensityAugment(BatchFilter):
@@ -35,6 +37,15 @@ class IntensityAugment(BatchFilter):
         self.shift_min = shift_min
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
+
+    def setup(self):
+        self.enable_autoskip()
+        self.updates(self.array, self.spec[self.array])
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        deps[self.array] = request[self.array].copy()
+        return deps
 
     def process(self, batch, request):
 

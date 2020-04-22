@@ -175,7 +175,10 @@ class Batch(Freezable):
             if val.roi is None:
                 cropped[key] = self[key]
             else:
-                cropped[key] = self[key].crop(val.roi, copy)
+                if isinstance(key, GraphKey):
+                    cropped[key] = self[key].crop(val.roi)
+                else:
+                    cropped[key] = self[key].crop(val.roi, copy)
 
         return cropped
 

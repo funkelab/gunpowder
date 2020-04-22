@@ -2,6 +2,7 @@ import logging
 import numpy as np
 
 from gunpowder.array import ArrayKey, Array
+from gunpowder.array_spec import ArraySpec
 from gunpowder.ext import torch, tensorboardX, NoSuchModule
 from gunpowder.nodes.generic_train import GenericTrain
 
@@ -84,7 +85,7 @@ class Train(GenericTrain):
         outputs: Dict[Union[int, str], ArrayKey],
         loss_inputs: Dict[Union[int, str], ArrayKey],
         gradients: Dict[Union[int, str], ArrayKey] = {},
-        array_specs: Optional[Dict[Union[int, str], ArrayKey]] = None,
+        array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
         checkpoint_basename: str = "model",
         save_every: int = 2000,
         log_dir: str = None,
@@ -219,7 +220,7 @@ class Train(GenericTrain):
             else:
                 break
         device_loss_kwargs = {}
-        for k, v in device_loss_inputs:
+        for k, v in list(device_loss_inputs.items()):
             if isinstance(k, str):
                 device_loss_kwargs[k] = device_loss_inputs.pop(k)
         assert (

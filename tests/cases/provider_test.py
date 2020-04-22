@@ -116,6 +116,7 @@ class ProviderTest(TestWithTempFiles):
         ArrayKey('GT_MASK')
         ArrayKey('GT_IGNORE')
         ArrayKey('LOSS_SCALE')
+        GraphKey('GT_GRAPH')
 
         self.test_source = TestSource()
         self.test_request = BatchRequest()

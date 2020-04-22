@@ -112,6 +112,12 @@ class Node(Freezable):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        return isinstance(other, Node) and self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 class Edge(Freezable):
     """
@@ -187,9 +193,7 @@ class Graph(Freezable):
             A spec describing the data.
     """
 
-    def __init__(
-        self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec
-    ):
+    def __init__(self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec):
         self.__spec = spec
         self.__graph = self.create_graph(nodes, edges)
 
@@ -236,10 +240,14 @@ class Graph(Freezable):
             yield Edge(u, v, attrs)
 
     def neighbors(self, node):
-        for neighbor in self.__graph.successors(node.id):
-            yield Node.from_attrs(self.__graph.nodes[neighbor])
         if self.directed:
-            for neighbor in self.__graph.predecessors(node.id):
+            for neighbor in self.__graph.successors(node.id):
+                yield Node.from_attrs(self.__graph.nodes[neighbor])
+            if self.directed:
+                for neighbor in self.__graph.predecessors(node.id):
+                    yield Node.from_attrs(self.__graph.nodes[neighbor])
+        else:
+            for neighbor in self.__graph.neighbors(node.id):
                 yield Node.from_attrs(self.__graph.nodes[neighbor])
 
     def __str__(self):
@@ -261,11 +269,27 @@ class Graph(Freezable):
         attrs = self.__graph.nodes[id]
         return Node.from_attrs(attrs)
 
-    def remove_node(self, node: Node):
+    def remove_node(self, node: Node, retain_connectivity=False):
         """
-        Remove a node
+        Remove a node.
+        
+        retain_connectivity: preserve removed nodes neighboring edges.
+        Given graph: a->b->c, removing `b` without retain_connectivity
+        would leave us with two connected components, {'a'} and {'b'}.
+        removing 'b' with retain_connectivity flag set to True would
+        leave us with the graph: a->c, and only one connected component
+        {a, c}, thus preserving the connectivity of 'a' and 'c'
         """
+        if retain_connectivity:
+            predecessors = self.predecessors(node)
+            successors = self.successors(node)
+
+            for pred_id in predecessors:
+                for succ_id in successors:
+                    if pred_id != succ_id:
+                        self.add_edge(Edge(pred_id, succ_id))
         self.__graph.remove_node(node.id)
+
 
     def add_node(self, node: Node):
         """
@@ -293,7 +317,7 @@ class Graph(Freezable):
     def copy(self):
         return deepcopy(self)
 
-    def crop(self, roi: Roi, copy: bool = True):
+    def crop(self, roi: Roi):
         """
         Will remove all nodes from self that are not contained in `roi` except for
         "dangling" nodes. This means that if there are nodes A, B s.t. there
@@ -303,20 +327,17 @@ class Graph(Freezable):
 
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
-        """
         
-        if not copy:
-            warnings.warn("subgraph view not yet supported, graphs are copied on crop.")
+        Args:
 
-        if copy:
-            cropped = self.copy()
-        else:
-            cropped = self.copy()
-        cropped.__spec = self.__spec
+            roi (:class:`Roi`):
 
-        contained_nodes = set(
-            [v.id for v in cropped.nodes if roi.contains(v.location)]
-        )
+                ROI in world units to crop to.
+        """
+
+        cropped = self.copy()
+
+        contained_nodes = set([v.id for v in cropped.nodes if roi.contains(v.location)])
         all_contained_edges = set(
             [
                 e
@@ -367,9 +388,7 @@ class Graph(Freezable):
 
         trimmed = self.copy()
 
-        contained_nodes = set(
-            [v.id for v in trimmed.nodes if roi.contains(v.location)]
-        )
+        contained_nodes = set([v.id for v in trimmed.nodes if roi.contains(v.location)])
         all_contained_edges = set(
             [
                 e
@@ -389,11 +408,13 @@ class Graph(Freezable):
         all_nodes = contained_edge_nodes | contained_nodes
         dangling_nodes = all_nodes - contained_nodes
 
+        next_node = 0 if len(all_nodes) == 0 else max(all_nodes) + 1
+
         trimmed._handle_boundaries(
             partially_contained_edges,
             contained_nodes,
             roi,
-            node_id=itertools.count(max(all_nodes) + 1),
+            node_id=itertools.count(next_node),
         )
 
         for node in trimmed.nodes:
@@ -410,6 +431,7 @@ class Graph(Freezable):
         roi: Roi,
         node_id: Iterator[int],
     ):
+        nodes_to_remove = set([])
         for e in crossing_edges:
             u, v = self.node(e.u), self.node(e.v)
             u_in = u.id in contained_nodes
@@ -419,19 +441,18 @@ class Graph(Freezable):
             if not all(np.isclose(new_location, in_location)):
                 # use deepcopy because modifying this node should not modify original
                 new_attrs = deepcopy(v_out.attrs)
-                new_v = Node(
-                    id=next(node_id),
-                    location=new_location,
-                    attrs=new_attrs,
-                    temporary=True,
-                )
+                new_attrs["id"] = next(node_id)
+                new_attrs["location"] = new_location
+                new_attrs["temporary"] = True
+                new_v = Node.from_attrs(new_attrs)
                 new_e = Edge(
                     u=v_in.id if u_in else new_v.id, v=new_v.id if u_in else v_in.id
                 )
                 self.add_node(new_v)
                 self.add_edge(new_e)
-            self.remove_edge(e)
-            self.remove_node(v_out)
+            nodes_to_remove.add(v_out)
+        for node in nodes_to_remove:
+            self.remove_node(node)
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi
@@ -521,6 +542,58 @@ class Graph(Freezable):
             merged.add_edge(edge)
 
         return merged
+
+    def to_nx_graph(self):
+        """
+        returns a pure networkx graph containing data from
+        this Graph.
+        """
+        return deepcopy(self.__graph)
+
+    @classmethod
+    def from_nx_graph(cls, graph, spec):
+        """
+        Create a gunpowder graph from a networkx graph
+        """
+        nodes = [
+            Node(id=node, location=attrs["location"], attrs=attrs)
+            for node, attrs in graph.nodes().items()
+        ]
+        edges = [Edge(u, v) for u, v in graph.edges]
+        directed = graph.is_directed()
+        spec.directed = directed
+        return cls(nodes, edges, spec)
+
+    def relabel_connected_components(self):
+        """
+        create a new attribute "component" for each node
+        in this Graph
+        """
+        for i, wcc in enumerate(self.connected_components):
+            for node in wcc:
+                self.__graph.nodes[node]["component"] = i
+
+    @property
+    def connected_components(self):
+        if not self.directed:
+            return nx.connected_components(self.__graph)
+        else:
+            return nx.weakly_connected_components(self.__graph)
+
+    def in_degree(self):
+        return self.__graph.in_degree()
+
+    def successors(self, node):
+        if self.directed:
+            return self.__graph.successors(node.id)
+        else:
+            return self.__graph.neighbors(node.id)
+
+    def predecessors(self, node):
+        if self.directed:
+            return self.__graph.predecessors(node.id)
+        else:
+            return self.__graph.neighbors(node.id)
 
 
 class GraphKey(Freezable):

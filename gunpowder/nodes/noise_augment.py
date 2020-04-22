@@ -1,6 +1,8 @@
 import numpy as np
 import skimage
 
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 class NoiseAugment(BatchFilter):
@@ -39,8 +41,9 @@ class NoiseAugment(BatchFilter):
         self.updates(self.array, self.spec[self.array])
 
     def prepare(self, request):
-        # TODO: move all randomness into the prepare method
-        np.random.seed(request.random_seed)
+        deps = BatchRequest()
+        deps[self.array] = request[self.array].copy()
+        return deps
 
     def process(self, batch, request):
 

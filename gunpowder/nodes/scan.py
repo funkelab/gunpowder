@@ -319,8 +319,8 @@ class Scan(BatchFilter):
         for (graph_key, graphs) in chunk.graphs.items():
             if graph_key not in spec:
                 continue
-            self.__fill_points(self.batch.graphs[graph_key].data, graphs.data,
-                               spec.graph_specs[graph_key].roi, graphs.roi)
+            self.__fill_points(self.batch.graphs[graph_key], graphs,
+                               spec.graph_specs[graph_key].roi, graphs.spec.roi)
 
     def __setup_batch(self, batch_spec, chunk):
         '''Allocate a batch matching the sizes of ``batch_spec``, using
@@ -341,7 +341,7 @@ class Scan(BatchFilter):
             spec = self.spec[array_key].copy()
             spec.roi = roi
             logger.info("allocating array of shape %s for %s", shape, array_key)
-            batch.arrays[array_key] = Array(data=np.zeros(shape),
+            batch.arrays[array_key] = Array(data=np.zeros(shape, dtype=spec.dtype),
                                                 spec=spec)
 
         for (graph_key, spec) in batch_spec.graph_specs.items():
@@ -383,12 +383,6 @@ class Scan(BatchFilter):
         if common_roi is None:
             return
 
-        # find max point_id in a so far
-        max_point_id = 0
-        for point_id, point in a.items():
-            if point_id > max_point_id:
-                max_point_id = point_id
-
-        for point_id, point in b.items():
-            if roi_a.contains(Coordinate(point.location)):
-                a[point_id + max_point_id] = point
+        for node in b.nodes:
+            if roi_a.contains(node.location):
+                a.add_node(node)
