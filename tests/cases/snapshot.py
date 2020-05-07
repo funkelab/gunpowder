@@ -54,7 +54,7 @@ class TestSource(BatchProvider):
         return outputs
 
 
-class TestRasterizePoints(unittest.TestCase):
+class TestSnapshot(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
 

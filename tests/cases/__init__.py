@@ -29,3 +29,4 @@ from .tensorflow_train import TestTensorflowTrain
 from .torch_train import TestTorchTrain, TestTorchPredict
 from .upsample import TestUpSample
 from .zarr_write import TestZarrWrite
+from .snapshot import TestSnapshot
