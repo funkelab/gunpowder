@@ -52,11 +52,6 @@ class ProviderSpec(Freezable):
 
             Initial graph specs.
 
-        random_seed (``int``, optional):
-
-            A random seed to use for this request. Makes sure
-            that requests can be repeated.
-
     Attributes:
 
         array_specs (``dict``, :class:`ArrayKey` -> :class:`ArraySpec`):
@@ -68,13 +63,10 @@ class ProviderSpec(Freezable):
             Contains all graph specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None, graph_specs=None, points_specs=None, random_seed: int = None):
+    def __init__(self, array_specs=None, graph_specs=None, points_specs=None):
 
         self.array_specs = {}
         self.graph_specs = {}
-        self._random_seed = (
-            random_seed if random_seed is not None else int(time.time() * 1e6)
-        )
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
@@ -96,10 +88,6 @@ class ProviderSpec(Freezable):
             "points_specs are depricated. Please use graph_specs", DeprecationWarning
         )
         return self.graph_specs
-
-    @property
-    def random_seed(self):
-        return self._random_seed % (2 ** 32)
 
     def __setitem__(self, key, spec):
 
@@ -242,16 +230,11 @@ class ProviderSpec(Freezable):
 
         return lcm_voxel_size
 
-    def _update_random_seed(self):
-        self._random_seed = hash((self._random_seed + 1) ** 2)
-
     def __eq__(self, other):
 
         if isinstance(other, self.__class__):
             other_dict = copy.deepcopy(other.__dict__)
             self_dict = copy.deepcopy(self.__dict__)
-            other_dict.pop("_random_seed")
-            self_dict.pop("_random_seed")
             return self_dict == other_dict
         return NotImplemented
 
