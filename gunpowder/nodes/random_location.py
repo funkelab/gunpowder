@@ -199,6 +199,15 @@ class RandomLocation(BatchFilter):
                 -request_roi.get_shape()
             )
 
+            # Add +1 in voxel size to allow for all possible shifts
+            lcm_voxel_size = self.spec.get_lcm_voxel_size(
+                request.array_specs.keys())
+            logger.debug(f'{lcm_voxel_size=}')
+            shift_roi = shift_roi.grow(
+                (0,) * request_roi.dims(),
+                lcm_voxel_size
+            )
+
             if total_shift_roi is None:
                 total_shift_roi = shift_roi
             else:
