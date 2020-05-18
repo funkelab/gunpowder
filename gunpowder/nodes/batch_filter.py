@@ -127,12 +127,14 @@ class BatchFilter(BatchProvider):
             dependencies = self.prepare(request)
             if isinstance(dependencies, BatchRequest):
                 upstream_request = request.merge(dependencies)
+            elif dependencies is None:
+                upstream_request = request.copy()
             else:
                 raise Exception(
-                    f"{self.__class__} does not return a BatchRequest ",
-                    "containing its dependencies.",
+                    f"{self.__class__} returned a {type(dependencies)}! "
+                    f"Supported return types are: `BatchRequest` containing your exact "
+                    f"dependencies or `None`, indicating a dependency on the full request."
                 )
-                upstream_request = request.copy()
             self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
@@ -192,9 +194,10 @@ class BatchFilter(BatchProvider):
         """To be implemented in subclasses.
 
         Prepare for a batch request. Should return a :class:`BatchRequest` of
-        needed dependencies.
+        needed dependencies. If None is returned, it will be assumed that all
+        of request is needed.
         """
-        pass
+        return None
 
     def process(self, batch, request):
         """To be implemented in subclasses.
@@ -217,4 +220,3 @@ class BatchFilter(BatchProvider):
         raise RuntimeError(
             "Class %s does not implement 'process'" % type(self).__name__
         )
-
