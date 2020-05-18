@@ -4,6 +4,8 @@ from gunpowder.batch_request import BatchRequest
 
 from .batch_provider import BatchProvider
 
+import random
+
 
 class MergeProvider(BatchProvider):
     '''Merges different providers::
@@ -38,7 +40,11 @@ class MergeProvider(BatchProvider):
 
             provider = self.key_to_provider[key]
             if provider not in upstream_requests:
-                upstream_requests[provider] = BatchRequest()
+                # use new random seeds per upstream request.
+                # seeds picked by random should be deterministic since
+                # the provided request already has a random seed.
+                seed = random.randint(0, 2**32)
+                upstream_requests[provider] = BatchRequest(seed)
 
             upstream_requests[provider][key] = spec
 
