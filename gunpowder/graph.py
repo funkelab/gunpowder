@@ -115,6 +115,9 @@ class Node(Freezable):
     def __eq__(self, other):
         return isinstance(other, Node) and self.id == other.id
 
+    def __hash__(self):
+        return hash(self.id)
+
 
 class Edge(Freezable):
     """
@@ -266,26 +269,27 @@ class Graph(Freezable):
         attrs = self.__graph.nodes[id]
         return Node.from_attrs(attrs)
 
-    def remove_node(self, node: Node):
+    def remove_node(self, node: Node, retain_connectivity=False):
         """
-        Remove a node
+        Remove a node.
+        
+        retain_connectivity: preserve removed nodes neighboring edges.
+        Given graph: a->b->c, removing `b` without retain_connectivity
+        would leave us with two connected components, {'a'} and {'b'}.
+        removing 'b' with retain_connectivity flag set to True would
+        leave us with the graph: a->c, and only one connected component
+        {a, c}, thus preserving the connectivity of 'a' and 'c'
         """
+        if retain_connectivity:
+            predecessors = self.predecessors(node)
+            successors = self.successors(node)
+
+            for pred_id in predecessors:
+                for succ_id in successors:
+                    if pred_id != succ_id:
+                        self.add_edge(Edge(pred_id, succ_id))
         self.__graph.remove_node(node.id)
 
-    def extract_node(self, node: Node):
-        """
-        Remove a node, while preserving its neighboring edges.
-        Given graph: a->b->c, extracting `b` would leave us
-        with a->c
-        """
-        predecessors = self.predecessors(node)
-        successors = self.successors(node)
-
-        for pred_id in predecessors:
-            for succ_id in successors:
-                if pred_id != succ_id:
-                    self.add_edge(Edge(pred_id, succ_id))
-        self.remove_node(node)
 
     def add_node(self, node: Node):
         """
@@ -313,7 +317,7 @@ class Graph(Freezable):
     def copy(self):
         return deepcopy(self)
 
-    def crop(self, roi: Roi, copy: bool = True):
+    def crop(self, roi: Roi):
         """
         Will remove all nodes from self that are not contained in `roi` except for
         "dangling" nodes. This means that if there are nodes A, B s.t. there
@@ -323,19 +327,17 @@ class Graph(Freezable):
 
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
+        
+        Args:
+
+            roi (:class:`Roi`):
+
+                ROI in world units to crop to.
         """
 
-        if not copy:
-            warnings.warn("subgraph view not yet supported, graphs are copied on crop.")
+        cropped = self.copy()
 
-        if copy:
-            cropped = self.copy()
-        else:
-            cropped = self.copy()
-
-        contained_nodes = set(
-            [v.id for v in cropped.nodes if roi.contains(v.location)]
-        )
+        contained_nodes = set([v.id for v in cropped.nodes if roi.contains(v.location)])
         all_contained_edges = set(
             [
                 e
@@ -429,8 +431,7 @@ class Graph(Freezable):
         roi: Roi,
         node_id: Iterator[int],
     ):
-        nodes_to_remove = []
-        edges_to_remove = []
+        nodes_to_remove = set([])
         for e in crossing_edges:
             u, v = self.node(e.u), self.node(e.v)
             u_in = u.id in contained_nodes
@@ -449,18 +450,9 @@ class Graph(Freezable):
                 )
                 self.add_node(new_v)
                 self.add_edge(new_e)
-            edges_to_remove.append(e)
-            nodes_to_remove.append(v_out)
+            nodes_to_remove.add(v_out)
         for node in nodes_to_remove:
-            try:
-                self.remove_node(node)
-            except nx.exception.NetworkXError:
-                logger.debug("Failed to remove node %s", str(node))
-        for edge in edges_to_remove:
-            try:
-                self.remove_edge(edge)
-            except nx.exception.NetworkXError:
-                logger.debug("Failed to remove edge %s", str(edge))
+            self.remove_node(node)
 
     def _roi_intercept(
         self, inside: np.ndarray, outside: np.ndarray, bb: Roi

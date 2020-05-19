@@ -85,22 +85,25 @@ class Snapshot(BatchFilter):
 
     def setup(self):
 
-        for array_key, spec in self.additional_request.array_specs.items():
+        for array_key in self.additional_request.array_specs.keys():
             spec = self.spec[array_key]
             self.updates(array_key, spec)
-
-        self.enable_autoskip()
+        for graph_key in self.additional_request.graph_specs.keys():
+            spec = self.spec[graph_key]
+            self.updates(graph_key, spec)
 
     def prepare(self, request):
         deps = BatchRequest()
 
         self.record_snapshot = self.n % self.every == 0 and self.output_filename is not None
 
-        # append additional array requests, don't overwrite existing ones
-        for array_key, spec in self.additional_request.array_specs.items():
-            deps[array_key] = spec
-        for graph_key, spec in self.additional_request.graph_specs.items():
-            deps[graph_key] = spec
+        if self.record_snapshot:
+
+            # append additional array requests, don't overwrite existing ones
+            for array_key, spec in self.additional_request.array_specs.items():
+                deps[array_key] = spec
+            for graph_key, spec in self.additional_request.graph_specs.items():
+                deps[graph_key] = spec
 
         return deps
 

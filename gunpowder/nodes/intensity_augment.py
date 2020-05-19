@@ -1,5 +1,7 @@
 import numpy as np
 
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 class IntensityAugment(BatchFilter):
@@ -44,7 +46,9 @@ class IntensityAugment(BatchFilter):
         # TODO: move all randomness into the prepare method
         # TODO: write a test for this node
         np.random.seed(request.random_seed)
-        return request
+        deps = BatchRequest()
+        deps[self.array] = request[self.array].copy()
+        return deps
 
     def process(self, batch, request):
 

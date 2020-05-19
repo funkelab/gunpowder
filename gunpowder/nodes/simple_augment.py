@@ -82,6 +82,8 @@ class SimpleAugment(BatchFilter):
 
         logger.debug("upstream request = " + str(request))
 
+        return request
+
     def process(self, batch, request):
 
         # mirror and transpose ROIs of arrays & points in batch

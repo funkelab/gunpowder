@@ -54,7 +54,7 @@ class Array(Freezable):
 
         self.freeze()
 
-    def crop(self, roi, copy=False):
+    def crop(self, roi, copy=True):
         '''Create a cropped copy of this Array.
 
         Args:

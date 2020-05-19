@@ -310,7 +310,7 @@ class ElasticAugment(BatchFilter):
 
                 if projected_voxels is None:
                     logger.debug("node outside of target, skipping")
-                    graph.extract_node(node)
+                    graph.remove_node(node, retain_connectivity=True)
                     continue
 
                 # convert to world units (now in float again)
@@ -333,7 +333,7 @@ class ElasticAugment(BatchFilter):
                 # been requested upstream)
                 if not request[graph_key].roi.contains(node.location):
                     logger.debug("node outside of target, skipping")
-                    graph.extract_node(node)
+                    graph.remove_node(node, retain_connectivity=True)
                     continue
 
             # restore original ROIs

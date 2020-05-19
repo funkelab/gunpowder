@@ -37,7 +37,7 @@ class TestSourceRandomLocation(BatchProvider):
         batch = Batch()
 
         roi = request[GraphKeys.TEST_GRAPH].roi
-        batch[GraphKeys.TEST_GRAPH] = self.graph.crop(roi, copy=True).trim(roi)
+        batch[GraphKeys.TEST_GRAPH] = self.graph.crop(roi).trim(roi)
 
         return batch
 

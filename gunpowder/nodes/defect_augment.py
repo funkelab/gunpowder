@@ -106,6 +106,7 @@ class DefectAugment(BatchFilter):
     # send roi request to data-source upstream
     def prepare(self, request):
         random.seed(request.random_seed)
+        deps = BatchRequest()
 
         # we prepare the augmentations, by determining which slices
         # will be augmented by which method
@@ -118,7 +119,7 @@ class DefectAugment(BatchFilter):
         prob_artifact_threshold = prob_low_contrast_threshold + self.prob_artifact
         prob_deform_slice = prob_artifact_threshold + self.prob_deform
 
-        spec = request[self.intensities]
+        spec = request[self.intensities].copy()
         roi = spec.roi
         logger.debug("downstream request ROI is %s" % roi)
         raw_voxel_size = self.spec[self.intensities].voxel_size
@@ -167,6 +168,8 @@ class DefectAugment(BatchFilter):
             # transformation
             spec.roi = source_roi
             logger.debug("upstream request roi is %s" % spec.roi)
+
+        deps[self.intensities] = spec
 
     def process(self, batch, request):
 
