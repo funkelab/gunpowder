@@ -2,6 +2,7 @@ import copy
 import logging
 import multiprocessing
 import time
+import random
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
@@ -121,5 +122,8 @@ class PreCache(BatchFilter):
 
     def __run_worker(self, i):
         request = copy.deepcopy(self.current_request)
-        request._random_seed = (request.random_seed * int(time.time() * 1000)) % 2 ** 32
+        # Note that using a precache node breaks determinism in batches recieved since we do not
+        # keep a mapping of the order in which random seeds were used, and the order in which
+        # the corresponding batch gets returned.
+        request._random_seed = random.randint(0, 2**32)
         return self.get_upstream_provider().request_batch(request)
