@@ -23,13 +23,9 @@ class TestSource(BatchProvider):
     def __init__(self):
 
         self.graph = Graph(
-            [
-                Node(id=1, location=np.array([1, 1, 1])),
-                Node(id=2, location=np.array([450, 450, 450])),
-                Node(id=3, location=np.array([551, 551, 551])),
-            ],
+            [Node(id=1, location=np.array([1, 1, 1]))],
             [],
-            GraphSpec(roi=Roi((0, 0, 0), (1000, 1000, 1000))),
+            GraphSpec(roi=Roi((0, 0, 0), (100, 100, 100))),
         )
 
     def setup(self):
@@ -54,16 +50,26 @@ class TestSimpleAugment(ProviderTest):
         test_graph = GraphKey("TEST_GRAPH")
 
         pipeline = TestSource() + SimpleAugment(
-            mirror_only=[0, 1, 2], transpose_only=[0, 1, 2]
+            mirror_only=[0, 1, 2], transpose_only=[]
         )
 
         request = BatchRequest()
-        request[GraphKeys.TEST_GRAPH] = GraphSpec(
-            roi=Roi((445, 445, 445), (10, 10, 10))
-        )
+        request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=Roi((0, 0, 0), (100, 100, 100)))
 
         with build(pipeline):
+            seen_mirrored = False
             for i in range(100):
                 batch = pipeline.request_batch(request)
 
-                assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) > 0
+                assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
+                node = list(batch[GraphKeys.TEST_GRAPH].nodes)[0]
+                assert all(
+                    [
+                        node.location[dim] == 1 or node.location[dim] == 99
+                        for dim in range(3)
+                    ]
+                )
+                seen_mirrored = seen_mirrored or any(
+                    [node.location[dim] == 99 for dim in range(3)]
+                )
+            assert seen_mirrored

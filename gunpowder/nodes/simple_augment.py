@@ -130,11 +130,11 @@ class SimpleAugment(BatchFilter):
             for node in list(graph.nodes):
                 # mirror
                 location_in_total_offset = np.asarray(node.location) - total_roi_offset
-                node.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
+                node.location[:] = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
                                                  if m else node.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
                 if self.transpose != tuple(range(self.dims)):
-                    node.location = np.asarray([node.location[self.transpose[d]] for d in range(self.dims)])
+                    node.location[:] = np.asarray([node.location[self.transpose[d]] for d in range(self.dims)])
 
                 # due to the mirroring, points at the lower boundary of the ROI
                 # could fall on the upper one, which excludes them from the ROI
