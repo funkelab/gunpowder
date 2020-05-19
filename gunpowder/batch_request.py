@@ -17,6 +17,14 @@ class BatchRequest(ProviderSpec):
 
     See :ref:`sec_requests_batches` for how to use a batch request to obtain a
     batch.
+
+    Additional Kwargs:
+
+        random_seed (``int``):
+
+            The random seed that will be associated with this batch to
+            guarantee deterministic and repeatable batch requests.
+
     """
 
     def __init__(self, *args, random_seed=None, **kwargs):
