@@ -1,5 +1,9 @@
+import numpy as np
+
 import copy
 import logging
+import random
+
 from gunpowder.coordinate import Coordinate
 from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
@@ -154,6 +158,8 @@ class BatchProvider(object):
 
         request._update_random_seed()
 
+        self.set_seeds(request)
+
         self.check_request_consistency(request)
 
         upstream_request = request.copy()
@@ -170,6 +176,12 @@ class BatchProvider(object):
         logger.debug("%s provides %s", self.name(), batch)
 
         return batch
+
+    def set_seeds(self, request):
+        seed = request.random_seed
+        random.seed(seed)
+        # augment uses numpy for its randomness
+        np.random.seed(seed)
 
     def check_request_consistency(self, request):
 
