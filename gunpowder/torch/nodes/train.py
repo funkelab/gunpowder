@@ -318,7 +318,7 @@ class Train(GenericTrain):
 
         for array_name, array_key in reference.items():
             if isinstance(array_key, ArrayKey):
-                msg = "batch does not contain {array_key}, array {array_name} will not be set"
+                msg = f"batch does not contain {array_key}, array {array_name} will not be set"
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
                 elif not expect_missing_arrays:
