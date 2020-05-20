@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from .provider_test import ProviderTest
@@ -16,15 +17,23 @@ from gunpowder import (
     MergeProvider,
 )
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 class TestSourceRandomLocation(BatchProvider):
-    def __init__(self, array):
+    def __init__(self, array, offset=(-200, -20, -20)):
         self.array = array
-        self.roi = Roi((-200, -20, -20), (1000, 100, 100))
+        self.roi = Roi(offset, (1000, 100, 100))
         self.voxel_size = Coordinate((20, 2, 2))
 
     def setup(self):
-        self.provides(self.array, ArraySpec(roi=self.roi, voxel_size=self.voxel_size))
+        self.provides(
+            self.array,
+            ArraySpec(
+                roi=self.roi,
+                voxel_size=self.voxel_size))
 
     def provide(self, request):
 
@@ -73,13 +82,53 @@ class TestRandomLocation(ProviderTest):
                     BatchRequest({raw: ArraySpec(roi=full_roi)})
                 )
 
+                logger.debug(
+                    f'batch shape {batch[raw].data.shape}')
+                logger.debug(
+                    f'full_roi shape {full_roi.get_shape() // source.voxel_size}')
+                self.assertTrue(
+                    batch[raw].data.shape == full_roi.get_shape() //
+                    source.voxel_size)
+
+    def test_output_zero_offset(self):
+
+        raw = ArrayKeys.RAW
+        source = TestSourceRandomLocation(raw, offset=(0, 0, 0))
+        pipeline = source + CustomRandomLocation()
+
+        with build(pipeline):
+
+            for i in range(10):
+                batch = pipeline.request_batch(
+                    BatchRequest(
+                        {raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))}
+                    )
+                )
+
+                self.assertTrue(np.sum(batch.arrays[raw].data) > 0)
+
+                # Request a ROI with the same shape as the entire ROI
+                full_roi = Roi((0, 0, 0), source.roi.get_shape())
+                batch = pipeline.request_batch(
+                    BatchRequest({raw: ArraySpec(roi=full_roi)})
+                )
+
+                logger.debug(
+                    f'batch shape {batch[raw].data.shape}')
+                logger.debug(
+                    f'full_roi shape {full_roi.get_shape() // source.voxel_size}')
+                self.assertTrue(
+                    batch[raw].data.shape == full_roi.get_shape() //
+                    source.voxel_size)
+
     def test_impossible(self):
         a = ArrayKey("A")
         b = ArrayKey("B")
         source_a = TestSourceRandomLocation(a)
         source_b = TestSourceRandomLocation(b)
 
-        pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation()
+        pipeline = (source_a, source_b) + \
+            MergeProvider() + CustomRandomLocation()
 
         with build(pipeline):
             with self.assertRaises(AssertionError):
@@ -87,7 +136,13 @@ class TestRandomLocation(ProviderTest):
                     BatchRequest(
                         {
                             a: ArraySpec(roi=Roi((0, 0, 0), (200, 20, 20))),
-                            b: ArraySpec(roi=Roi((1000, 100, 100), (220, 22, 22))),
+                            b: ArraySpec(
+                                roi=Roi(
+                                    (220, 22, 22), (1000, 100, 100))),
                         }
                     )
                 )
+
+
+if __name__ == '__main__':
+    pass
