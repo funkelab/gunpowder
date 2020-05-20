@@ -13,3 +13,10 @@ install-dev:
 .PHONY: test
 test:
 	python -m tests -v
+
+.PHONY: publish
+publish:
+	-rm -rf dist build gunpowder.egg-info
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
+	-rm -rf dist build gunpowder.egg-info
