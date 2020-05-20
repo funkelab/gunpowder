@@ -2,24 +2,28 @@ from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
 
+
 class TestSourceRandomLocation(BatchProvider):
+    def __init__(self):
+        self.roi = Roi((-200, -20, -20), (1000, 100, 100))
+        self.voxel_size = Coordinate((20, 2, 2))
 
     def setup(self):
-
         self.provides(
             ArrayKeys.RAW,
             ArraySpec(
-                roi=Roi((-200, -20, -20), (1000, 100, 100)),
-                voxel_size=(20, 2, 2)))
+                roi=self.roi,
+                voxel_size=self.voxel_size))
 
     def provide(self, request):
 
         batch = Batch()
 
         spec = request[ArrayKeys.RAW].copy()
-        spec.voxel_size = Coordinate((20, 2, 2))
+        spec.voxel_size = self.voxel_size
 
-        data = np.zeros(request[ArrayKeys.RAW].roi.get_shape()/(20, 2, 2))
+        data = np.zeros(
+            request[ArrayKeys.RAW].roi.get_shape() / self.voxel_size)
         if request.array_specs[ArrayKeys.RAW].roi.contains((0, 0, 0)):
             data[:] = 1
 
@@ -29,19 +33,22 @@ class TestSourceRandomLocation(BatchProvider):
 
         return batch
 
+
 class CustomRandomLocation(RandomLocation):
 
     # only accept random locations that contain (0, 0, 0)
     def accepts(self, request):
         return request.array_specs[ArrayKeys.RAW].roi.contains((0, 0, 0))
 
+
 class TestRandomLocation(ProviderTest):
 
     def test_output(self):
 
+        source = TestSourceRandomLocation()
         pipeline = (
-            TestSourceRandomLocation() +
-            CustomRandomLocation()
+            source
+            + CustomRandomLocation()
         )
 
         with build(pipeline):
@@ -54,4 +61,13 @@ class TestRandomLocation(ProviderTest):
                                 roi=Roi((0, 0, 0), (20, 20, 20)))
                         }))
 
-                self.assertTrue(np.sum( batch.arrays[ArrayKeys.RAW].data) > 0)
+                self.assertTrue(np.sum(batch.arrays[ArrayKeys.RAW].data) > 0)
+
+                # Request the entire ROI from the source
+                batch = pipeline.request_batch(
+                    BatchRequest(
+                        {
+                            ArrayKeys.RAW: ArraySpec(roi=source.roi)
+                        }
+                    )
+                )
