@@ -199,14 +199,6 @@ class RandomLocation(BatchFilter):
                 -request_roi.get_shape()
             )
 
-            # Add +1 in voxel size to allow for all possible shifts
-            lcm_voxel_size = self.spec.get_lcm_voxel_size(
-                request.array_specs.keys())
-            shift_roi = shift_roi.grow(
-                (0,) * request_roi.dims(),
-                lcm_voxel_size
-            )
-
             if total_shift_roi is None:
                 total_shift_roi = shift_roi
             else:
@@ -217,7 +209,7 @@ class RandomLocation(BatchFilter):
         assert not total_shift_roi.unbounded(), (
             "Can not pick a random location, intersection of upstream ROIs is "
             "unbounded.")
-        assert total_shift_roi.size() > 0, (
+        assert total_shift_roi.get_begin() is not None, (
             "Can not satisfy batch request, no location covers all requested "
             "ROIs.")
 
@@ -431,7 +423,7 @@ class RandomLocation(BatchFilter):
 
         # select a random point inside ROI
         random_shift = Coordinate(
-            randint(int(begin), int(end-1))
+            randint(int(begin), int(end))
             for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
 
         random_shift *= lcm_voxel_size
