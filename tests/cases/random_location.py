@@ -1,6 +1,19 @@
-from .provider_test import ProviderTest
-from gunpowder import *
 import numpy as np
+
+from .provider_test import ProviderTest
+from gunpowder import (
+    RandomLocation,
+    BatchProvider,
+    Roi,
+    Coordinate,
+    ArrayKey,
+    ArrayKeys,
+    ArraySpec,
+    Batch,
+    Array,
+    BatchRequest,
+    build,
+)
 
 
 class TestSourceRandomLocation(BatchProvider):
@@ -63,11 +76,12 @@ class TestRandomLocation(ProviderTest):
 
                 self.assertTrue(np.sum(batch.arrays[ArrayKeys.RAW].data) > 0)
 
-                # Request the entire ROI from the source
+                # Request a ROI with the same shape as the entire ROI
+                full_roi = Roi((0, 0, 0), source.roi.get_shape())
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
-                            ArrayKeys.RAW: ArraySpec(roi=source.roi)
+                            ArrayKeys.RAW: ArraySpec(roi=full_roi)
                         }
                     )
                 )
