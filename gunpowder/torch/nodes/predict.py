@@ -66,7 +66,6 @@ class Predict(GenericPredict):
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = model.to(self.device)
-        self.model.eval()
         self.checkpoint = checkpoint
         self.gpus = gpus
 

@@ -112,7 +112,6 @@ class Train(GenericTrain):
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = self.model.to(self.device)
-        self.model.train()
         self.loss = self.loss.to(self.device)
         self.iteration = 0
 
