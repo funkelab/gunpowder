@@ -54,6 +54,8 @@ class Node(Freezable):
     ):
         self.__id = id
         self.__location = location
+        # purpose is to keep track of nodes that were created during
+        # processing and do not have a corresponding node in the original source
         self.__temporary = temporary
         self.attrs = attrs
         self.freeze()
@@ -100,7 +102,7 @@ class Node(Freezable):
         special_attrs = ["id", "location", "temporary"]
         node_id = attrs["id"]
         location = attrs["location"]
-        temporary = attrs["temporary"]
+        temporary = attrs.get("temporary", False)
         remaining_attrs = {k: v for k, v in attrs.items() if k not in special_attrs}
         return cls(
             id=node_id, location=location, temporary=temporary, attrs=remaining_attrs
