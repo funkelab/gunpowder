@@ -60,6 +60,11 @@ class Predict(GenericPredict):
         checkpoint: str = None,
         gpus=[0],
     ):
+        if model.training:
+            logger.warning(
+                "Model is in training mode during prediction. "
+                "Consider using model.eval()"
+            )
 
         super(Predict, self).__init__(inputs, outputs, array_specs)
 
@@ -71,8 +76,8 @@ class Predict(GenericPredict):
 
         if self.checkpoint is not None:
             checkpoint = torch.load(self.checkpoint)
-            if 'model_state_dict' in checkpoint:
-                self.model.load_state_dict(checkpoint['model_state_dict'])
+            if "model_state_dict" in checkpoint:
+                self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict()
         self.intermediate_layers = {}
@@ -104,6 +109,7 @@ class Predict(GenericPredict):
     def create_hook(self, key):
         def save_layer(module, input, output):
             self.intermediate_layers[key] = output
+
         return save_layer
 
     def get_outputs(self, module_out, request):

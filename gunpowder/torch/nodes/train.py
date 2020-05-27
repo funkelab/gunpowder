@@ -92,6 +92,12 @@ class Train(GenericTrain):
         log_every: int = 1,
     ):
 
+        if not model.training:
+            logger.warning(
+                "Model is in evaluation mode during training. "
+                "Consider using model.train()"
+            )
+
         # not yet implemented
         gradients = gradients
         inputs.update(
