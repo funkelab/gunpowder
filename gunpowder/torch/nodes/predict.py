@@ -59,6 +59,7 @@ class Predict(GenericPredict):
         array_specs: Dict[ArrayKey, ArraySpec] = {},
         checkpoint: str = None,
         gpus=[0],
+        device="cuda",
     ):
         if model.training:
             logger.warning(
@@ -68,7 +69,8 @@ class Predict(GenericPredict):
 
         super(Predict, self).__init__(inputs, outputs, array_specs)
 
-        self.use_cuda = torch.cuda.is_available()
+        self.use_cuda = torch.cuda.is_available() and device == "cuda"
+        logger.info(f"Training on {'gpu' if self.use_cuda else 'cpu'}")
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = model.to(self.device)
         self.checkpoint = checkpoint
