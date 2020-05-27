@@ -111,7 +111,7 @@ class ProviderSpec(Freezable):
         elif isinstance(spec, GraphSpec):
             assert isinstance(
                 key, GraphKey
-            ), f"Only A GraphKey (not a {type(spec).__name__}) is allowed as key for a GraphSpec value."
+            ), f"Only A GraphKey (not a {type(key).__name__}) is allowed as key for a GraphSpec value."
             self.graph_specs[key] = spec.copy()
 
         else:

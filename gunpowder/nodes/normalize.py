@@ -53,6 +53,7 @@ class Normalize(BatchFilter):
 
         factor = self.factor
         array = batch.arrays[self.array]
+        array.spec.dtype = self.dtype
 
         if factor is None:
 

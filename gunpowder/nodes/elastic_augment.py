@@ -486,6 +486,10 @@ class ElasticAugment(BatchFilter):
         # inspect grid edges incident to center_grid
         for d in range(dims):
 
+            # nothing to do for dimensions without spatial extent
+            if transformation.shape[1 + d] == 1:
+                continue
+
             dim_vector = tuple(1 if dd == d else 0 for dd in range(dims))
             pos_grid = center_grid + dim_vector
             neg_grid = center_grid - dim_vector

@@ -121,26 +121,26 @@ class SimpleAugment(BatchFilter):
             transpose = [t + num_channels for t in self.transpose]
             array.data = array.data.transpose([0]*num_channels + transpose)
 
-        # points
+        # graphs
         total_roi_offset = self.total_roi.get_offset()
-        for (points_key, points) in batch.points.items():
+        for (graph_key, graph) in batch.graphs.items():
 
-            if points_key not in request:
+            if graph_key not in request:
                 continue
 
-            for loc_id, syn_point in list(points.data.items()):
+            for node in list(graph.nodes):
                 # mirror
-                location_in_total_offset = np.asarray(syn_point.location) - total_roi_offset
-                syn_point.location = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
-                                                 if m else syn_point.location[dim] for dim, m in enumerate(self.mirror)])
+                location_in_total_offset = np.asarray(node.location) - total_roi_offset
+                node.location[:] = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
+                                                 if m else node.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
                 if self.transpose != tuple(range(self.dims)):
-                    syn_point.location = np.asarray([syn_point.location[self.transpose[d]] for d in range(self.dims)])
+                    node.location[:] = np.asarray([node.location[self.transpose[d]] for d in range(self.dims)])
 
                 # due to the mirroring, points at the lower boundary of the ROI
                 # could fall on the upper one, which excludes them from the ROI
-                if not points.spec.roi.contains(syn_point.location):
-                    del points.data[loc_id]
+                if not graph.spec.roi.contains(node.location):
+                    graph.remove_node(node)
 
 
     def __mirror_request(self, request, mirror):

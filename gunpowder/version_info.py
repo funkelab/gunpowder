@@ -1,6 +1,6 @@
 __major__   = 1
 __minor__   = 1
-__patch__   = 1
+__patch__   = 3
 __tag__     = ''
 __version__ = '{}.{}.{}{}'.format(__major__, __minor__, __patch__, __tag__).strip('.')
 
