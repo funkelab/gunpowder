@@ -230,7 +230,9 @@ class Graph(Freezable):
         for node_id, node_attrs in self.__graph.nodes.items():
             v = Node.from_attrs(node_attrs)
             if not np.issubdtype(v.location.dtype, self.spec.dtype):
-                raise Exception()
+                raise Exception(
+                    f"expected location to have dtype {self.spec.dtype} but it had {v.location.dtype}"
+                )
             yield v
 
     def num_vertices(self):
