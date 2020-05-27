@@ -11,6 +11,7 @@ from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
+
 class Scan(BatchFilter):
     '''Iteratively requests batches of size ``reference`` from upstream
     providers in a scanning fashion, until all requested ROIs are covered. If
@@ -308,6 +309,7 @@ class Scan(BatchFilter):
 
         if self.batch.get_total_roi() is None:
             self.batch = self.__setup_batch(spec, chunk)
+        self.batch.profiling_stats.merge_with(chunk.profiling_stats)
 
         for (array_key, array) in chunk.arrays.items():
             if array_key not in spec:
@@ -377,6 +379,15 @@ class Scan(BatchFilter):
         a[slices_a] = b[slices_b]
 
     def __fill_points(self, a, b, roi_a, roi_b):
+        """
+        Take points from b and add them to a.
+        Nodes marked temporary must be ignored. Temporary nodes are nodes
+        that were created during processing. Since it is impossible to know
+        in general, that a node created during processing of a subgraph was
+        not assigned an id that is already used by the full graph, we cannot
+        include temporary nodes and assume there will not be ambiguous node
+        id's that correspond to multiple distinct nodes. 
+        """
         logger.debug("filling points of " + str(roi_b) + " into points of" + str(roi_a))
 
         common_roi = roi_a.intersect(roi_b)
@@ -384,5 +395,15 @@ class Scan(BatchFilter):
             return
 
         for node in b.nodes:
-            if roi_a.contains(node.location):
+            if not node.temporary and roi_a.contains(node.location):
                 a.add_node(node)
+        for e in b.edges:
+            bu = b.node(e.u)
+            bv = b.node(e.v)
+            if (
+                not bu.temporary
+                and not bv.temporary
+                and a.contains(bu.id)
+                and a.contains(bv.id)
+            ):
+                a.add_edge(e)
