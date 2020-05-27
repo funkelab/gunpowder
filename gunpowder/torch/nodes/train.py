@@ -169,7 +169,7 @@ class Train(GenericTrain):
             logger.info("Resuming training from iteration %d", self.iteration)
             logger.info("Loading %s", checkpoint)
 
-            checkpoint = torch.load(checkpoint)
+            checkpoint = torch.load(checkpoint, map_location=self.device)
             self.model.load_state_dict(checkpoint["model_state_dict"])
             self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
