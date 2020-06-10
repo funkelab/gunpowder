@@ -81,11 +81,32 @@ class TestUnsqueeze(ProviderTest):
 
         pipeline = (
             TestSourceUnsqueeze(voxel_size)
-            + gp.Unsqueeze([raw], axis=0)
             + gp.Unsqueeze([raw, labels])
+            + gp.Unsqueeze([raw], axis=1)
         )
 
         with gp.build(pipeline) as p:
             batch = p.request_batch(request)
             assert batch[raw].data.shape == (1,) + (1,) + input_voxels
             assert batch[labels].data.shape == (1,) + input_voxels
+
+    def test_unsqueeze_not_possible(self):
+        raw = gp.ArrayKey("RAW")
+        labels = gp.ArrayKey("LABELS")
+
+        voxel_size = gp.Coordinate((50, 5, 5))
+        input_voxels = gp.Coordinate((5, 5, 5))
+        input_size = input_voxels * voxel_size
+
+        request = gp.BatchRequest()
+        request.add(raw, input_size)
+        request.add(labels, input_size)
+
+        pipeline = (
+            TestSourceUnsqueeze(voxel_size)
+            + gp.Unsqueeze([raw], axis=1)
+        )
+
+        with self.assertRaises(ValueError):
+            with gp.build(pipeline) as p:
+                batch = p.request_batch(request)
