@@ -2,7 +2,6 @@ import copy
 import numpy as np
 import gunpowder as gp
 
-import fiborganellesegmentation as fos
 from .provider_test import ProviderTest
 
 
@@ -82,8 +81,8 @@ class TestUnsqueeze(ProviderTest):
 
         pipeline = (
             TestSourceUnsqueeze(voxel_size)
-            + fos.gunpowder.Unsqueeze([raw], axis=0)
-            + fos.gunpowder.Unsqueeze([raw, labels])
+            + gp.Unsqueeze([raw], axis=0)
+            + gp.Unsqueeze([raw, labels])
         )
 
         with gp.build(pipeline) as p:

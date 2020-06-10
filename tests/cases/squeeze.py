@@ -2,8 +2,6 @@ import copy
 import numpy as np
 import gunpowder as gp
 
-import fiborganellesegmentation as fos
-
 from .provider_test import ProviderTest
 
 
@@ -76,7 +74,7 @@ class TestSourceSqueeze(gp.BatchProvider):
         return outputs
 
 
-class TestSqueeze:
+class TestSqueeze(ProviderTest):
     def test_squeeze(self):
         raw = gp.ArrayKey("RAW")
         labels = gp.ArrayKey("LABELS")
@@ -91,11 +89,32 @@ class TestSqueeze:
 
         pipeline = (
             TestSourceSqueeze(voxel_size)
-            + fos.gunpowder.Squeeze([raw], axis=0)
-            + fos.gunpowder.Squeeze([raw, labels])
+            + gp.Squeeze([raw], axis=1)
+            + gp.Squeeze([raw, labels])
         )
 
         with gp.build(pipeline) as p:
             batch = p.request_batch(request)
             assert batch[raw].data.shape == input_voxels
             assert batch[labels].data.shape == input_voxels
+
+    def test_squeeze_not_possible(self):
+        raw = gp.ArrayKey("RAW")
+        labels = gp.ArrayKey("LABELS")
+
+        voxel_size = gp.Coordinate((50, 5, 5))
+        input_voxels = gp.Coordinate((10, 10, 10))
+        input_size = input_voxels * voxel_size
+
+        request = gp.BatchRequest()
+        request.add(raw, input_size)
+        request.add(labels, input_size)
+
+        pipeline = (
+            TestSourceSqueeze(voxel_size)
+            + gp.Squeeze([raw], axis=2)
+        )
+
+        with self.assertRaises(ValueError):
+            with gp.build(pipeline) as p:
+                batch = p.request_batch(request)
