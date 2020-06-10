@@ -24,10 +24,6 @@ class Squeeze(BatchFilter):
         self.arrays = arrays
         self.axis = axis
 
-        if self.axis != 0:
-            raise NotImplementedError(
-                'Squeeze only supported for leading dimension')
-
     def setup(self):
         self.enable_autoskip()
         for array in self.arrays:
@@ -42,6 +38,16 @@ class Squeeze(BatchFilter):
     def process(self, batch, request):
         outputs = Batch()
         for array in self.arrays:
+
+            if not batch[array].spec.nonspatial:
+                spatial_dims = request[array].roi.dims()
+                if self.axis >= batch[array].data.ndim - spatial_dims:
+                    raise ValueError((
+                        f"Squeeze.axis={self.axis} not permitted. "
+                        "Squeeze only supported for "
+                        "non-spatial dimensions of Array."
+                    ))
+
             outputs[array] = copy.deepcopy(batch[array])
             outputs[array].data = np.squeeze(batch[array].data, self.axis)
             logger.debug(f'{array} shape: {outputs[array].data.shape}')
