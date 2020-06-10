@@ -80,7 +80,7 @@ class TestSqueeze(ProviderTest):
         labels = gp.ArrayKey("LABELS")
 
         voxel_size = gp.Coordinate((50, 5, 5))
-        input_voxels = gp.Coordinate((10, 10, 10))
+        input_voxels = gp.Coordinate((5, 5, 5))
         input_size = input_voxels * voxel_size
 
         request = gp.BatchRequest()
@@ -103,7 +103,7 @@ class TestSqueeze(ProviderTest):
         labels = gp.ArrayKey("LABELS")
 
         voxel_size = gp.Coordinate((50, 5, 5))
-        input_voxels = gp.Coordinate((10, 10, 10))
+        input_voxels = gp.Coordinate((5, 5, 5))
         input_size = input_voxels * voxel_size
 
         request = gp.BatchRequest()
