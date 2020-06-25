@@ -29,7 +29,7 @@ class Stack(BatchFilter):
         timing.start()
 
         batches = [
-            self.get_upstream_provider().provide(request)
+            self.get_upstream_provider().request_batch(request)
             for _ in range(self.num_repetitions)
         ]
 
