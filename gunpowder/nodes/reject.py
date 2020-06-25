@@ -80,7 +80,8 @@ class Reject(BatchFilter):
                 mask_ratio = None
 
             if self.ensure_nonempty:
-                num_points = len(batch.points[self.ensure_nonempty].data)
+                num_points = len(
+                    list(batch.points[self.ensure_nonempty].nodes))
             else:
                 num_points = None
 
