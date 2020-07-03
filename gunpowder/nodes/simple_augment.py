@@ -53,7 +53,7 @@ class SimpleAugment(BatchFilter):
 
     def prepare(self, request):
 
-        self.total_roi = request.get_total_roi()
+        self.total_roi = request.get_total_roi().copy()
 
         self.mirror = [
             random.randint(0,1)
@@ -74,9 +74,12 @@ class SimpleAugment(BatchFilter):
         for d in range(self.dims):
             reverse_transpose[self.transpose[d]] = d
 
-        logger.debug("downstream request = " + str(request))
+        logger.debug("downstream request = " + str(request) +
+                     "\nmirror = " + str(self.mirror) +
+                     "\ntranspose = " + str(self.transpose))
 
         self.__transpose_request(request, reverse_transpose)
+        self.__transpose_roi(self.total_roi, reverse_transpose)
         self.__mirror_request(request, self.mirror)
 
         logger.debug("upstream request = " + str(request))
@@ -169,6 +172,13 @@ class SimpleAugment(BatchFilter):
                 total_roi_offset[d] + roi_in_total_offset_mirrored[d] if mirror[d] else roi_offset[d]
                 for d in range(self.dims)
         )
+        logger.debug("Mirror numbers for roi: " + str(roi)
+                     + "\nMirror: " + str(mirror)
+                     + "\ntotal roi: " + str(total_roi)
+                     + "\nroi_in_total_offset: " + str(roi_in_total_offset)
+                     + "\nend_of_roi_in_total: " + str(end_of_roi_in_total)
+                     + "\nroi_in_total_offset_mirrored: " + str(roi_in_total_offset_mirrored)
+                     + "\nroi_offset: " + str(roi_offset))
 
         roi.set_offset(roi_offset)
 
