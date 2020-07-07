@@ -53,8 +53,6 @@ class SimpleAugment(BatchFilter):
 
     def prepare(self, request):
 
-        self.total_roi = request.get_total_roi()
-
         self.mirror = [
             random.randint(0,1)
             if self.mirror_mask[d] else 0
@@ -74,7 +72,9 @@ class SimpleAugment(BatchFilter):
         for d in range(self.dims):
             reverse_transpose[self.transpose[d]] = d
 
-        logger.debug("downstream request = " + str(request))
+        logger.debug("downstream request = " + str(request) +
+                     "\nmirror = " + str(self.mirror) +
+                     "\ntranspose = " + str(self.transpose))
 
         self.__transpose_request(request, reverse_transpose)
         self.__mirror_request(request, self.mirror)
@@ -92,9 +92,9 @@ class SimpleAugment(BatchFilter):
                     continue
                 if collector.spec.roi is None:
                     continue
-                logger.debug("total ROI: %s"%self.total_roi)
+                logger.debug("total ROI: %s"%batch.get_total_roi())
                 logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
-                self.__mirror_roi(collector.spec.roi, self.total_roi, self.mirror)
+                self.__mirror_roi(collector.spec.roi, batch.get_total_roi(), self.mirror)
                 logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
                 self.__transpose_roi(collector.spec.roi, self.transpose)
                 logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
@@ -121,7 +121,7 @@ class SimpleAugment(BatchFilter):
             array.data = array.data.transpose([0]*num_channels + transpose)
 
         # graphs
-        total_roi_offset = self.total_roi.get_offset()
+        total_roi_offset = batch.get_total_roi().get_offset()
         for (graph_key, graph) in batch.graphs.items():
 
             if graph_key not in request:
@@ -130,7 +130,7 @@ class SimpleAugment(BatchFilter):
             for node in list(graph.nodes):
                 # mirror
                 location_in_total_offset = np.asarray(node.location) - total_roi_offset
-                node.location[:] = np.asarray([self.total_roi.get_end()[dim] - location_in_total_offset[dim]
+                node.location[:] = np.asarray([batch.get_total_roi().get_end()[dim] - location_in_total_offset[dim]
                                                  if m else node.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
                 if self.transpose != tuple(range(self.dims)):
@@ -146,7 +146,7 @@ class SimpleAugment(BatchFilter):
 
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__mirror_roi(spec.roi, self.total_roi, mirror)
+                self.__mirror_roi(spec.roi, request.get_total_roi(), mirror)
 
     def __transpose_request(self, request, transpose):
 
@@ -169,6 +169,13 @@ class SimpleAugment(BatchFilter):
                 total_roi_offset[d] + roi_in_total_offset_mirrored[d] if mirror[d] else roi_offset[d]
                 for d in range(self.dims)
         )
+        logger.debug("Mirror numbers for roi: " + str(roi)
+                     + "\nMirror: " + str(mirror)
+                     + "\ntotal roi: " + str(total_roi)
+                     + "\nroi_in_total_offset: " + str(roi_in_total_offset)
+                     + "\nend_of_roi_in_total: " + str(end_of_roi_in_total)
+                     + "\nroi_in_total_offset_mirrored: " + str(roi_in_total_offset_mirrored)
+                     + "\nroi_offset: " + str(roi_offset))
 
         roi.set_offset(roi_offset)
 
