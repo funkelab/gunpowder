@@ -79,7 +79,6 @@ class SimpleAugment(BatchFilter):
                      "\ntranspose = " + str(self.transpose))
 
         self.__mirror_request(request, self.mirror)
-        logger.debug("modified downstream request = " + str(request)) 
 
         logger.debug("upstream request = " + str(request))
 
