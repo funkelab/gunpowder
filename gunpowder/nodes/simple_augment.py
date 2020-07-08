@@ -78,8 +78,6 @@ class SimpleAugment(BatchFilter):
                      "\nmirror = " + str(self.mirror) +
                      "\ntranspose = " + str(self.transpose))
 
-        self.__mirror_request(request, self.mirror)
-
         logger.debug("upstream request = " + str(request))
 
         return request
@@ -143,13 +141,6 @@ class SimpleAugment(BatchFilter):
                 if not graph.spec.roi.contains(node.location):
                     graph.remove_node(node)
             logger.debug("nodes left: ", len(list(graph.nodes)), "with ", self.transpose)
-
-
-    def __mirror_request(self, request, mirror):
-
-        for key, spec in request.items():
-            if spec.roi is not None:
-                self.__mirror_roi(spec.roi, request.get_total_roi(), mirror)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
