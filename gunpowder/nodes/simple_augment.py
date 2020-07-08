@@ -54,7 +54,7 @@ class SimpleAugment(BatchFilter):
     def prepare(self, request):
 
         self.mirror = [
-            random.randint(0,1)
+            random.randint(0, 1)
             if self.mirror_mask[d] else 0
             for d in range(self.dims)
         ]
@@ -67,12 +67,6 @@ class SimpleAugment(BatchFilter):
 
         logger.debug("mirror = " + str(self.mirror))
         logger.debug("transpose = " + str(self.transpose))
-
-        reverse_transpose = [0]*self.dims
-        for d in range(self.dims):
-            reverse_transpose[self.transpose[d]] = d
-        logger.debug("reverse_transpose: ", reverse_transpose,
-                     "transpose: ", self.transpose)
 
         logger.debug("downstream request = " + str(request) +
                      "\nmirror = " + str(self.mirror) +
