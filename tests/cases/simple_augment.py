@@ -18,6 +18,7 @@ from gunpowder import (
 
 import numpy as np
 from itertools import permutations 
+import logging
 
 class TestSource(BatchProvider):
     def __init__(self):
@@ -40,7 +41,7 @@ class TestSource(BatchProvider):
         batch = Batch()
 
         roi = request[GraphKeys.TEST_GRAPH].roi
-        print("roi: ", roi)
+        logging.debug("roi: ", roi)
         batch[GraphKeys.TEST_GRAPH] = self.graph.crop(roi).trim(roi)
 
         return batch
@@ -64,14 +65,14 @@ class TestSimpleAugment(ProviderTest):
 
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
                 node = list(batch[GraphKeys.TEST_GRAPH].nodes)[0]
-                print(node.location)
+                logging.debug(node.location)
                 assert all(
                     [
                         node.location[dim] in possible_loc[dim] or node.location[dim] in possible_loc[dim] 
                         for dim in range(3)
                     ]
                 )
-                print(node.location)
+                logging.debug(node.location)
                 seen_mirrored = seen_mirrored or any(
                     [node.location[dim] == possible_loc[dim][1] for dim in range(3)]
                 )
@@ -99,14 +100,14 @@ class TestSimpleAugment(ProviderTest):
 
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
                 node = list(batch[GraphKeys.TEST_GRAPH].nodes)[0]
-                print(node.location)
+                logging.debug(node.location)
                 assert all(
                     [
                         node.location[dim] in possible_loc[dim] or node.location[dim] in possible_loc[dim] 
                         for dim in range(3)
                     ]
                 )
-                print(node.location)
+                logging.debug(node.location)
                 seen_transposed = seen_transposed or any(
                     [node.location[dim] != possible_loc[dim][0] for dim in range(3)]
                 )
@@ -189,7 +190,6 @@ class TestSimpleAugment(ProviderTest):
                 possible_loc[i, j] = point - np.array(offset)
                 possible_loc[i, j] = possible_loc[i, j][np.array(comb)]
                 possible_loc[i, j] = possible_loc[i, j] + np.array(offset)
-        print(possible_loc)
 
         with build(pipeline):
             seen_transposed = False
