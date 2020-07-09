@@ -156,10 +156,10 @@ class Batch(Freezable):
 
     def __repr__(self):
 
-        r = ""
+        r = "\n"
         for collection_type in [self.arrays, self.graphs]:
             for (key, obj) in collection_type.items():
-                r += "%s: %s\n"%(key, obj.spec)
+                r += "\t%s: %s\n"%(key, obj.spec)
         return r
 
     def crop(self, request, copy=False):
