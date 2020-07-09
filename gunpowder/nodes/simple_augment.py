@@ -1,6 +1,7 @@
 import logging
 import random
 import numpy as np
+import math
 
 from .batch_filter import BatchFilter
 from gunpowder.coordinate import Coordinate
@@ -77,7 +78,7 @@ class SimpleAugment(BatchFilter):
                      "\ntranspose = " + str(self.transpose))
 
         self.__transpose_request(request, reverse_transpose)
-        self.__mirror_request(request, self.mirror)
+        #self.__mirror_request(request, self.mirror)
 
         logger.debug("upstream request = " + str(request))
 
@@ -96,7 +97,7 @@ class SimpleAugment(BatchFilter):
                 logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, batch.get_total_roi(), self.mirror)
                 logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
-                self.__transpose_roi(collector.spec.roi, self.transpose)
+                self.__transpose_roi(collector.spec.roi, batch.get_total_roi(), self.transpose)
                 logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
         mirror = tuple(
@@ -133,8 +134,20 @@ class SimpleAugment(BatchFilter):
                 node.location[:] = np.asarray([batch.get_total_roi().get_end()[dim] - location_in_total_offset[dim]
                                                  if m else node.location[dim] for dim, m in enumerate(self.mirror)])
                 # transpose
-                if self.transpose != tuple(range(self.dims)):
-                    node.location[:] = np.asarray([node.location[self.transpose[d]] for d in range(self.dims)])
+                if self.transpose != list(range(self.dims)):
+
+                    for d in range(self.dims):
+                        node.location[d] = \
+                            location_in_total_offset[self.transpose[d]] + \
+                            total_roi_offset[d]
+                    print(node.location)
+                    # print("original loc:", node.location)
+                    # center = total_roi_offset + (batch.get_total_roi().get_shape() / 2)
+                    # print("center:", center)
+                    # dist_from_center = center - Coordinate(node.location)
+                    # print("dist_from_center:", dist_from_center)
+                    # node.location[:] = np.asarray([center[d] - dist_from_center[self.transpose[d]] for d in range(self.dims)])
+                    # print("changed loc:", node.location)
 
                 # due to the mirroring, points at the lower boundary of the ROI
                 # could fall on the upper one, which excludes them from the ROI
@@ -152,7 +165,7 @@ class SimpleAugment(BatchFilter):
 
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__transpose_roi(spec.roi, transpose)
+                self.__transpose_roi(spec.roi, request.get_total_roi(), transpose)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
@@ -179,11 +192,18 @@ class SimpleAugment(BatchFilter):
 
         roi.set_offset(roi_offset)
 
-    def __transpose_roi(self, roi, transpose):
+    def __transpose_roi(self, roi, total_roi, transpose):
 
-        offset = roi.get_offset()
-        shape = roi.get_shape()
-        offset = tuple(offset[transpose[d]] for d in range(self.dims))
-        shape = tuple(shape[transpose[d]] for d in range(self.dims))
+        print("original roi:", roi)
+        offset = total_roi.get_offset()
+        shape = total_roi.get_shape()
+        center = (offset + shape / 2)
+        left_shift = Coordinate(roi.get_shape()[transpose[d]] / 2 for d in range(self.dims))
+        print("center:", center)
+        print("left_shift:", left_shift)
+        offset = center - left_shift
+
+        shape = tuple(roi.get_shape()[transpose[d]] for d in range(self.dims))
         roi.set_offset(offset)
         roi.set_shape(shape)
+        print("shifted roi:", roi)
