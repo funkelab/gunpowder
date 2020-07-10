@@ -189,25 +189,25 @@ class SimpleAugment(BatchFilter):
 
     def __transpose_roi(self, roi, transpose):
         
-        logger.debug("Original roi: %s"%roi)
+        logger.debug(f"Original roi: {roi}")
 
         total_roi_offset = self.total_roi.get_offset()
-        logger.debug("total_roi_offset: " + str(total_roi_offset))
+        logger.debug(f"total_roi_offset: {total_roi_offset}")
 
         center = self.total_roi.get_center()
-        logger.debug("Center: %s" + str(center))
+        logger.debug(f"Center: {center}")
 
         # Get distance from center, then transpose
         dist_to_center = center - roi.get_offset() 
         dist_to_center = Coordinate(dist_to_center[transpose[d]]
                                     for d in range(self.dims))
-        logger.debug("dist_to_center: " + str(dist_to_center))
+        logger.debug(f"dist_to_center: {dist_to_center}")
 
         # Using the tranposed distance to center, get the correct offset.
         new_offset = center - dist_to_center
-        logger.debug("shift: " + str(new_offset))
+        logger.debug(f"new_offset: {new_offset}")
 
         shape = tuple(roi.get_shape()[transpose[d]] for d in range(self.dims))
         roi.set_offset(new_offset)
         roi.set_shape(shape)
-        logger.debug("Tranposed roi: %s"%roi)
+        logger.debug(f"Tranposed roi: {roi}")

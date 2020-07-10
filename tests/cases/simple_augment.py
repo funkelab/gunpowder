@@ -24,7 +24,6 @@ from gunpowder import (
 import numpy as np
 from itertools import permutations 
 import logging
-logging.getLogger("gunpowder.nodes.simple_augment").setLevel(logging.DEBUG)
 
 class ArrayTestSource(BatchProvider):
     def __init__(self):
@@ -146,8 +145,11 @@ class TestSimpleAugment(ProviderTest):
                 assert Roi((0, 20, 33), (100, 100, 120)).contains(batch[GraphKeys.TEST_GRAPH].spec.roi)
                 assert batch[GraphKeys.TEST_GRAPH].spec.roi.contains(node.location)
 
+                for (array_key, array) in batch.arrays.items():
+                    assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
 
             assert seen_transposed
+            assert 1==2
 
     def test_multi_transpose(self):
         test_graph = GraphKey("TEST_GRAPH")
@@ -192,6 +194,8 @@ class TestSimpleAugment(ProviderTest):
                     assert Roi((0, 20, 33), (100, 100, 120)).contains(batch[GraphKeys.TEST_GRAPH].spec.roi)
                     assert batch[GraphKeys.TEST_GRAPH].spec.roi.contains(node.location)
 
+                for (array_key, array) in batch.arrays.items():
+                    assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
             assert seen_transposed
             assert seen_node
 
@@ -253,6 +257,8 @@ class TestSimpleAugment(ProviderTest):
                     assert Roi((0, 20, 33), (100, 100, 120)).contains(batch[GraphKeys.TEST_GRAPH].spec.roi)
                     assert batch[GraphKeys.TEST_GRAPH].spec.roi.contains(node.location)
 
+                for (array_key, array) in batch.arrays.items():
+                    assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
             assert seen_transposed
             assert seen_node
 
@@ -278,5 +284,7 @@ class TestSimpleAugment(ProviderTest):
         with build(pipeline):
             for i in range(100):
                 batch = pipeline.request_batch(request)
-                print(batch)
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
+
+                for (array_key, array) in batch.arrays.items():
+                    assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
