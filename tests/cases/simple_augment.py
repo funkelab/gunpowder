@@ -149,7 +149,6 @@ class TestSimpleAugment(ProviderTest):
                     assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
 
             assert seen_transposed
-            assert 1==2
 
     def test_multi_transpose(self):
         test_graph = GraphKey("TEST_GRAPH")

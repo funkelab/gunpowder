@@ -53,8 +53,6 @@ class SimpleAugment(BatchFilter):
 
     def prepare(self, request):
 
-        self.total_roi = request.get_total_roi().copy()
-
         self.mirror = [
             random.randint(0,1)
             if self.mirror_mask[d] else 0
@@ -99,7 +97,7 @@ class SimpleAugment(BatchFilter):
                 logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, total_roi, self.mirror)
                 logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
-                self.__transpose_roi(collector.spec.roi, self.transpose)
+                self.__transpose_roi(collector.spec.roi, total_roi, self.transpose)
                 logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
         mirror = tuple(
@@ -157,9 +155,10 @@ class SimpleAugment(BatchFilter):
                 self.__mirror_roi(spec.roi, request.get_total_roi(), mirror)
 
     def __transpose_request(self, request, transpose):
+        total_roi = request.get_total_roi().copy()
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__transpose_roi(spec.roi, transpose)
+                self.__transpose_roi(spec.roi, total_roi, transpose)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
@@ -187,14 +186,11 @@ class SimpleAugment(BatchFilter):
 
         roi.set_offset(roi_offset)
 
-    def __transpose_roi(self, roi, transpose):
+    def __transpose_roi(self, roi, total_roi, transpose):
         
         logger.debug(f"Original roi: {roi}")
 
-        total_roi_offset = self.total_roi.get_offset()
-        logger.debug(f"total_roi_offset: {total_roi_offset}")
-
-        center = self.total_roi.get_center()
+        center = total_roi.get_center()
         logger.debug(f"Center: {center}")
 
         # Get distance from center, then transpose
