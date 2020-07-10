@@ -142,6 +142,7 @@ class SimpleAugment(BatchFilter):
                         node.location[d] = \
                             location_in_total_offset[self.transpose[d]] + \
                             total_roi_offset[d]
+                    logger.debug(node.location)
 
                 # due to the mirroring, points at the lower boundary of the ROI
                 # could fall on the upper one, which excludes them from the ROI
@@ -177,6 +178,7 @@ class SimpleAugment(BatchFilter):
         )
         logger.debug("Mirror numbers for roi: " + str(roi)
                      + "\nMirror: " + str(mirror)
+                     + "\tTranpose: " + str(self.transpose)
                      + "\ntotal roi: " + str(total_roi)
                      + "\nroi_in_total_offset: " + str(roi_in_total_offset)
                      + "\nend_of_roi_in_total: " + str(end_of_roi_in_total)
@@ -187,17 +189,25 @@ class SimpleAugment(BatchFilter):
 
     def __transpose_roi(self, roi, transpose):
         
-        total_roi_offset = self.total_roi.get_offset()
-        shape = self.total_roi.get_shape()
-        center = self.total_roi.get_center()
-        roi_in_total_offset = roi.get_offset() - total_roi_offset
+        logger.debug("Original roi: %s"%roi)
 
-        left_shift = Coordinate(roi_in_total_offset[transpose[d]] - center[transpose[d]] 
-                                for d in range(self.dims))
-        
-        shift = center + left_shift
-        offset = shift + total_roi_offset
+        total_roi_offset = self.total_roi.get_offset()
+        logger.debug("total_roi_offset: " + str(total_roi_offset))
+
+        center = self.total_roi.get_center()
+        logger.debug("Center: %s" + str(center))
+
+        # Get distance from center, then transpose
+        dist_to_center = center - roi.get_offset() 
+        dist_to_center = Coordinate(dist_to_center[transpose[d]]
+                                    for d in range(self.dims))
+        logger.debug("dist_to_center: " + str(dist_to_center))
+
+        # Using the tranposed distance to center, get the correct offset.
+        new_offset = center - dist_to_center
+        logger.debug("shift: " + str(new_offset))
 
         shape = tuple(roi.get_shape()[transpose[d]] for d in range(self.dims))
-        roi.set_offset(offset)
+        roi.set_offset(new_offset)
         roi.set_shape(shape)
+        logger.debug("Tranposed roi: %s"%roi)

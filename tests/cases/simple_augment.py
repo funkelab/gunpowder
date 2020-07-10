@@ -24,7 +24,7 @@ from gunpowder import (
 import numpy as np
 from itertools import permutations 
 import logging
-
+logging.getLogger("gunpowder.nodes.simple_augment").setLevel(logging.DEBUG)
 
 class ArrayTestSource(BatchProvider):
     def __init__(self):
@@ -255,3 +255,28 @@ class TestSimpleAugment(ProviderTest):
 
             assert seen_transposed
             assert seen_node
+
+    def test_square(self):
+        
+
+        test_graph = GraphKey("TEST_GRAPH")
+        test_array1 = ArrayKey("TEST_ARRAY1")
+        test_array2 = ArrayKey("TEST_ARRAY2")
+
+        pipeline = ((ArrayTestSource(), TestSource()) + MergeProvider() + 
+                    Pad(test_array1, None) + Pad(test_array2, None) + Pad(test_graph, None)
+                    + SimpleAugment(
+            mirror_only=[1,2], transpose_only=[1,2]
+        ))
+
+        request = BatchRequest()
+        request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=Roi((0, 50, 65), (100, 100, 100)))
+        request[ArrayKeys.TEST_ARRAY1] = ArraySpec(roi=Roi((0, 0, 15), (100, 200, 200)))
+        request[ArrayKeys.TEST_ARRAY2] = ArraySpec(roi=Roi((0, 50, 65), (100, 100, 100)))
+
+        
+        with build(pipeline):
+            for i in range(100):
+                batch = pipeline.request_batch(request)
+                print(batch)
+                assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
