@@ -4,6 +4,7 @@ from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.roi import Roi
 from .freezable import Freezable
 
 import logging
@@ -85,21 +86,31 @@ class ProviderSpec(Freezable):
 
     def __setitem__(self, key, spec):
 
-        if isinstance(spec, ArraySpec):
-            assert isinstance(key, ArrayKey), ("Only a ArrayKey is "
-                                                        "allowed as key for a "
-                                                        "ArraySpec value.")
+        assert isinstance(key, ArrayKey) or isinstance(key, GraphKey), \
+            f"Only ArrayKey or GraphKey (not {type(key).__name__} are " \
+            "allowed as key for ProviderSpec, "
+
+        if isinstance(key, ArrayKey):
+
+            if isinstance(spec, Roi):
+                spec = ArraySpec(roi=spec)
+
+            assert isinstance(spec, ArraySpec), \
+                f"Only ArraySpec (not {type(spec).__name__}) can be set for " \
+                "ArrayKey"
+
             self.array_specs[key] = spec.copy()
 
-        elif isinstance(spec, GraphSpec):
-            assert isinstance(
-                key, GraphKey
-            ), f"Only A GraphKey (not a {type(key).__name__}) is allowed as key for a GraphSpec value."
-            self.graph_specs[key] = spec.copy()
-
         else:
-            raise RuntimeError(f"Only ArraySpec or GraphSpec, (not {type(spec).__name__}) can be set in a "
-                               f"{type(self).__name__}.")
+
+            if isinstance(spec, Roi):
+                spec = GraphSpec(roi=spec)
+
+            assert isinstance(spec, GraphSpec), \
+                f"Only GraphSpec (not {type(spec).__name__}) can be set for " \
+                "GraphKey"
+
+            self.graph_specs[key] = spec.copy()
 
     def __getitem__(self, key):
 
