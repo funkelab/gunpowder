@@ -89,7 +89,10 @@ class BatchFilter(BatchProvider):
     def _init_spec(self):
         # default for BatchFilters is to provide the same as upstream
         if not hasattr(self, "_spec") or self._spec is None:
-            self._spec = copy.deepcopy(self.get_upstream_provider().spec)
+            if len(self.get_upstream_providers()) != 0:
+                self._spec = copy.deepcopy(self.get_upstream_provider().spec)
+            else:
+                self._spec = None
 
     def internal_teardown(self):
 

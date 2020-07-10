@@ -91,7 +91,7 @@ class AddAffinities(BatchFilter):
         spec = self.spec[self.labels].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
-        spec.dtype = np.float32
+        spec.dtype = np.uint8
 
         self.provides(self.affinities, spec)
         if self.affinities_mask:

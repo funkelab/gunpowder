@@ -1,5 +1,9 @@
 from .provider_test import ProviderTest
 from gunpowder import (
+    RandomLocation,
+    BatchProvider,
+    Roi,
+    Coordinate,
     ArrayKeys,
     ArrayKey,
     ArraySpec,
@@ -32,15 +36,11 @@ class TestSourceRandomLocation(BatchProvider):
 
         batch = Batch()
 
-        spec = request[ArrayKeys.RAW].copy()
+        spec = request[self.array].copy()
         spec.voxel_size = Coordinate((20, 2, 2))
 
-        start = (request[ArrayKeys.RAW].roi.get_begin() / self.voxel_size) + (
-            10,
-            10,
-            10,
-        )
-        end = (request[ArrayKeys.RAW].roi.get_end() / self.voxel_size) + (10, 10, 10)
+        start = (request[self.array].roi.get_begin() / self.voxel_size) + (10, 10, 10,)
+        end = (request[self.array].roi.get_end() / self.voxel_size) + (10, 10, 10)
         data_slices = tuple(map(slice, start, end))
 
         data = self.data[data_slices]
@@ -62,24 +62,35 @@ class CustomRandomLocation(RandomLocation):
 
 class TestRandomLocation(ProviderTest):
     def test_output(self):
+        a = ArrayKey("A")
+        b = ArrayKey("B")
+        source_a = TestSourceRandomLocation(a)
+        source_b = TestSourceRandomLocation(b)
 
-        raw = ArrayKey("RAW")
-        source = TestSourceRandomLocation(raw)
-        pipeline = source + CustomRandomLocation(raw)
+        pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(a)
 
         with build(pipeline):
 
             for i in range(10):
                 batch = pipeline.request_batch(
-                    BatchRequest({raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
+                    BatchRequest(
+                        {
+                            a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                            b: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                        }
+                    )
                 )
 
-                self.assertTrue(0 in batch.arrays[raw].data)
+                self.assertTrue(0 in batch.arrays[a].data)
+                self.assertTrue(0 in batch.arrays[b].data)
 
                 # Request a ROI with the same shape as the entire ROI
-                full_roi = Roi((0, 0, 0), source.roi.get_shape())
+                full_roi_a = Roi((0, 0, 0), source_a.roi.get_shape())
+                full_roi_b = Roi((0, 0, 0), source_b.roi.get_shape())
                 batch = pipeline.request_batch(
-                    BatchRequest({raw: ArraySpec(roi=full_roi)})
+                    BatchRequest(
+                        {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
+                    )
                 )
 
     def test_random_seed(self):

@@ -92,6 +92,12 @@ class Train(GenericTrain):
         log_every: int = 1,
     ):
 
+        if not model.training:
+            logger.warning(
+                "Model is in evaluation mode during training. "
+                "Consider using model.train()"
+            )
+
         # not yet implemented
         gradients = gradients
         inputs.update(
@@ -112,7 +118,8 @@ class Train(GenericTrain):
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
         self.model = self.model.to(self.device)
-        self.loss = self.loss.to(self.device)
+        if isinstance(self.loss, torch.nn.Module):
+            self.loss = self.loss.to(self.device)
         self.iteration = 0
 
         if not isinstance(tensorboardX, NoSuchModule) and log_dir is not None:
@@ -163,7 +170,7 @@ class Train(GenericTrain):
             logger.info("Resuming training from iteration %d", self.iteration)
             logger.info("Loading %s", checkpoint)
 
-            checkpoint = torch.load(checkpoint)
+            checkpoint = torch.load(checkpoint, map_location=self.device)
             self.model.load_state_dict(checkpoint["model_state_dict"])
             self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 

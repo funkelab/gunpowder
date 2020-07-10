@@ -234,7 +234,8 @@ class RandomLocation(BatchFilter):
             if total_shift_roi is None:
                 total_shift_roi = shift_roi
             else:
-                total_shift_roi = total_shift_roi.intersect(shift_roi)
+                if shift_roi != total_shift_roi:
+                    total_shift_roi = total_shift_roi.intersect(shift_roi)
 
         logger.debug("valid shifts for request in " + str(total_shift_roi))
 

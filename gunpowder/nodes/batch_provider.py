@@ -30,6 +30,9 @@ class BatchProvider(object):
         self.get_upstream_providers().append(provider)
         return provider
 
+    def remove_upstream_providers(self):
+        self.upstream_providers = []
+
     def get_upstream_providers(self):
         if not hasattr(self, 'upstream_providers'):
             self.upstream_providers = []
