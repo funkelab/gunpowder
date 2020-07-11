@@ -147,12 +147,12 @@ class SimpleAugment(BatchFilter):
                 if not graph.spec.roi.contains(node.location):
                     graph.remove_node(node)
 
-
     def __mirror_request(self, request, mirror):
 
+        total_roi = request.get_total_roi().copy()
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__mirror_roi(spec.roi, request.get_total_roi(), mirror)
+                self.__mirror_roi(spec.roi, total_roi, mirror)
 
     def __transpose_request(self, request, transpose):
         total_roi = request.get_total_roi().copy()
