@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>API Reference &mdash; gunpowder 1.1.4 documentation</title>
   
 
   
@@ -27,10 +27,12 @@
   
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Writing Custom Batch Providers" href="custom_providers.html" />
-    <link rel="prev" title="Pipelines" href="pipeline.html" /> 
+    <link rel="next" title="Example: Boundary Prediction for Instance Segmentation" href="example_boundaries.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -87,16 +89,22 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a></li>
-<li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#tutorial-a-simple-pipeline">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#random-samples">Random samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#training-a-network">Training a network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#batch">Batch</a></li>
@@ -196,11 +204,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -319,9 +326,38 @@ or <code class="docutils literal notranslate"><span class="pre">batch.graphs</sp
 </dd></dl>
 
 <dl class="method">
+<dt id="gunpowder.Batch.crop">
+<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">request</em>, <em class="sig-param">copy=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch.html#Batch.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch.crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crop batch to meet the given request.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Batch.get_total_roi">
+<code class="sig-name descname">get_total_roi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch.html#Batch.get_total_roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch.get_total_roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the union of all the array ROIs in the batch.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gunpowder.Batch.items">
 <code class="sig-name descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch.html#Batch.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch.items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provides a generator iterating over key/value pairs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Batch.merge">
+<code class="sig-name descname">merge</code><span class="sig-paren">(</span><em class="sig-param">batch</em>, <em class="sig-param">merge_profiling_stats=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch.html#Batch.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Batch.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge this batch (<code class="docutils literal notranslate"><span class="pre">a</span></code>) with another batch (<code class="docutils literal notranslate"><span class="pre">b</span></code>).</p>
+<p>This creates a new batch <code class="docutils literal notranslate"><span class="pre">c</span></code> containing arrays and graphs from
+both batches <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Arrays or Graphs that exist in either <code class="docutils literal notranslate"><span class="pre">a</span></code> or <code class="docutils literal notranslate"><span class="pre">b</span></code> will be
+referenced in <code class="docutils literal notranslate"><span class="pre">c</span></code> (not copied).</p></li>
+<li><p>Arrays or Graphs that exist in both batches will keep only
+a reference to the version in <code class="docutils literal notranslate"><span class="pre">b</span></code> in <code class="docutils literal notranslate"><span class="pre">c</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<p>All other cases will lead to an exception.</p>
 </dd></dl>
 
 </dd></dl>
@@ -347,7 +383,7 @@ array, if necessary.</p></li>
 </dl>
 <dl class="method">
 <dt id="gunpowder.Array.crop">
-<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">roi</em>, <em class="sig-param">copy=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#Array.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Array.crop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">roi</em>, <em class="sig-param">copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/array.html#Array.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Array.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a cropped copy of this Array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -409,7 +445,7 @@ its attributes will be overwritten.</p>
 
 <dl class="method">
 <dt id="gunpowder.Graph.crop">
-<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">roi: gunpowder.roi.Roi</em>, <em class="sig-param">copy: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.crop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">roi: gunpowder.roi.Roi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will remove all nodes from self that are not contained in <cite>roi</cite> except for
 “dangling” nodes. This means that if there are nodes A, B s.t. there
 is an edge (A, B) and A is contained in <cite>roi</cite> but B is not, the edge (A, B)
@@ -417,6 +453,17 @@ is considered contained in the <cite>roi</cite> and thus node B will be kept as 
 “dangling” node.</p>
 <p>Note there is a helper function <cite>trim</cite> that will remove B and replace it with
 a node at the intersection of the edge (A, B) and the bounding box of <cite>roi</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>roi</strong> (<a class="reference internal" href="#gunpowder.Roi" title="gunpowder.Roi"><code class="xref py py-class docutils literal notranslate"><span class="pre">Roi</span></code></a>) – ROI in world units to crop to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Graph.from_nx_graph">
+<em class="property">classmethod </em><code class="sig-name descname">from_nx_graph</code><span class="sig-paren">(</span><em class="sig-param">graph</em>, <em class="sig-param">spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.from_nx_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.from_nx_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a gunpowder graph from a networkx graph</p>
 </dd></dl>
 
 <dl class="method">
@@ -439,6 +486,13 @@ will be removed (vice versa for <code class="docutils literal notranslate"><span
 </dd></dl>
 
 <dl class="method">
+<dt id="gunpowder.Graph.relabel_connected_components">
+<code class="sig-name descname">relabel_connected_components</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.relabel_connected_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.relabel_connected_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new attribute “component” for each node
+in this Graph</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gunpowder.Graph.remove_edge">
 <code class="sig-name descname">remove_edge</code><span class="sig-paren">(</span><em class="sig-param">edge: gunpowder.graph.Edge</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.remove_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.remove_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove an edge from the graph.</p>
@@ -446,8 +500,21 @@ will be removed (vice versa for <code class="docutils literal notranslate"><span
 
 <dl class="method">
 <dt id="gunpowder.Graph.remove_node">
-<code class="sig-name descname">remove_node</code><span class="sig-paren">(</span><em class="sig-param">node: gunpowder.graph.Node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.remove_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.remove_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove a node</p>
+<code class="sig-name descname">remove_node</code><span class="sig-paren">(</span><em class="sig-param">node: gunpowder.graph.Node</em>, <em class="sig-param">retain_connectivity=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.remove_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a node.</p>
+<p>retain_connectivity: preserve removed nodes neighboring edges.
+Given graph: a-&gt;b-&gt;c, removing <cite>b</cite> without retain_connectivity
+would leave us with two connected components, {‘a’} and {‘b’}.
+removing ‘b’ with retain_connectivity flag set to True would
+leave us with the graph: a-&gt;c, and only one connected component
+{a, c}, thus preserving the connectivity of ‘a’ and ‘c’</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Graph.to_nx_graph">
+<code class="sig-name descname">to_nx_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/graph.html#Graph.to_nx_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Graph.to_nx_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a pure networkx graph containing data from
+this Graph.</p>
 </dd></dl>
 
 <dl class="method">
@@ -633,8 +700,6 @@ respectively.</p>
 <dd><p>A collection of (possibly partial) <a class="reference internal" href="#gunpowder.ArraySpec" title="gunpowder.ArraySpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArraySpec</span></code></a> and
 <code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSpec</span></code> forming a request.</p>
 <p>Inherits from <a class="reference internal" href="#gunpowder.ProviderSpec" title="gunpowder.ProviderSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProviderSpec</span></code></a>.</p>
-<p>See <a class="reference internal" href="requests_batches.html#sec-requests-batches"><span class="std std-ref">Batch Requests and Batches</span></a> for how to use a batch request to obtain a
-batch.</p>
 <dl class="method">
 <dt id="gunpowder.BatchRequest.add">
 <code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">shape</em>, <em class="sig-param">voxel_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/batch_request.html#BatchRequest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchRequest.add" title="Permalink to this definition">¶</a></dt>
@@ -829,9 +894,27 @@ inferred from <code class="docutils literal notranslate"><span class="pre">offse
 </dd></dl>
 
 <dl class="method">
+<dt id="gunpowder.Roi.get_bounding_box">
+<code class="sig-name descname">get_bounding_box</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_bounding_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for <code class="docutils literal notranslate"><span class="pre">to_slices()</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.get_center">
+<code class="sig-name descname">get_center</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the center of this ROI.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gunpowder.Roi.get_end">
 <code class="sig-name descname">get_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Smallest coordinate which is component-wise larger than any inside ROI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gunpowder.Roi.get_shape">
+<code class="sig-name descname">get_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/roi.html#Roi.get_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.Roi.get_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the shape of this ROI.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1064,7 +1147,8 @@ request contains at least one key reported earlier with
 <code class="sig-name descname">prepare</code><span class="sig-paren">(</span><em class="sig-param">request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/nodes/batch_filter.html#BatchFilter.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.BatchFilter.prepare" title="Permalink to this definition">¶</a></dt>
 <dd><p>To be implemented in subclasses.</p>
 <p>Prepare for a batch request. Should return a <a class="reference internal" href="#gunpowder.BatchRequest" title="gunpowder.BatchRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchRequest</span></code></a> of
-needed dependencies.</p>
+needed dependencies. If None is returned, it will be assumed that all
+of request is needed.</p>
 </dd></dl>
 
 <dl class="method">
@@ -2032,7 +2116,7 @@ same point sets as found in the first batch requested upstream.</p>
 <blockquote>
 <div><dl class="class">
 <dt id="gunpowder.torch.Train">
-<em class="property">class </em><code class="sig-prename descclassname">gunpowder.torch.</code><code class="sig-name descname">Train</code><span class="sig-paren">(</span><em class="sig-param">model, loss, optimizer, inputs: Dict[str, gunpowder.array.ArrayKey], outputs: Dict[Union[int, str], gunpowder.array.ArrayKey], loss_inputs: Dict[Union[int, str], gunpowder.array.ArrayKey], gradients: Dict[Union[int, str], gunpowder.array.ArrayKey] = {}, array_specs: Optional[Dict[Union[int, str], gunpowder.array.ArrayKey]] = None, checkpoint_basename: str = 'model', save_every: int = 2000, log_dir: str = None, log_every: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/torch/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.torch.Train" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gunpowder.torch.</code><code class="sig-name descname">Train</code><span class="sig-paren">(</span><em class="sig-param">model, loss, optimizer, inputs: Dict[str, gunpowder.array.ArrayKey], outputs: Dict[Union[int, str], gunpowder.array.ArrayKey], loss_inputs: Dict[Union[int, str], gunpowder.array.ArrayKey], gradients: Dict[Union[int, str], gunpowder.array.ArrayKey] = {}, array_specs: Optional[Dict[gunpowder.array.ArrayKey, gunpowder.array_spec.ArraySpec]] = None, checkpoint_basename: str = 'model', save_every: int = 2000, log_dir: str = None, log_every: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/torch/nodes/train.html#Train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.torch.Train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Torch implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">gunpowder.nodes.GenericTrain</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2075,7 +2159,7 @@ learnt weights.</p></li>
 <blockquote>
 <div><dl class="class">
 <dt id="gunpowder.torch.Predict">
-<em class="property">class </em><code class="sig-prename descclassname">gunpowder.torch.</code><code class="sig-name descname">Predict</code><span class="sig-paren">(</span><em class="sig-param">model, inputs: Dict[str, gunpowder.array.ArrayKey], outputs: Dict[Union[int, str], gunpowder.array.ArrayKey], array_specs: Dict[gunpowder.array.ArrayKey, gunpowder.array_spec.ArraySpec] = {}, checkpoint: str = None, gpus=[0]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/torch/nodes/predict.html#Predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.torch.Predict" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gunpowder.torch.</code><code class="sig-name descname">Predict</code><span class="sig-paren">(</span><em class="sig-param">model, inputs: Dict[str, gunpowder.array.ArrayKey], outputs: Dict[Union[int, str], gunpowder.array.ArrayKey], array_specs: Dict[gunpowder.array.ArrayKey, gunpowder.array_spec.ArraySpec] = {}, checkpoint: str = None, gpus=[0], device='cuda'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gunpowder/torch/nodes/predict.html#Predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gunpowder.torch.Predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Torch implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">gunpowder.nodes.Predict</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2459,6 +2543,16 @@ within the pipeline remain unchanged.</p></li>
 <dd><p>Pre-cache repeated equal batch requests. For the first of a series of
 equal batch request, a set of workers is spawned to pre-cache the batches
 in parallel processes. This way, subsequent requests can be served quickly.</p>
+<p>A note on changing the requests sent to <cite>PreCache</cite>.
+Given requests A and B, if requests are sent in the sequence:
+A, …, A, B, A, …, A, B, A, …
+Precache will build a Queue of batches that satisfy A, and handle requests
+B on demand. This prevents <cite>PreCache</cite> from discarding the queue on every
+SnapshotRequest.
+However if B request replace A as the most common request, i.e.:
+A, A, A, …, A, B, B, B, …,
+<cite>PreCache</cite> will discard the A queue and build a B queue after it has seen
+more B requests than A requests out of the last 5 requests.</p>
 <p>This node only makes sense if:</p>
 <ol class="arabic simple">
 <li><p>Incoming batch requests are repeatedly the same.</p></li>
@@ -2508,10 +2602,10 @@ max, mean, and median runtimes.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="custom_providers.html" class="btn btn-neutral float-right" title="Writing Custom Batch Providers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="example_boundaries.html" class="btn btn-neutral float-right" title="Example: Boundary Prediction for Instance Segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="pipeline.html" class="btn btn-neutral" title="Pipelines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -2542,7 +2636,7 @@ max, mean, and median runtimes.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.1.0rc0.dev0',
+            VERSION:'1.1.4',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -2554,6 +2648,8 @@ max, mean, and median runtimes.</p>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -2569,7 +2665,18 @@ max, mean, and median runtimes.</p>
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>

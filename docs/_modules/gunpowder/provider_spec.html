@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.provider_spec &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>gunpowder.provider_spec &mdash; gunpowder 1.1.4 documentation</title>
   
 
   
@@ -27,6 +27,8 @@
   
     <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 
@@ -85,16 +87,22 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing gunpowder</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview.html#tutorial-a-simple-pipeline">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#random-samples">Random samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#training-a-network">Training a network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#batch">Batch</a></li>
@@ -194,11 +202,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -270,6 +277,7 @@
 <span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="kn">import</span> <span class="n">ArraySpec</span>
 <span class="kn">from</span> <span class="nn">gunpowder.graph</span> <span class="kn">import</span> <span class="n">GraphKey</span>
 <span class="kn">from</span> <span class="nn">gunpowder.graph_spec</span> <span class="kn">import</span> <span class="n">GraphSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="kn">import</span> <span class="n">Roi</span>
 <span class="kn">from</span> <span class="nn">.freezable</span> <span class="kn">import</span> <span class="n">Freezable</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -351,21 +359,31 @@
 
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">ArraySpec</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Only a ArrayKey is &quot;</span>
-                                                        <span class="s2">&quot;allowed as key for a &quot;</span>
-                                                        <span class="s2">&quot;ArraySpec value.&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">GraphKey</span><span class="p">),</span> \
+            <span class="sa">f</span><span class="s2">&quot;Only ArrayKey or GraphKey (not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> are &quot;</span> \
+            <span class="s2">&quot;allowed as key for ProviderSpec, &quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Roi</span><span class="p">):</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">ArraySpec</span><span class="p">),</span> \
+                <span class="sa">f</span><span class="s2">&quot;Only ArraySpec (not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">) can be set for &quot;</span> \
+                <span class="s2">&quot;ArrayKey&quot;</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">GraphSpec</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="n">key</span><span class="p">,</span> <span class="n">GraphKey</span>
-            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Only A GraphKey (not a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">) is allowed as key for a GraphSpec value.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">graph_specs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only ArraySpec or GraphSpec, (not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">) can be set in a &quot;</span>
-                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Roi</span><span class="p">):</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">GraphSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">GraphSpec</span><span class="p">),</span> \
+                <span class="sa">f</span><span class="s2">&quot;Only GraphSpec (not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">) can be set for &quot;</span> \
+                <span class="s2">&quot;GraphKey&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph_specs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 
@@ -528,7 +546,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.1.0rc0.dev0',
+            VERSION:'1.1.4',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -540,6 +558,8 @@
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -555,7 +575,18 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>
