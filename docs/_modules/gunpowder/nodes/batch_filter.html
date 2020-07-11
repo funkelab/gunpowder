@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.batch_filter &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>gunpowder.nodes.batch_filter &mdash; gunpowder 1.1.4 documentation</title>
   
 
   
@@ -27,6 +27,8 @@
   
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -85,16 +87,22 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing gunpowder</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../overview.html#tutorial-a-simple-pipeline">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#random-samples">Random samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#training-a-network">Training a network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../overview.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
@@ -194,11 +202,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -349,7 +356,10 @@
     <span class="k">def</span> <span class="nf">_init_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># default for BatchFilters is to provide the same as upstream</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_spec&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_providers</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_upstream_provider</span><span class="p">()</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">internal_teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -393,12 +403,14 @@
             <span class="n">dependencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dependencies</span><span class="p">,</span> <span class="n">BatchRequest</span><span class="p">):</span>
                 <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">dependencies</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dependencies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2"> does not return a BatchRequest &quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;containing its dependencies.&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2"> returned a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dependencies</span><span class="p">)</span><span class="si">}</span><span class="s2">! &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Supported return types are: `BatchRequest` containing your exact &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;dependencies or `None`, indicating a dependency on the full request.&quot;</span>
                 <span class="p">)</span>
-                <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_provided</span><span class="p">(</span><span class="n">upstream_request</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">upstream_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -458,9 +470,10 @@
         <span class="sd">&quot;&quot;&quot;To be implemented in subclasses.</span>
 
 <span class="sd">        Prepare for a batch request. Should return a :class:`BatchRequest` of</span>
-<span class="sd">        needed dependencies.</span>
+<span class="sd">        needed dependencies. If None is returned, it will be assumed that all</span>
+<span class="sd">        of request is needed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="BatchFilter.process"><a class="viewcode-back" href="../../../api.html#gunpowder.BatchFilter.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;To be implemented in subclasses.</span>
@@ -483,7 +496,6 @@
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
             <span class="s2">&quot;Class </span><span class="si">%s</span><span class="s2"> does not implement &#39;process&#39;&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="p">)</span></div></div>
-
 </pre></div>
 
            </div>
@@ -518,7 +530,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.1.0rc0.dev0',
+            VERSION:'1.1.4',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -530,6 +542,8 @@
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -545,7 +559,18 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>

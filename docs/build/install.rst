@@ -1,7 +1,7 @@
 .. _sec_install:
 
-Installing gunpowder
-====================
+Installation
+============
 
 .. automodule:: gunpowder
    :noindex:

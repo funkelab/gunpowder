@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.graph &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>gunpowder.graph &mdash; gunpowder 1.1.4 documentation</title>
   
 
   
@@ -27,6 +27,8 @@
   
     <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 
@@ -85,16 +87,22 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing gunpowder</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../overview.html#tutorial-a-simple-pipeline">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#random-samples">Random samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#training-a-network">Training a network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#batch">Batch</a></li>
@@ -194,11 +202,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -376,7 +383,13 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Node(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">temporary</span><span class="si">}</span><span class="s2">) (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">) at (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Node</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Edge"><a class="viewcode-back" href="../../api.html#gunpowder.Edge">[docs]</a><span class="k">class</span> <span class="nc">Edge</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
@@ -453,9 +466,7 @@
 <span class="sd">            A spec describing the data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">edges</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Edge</span><span class="p">],</span> <span class="n">spec</span><span class="p">:</span> <span class="n">GraphSpec</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">edges</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Edge</span><span class="p">],</span> <span class="n">spec</span><span class="p">:</span> <span class="n">GraphSpec</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__spec</span> <span class="o">=</span> <span class="n">spec</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
 
@@ -502,10 +513,14 @@
             <span class="k">yield</span> <span class="n">Edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">neighbor</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">neighbor</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">neighbor</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">neighbor</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -527,11 +542,27 @@
         <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.remove_node"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph.remove_node"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">retain_connectivity</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove a node</span>
+<span class="sd">        Remove a node.</span>
+<span class="sd">        </span>
+<span class="sd">        retain_connectivity: preserve removed nodes neighboring edges.</span>
+<span class="sd">        Given graph: a-&gt;b-&gt;c, removing `b` without retain_connectivity</span>
+<span class="sd">        would leave us with two connected components, {&#39;a&#39;} and {&#39;b&#39;}.</span>
+<span class="sd">        removing &#39;b&#39; with retain_connectivity flag set to True would</span>
+<span class="sd">        leave us with the graph: a-&gt;c, and only one connected component</span>
+<span class="sd">        {a, c}, thus preserving the connectivity of &#39;a&#39; and &#39;c&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">retain_connectivity</span><span class="p">:</span>
+            <span class="n">predecessors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">successors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">pred_id</span> <span class="ow">in</span> <span class="n">predecessors</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">succ_id</span> <span class="ow">in</span> <span class="n">successors</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">pred_id</span> <span class="o">!=</span> <span class="n">succ_id</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">pred_id</span><span class="p">,</span> <span class="n">succ_id</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Graph.add_node"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -559,7 +590,7 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Graph.crop"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.crop">[docs]</a>    <span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph.crop"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.crop">[docs]</a>    <span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Roi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Will remove all nodes from self that are not contained in `roi` except for</span>
 <span class="sd">        &quot;dangling&quot; nodes. This means that if there are nodes A, B s.t. there</span>
@@ -569,20 +600,17 @@
 
 <span class="sd">        Note there is a helper function `trim` that will remove B and replace it with</span>
 <span class="sd">        a node at the intersection of the edge (A, B) and the bounding box of `roi`.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            roi (:class:`Roi`):</span>
+
+<span class="sd">                ROI in world units to crop to.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;subgraph view not yet supported, graphs are copied on crop.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
-            <span class="n">cropped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cropped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">cropped</span><span class="o">.</span><span class="n">__spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__spec</span>
+        <span class="n">cropped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="n">contained_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cropped</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="p">)]</span>
-        <span class="p">)</span>
+        <span class="n">contained_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cropped</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="p">)])</span>
         <span class="n">all_contained_edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">e</span>
@@ -633,9 +661,7 @@
 
         <span class="n">trimmed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="n">contained_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">trimmed</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="p">)]</span>
-        <span class="p">)</span>
+        <span class="n">contained_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">trimmed</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="p">)])</span>
         <span class="n">all_contained_edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">e</span>
@@ -655,11 +681,13 @@
         <span class="n">all_nodes</span> <span class="o">=</span> <span class="n">contained_edge_nodes</span> <span class="o">|</span> <span class="n">contained_nodes</span>
         <span class="n">dangling_nodes</span> <span class="o">=</span> <span class="n">all_nodes</span> <span class="o">-</span> <span class="n">contained_nodes</span>
 
+        <span class="n">next_node</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_nodes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
         <span class="n">trimmed</span><span class="o">.</span><span class="n">_handle_boundaries</span><span class="p">(</span>
             <span class="n">partially_contained_edges</span><span class="p">,</span>
             <span class="n">contained_nodes</span><span class="p">,</span>
             <span class="n">roi</span><span class="p">,</span>
-            <span class="n">node_id</span><span class="o">=</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">all_nodes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">next_node</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">trimmed</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
@@ -676,6 +704,7 @@
         <span class="n">roi</span><span class="p">:</span> <span class="n">Roi</span><span class="p">,</span>
         <span class="n">node_id</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="p">):</span>
+        <span class="n">nodes_to_remove</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">crossing_edges</span><span class="p">:</span>
             <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">u</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
             <span class="n">u_in</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">contained_nodes</span>
@@ -685,19 +714,18 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">new_location</span><span class="p">,</span> <span class="n">in_location</span><span class="p">)):</span>
                 <span class="c1"># use deepcopy because modifying this node should not modify original</span>
                 <span class="n">new_attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
-                <span class="n">new_v</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-                    <span class="nb">id</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
-                    <span class="n">location</span><span class="o">=</span><span class="n">new_location</span><span class="p">,</span>
-                    <span class="n">attrs</span><span class="o">=</span><span class="n">new_attrs</span><span class="p">,</span>
-                    <span class="n">temporary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">new_attrs</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+                <span class="n">new_attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_location</span>
+                <span class="n">new_attrs</span><span class="p">[</span><span class="s2">&quot;temporary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">new_v</span> <span class="o">=</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="n">new_attrs</span><span class="p">)</span>
                 <span class="n">new_e</span> <span class="o">=</span> <span class="n">Edge</span><span class="p">(</span>
                     <span class="n">u</span><span class="o">=</span><span class="n">v_in</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">u_in</span> <span class="k">else</span> <span class="n">new_v</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">new_v</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">u_in</span> <span class="k">else</span> <span class="n">v_in</span><span class="o">.</span><span class="n">id</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_v</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">new_e</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">v_out</span><span class="p">)</span>
+            <span class="n">nodes_to_remove</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v_out</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_to_remove</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_roi_intercept</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">inside</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">outside</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">bb</span><span class="p">:</span> <span class="n">Roi</span>
@@ -786,7 +814,59 @@
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">addition</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
             <span class="n">merged</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">merged</span></div></div>
+        <span class="k">return</span> <span class="n">merged</span></div>
+
+<div class="viewcode-block" id="Graph.to_nx_graph"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.to_nx_graph">[docs]</a>    <span class="k">def</span> <span class="nf">to_nx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns a pure networkx graph containing data from</span>
+<span class="sd">        this Graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Graph.from_nx_graph"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.from_nx_graph">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_nx_graph</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a gunpowder graph from a networkx graph</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">Edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">]</span>
+        <span class="n">directed</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">directed</span> <span class="o">=</span> <span class="n">directed</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Graph.relabel_connected_components"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.relabel_connected_components">[docs]</a>    <span class="k">def</span> <span class="nf">relabel_connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        create a new attribute &quot;component&quot; for each node</span>
+<span class="sd">        in this Graph</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wcc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connected_components</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">wcc</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;component&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">weakly_connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">in_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">successors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predecessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="GraphKey"><a class="viewcode-back" href="../../api.html#gunpowder.GraphKey">[docs]</a><span class="k">class</span> <span class="nc">GraphKey</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
@@ -870,7 +950,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.1.0rc0.dev0',
+            VERSION:'1.1.4',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -882,6 +962,8 @@
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -897,7 +979,18 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>
