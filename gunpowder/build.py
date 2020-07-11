@@ -12,12 +12,12 @@ class build(object):
             self.pipeline.setup()
         except:
             logger.error("something went wrong during the setup of the pipeline, calling tear down")
-            self.pipeline.teardown()
+            self.pipeline.internal_teardown()
             logger.debug("tear down completed")
             raise
         return self.pipeline
 
     def __exit__(self, type, value, traceback):
         logger.debug("leaving context, tearing down pipeline")
-        self.pipeline.teardown()
+        self.pipeline.internal_teardown()
         logger.debug("tear down completed")
