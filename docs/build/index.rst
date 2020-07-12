@@ -29,6 +29,7 @@ or `caffe <http://caffe.berkeleyvision.org/>`_.
 
   overview
   install
+  tutorial_simple_pipeline
   api
   example_boundaries
 
