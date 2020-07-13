@@ -30,6 +30,7 @@ or `caffe <http://caffe.berkeleyvision.org/>`_.
   overview
   install
   tutorial_simple_pipeline
+  tutorial_batch_provider
   api
   example_boundaries
 
