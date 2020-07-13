@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; gunpowder 1.1.4 documentation</title>
+  <title>Installation &mdash; gunpowder 1.1.5 documentation</title>
   
 
   
@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="next" title="Tutorial: A Simple Pipeline" href="tutorial_simple_pipeline.html" />
     <link rel="prev" title="Overview" href="overview.html" /> 
 
   
@@ -89,22 +89,27 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#tutorial-a-simple-pipeline">Tutorial: A Simple Pipeline</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#a-minimal-pipeline">A minimal pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#random-samples">Random samples</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#geometric-augmentation">Geometric augmentation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#intensity-augmentation">Intensity augmentation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#training-a-network">Training a network</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
-<li class="toctree-l3"><a class="reference internal" href="overview.html#what-next">What next?</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_simple_pipeline.html">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#random-samples">Random samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#training-a-network">Training a network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#what-next">What next?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_batch_provider.html">Tutorial: Writing Your Own Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#the-basics-prepare-and-process">The basics: <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#changing-an-array-in-place">Changing an array in-place</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#requesting-additional-data">Requesting additional data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#creating-new-arrays">Creating new arrays</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
@@ -290,7 +295,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="tutorial_simple_pipeline.html" class="btn btn-neutral float-right" title="Tutorial: A Simple Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="overview.html" class="btn btn-neutral" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -324,7 +329,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.1.4',
+            VERSION:'1.1.5',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
