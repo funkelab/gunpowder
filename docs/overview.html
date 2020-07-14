@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Writing Custom Batch Providers &mdash; gunpowder 1.1.0rc0.dev0 documentation</title>
+  <title>Overview &mdash; gunpowder 1.1.5 documentation</title>
   
 
   
@@ -27,10 +27,12 @@
   
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutorial: boundary prediction for instance segmentation" href="tutorial.html" />
-    <link rel="prev" title="API Reference" href="api.html" /> 
+    <link rel="next" title="Installation" href="install.html" />
+    <link rel="prev" title="Gunpowder Documentation" href="index.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -87,16 +89,27 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installing gunpowder</a></li>
-<li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_simple_pipeline.html">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#random-samples">Random samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#training-a-network">Training a network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_pipeline.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_batch_provider.html">Tutorial: Writing Your Own Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#the-basics-prepare-and-process">The basics: <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#changing-an-array-in-place">Changing an array in-place</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#requesting-additional-data">Requesting additional data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_batch_provider.html#creating-new-arrays">Creating new arrays</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batch">Batch</a></li>
@@ -196,11 +209,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -248,13 +260,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Writing Custom Batch Providers</li>
+      <li>Overview</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/custom_providers.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/overview.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -267,40 +279,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="writing-custom-batch-providers">
-<span id="sec-custom-providers"></span><h1>Writing Custom Batch Providers<a class="headerlink" href="#writing-custom-batch-providers" title="Permalink to this headline">¶</a></h1>
-<p>The simplest batch provider is a <a class="reference internal" href="api.html#gunpowder.BatchFilter" title="gunpowder.BatchFilter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchFilter</span></code></a>,
-which has exactly one upstream provider. To create a new one, subclass it and
-override <a class="reference internal" href="api.html#gunpowder.BatchFilter.prepare" title="gunpowder.BatchFilter.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare</span></code></a> and/or
-<a class="reference internal" href="api.html#gunpowder.BatchFilter.process" title="gunpowder.BatchFilter.process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process</span></code></a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleFilter</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
-
-  <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-    <span class="c1"># create a new request for this node&#39;s dependencies</span>
-    <span class="n">dependencies</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-    <span class="c1"># [...]</span>
-    <span class="k">return</span> <span class="n">dependencies</span>
-
-  <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-    <span class="c1"># create a new batch for this node&#39;s output</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
-    <span class="c1"># [...]</span>
-    <span class="k">return</span> <span class="n">output</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code> will be called in an alternating fashion.
-<code class="docutils literal notranslate"><span class="pre">prepare</span></code> is called first, when a <code class="docutils literal notranslate"><span class="pre">BatchRequest</span></code> is passed upstream through
-the filter. Your filter has to formulate a new request, stating the
-dependencies needed by this filter, e.g., by increasing the requested sizes of
-existing arrays in the request.
-After <code class="docutils literal notranslate"><span class="pre">prepare</span></code>, <code class="docutils literal notranslate"><span class="pre">process</span></code> will be called with a batch going downstream,
-which is the upstream’s response to the your request you returned in
-<code class="docutils literal notranslate"><span class="pre">prepare</span></code>. In <code class="docutils literal notranslate"><span class="pre">process</span></code>, your filter has to create a new batch with
-expected outputs and ensure it meets the original downstream request earlier
-communicated to <code class="docutils literal notranslate"><span class="pre">prepare</span></code> (given as <code class="docutils literal notranslate"><span class="pre">request</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">process</span></code> for
-convenience).</p>
-<p>For a simple example of a batch filter following this scheme, see
-the source code of <a class="reference internal" href="api.html#gunpowder.DownSample" title="gunpowder.DownSample"><code class="xref py py-class docutils literal notranslate"><span class="pre">DownSample</span></code></a>.</p>
+  <div class="section" id="overview">
+<span id="sec-overview"></span><h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>Many data loading, training, and prediction tasks can be thought of as chaining
+a sequence of operations. For example, to train a model to segment cells in a
+large 2D+t movie, one might want to:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><strong>Read the data</strong> (the movie) and meta data (spatial resolution, data
+type, ground-truth annotations).</p></li>
+<li><p><strong>Pick a sample</strong> to train on from a random frame, at a random location.</p></li>
+<li><p><strong>Augment the sample</strong> (rotate, mirror, flip, elastically deform, change
+intensity, etc.).</p></li>
+<li><p><strong>Stack several samples</strong> together into a batch.</p></li>
+<li><p><strong>Perform a training iteration</strong> on the batch</p></li>
+</ol>
+</div></blockquote>
+<p>In <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code>, a sequence of operations like the example above is assembled
+in the form of a <strong>pipeline</strong> of linked <strong>nodes</strong>. Once the pipeline is built,
+<strong>requests</strong> can be made at the end of the pipeline (e.g, “give me a batch with
+ten images of size <code class="docutils literal notranslate"><span class="pre">(100,</span> <span class="pre">100)</span></code>”). This request will then be passed upstream
+from node to node. Nodes will update the request to ask for additional data
+they need (e.g., a node performing a rotation of 45° will require an image of
+size <code class="docutils literal notranslate"><span class="pre">(142,</span> <span class="pre">142)</span></code> to satisfy the requested size <code class="docutils literal notranslate"><span class="pre">(100,</span> <span class="pre">100)</span></code>). Once the
+request hits a source node, a <strong>batch</strong> with the requested data will be
+created. This batch is then sent downstream the pipeline, once again visiting
+each node along the path to perform the actual operation (e.g., rotate by 45°
+and crop to <code class="docutils literal notranslate"><span class="pre">(100,</span> <span class="pre">100)</span></code>).</p>
+<p>The <a class="reference internal" href="tutorial_simple_pipeline.html#sec-tutorial-simple-pipeline"><span class="std std-ref">Simple Pipeline</span></a> demonstrates how such
+a pipeline in assembled in <code class="docutils literal notranslate"><span class="pre">gunpowder</span></code> (and also how to use a similar
+pipeline for prediction).</p>
 </div>
 
 
@@ -311,10 +319,10 @@ the source code of <a class="reference internal" href="api.html#gunpowder.DownSa
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial: boundary prediction for instance segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="api.html" class="btn btn-neutral" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Gunpowder Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -345,7 +353,7 @@ the source code of <a class="reference internal" href="api.html#gunpowder.DownSa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.1.0rc0.dev0',
+            VERSION:'1.1.5',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -357,6 +365,8 @@ the source code of <a class="reference internal" href="api.html#gunpowder.DownSa
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -372,7 +382,18 @@ the source code of <a class="reference internal" href="api.html#gunpowder.DownSa
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>

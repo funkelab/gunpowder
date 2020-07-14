@@ -12,7 +12,7 @@ Data Containers
 Batch
 ^^^^^
   .. autoclass:: Batch
-    :members: arrays, points, items
+    :members:
 
 Array
 ^^^^^

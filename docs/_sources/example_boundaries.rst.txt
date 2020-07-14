@@ -1,7 +1,7 @@
 .. _sec_tutorial:
 
-Tutorial: boundary prediction for instance segmentation
-=======================================================
+Example: Boundary Prediction for Instance Segmentation
+======================================================
 
 (written by Sherry Ding)
 

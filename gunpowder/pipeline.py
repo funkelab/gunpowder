@@ -64,13 +64,13 @@ class Pipeline:
                 "pipeline.setup() called more than once (build() inside "
                 "build()?)")
 
-    def teardown(self):
+    def internal_teardown(self):
         '''Call teardown on each batch provider in the pipeline and disconnect
         all nodes.'''
 
         try:
 
-            # call teardown on all nodes
+            # call internal_teardown on all nodes
             self.traverse(
                 lambda n: n.output.internal_teardown(),
                 reverse=True)

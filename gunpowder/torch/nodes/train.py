@@ -236,8 +236,13 @@ class Train(GenericTrain):
 
         self.retain_gradients(request, outputs)
 
-        logger.debug("model outputs: %s", outputs)
-        logger.debug(f"loss_inputs: {device_loss_args}, {device_loss_kwargs}")
+        logger.debug(
+            "model outputs: %s",
+            {k: v.shape for k, v in outputs.items()})
+        logger.debug(
+            "loss inputs: %s %s",
+            [v.shape for v in device_loss_args],
+            {k: v.shape for k, v in device_loss_kwargs.items()})
         loss = self.loss(*device_loss_args, **device_loss_kwargs)
         loss.backward()
         self.optimizer.step()

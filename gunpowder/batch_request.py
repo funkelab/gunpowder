@@ -11,9 +11,6 @@ class BatchRequest(ProviderSpec):
     :class:`GraphSpec` forming a request.
 
     Inherits from :class:`ProviderSpec`.
-
-    See :ref:`sec_requests_batches` for how to use a batch request to obtain a
-    batch.
     '''
 
     def add(self, key, shape, voxel_size=None, placeholder=False):

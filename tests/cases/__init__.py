@@ -31,4 +31,4 @@ from .unsqueeze import TestUnsqueeze
 from .upsample import TestUpSample
 from .zarr_write import TestZarrWrite
 from .snapshot import TestSnapshot
-from .simple_augment import SimpleAugment
+from .simple_augment import TestSimpleAugment

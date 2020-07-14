@@ -8,7 +8,7 @@ What is Gunpowder?
 ^^^^^^^^^^^^^^^^^^
 
 Gunpowder is a library to facilitate machine learning on large,
-multi-dimensional images.
+multi-dimensional arrays.
 
 Gunpowder allows you to assemble a pipeline from :ref:`data
 loading <sec_api_source_nodes>` over
@@ -27,12 +27,12 @@ or `caffe <http://caffe.berkeleyvision.org/>`_.
 .. toctree::
   :maxdepth: 2
 
+  overview
   install
-  first_steps
-  pipeline
+  tutorial_simple_pipeline
+  tutorial_batch_provider
   api
-  custom_providers
-  tutorial
+  example_boundaries
 
 Indices and tables
 ==================
