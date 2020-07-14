@@ -67,14 +67,28 @@ class Predict(GenericPredict):
                 "Consider using model.eval()"
             )
 
-        super(Predict, self).__init__(inputs, outputs, array_specs)
+        super(Predict, self).__init__(
+            inputs,
+            outputs,
+            array_specs)
 
-        self.use_cuda = torch.cuda.is_available() and device == "cuda"
-        logger.info(f"Training on {'gpu' if self.use_cuda else 'cpu'}")
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
-        self.model = model.to(self.device)
+        self.device_string = device
+        self.device = None  # to be set in start()
+        self.model = model
         self.checkpoint = checkpoint
         self.gpus = gpus
+
+        self.intermediate_layers = {}
+        self.register_hooks()
+
+    def start(self):
+
+        self.use_cuda = (
+            torch.cuda.is_available() and
+            self.device_string == "cuda")
+        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
+        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+        self.model = self.model.to(self.device)
 
         if self.checkpoint is not None:
             checkpoint = torch.load(self.checkpoint, map_location=self.device)
@@ -82,11 +96,6 @@ class Predict(GenericPredict):
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict()
-        self.intermediate_layers = {}
-        self.register_hooks()
-
-    def start(self):
-        pass
 
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)
