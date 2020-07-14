@@ -49,6 +49,9 @@ class Predict(GenericPredict):
 
             Which gpu's to use for prediction.
             Not yet implemented.
+
+        spawn_subprocess (bool, optional): Whether to run ``predict`` in a
+            separate process. Default is false.
     """
 
     def __init__(
@@ -60,6 +63,7 @@ class Predict(GenericPredict):
         checkpoint: str = None,
         gpus=[0],
         device="cuda",
+        spawn_subprocess=False
     ):
         if model.training:
             logger.warning(
@@ -70,7 +74,8 @@ class Predict(GenericPredict):
         super(Predict, self).__init__(
             inputs,
             outputs,
-            array_specs)
+            array_specs,
+            spawn_subprocess=spawn_subprocess)
 
         self.device_string = device
         self.device = None  # to be set in start()
