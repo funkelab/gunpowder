@@ -27,7 +27,7 @@ before_install:
   - source activate gp-env
 
 install:
-  - make install-full
+  - make install-dev
 
 script:
   - make test
