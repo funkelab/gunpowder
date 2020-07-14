@@ -12,7 +12,7 @@ install-dev:
 
 .PHONY: test
 test:
-	python -m tests -v
+	pytest -v
 
 .PHONY: publish
 publish:
