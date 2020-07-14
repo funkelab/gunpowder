@@ -12,7 +12,7 @@ install-dev:
 
 .PHONY: test
 test:
-	pytest -v
+	pytest -v --cov gunpowder
 
 .PHONY: publish
 publish:

@@ -9,6 +9,9 @@ python:
 jobs:
   allow_failures:
     - python: "3.8"
+  include:
+    - stage: lint
+      script: flake8 tests gunpowder
 
 before_install:
   - sudo apt-get update

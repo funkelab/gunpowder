@@ -5,5 +5,3 @@ scikit-image
 requests
 augment-nd
 networkx
-
-pytest
