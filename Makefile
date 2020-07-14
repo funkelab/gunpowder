@@ -8,6 +8,7 @@ install-full:
 
 .PHONY: install-dev
 install-dev:
+	pip install -r requirements-dev.txt
 	pip install -e .[full]
 
 .PHONY: test
