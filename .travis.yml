@@ -27,8 +27,7 @@ before_install:
   - source activate gp-env
 
 install:
-  - conda install -c cpape
-  - make install-dev
+  - make install-full
 
 script:
   - make test
