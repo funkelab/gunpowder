@@ -45,10 +45,16 @@ class Predict(GenericPredict):
             An optional path to the saved parameters for your torch module.
             These will be loaded and used for prediction if provided.
 
-        use_gpus: (``list``, ``int``):
+        gpus: (``list`` of ``int``, optional):
 
             Which gpu's to use for prediction.
             Not yet implemented.
+
+        device (``string``, optional):
+
+            Which device to use for prediction (``"cpu"`` or ``"cuda"``).
+            Default is ``"cuda"``, which falls back to CPU if CUDA is not
+            available.
 
         spawn_subprocess (bool, optional): Whether to run ``predict`` in a
             separate process. Default is false.
