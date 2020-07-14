@@ -205,9 +205,11 @@ class BatchFilter(BatchProvider):
     def process(self, batch, request):
         """To be implemented in subclasses.
 
-        Filter a batch, will be called after :func:`prepare`. Change batch as
-        needed, it will be passed downstream. ``request`` is the same as passed
-        to :func:`prepare`, provided for convenience.
+        Filter a batch, will be called after :func:`prepare`. Should return a
+        :class:`Batch` containing modified Arrays and Graphs. Keys in the returned
+        batch will replace the associated data in the original batch. If None is
+        returned it is assumed that the batch has been modified in place. ``request``
+        is the same as passed to :func:`prepare`, provided for convenience.
 
         Args:
 
