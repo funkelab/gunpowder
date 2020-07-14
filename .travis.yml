@@ -27,7 +27,7 @@ before_install:
   - source activate gp-env
 
 install:
-  - conda install -c cpape -c conda-forge
+  - conda install -c cpape
   - make install-dev
 
 script:
