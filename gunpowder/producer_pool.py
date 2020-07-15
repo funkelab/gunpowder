@@ -35,6 +35,9 @@ class ProducerPool(object):
     def start(self):
         '''Start the pool of producers.'''
 
+        if self.__watch_dog is None:
+            raise RuntimeError("can't start a ProducerPool a second time")
+
         if self.__watch_dog.is_alive():
             logger.warning("trying to start workers, but they are already running")
             return
@@ -72,8 +75,12 @@ class ProducerPool(object):
 
         Items currently being produced will not be waited for and be discarded.'''
 
+        if self.__watch_dog is None:
+            return
+
         self.__stop.set()
         self.__watch_dog.join()
+        self.__watch_dog = None
 
     def __run_watch_dog(self, callables):
 

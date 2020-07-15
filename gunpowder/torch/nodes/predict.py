@@ -45,10 +45,19 @@ class Predict(GenericPredict):
             An optional path to the saved parameters for your torch module.
             These will be loaded and used for prediction if provided.
 
-        use_gpus: (``list``, ``int``):
+        gpus: (``list`` of ``int``, optional):
 
             Which gpu's to use for prediction.
             Not yet implemented.
+
+        device (``string``, optional):
+
+            Which device to use for prediction (``"cpu"`` or ``"cuda"``).
+            Default is ``"cuda"``, which falls back to CPU if CUDA is not
+            available.
+
+        spawn_subprocess (bool, optional): Whether to run ``predict`` in a
+            separate process. Default is false.
     """
 
     def __init__(
@@ -60,6 +69,7 @@ class Predict(GenericPredict):
         checkpoint: str = None,
         gpus=[0],
         device="cuda",
+        spawn_subprocess=False
     ):
         if model.training:
             logger.warning(
@@ -67,14 +77,37 @@ class Predict(GenericPredict):
                 "Consider using model.eval()"
             )
 
-        super(Predict, self).__init__(inputs, outputs, array_specs)
+        super(Predict, self).__init__(
+            inputs,
+            outputs,
+            array_specs,
+            spawn_subprocess=spawn_subprocess)
 
-        self.use_cuda = torch.cuda.is_available() and device == "cuda"
-        logger.info(f"Training on {'gpu' if self.use_cuda else 'cpu'}")
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
-        self.model = model.to(self.device)
+        self.device_string = device
+        self.device = None  # to be set in start()
+        self.model = model
         self.checkpoint = checkpoint
         self.gpus = gpus
+
+        self.intermediate_layers = {}
+        self.register_hooks()
+
+    def start(self):
+
+        self.use_cuda = (
+            torch.cuda.is_available() and
+            self.device_string == "cuda")
+        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
+        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+
+        try:
+            self.model = self.model.to(self.device)
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to move model to device. If you are using a child process "
+                "to run your model, maybe you already initialized CUDA by sending "
+                "your model to device in the main process."
+            ) from e
 
         if self.checkpoint is not None:
             checkpoint = torch.load(self.checkpoint, map_location=self.device)
@@ -82,11 +115,6 @@ class Predict(GenericPredict):
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict()
-        self.intermediate_layers = {}
-        self.register_hooks()
-
-    def start(self):
-        pass
 
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)

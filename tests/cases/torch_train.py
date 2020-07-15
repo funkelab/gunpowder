@@ -9,14 +9,43 @@ from gunpowder import (
     ArrayKey,
     Array,
     Batch,
+    Scan,
+    PreCache,
     build,
 )
 from gunpowder.ext import torch, NoSuchModule
 from gunpowder.torch import Train, Predict
-from unittest import skipIf
+from unittest import skipIf, expectedFailure
 import numpy as np
 
 import logging
+
+
+class TestTorchTrain2DSource(BatchProvider):
+    def __init__(self):
+        pass
+
+    def setup(self):
+        spec = ArraySpec(
+            roi=Roi((0, 0), (17, 17)),
+            dtype=np.float32,
+            interpolatable=True,
+            voxel_size=(1, 1),
+        )
+        self.provides(ArrayKeys.A, spec)
+
+    def provide(self, request):
+
+        batch = Batch()
+
+        spec = self.spec[ArrayKeys.A]
+
+        x = np.array(list(range(17)), dtype=np.float32).reshape([17, 1])
+        x = x + x.T
+
+        batch.arrays[ArrayKeys.A] = Array(x, spec).crop(request[ArrayKeys.A].roi)
+
+        return batch
 
 
 class TestTorchTrainSource(BatchProvider):
@@ -102,6 +131,7 @@ class TestTorchTrain(ProviderTest):
             },
             checkpoint_basename=checkpoint_basename,
             save_every=100,
+            spawn_subprocess=True,
         )
         pipeline = source + train
 
@@ -172,6 +202,7 @@ class TestTorchPredict(ProviderTest):
                 c_pred: ArraySpec(nonspatial=True),
                 d_pred: ArraySpec(nonspatial=True),
             },
+            spawn_subprocess=True,
         )
         pipeline = source + predict
 
@@ -194,3 +225,100 @@ class TestTorchPredict(ProviderTest):
             assert np.isclose(batch1[c_pred].data, batch2[c_pred].data)
             assert np.isclose(batch1[c_pred].data, 1 + 4 + 9)
             assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 + 9))
+
+
+class TestModel(torch.nn.Module):
+    def __init__(self):
+        super(TestModel, self).__init__()
+        self.linear = torch.nn.Conv2d(1, 1, 3)
+
+    def forward(self, a):
+        a = a.unsqueeze(0).unsqueeze(0)
+        pred = self.linear(a)
+        a = a.squeeze(0).squeeze(0)
+        pred = pred.squeeze(0).squeeze(0)
+        return pred
+
+
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
+class TestTorchPredictMultiprocessing(ProviderTest):
+    def test_scan(self):
+        if torch.cuda.is_initialized():
+            raise RuntimeError(
+                "Cuda is already initialized in the main process! Will not be able "
+                "to reinitialize in forked subprocesses."
+            )
+
+        logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
+
+        a = ArrayKey("A")
+        pred = ArrayKey("PRED")
+
+        model = TestModel()
+
+        reference_request = BatchRequest()
+        reference_request[a] = ArraySpec(roi=Roi((0, 0), (7, 7)))
+        reference_request[pred] = ArraySpec(roi=Roi((1, 1), (5, 5)))
+
+        source = TestTorchTrain2DSource()
+        predict = Predict(
+            model=model,
+            inputs={"a": a},
+            outputs={0: pred},
+            array_specs={pred: ArraySpec()},
+        )
+        pipeline = source + predict + Scan(reference_request, num_workers=2)
+
+        request = BatchRequest(
+            {
+                a: ArraySpec(roi=Roi((0, 0), (17, 17))),
+                pred: ArraySpec(roi=Roi((0, 0), (15, 15))),
+            }
+        )
+
+        # train for a couple of iterations
+        with build(pipeline):
+
+            batch = pipeline.request_batch(request)
+            assert pred in batch
+
+    def test_precache(self):
+
+        if torch.cuda.is_initialized():
+            raise RuntimeError(
+                "Cuda is already initialized in the main process! Will not be able "
+                "to reinitialize in forked subprocesses."
+            )
+
+        logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
+
+        a = ArrayKey("A")
+        pred = ArrayKey("PRED")
+
+        model = TestModel()
+
+        reference_request = BatchRequest()
+        reference_request[a] = ArraySpec(roi=Roi((0, 0), (7, 7)))
+        reference_request[pred] = ArraySpec(roi=Roi((1, 1), (5, 5)))
+
+        source = TestTorchTrain2DSource()
+        predict = Predict(
+            model=model,
+            inputs={"a": a},
+            outputs={0: pred},
+            array_specs={pred: ArraySpec()},
+        )
+        pipeline = source + predict + PreCache(cache_size=3, num_workers=2)
+
+        request = BatchRequest(
+            {
+                a: ArraySpec(roi=Roi((0, 0), (17, 17))),
+                pred: ArraySpec(roi=Roi((0, 0), (15, 15))),
+            }
+        )
+
+        # train for a couple of iterations
+        with build(pipeline):
+
+            batch = pipeline.request_batch(request)
+            assert pred in batch

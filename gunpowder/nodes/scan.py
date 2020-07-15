@@ -47,13 +47,12 @@ class Scan(BatchFilter):
         self.num_workers = num_workers
         self.cache_size = cache_size
         self.workers = None
-        if num_workers > 1:
-            self.request_queue = multiprocessing.Queue(maxsize=0)
         self.batch = None
 
     def setup(self):
 
         if self.num_workers > 1:
+            self.request_queue = multiprocessing.Queue(maxsize=0)
             self.workers = ProducerPool(
                 [self.__worker_get_chunk for _ in range(self.num_workers)],
                 queue_size=self.cache_size)
