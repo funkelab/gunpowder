@@ -8,6 +8,17 @@ from gunpowder.profiling import Timing
 logger = logging.getLogger(__name__)
 
 
+class BatchFilterError(Exception):
+
+    def __init__(self, batch_filter, msg):
+        self.batch_filter = batch_filter
+        self.msg = msg
+
+    def __str__(self):
+
+        return f"Error in {self.batch_filter.name()}: {self.msg}"
+
+
 class BatchFilter(BatchProvider):
     """Convenience wrapper for :class:`BatchProviders<BatchProvider>` with
     exactly one input provider.
@@ -35,9 +46,12 @@ class BatchFilter(BatchProvider):
     """
 
     def get_upstream_provider(self):
-        assert (
-            len(self.get_upstream_providers()) == 1
-        ), "BatchFilters need to have exactly one upstream provider"
+        if len(self.get_upstream_providers()) != 1:
+            raise BatchFilterError(
+                self,
+                "BatchFilters need to have exactly one upstream provider, "
+                f"this one has {len(self.get_upstream_providers())}: "
+                f"({[b.name() for b in self.get_upstream_providers()]}")
         return self.get_upstream_providers()[0]
 
     def updates(self, key, spec):
@@ -57,10 +71,12 @@ class BatchFilter(BatchProvider):
                 The updated spec of the array or point set.
         """
 
-        assert key in self.spec, (
-            "Node %s is trying to change the spec for %s, but is not provided upstream."
-            % (type(self).__name__, key)
-        )
+        if key not in self.spec:
+            raise BatchFilterError(
+                self,
+                f"BatchFilter {self} is trying to change the spec for {key}, "
+                f"but {key} is not provided upstream. Upstream offers: "
+                f"{self.get_upstream_provider().spec}")
         self.spec[key] = copy.deepcopy(spec)
         self.updated_items.append(key)
 
@@ -133,11 +149,11 @@ class BatchFilter(BatchProvider):
             elif dependencies is None:
                 upstream_request = request.copy()
             else:
-                raise Exception(
-                    f"{self.__class__} returned a {type(dependencies)}! "
-                    f"Supported return types are: `BatchRequest` containing your exact "
-                    f"dependencies or `None`, indicating a dependency on the full request."
-                )
+                raise BatchFilterError(
+                    self,
+                    f"This BatchFilter returned a {type(dependencies)}! "
+                    "Supported return types are: `BatchRequest` containing your exact "
+                    "dependencies or `None`, indicating a dependency on the full request.")
             self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
@@ -222,6 +238,6 @@ class BatchFilter(BatchProvider):
                 The request this node received. The updated batch should meet
                 this request.
         """
-        raise RuntimeError(
-            "Class %s does not implement 'process'" % type(self).__name__
-        )
+        raise BatchFilterError(
+            self,
+            "does not implement 'process'")
