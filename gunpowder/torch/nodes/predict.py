@@ -99,7 +99,15 @@ class Predict(GenericPredict):
             self.device_string == "cuda")
         logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
-        self.model = self.model.to(self.device)
+        
+        try:
+            self.model = self.model.to(self.device)
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to move model to device. If you are using a child process "
+                "to run your model, maybe you already initialized CUDA by sending "
+                "your model to device in the main process."
+            ) from e
 
         if self.checkpoint is not None:
             checkpoint = torch.load(self.checkpoint, map_location=self.device)

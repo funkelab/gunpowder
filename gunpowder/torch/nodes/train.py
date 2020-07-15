@@ -160,7 +160,14 @@ class Train(GenericTrain):
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
 
-        self.model = self.model.to(self.device)
+        try:
+            self.model = self.model.to(self.device)
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to move model to device. If you are using a child process "
+                "to run your model, maybe you already initialized CUDA by sending "
+                "your model to device in the main process."
+            ) from e
         if isinstance(self.loss, torch.nn.Module):
             self.loss = self.loss.to(self.device)
 
