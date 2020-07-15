@@ -99,7 +99,7 @@ class Predict(GenericPredict):
             self.device_string == "cuda")
         logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
-        
+
         try:
             self.model = self.model.to(self.device)
         except RuntimeError as e:
