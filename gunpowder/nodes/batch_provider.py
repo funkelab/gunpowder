@@ -145,11 +145,23 @@ class BatchProvider(object):
 
         logger.debug("%s got request %s", self.name(), request)
 
-        self.check_request_consistency(request)
+        try:
+            self.check_request_consistency(request)
+        except AssertionError as e:
+            raise AssertionError(
+                f"{self.name()} failed the request consistency check!\n"
+                f"request: {request}\nspec: {self.spec}"
+            ) from e
 
         batch = self.provide(request.copy())
 
-        self.check_batch_consistency(batch, request)
+        try:
+            self.check_batch_consistency(batch, request)
+        except AssertionError as e:
+            raise AssertionError(
+                f"{self.name()} failed the batch consistency check!\n"
+                f"batch: {batch}\nrequest: {request}"
+            ) from e
 
         self.remove_unneeded(batch, request)
 
