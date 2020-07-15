@@ -9,6 +9,23 @@ from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
 
+
+class BatchRequestError(Exception):
+
+    def __init__(self, provider, request, batch):
+        self.provider = provider
+        self.request = request
+        self.batch = batch
+
+    def __str__(self):
+
+        return \
+            f"Exception in {self.provider.name()} while processing request" \
+            f"{self.request} \n" \
+            "Batch returned so far:\n" \
+            f"{self.batch}"
+
+
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
@@ -143,17 +160,25 @@ class BatchProvider(object):
                 :class:`GraphSpecs<GraphSpec>`.
         '''
 
-        logger.debug("%s got request %s", self.name(), request)
+        batch = None
 
-        self.check_request_consistency(request)
+        try:
 
-        batch = self.provide(request.copy())
+            logger.debug("%s got request %s", self.name(), request)
 
-        self.check_batch_consistency(batch, request)
+            self.check_request_consistency(request)
 
-        self.remove_unneeded(batch, request)
+            batch = self.provide(request.copy())
 
-        logger.debug("%s provides %s", self.name(), batch)
+            self.check_batch_consistency(batch, request)
+
+            self.remove_unneeded(batch, request)
+
+            logger.debug("%s provides %s", self.name(), batch)
+
+        except Exception as e:
+
+            raise BatchRequestError(self, request, batch) from e
 
         return batch
 
