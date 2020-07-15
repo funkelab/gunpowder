@@ -131,6 +131,7 @@ class TestTorchTrain(ProviderTest):
             },
             checkpoint_basename=checkpoint_basename,
             save_every=100,
+            spawn_subprocess=True,
         )
         pipeline = source + train
 
@@ -201,6 +202,7 @@ class TestTorchPredict(ProviderTest):
                 c_pred: ArraySpec(nonspatial=True),
                 d_pred: ArraySpec(nonspatial=True),
             },
+            spawn_subprocess=True,
         )
         pipeline = source + predict
 
@@ -240,7 +242,6 @@ class TestModel(torch.nn.Module):
 
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 class TestTorchPredictMultiprocessing(ProviderTest):
-    @expectedFailure
     def test_scan(self):
         if torch.cuda.is_initialized():
             raise RuntimeError(
@@ -281,7 +282,6 @@ class TestTorchPredictMultiprocessing(ProviderTest):
             batch = pipeline.request_batch(request)
             assert pred in batch
 
-    @expectedFailure
     def test_precache(self):
 
         if torch.cuda.is_initialized():
