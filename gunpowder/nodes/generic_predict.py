@@ -46,21 +46,10 @@ class GenericPredict(BatchFilter):
             spawn_subprocess=False):
 
         self.initialized = False
-
         self.inputs = inputs
         self.outputs = outputs
         self.array_specs = {} if array_specs is None else array_specs
         self.spawn_subprocess = spawn_subprocess
-
-        if self.spawn_subprocess:
-
-            # start prediction as a producer pool, so that we can gracefully
-            # exit if anything goes wrong
-            self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
-            self.batch_in = multiprocessing.Queue(maxsize=1)
-            self.batch_in_lock = multiprocessing.Lock()
-            self.batch_out_lock = multiprocessing.Lock()
-
         self.timer_start = None
 
     def setup(self):
@@ -105,6 +94,12 @@ class GenericPredict(BatchFilter):
             self.provides(key, spec)
 
         if self.spawn_subprocess:
+            # start prediction as a producer pool, so that we can gracefully
+            # exit if anything goes wrong
+            self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
+            self.batch_in = multiprocessing.Queue(maxsize=1)
+            self.batch_in_lock = multiprocessing.Lock()
+            self.batch_out_lock = multiprocessing.Lock()
             self.worker.start()
 
     def teardown(self):
