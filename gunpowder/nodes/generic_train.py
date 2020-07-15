@@ -63,13 +63,6 @@ class GenericTrain(BatchFilter):
 
         self.provided_arrays = list(self.outputs.values()) + list(self.gradients.values())
 
-        if self.spawn_subprocess:
-
-            # start training as a producer pool, so that we can gracefully exit if
-            # anything goes wrong
-            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
-            self.batch_in = multiprocessing.Queue(maxsize=1)
-
     def setup(self):
 
         # get common voxel size of inputs, or None if they differ
@@ -112,6 +105,10 @@ class GenericTrain(BatchFilter):
             self.provides(key, spec)
 
         if self.spawn_subprocess:
+            # start training as a producer pool, so that we can gracefully exit if
+            # anything goes wrong
+            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
+            self.batch_in = multiprocessing.Queue(maxsize=1)
             self.worker.start()
         else:
             self.start()
