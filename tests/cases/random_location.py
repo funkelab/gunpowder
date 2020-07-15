@@ -14,6 +14,7 @@ from gunpowder import (
     build,
     MergeProvider,
 )
+from gunpowder.pipeline import PipelineRequestError
 
 
 class TestSourceRandomLocation(BatchProvider):
@@ -101,7 +102,7 @@ class TestRandomLocation(ProviderTest):
             MergeProvider() + CustomRandomLocation()
 
         with build(pipeline):
-            with self.assertRaises(AssertionError):
+            with self.assertRaises(PipelineRequestError):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
