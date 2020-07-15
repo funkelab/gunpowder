@@ -44,7 +44,7 @@ class MergeProvider(BatchProvider):
                 # seeds picked by random should be deterministic since
                 # the provided request already has a random seed.
                 seed = random.randint(0, 2**32)
-                upstream_requests[provider] = BatchRequest(seed)
+                upstream_requests[provider] = BatchRequest(random_seed=seed)
 
             upstream_requests[provider][key] = spec
 
