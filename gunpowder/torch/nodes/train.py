@@ -90,6 +90,7 @@ class Train(GenericTrain):
         save_every: int = 2000,
         log_dir: str = None,
         log_every: int = 1,
+        spawn_subprocess: bool = False,
     ):
 
         if not model.training:
@@ -105,7 +106,7 @@ class Train(GenericTrain):
         )
 
         super(Train, self).__init__(
-            inputs, outputs, gradients, array_specs, spawn_subprocess=False
+            inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
         )
 
         self.model = model
@@ -115,11 +116,6 @@ class Train(GenericTrain):
         self.checkpoint_basename = checkpoint_basename
         self.save_every = save_every
 
-        self.use_cuda = torch.cuda.is_available()
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
-        self.model = self.model.to(self.device)
-        if isinstance(self.loss, torch.nn.Module):
-            self.loss = self.loss.to(self.device)
         self.iteration = 0
 
         if not isinstance(tensorboardX, NoSuchModule) and log_dir is not None:
@@ -160,6 +156,13 @@ class Train(GenericTrain):
             tensor.retain_grad()
 
     def start(self):
+
+        self.use_cuda = torch.cuda.is_available()
+        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+
+        self.model = self.model.to(self.device)
+        if isinstance(self.loss, torch.nn.Module):
+            self.loss = self.loss.to(self.device)
 
         checkpoint, self.iteration = self._get_latest_checkpoint(
             self.checkpoint_basename
