@@ -25,7 +25,7 @@ from pathlib import Path
 import h5py
 
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
     def __init__(self, keys, specs, every=2):
         self.keys = keys
         self.specs = specs
@@ -77,7 +77,7 @@ class TestSnapshot(unittest.TestCase):
         snapshot_request = BatchRequest()
         snapshot_request.add(test_graph, Coordinate((5, 5, 5)))
 
-        pipeline = TestSource(
+        pipeline = ExampleSource(
             [test_graph, test_array, test_array2], [graph_spec, array_spec, array2_spec]
         ) + Snapshot(
             {

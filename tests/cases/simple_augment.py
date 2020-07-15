@@ -50,7 +50,7 @@ class ArrayTestSource(BatchProvider):
 
         return batch
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
     def __init__(self):
 
         self.graph = Graph(
@@ -80,7 +80,7 @@ class TestSimpleAugment(ProviderTest):
     def test_mirror(self):
         test_graph = GraphKey("TEST_GRAPH")
 
-        pipeline = TestSource() + SimpleAugment(
+        pipeline = ExampleSource() + SimpleAugment(
             mirror_only=[0, 1, 2], transpose_only=[]
         )
 
@@ -115,7 +115,7 @@ class TestSimpleAugment(ProviderTest):
         test_array2 = ArrayKey("TEST_ARRAY2")
 
         transpose_dims = [1, 2]
-        pipeline = (ArrayTestSource(), TestSource()) + MergeProvider() + SimpleAugment(
+        pipeline = (ArrayTestSource(), ExampleSource()) + MergeProvider() + SimpleAugment(
             mirror_only=[], transpose_only=transpose_dims
         )
 
@@ -157,7 +157,7 @@ class TestSimpleAugment(ProviderTest):
         point = np.array([50, 70, 100])
 
         transpose_dims = [0, 1, 2]
-        pipeline = (ArrayTestSource(), TestSource()) + MergeProvider() + SimpleAugment(
+        pipeline = (ArrayTestSource(), ExampleSource()) + MergeProvider() + SimpleAugment(
             mirror_only=[], transpose_only=transpose_dims
         )
 
@@ -206,7 +206,7 @@ class TestSimpleAugment(ProviderTest):
 
         transpose_dims = [0, 1, 2]
         mirror_dims = [0, 1, 2]
-        pipeline = ((ArrayTestSource(), TestSource()) + MergeProvider() + 
+        pipeline = ((ArrayTestSource(), ExampleSource()) + MergeProvider() + 
                     Pad(test_array1, None) + Pad(test_array2, None) + Pad(test_graph, None)
                     + SimpleAugment(
             mirror_only=mirror_dims, transpose_only=transpose_dims
@@ -268,7 +268,7 @@ class TestSimpleAugment(ProviderTest):
         test_array1 = ArrayKey("TEST_ARRAY1")
         test_array2 = ArrayKey("TEST_ARRAY2")
 
-        pipeline = ((ArrayTestSource(), TestSource()) + MergeProvider() + 
+        pipeline = ((ArrayTestSource(), ExampleSource()) + MergeProvider() + 
                     Pad(test_array1, None) + Pad(test_array2, None) + Pad(test_graph, None)
                     + SimpleAugment(
             mirror_only=[1,2], transpose_only=[1,2]

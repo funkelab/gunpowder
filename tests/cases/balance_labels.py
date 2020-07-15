@@ -2,7 +2,7 @@ from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
 
     def setup(self):
 
@@ -55,7 +55,7 @@ class TestBalanceLabels(ProviderTest):
 
     def test_output(self):
 
-        pipeline = TestSource() + BalanceLabels(
+        pipeline = ExampleSource() + BalanceLabels(
             labels=ArrayKeys.GT_AFFINITIES,
             scales=ArrayKeys.LOSS_SCALE,
             mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE])
@@ -109,7 +109,7 @@ class TestBalanceLabels(ProviderTest):
 
         # same using a slab for balancing
 
-        pipeline = TestSource() + BalanceLabels(
+        pipeline = ExampleSource() + BalanceLabels(
             labels=ArrayKeys.GT_AFFINITIES,
             scales=ArrayKeys.LOSS_SCALE,
             mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE],

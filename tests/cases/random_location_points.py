@@ -2,7 +2,7 @@ from .provider_test import ProviderTest
 from gunpowder import *
 import numpy as np
 
-class TestSourceRandomLocation(BatchProvider):
+class ExampleSourceRandomLocation(BatchProvider):
 
     def __init__(self):
 
@@ -42,7 +42,7 @@ class TestRandomLocationPoints(ProviderTest):
         PointsKey('TEST_POINTS')
 
         pipeline = (
-            TestSourceRandomLocation() +
+            ExampleSourceRandomLocation() +
             RandomLocation(ensure_nonempty=PointsKeys.TEST_POINTS)
         )
 

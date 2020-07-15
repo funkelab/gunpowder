@@ -17,7 +17,7 @@ from gunpowder import (
 from gunpowder.pipeline import PipelineRequestError
 
 
-class TestSourceRandomLocation(BatchProvider):
+class ExampleSourceRandomLocation(BatchProvider):
     def __init__(self, array):
         self.array = array
         self.roi = Roi((-200, -20, -20), (1000, 100, 100))
@@ -57,8 +57,8 @@ class TestRandomLocation(ProviderTest):
     def test_output(self):
         a = ArrayKey("A")
         b = ArrayKey("B")
-        source_a = TestSourceRandomLocation(a)
-        source_b = TestSourceRandomLocation(b)
+        source_a = ExampleSourceRandomLocation(a)
+        source_b = ExampleSourceRandomLocation(b)
 
         pipeline = (source_a, source_b) + \
             MergeProvider() + CustomRandomLocation()
@@ -95,8 +95,8 @@ class TestRandomLocation(ProviderTest):
     def test_impossible(self):
         a = ArrayKey("A")
         b = ArrayKey("B")
-        source_a = TestSourceRandomLocation(a)
-        source_b = TestSourceRandomLocation(b)
+        source_a = ExampleSourceRandomLocation(a)
+        source_b = ExampleSourceRandomLocation(b)
 
         pipeline = (source_a, source_b) + \
             MergeProvider() + CustomRandomLocation()

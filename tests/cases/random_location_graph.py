@@ -15,7 +15,7 @@ from gunpowder import (
 import numpy as np
 
 
-class TestSourceRandomLocation(BatchProvider):
+class ExampleSourceRandomLocation(BatchProvider):
     def __init__(self):
 
         self.graph = Graph(
@@ -47,7 +47,7 @@ class TestRandomLocationGraph(ProviderTest):
 
         GraphKey("TEST_GRAPH")
 
-        pipeline = TestSourceRandomLocation() + RandomLocation(
+        pipeline = ExampleSourceRandomLocation() + RandomLocation(
             ensure_nonempty=GraphKeys.TEST_GRAPH
         )
 
