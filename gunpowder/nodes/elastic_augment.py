@@ -66,6 +66,22 @@ class ElasticAugment(BatchFilter):
             dimension. If, for example, your array is indexed as ``(c,y,x)``
             (2D plus channels), you would want to set ``spatial_dims=2`` to
             perform the elastic deformation only on x and y.
+
+        use_fast_points_transform (``bool``):
+
+            By solving for all of your points simultaneously with the following
+            3 step proceedure:
+            1) Rasterize nodes into numpy array
+            2) Apply elastic transform to array
+            3) Read out nodes via center of mass of transformed points
+            You can gain substantial speed up as opposed to calculating the
+            elastic transform for each point individually. However this may
+            lead to nodes being lost during the transform.
+
+        recompute_missing_points (``bool``):
+
+            Whether or not to compute the elastic transform node wise for nodes
+            that were lossed during the fast elastic transform process.
     """
 
     def __init__(
