@@ -371,3 +371,90 @@ class TestElasticAugment(ProviderTest):
             t_fast, t_ref = [np.mean(x) for x in zip(*timings)]
             self.assertLess(t_fast, t_ref)
             self.assertEqual(missing, 0)
+
+
+    def test_fast_transform_no_recompute(self):
+        test_labels = ArrayKey("TEST_LABELS")
+        test_points = PointsKey("TEST_POINTS")
+        test_raster = ArrayKey("TEST_RASTER")
+        fast_pipeline = (
+            DensePointTestSource3D()
+            + ElasticAugment(
+                [10, 10, 10],
+                [0.1, 0.1, 0.1],
+                [0, 2.0 * math.pi],
+                use_fast_points_transform=True,
+                recompute_missing_points=False,
+            )
+            + RasterizePoints(
+                test_points,
+                test_raster,
+                settings=RasterizationSettings(radius=2, mode="peak"),
+            )
+        )
+
+        reference_pipeline = (
+            DensePointTestSource3D()
+            + ElasticAugment([10, 10, 10], [0.1, 0.1, 0.1], [0, 2.0 * math.pi])
+            + RasterizePoints(
+                test_points,
+                test_raster,
+                settings=RasterizationSettings(radius=2, mode="peak"),
+            )
+        )
+
+        timings = []
+        for i in range(5):
+            points_fast = {}
+            points_reference = {}
+            # seed chosen specifically to make this test fail
+            seed = i + 15
+            with build(fast_pipeline):
+
+                request_roi = Roi((0, 0, 0), (40, 40, 40))
+
+                request = BatchRequest(random_seed=seed)
+                request[test_labels] = ArraySpec(roi=request_roi)
+                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_raster] = ArraySpec(roi=request_roi)
+
+                t1_fast = time.time()
+                batch = fast_pipeline.request_batch(request)
+                t2_fast = time.time()
+                points_fast = batch[test_points].data
+
+            with build(reference_pipeline):
+
+                request_roi = Roi((0, 0, 0), (40, 40, 40))
+
+                request = BatchRequest(random_seed=seed)
+                request[test_labels] = ArraySpec(roi=request_roi)
+                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_raster] = ArraySpec(roi=request_roi)
+
+                t1_ref = time.time()
+                batch = reference_pipeline.request_batch(request)
+                t2_ref = time.time()
+                points_reference = batch[test_points].data
+
+            timings.append((t2_fast - t1_fast, t2_ref - t1_ref))
+            diffs = []
+            missing = 0
+            for point_id, point in points_reference.items():
+                if point_id not in points_fast:
+                    missing += 1
+                    continue
+                diff = point.location - points_fast[point_id].location
+                diffs.append(tuple(diff))
+                self.assertAlmostEqual(
+                    np.linalg.norm(diff),
+                    0,
+                    delta=1,
+                    msg="fast transform returned location {} but expected {} for point {}".format(
+                        point.location, points_fast[point_id].location, point_id
+                    ),
+                )
+
+            t_fast, t_ref = [np.mean(x) for x in zip(*timings)]
+            self.assertLess(t_fast, t_ref)
+            self.assertGreater(missing, 0)
