@@ -175,12 +175,11 @@ class Scan(BatchFilter):
 
             logger.debug("upstream ROI is %s", spec[key].roi)
 
-            for r, s in zip(
-                    reference_spec.roi.get_shape(),
-                    spec[key].roi.get_shape()):
-                assert r <= s, (
+            for r, s in zip(reference_spec.roi.get_shape(), spec[key].roi.get_shape()):
+                assert s is None or r <= s, (
                     "reference %s with ROI %s does not fit into provided "
-                    "upstream %s"%(key, reference_spec.roi, spec[key].roi))
+                    "upstream %s" % (key, reference_spec.roi, spec[key].roi)
+                )
 
             # we have a reference ROI
             #
