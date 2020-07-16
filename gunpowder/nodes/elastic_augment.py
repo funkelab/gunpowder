@@ -299,7 +299,7 @@ class ElasticAugment(BatchFilter):
                 )
                 if not self.recompute_missing_points:
                     for node in set(missed_nodes):
-                        graph.extract_node(node)
+                        graph.remove_node(node, retain_connectivity=True)
                     missed_nodes = []
             else:
                 missed_nodes = nodes
@@ -417,6 +417,7 @@ class ElasticAugment(BatchFilter):
                     // self.voxel_size,
                 )
                 for node in nodes
+                if source_roi.contains(node.location)
             ]
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
@@ -622,4 +623,3 @@ class ElasticAugment(BatchFilter):
                 for d in range(2)
             )
         )
-
