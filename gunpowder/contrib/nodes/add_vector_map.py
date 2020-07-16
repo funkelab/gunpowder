@@ -9,7 +9,7 @@ from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.morphology import enlarge_binary_map
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.points_spec import PointsSpec
+from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
 
@@ -113,11 +113,11 @@ class AddVectorMap(BatchFilter):
         ) in self.array_to_src_trg_points.items():
             if array_key in request:
                 # increase or set request for points to be array roi + padding for partners outside roi for target points
-                deps[src_points_key] = PointsSpec(request[array_key].roi)
+                deps[src_points_key] = GraphSpec(request[array_key].roi)
                 padded_roi = request[array_key].roi.grow(
                     (self.pad_for_partners), (self.pad_for_partners)
                 )
-                deps[trg_points_key] = PointsSpec(padded_roi)
+                deps[trg_points_key] = GraphSpec(padded_roi)
 
         for (
             array_key,
@@ -157,10 +157,10 @@ class AddVectorMap(BatchFilter):
             dtype=np.float32,
         )
 
-        if batch.points[src_points_key].num_vertices() == 0:
+        if batch.graphs[src_points_key].num_vertices() == 0:
             return vector_map_total
 
-        for node in batch.points[src_points_key].nodes:
+        for node in batch.graphs[src_points_key].nodes:
 
             if request[vector_map_array_key].roi.contains(Coordinate(node.location)):
 
@@ -270,9 +270,9 @@ class AddVectorMap(BatchFilter):
         # get all partner locations
         all_partners_locations = []
         for partner_id in node.attrs["partner_ids"]:
-            if batch.points[trg_points_key].contains_node(partner_id):
+            if batch.graphs[trg_points_key].contains_node(partner_id):
                 all_partners_locations.append(
-                    batch.points[trg_points_key].node(partner_id).location
+                    batch.graphs[trg_points_key].node(partner_id).location
                 )
 
         # if only one partner location, return this one for any given criterion

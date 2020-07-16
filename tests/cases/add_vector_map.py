@@ -86,12 +86,12 @@ class AddVectorMapTestSource(BatchProvider):
             )
 
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
-        for (points_key, spec) in request.points_specs.items():
-            if points_key == GraphKeys.PRESYN:
+        for (graph_key, spec) in request.graph_specs.items():
+            if graph_key == GraphKeys.PRESYN:
                 data = data_presyn
-            if points_key == GraphKeys.POSTSYN:
+            if graph_key == GraphKeys.POSTSYN:
                 data = data_postsyn
-            batch.points[points_key] = Graph(
+            batch.graphs[graph_key] = Graph(
                 list(data.values()), [], GraphSpec(spec.roi)
             )
 
@@ -311,8 +311,8 @@ class TestAddVectorMap(ProviderTest):
         with build(pipeline_all):
             batch = pipeline_all.request_batch(request)
 
-        presyn_locs = {n.id: n for n in batch.points[GraphKeys.PRESYN].nodes}
-        postsyn_locs = {n.id: n for n in batch.points[GraphKeys.POSTSYN].nodes}
+        presyn_locs = {n.id: n for n in batch.graphs[GraphKeys.PRESYN].nodes}
+        postsyn_locs = {n.id: n for n in batch.graphs[GraphKeys.POSTSYN].nodes}
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[
             ArrayKeys.GT_VECTORS_MAP_PRESYN

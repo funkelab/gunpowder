@@ -4,7 +4,7 @@ import numpy as np
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points
+from gunpowder.graph import Graph
 from gunpowder.producer_pool import ProducerPool
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
@@ -348,7 +348,7 @@ class Scan(BatchFilter):
             roi = spec.roi
             spec = self.spec[graph_key].copy()
             spec.roi = roi
-            batch.graphs[graph_key] = Points(data={}, spec=spec)
+            batch.graphs[graph_key] = Graph(nodes=[], edges=[], spec=spec)
 
         logger.debug("setup batch to fill %s", batch)
 
