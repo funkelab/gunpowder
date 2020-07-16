@@ -1,6 +1,6 @@
 import unittest
 from gunpowder import *
-from gunpowder.points import PointsKeys, Points, Point
+from gunpowder.points import GraphKeys, Points, Point
 from .provider_test import ProviderTest
 
 import numpy as np
@@ -21,8 +21,8 @@ class PointTestSource3D(BatchProvider):
         }
 
         self.provides(
-            PointsKeys.TEST_POINTS,
-            PointsSpec(
+            GraphKeys.TEST_POINTS,
+            GraphSpec(
                 roi=Roi((-100, -100, -100), (200, 200, 200))
             ))
 
@@ -50,7 +50,7 @@ class PointTestSource3D(BatchProvider):
 
         batch = Batch()
 
-        roi_points = request[PointsKeys.TEST_POINTS].roi
+        roi_points = request[GraphKeys.TEST_POINTS].roi
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array//self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
@@ -71,9 +71,9 @@ class PointTestSource3D(BatchProvider):
         for i, point in self.points.items():
             if roi_points.contains(point.location):
                 points[i] = point
-        batch.points[PointsKeys.TEST_POINTS] = Points(
+        batch.graphs[GraphKeys.TEST_POINTS] = Points(
             points,
-            PointsSpec(roi=roi_points))
+            GraphSpec(roi=roi_points))
 
         return batch
 
@@ -83,7 +83,7 @@ class TestElasticAugment(ProviderTest):
     def test_3d_basics(self):
 
         test_labels = ArrayKey('TEST_LABELS')
-        test_points = PointsKey('TEST_POINTS')
+        test_points = GraphKey('TEST_POINTS')
         test_raster = ArrayKey('TEST_RASTER')
 
         pipeline = (
@@ -123,7 +123,7 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest()
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 batch = pipeline.request_batch(request)

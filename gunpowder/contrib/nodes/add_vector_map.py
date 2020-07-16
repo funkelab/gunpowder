@@ -189,7 +189,7 @@ class AddVectorMap(BatchFilter):
                     clipped_offset_vx_considered_mask = np.clip(
                         offset_vx_considered_mask, a_min=0, a_max=np.inf
                     )
-                    slices = [
+                    slices = tuple(
                         slice(
                             int(np.max((0, offset_vx_considered_mask[dim]))),
                             int(
@@ -203,7 +203,7 @@ class AddVectorMap(BatchFilter):
                             ),
                         )
                         for dim in range(dim_vectors)
-                    ]
+                    )
                     considered_region_mask = mask[slices]
                     locations_to_fill_vx = np.reshape(
                         np.nonzero(considered_region_mask), [dim_vectors, -1]
@@ -260,7 +260,7 @@ class AddVectorMap(BatchFilter):
                                 ) // voxel_size_vm
                                 for dim in range(dim_vectors):
                                     vector_map_total[dim][
-                                        [[int(l)] for l in neighbor_loc_shifted_vx]
+                                        tuple([int(l)] for l in neighbor_loc_shifted_vx)
                                     ] = vector[dim]
         return vector_map_total
 
@@ -320,11 +320,11 @@ class AddVectorMap(BatchFilter):
 
         shifted_loc = src_location - np.asarray(offset_bm_phys)
         shifted_loc = shifted_loc.astype(np.int32) // voxel_size
-        object_id = mask[[[loc] for loc in shifted_loc]][
+        object_id = mask[tuple([loc] for loc in shifted_loc)][
             0
         ]  # 0 index, otherwise numpy array with single number
 
-        binary_map[[[loc] for loc in shifted_loc]] = 1
+        binary_map[tuple([loc] for loc in shifted_loc)] = 1
         binary_map = enlarge_binary_map(
             binary_map, radius=self.radius_phys, voxel_size=voxel_size
         )

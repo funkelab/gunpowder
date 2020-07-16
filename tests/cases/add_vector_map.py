@@ -3,10 +3,10 @@ from .provider_test import ProviderTest
 from gunpowder import (
     ArrayKeys,
     ArraySpec,
-    PointsSpec,
+    GraphSpec,
     Roi,
     Array,
-    PointsKeys,
+    GraphKeys,
     Batch,
     BatchProvider,
     Graph,
@@ -36,10 +36,10 @@ class AddVectorMapTestSource(BatchProvider):
                 ),
             )
 
-        for identifier in [PointsKeys.PRESYN, PointsKeys.POSTSYN]:
+        for identifier in [GraphKeys.PRESYN, GraphKeys.POSTSYN]:
 
             self.provides(
-                identifier, PointsSpec(roi=Roi((1000, 1000, 1000), (400, 400, 400)))
+                identifier, GraphSpec(roi=Roi((1000, 1000, 1000), (400, 400, 400)))
             )
 
     def provide(self, request):
@@ -76,23 +76,23 @@ class AddVectorMapTestSource(BatchProvider):
             spec.roi = roi
             batch.arrays[ArrayKeys.GT_LABELS] = Array(data, spec)
 
-        if PointsKeys.PRESYN in request:
+        if GraphKeys.PRESYN in request:
             data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(
-                roi=request[PointsKeys.PRESYN].roi
+                roi=request[GraphKeys.PRESYN].roi
             )
-        elif PointsKeys.POSTSYN in request:
+        elif GraphKeys.POSTSYN in request:
             data_presyn, data_postsyn = self.__get_pre_and_postsyn_locations(
-                roi=request[PointsKeys.POSTSYN].roi
+                roi=request[GraphKeys.POSTSYN].roi
             )
 
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
         for (points_key, spec) in request.points_specs.items():
-            if points_key == PointsKeys.PRESYN:
+            if points_key == GraphKeys.PRESYN:
                 data = data_presyn
-            if points_key == PointsKeys.POSTSYN:
+            if points_key == GraphKeys.POSTSYN:
                 data = data_postsyn
             batch.points[points_key] = Graph(
-                list(data.values()), [], PointsSpec(spec.roi)
+                list(data.values()), [], GraphSpec(spec.roi)
             )
 
         return batch
@@ -194,7 +194,7 @@ class TestAddVectorMap(ProviderTest):
         PointsKey("POSTSYN")
 
         arraytypes_to_source_target_pointstypes = {
-            ArrayKeys.GT_VECTORS_MAP_PRESYN: (PointsKeys.PRESYN, PointsKeys.POSTSYN)
+            ArrayKeys.GT_VECTORS_MAP_PRESYN: (GraphKeys.PRESYN, GraphKeys.POSTSYN)
         }
         arraytypes_to_stayinside_arraytypes = {
             ArrayKeys.GT_VECTORS_MAP_PRESYN: ArrayKeys.GT_LABELS
@@ -216,20 +216,20 @@ class TestAddVectorMap(ProviderTest):
             request = BatchRequest()
             raw_roi = pipeline_min_distance.spec[ArrayKeys.RAW].roi
             gt_labels_roi = pipeline_min_distance.spec[ArrayKeys.GT_LABELS].roi
-            presyn_roi = pipeline_min_distance.spec[PointsKeys.PRESYN].roi
+            presyn_roi = pipeline_min_distance.spec[GraphKeys.PRESYN].roi
 
             request.add(ArrayKeys.RAW, raw_roi.get_shape())
             request.add(ArrayKeys.GT_LABELS, gt_labels_roi.get_shape())
-            request.add(PointsKeys.PRESYN, presyn_roi.get_shape())
-            request.add(PointsKeys.POSTSYN, presyn_roi.get_shape())
+            request.add(GraphKeys.PRESYN, presyn_roi.get_shape())
+            request.add(GraphKeys.POSTSYN, presyn_roi.get_shape())
             request.add(ArrayKeys.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
             for identifier, spec in request.items():
                 spec.roi = spec.roi.shift((1000, 1000, 1000))
 
             batch = pipeline_min_distance.request_batch(request)
 
-        presyn_locs = {n.id: n for n in batch.graphs[PointsKeys.PRESYN].nodes}
-        postsyn_locs = {n.id: n for n in batch.graphs[PointsKeys.POSTSYN].nodes}
+        presyn_locs = {n.id: n for n in batch.graphs[GraphKeys.PRESYN].nodes}
+        postsyn_locs = {n.id: n for n in batch.graphs[GraphKeys.POSTSYN].nodes}
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[
             ArrayKeys.GT_VECTORS_MAP_PRESYN
@@ -311,8 +311,8 @@ class TestAddVectorMap(ProviderTest):
         with build(pipeline_all):
             batch = pipeline_all.request_batch(request)
 
-        presyn_locs = {n.id: n for n in batch.points[PointsKeys.PRESYN].nodes}
-        postsyn_locs = {n.id: n for n in batch.points[PointsKeys.POSTSYN].nodes}
+        presyn_locs = {n.id: n for n in batch.points[GraphKeys.PRESYN].nodes}
+        postsyn_locs = {n.id: n for n in batch.points[GraphKeys.POSTSYN].nodes}
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[
             ArrayKeys.GT_VECTORS_MAP_PRESYN
