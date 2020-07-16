@@ -207,10 +207,19 @@ class Graph(Freezable):
 
     @property
     def directed(self):
-        return self.spec.directed
+        return (
+            self.spec.directed
+            if self.spec.directed is not None
+            else self.__graph.is_directed()
+        )
 
     def create_graph(self, nodes: Iterator[Node], edges: Iterator[Edge]):
-        if self.directed:
+        if self.__spec.directed is None:
+            logger.warning(
+                "Trying to create a Graph without specifying directionality. Using default Directed!"
+                )
+            graph = nx.DiGraph()
+        elif self.__spec.directed:
             graph = nx.DiGraph()
         else:
             graph = nx.Graph()
@@ -233,6 +242,9 @@ class Graph(Freezable):
 
     def num_vertices(self):
         return self.__graph.number_of_nodes()
+
+    def num_edges(self):
+        return self.__graph.number_of_edges()
 
     @property
     def edges(self):
@@ -292,7 +304,6 @@ class Graph(Freezable):
                     if pred_id != succ_id:
                         self.add_edge(Edge(pred_id, succ_id))
         self.__graph.remove_node(node.id)
-
 
     def add_node(self, node: Node):
         """
@@ -558,14 +569,11 @@ class Graph(Freezable):
         """
         Create a gunpowder graph from a networkx graph
         """
-        nodes = [
-            Node(id=node, location=attrs["location"], attrs=attrs)
-            for node, attrs in graph.nodes().items()
-        ]
-        edges = [Edge(u, v) for u, v in graph.edges]
-        directed = graph.is_directed()
-        spec.directed = directed
-        return cls(nodes, edges, spec)
+        if spec.directed is None:
+            spec.directed = graph.is_directed()
+        g = cls([], [], spec)
+        g.__graph = graph
+        return g
 
     def relabel_connected_components(self):
         """

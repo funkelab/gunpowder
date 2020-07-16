@@ -13,7 +13,7 @@ class BatchRequest(ProviderSpec):
     Inherits from :class:`ProviderSpec`.
     '''
 
-    def add(self, key, shape, voxel_size=None):
+    def add(self, key, shape, voxel_size=None, directed=None):
         '''Convenience method to add an array or graph spec by providing only
         the shape of a ROI (in world units).
 
@@ -40,7 +40,7 @@ class BatchRequest(ProviderSpec):
         if isinstance(key, ArrayKey):
             spec = ArraySpec()
         elif isinstance(key, GraphKey):
-            spec = GraphSpec()
+            spec = GraphSpec(directed=directed)
         else:
             raise RuntimeError("Only ArrayKey or GraphKey can be added.")
 

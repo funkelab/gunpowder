@@ -5,6 +5,7 @@ from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
@@ -224,6 +225,13 @@ class BatchProvider(object):
                                         key,
                                         provided_spec.voxel_size[d])
 
+            if isinstance(key, GraphKey):
+
+                if request_spec.directed is not None:
+                    assert request_spec.directed == provided_spec.directed, (
+                        f"asked for {key}:  directed={request_spec.directed} but "
+                        f"{self.name()} provides directed={provided_spec.directed}"
+                    )
     def check_batch_consistency(self, batch, request):
 
         for (array_key, request_spec) in request.array_specs.items():
@@ -273,9 +281,15 @@ class BatchProvider(object):
                                             graph.spec.roi,
                                             self.name())
 
+            if request_spec.directed is not None:
+                assert request_spec.directed == graph.directed, (
+                    f"Recieved {graph_key}:  directed={graph.directed} but "
+                    f"{self.name()} should provide directed={request_spec.directed}"
+                )
+
             for node in graph.nodes:
                 contained = graph.spec.roi.contains(node.location)
-                dangling = not contained or all(
+                dangling = not contained and all(
                     [
                         graph.spec.roi.contains(v.location)
                         for v in graph.neighbors(node)
