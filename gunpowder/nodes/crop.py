@@ -58,6 +58,7 @@ class Crop(BatchFilter):
 
     def setup(self):
 
+        self.enable_autoskip()
         spec = self.spec[self.key]
 
         if self.roi is not None:
