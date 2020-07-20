@@ -270,7 +270,7 @@ class AddVectorMap(BatchFilter):
         # get all partner locations
         all_partners_locations = []
         for partner_id in node.attrs["partner_ids"]:
-            if batch.graphs[trg_points_key].contains_node(partner_id):
+            if batch.graphs[trg_points_key].contains(partner_id):
                 all_partners_locations.append(
                     batch.graphs[trg_points_key].node(partner_id).location
                 )
