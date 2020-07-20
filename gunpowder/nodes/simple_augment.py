@@ -88,7 +88,7 @@ class SimpleAugment(BatchFilter):
 
         # mirror and transpose ROIs of arrays & points in batch
         total_roi = batch.get_total_roi().copy()
-        for collection_type in [batch.arrays, batch.points]:
+        for collection_type in [batch.arrays, batch.graphs]:
             for (key, collector) in collection_type.items():
                 if key not in request:
                     continue

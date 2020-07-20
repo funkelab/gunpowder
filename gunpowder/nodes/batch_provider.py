@@ -9,10 +9,26 @@ from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
 
+
+class BatchRequestError(Exception):
+
+    def __init__(self, provider, request, batch):
+        self.provider = provider
+        self.request = request
+        self.batch = batch
+
+    def __str__(self):
+
+        return \
+            f"Exception in {self.provider.name()} while processing request" \
+            f"{self.request} \n" \
+            "Batch returned so far:\n" \
+            f"{self.batch}"
 
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
@@ -154,26 +170,34 @@ class BatchProvider(object):
                 :class:`GraphSpecs<GraphSpec>`.
         '''
 
-        logger.debug("%s got request %s", self.name(), request)
+        batch = None
 
-        request._update_random_seed()
+        try:
 
-        self.set_seeds(request)
+            request._update_random_seed()
 
-        self.check_request_consistency(request)
+            self.set_seeds(request)
 
-        upstream_request = request.copy()
-        if self.remove_placeholders:
-            upstream_request.remove_placeholders()
-        batch = self.provide(upstream_request)
+            logger.debug("%s got request %s", self.name(), request)
 
-        request.remove_placeholders()
+            self.check_request_consistency(request)
 
-        self.check_batch_consistency(batch, request)
+            upstream_request = request.copy()
+            if self.remove_placeholders:
+                upstream_request.remove_placeholders()
+            batch = self.provide(upstream_request)
 
-        self.remove_unneeded(batch, request)
+            request.remove_placeholders()
 
-        logger.debug("%s provides %s", self.name(), batch)
+            self.check_batch_consistency(batch, request)
+
+            self.remove_unneeded(batch, request)
+
+            logger.debug("%s provides %s", self.name(), batch)
+
+        except Exception as e:
+
+            raise BatchRequestError(self, request, batch) from e
 
         return batch
 
@@ -225,6 +249,13 @@ class BatchProvider(object):
                                         key,
                                         provided_spec.voxel_size[d])
 
+            if isinstance(key, GraphKey):
+
+                if request_spec.directed is not None:
+                    assert request_spec.directed == provided_spec.directed, (
+                        f"asked for {key}:  directed={request_spec.directed} but "
+                        f"{self.name()} provides directed={provided_spec.directed}"
+                    )
     def check_batch_consistency(self, batch, request):
 
         for (array_key, request_spec) in request.array_specs.items():
@@ -274,9 +305,15 @@ class BatchProvider(object):
                                             graph.spec.roi,
                                             self.name())
 
+            if request_spec.directed is not None:
+                assert request_spec.directed == graph.directed, (
+                    f"Recieved {graph_key}:  directed={graph.directed} but "
+                    f"{self.name()} should provide directed={request_spec.directed}"
+                )
+
             for node in graph.nodes:
                 contained = graph.spec.roi.contains(node.location)
-                dangling = not contained or all(
+                dangling = not contained and all(
                     [
                         graph.spec.roi.contains(v.location)
                         for v in graph.neighbors(node)

@@ -16,7 +16,7 @@ import multiprocessing
 import numpy as np
 from unittest import skipIf
 
-class TestTensorflowTrainSource(BatchProvider):
+class ExampleTensorflowTrainSource(BatchProvider):
 
     def setup(self):
 

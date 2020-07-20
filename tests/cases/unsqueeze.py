@@ -5,7 +5,7 @@ import gunpowder as gp
 from .provider_test import ProviderTest
 
 
-class TestSourceUnsqueeze(gp.BatchProvider):
+class ExampleSourceUnsqueeze(gp.BatchProvider):
     def __init__(self, voxel_size):
         self.voxel_size = gp.Coordinate(voxel_size)
         self.roi = gp.Roi((0, 0, 0), (10, 10, 10)) * self.voxel_size
@@ -80,7 +80,7 @@ class TestUnsqueeze(ProviderTest):
         request.add(labels, input_size)
 
         pipeline = (
-            TestSourceUnsqueeze(voxel_size)
+            ExampleSourceUnsqueeze(voxel_size)
             + gp.Unsqueeze([raw, labels])
             + gp.Unsqueeze([raw], axis=1)
         )
@@ -103,10 +103,10 @@ class TestUnsqueeze(ProviderTest):
         request.add(labels, input_size)
 
         pipeline = (
-            TestSourceUnsqueeze(voxel_size)
+            ExampleSourceUnsqueeze(voxel_size)
             + gp.Unsqueeze([raw], axis=1)
         )
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(gp.PipelineRequestError):
             with gp.build(pipeline) as p:
                 batch = p.request_batch(request)

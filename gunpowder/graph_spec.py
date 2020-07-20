@@ -16,12 +16,17 @@ class GraphSpec(Freezable):
 
             The region of interested represented by this graph.
 
-        directed (``bool``):
+        directed (``bool``, optional):
 
             Whether the graph is directed or not.
+
+        dtype (``dtype``, optional):
+
+            The data type of the "location" attribute.
+            Currently only supports np.float32.
     """
 
-    def __init__(self, roi=None, directed=True, dtype=np.float32, placeholder=False):
+    def __init__(self, roi=None, directed=None, dtype=np.float32, placeholder=False):
 
         self.roi = roi
         self.directed = directed

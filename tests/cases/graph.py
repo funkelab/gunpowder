@@ -18,7 +18,7 @@ from gunpowder import (
 import numpy as np
 
 
-class TestGraphSource(BatchProvider):
+class ExampleGraphSource(BatchProvider):
     def __init__(self):
 
         self.dtype = float
@@ -92,7 +92,7 @@ class TestGraphs(ProviderTest):
 
         GraphKey("TEST_GRAPH")
 
-        pipeline = TestGraphSource() + GrowFilter()
+        pipeline = ExampleGraphSource() + GrowFilter()
 
         with build(pipeline):
 

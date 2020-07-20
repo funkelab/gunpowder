@@ -1,12 +1,14 @@
+
+import unittest
 from gunpowder import (
     BatchProvider,
     Batch,
     BatchRequest,
-    PointsSpec,
-    PointsKeys,
-    PointsKey,
-    Points,
-    Point,
+    GraphSpec,
+    GraphKeys,
+    GraphKey,
+    Graph,
+    Node,
     ArraySpec,
     ArrayKeys,
     ArrayKey,
@@ -30,19 +32,20 @@ import unittest
 class PointTestSource3D(BatchProvider):
     def setup(self):
 
-        self.points = {
-            0: Point([0, 0, 0]),
-            1: Point([0, 10, 0]),
-            2: Point([0, 20, 0]),
-            3: Point([0, 30, 0]),
-            4: Point([0, 40, 0]),
-            5: Point([0, 50, 0]),
-        }
+        self.points = [
+            Node(0, np.array([0, 0, 0])),
+            Node(1, np.array([0, 10, 0])),
+            Node(2, np.array([0, 20, 0])),
+            Node(3, np.array([0, 30, 0])),
+            Node(4, np.array([0, 40, 0])),
+            Node(5, np.array([0, 50, 0])),
+        ]
 
         self.provides(
-            PointsKeys.TEST_POINTS,
-            PointsSpec(roi=Roi((-100, -100, -100), (200, 200, 200))),
-        )
+            GraphKeys.TEST_POINTS,
+            GraphSpec(
+                roi=Roi((-100, -100, -100), (200, 200, 200))
+            ))
 
         self.provides(
             ArrayKeys.TEST_LABELS,
@@ -67,28 +70,29 @@ class PointTestSource3D(BatchProvider):
 
         batch = Batch()
 
-        roi_points = request[PointsKeys.TEST_POINTS].roi
+        roi_points = request[GraphKeys.TEST_POINTS].roi
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
         data[:, ::2] = 100
 
-        for i, point in self.points.items():
-            loc = self.point_to_voxel(roi_array, point.location)
-            data[loc] = i
+        for node in self.points:
+            loc = self.point_to_voxel(roi_array, node.location)
+            data[loc] = node.id
 
         spec = self.spec[ArrayKeys.TEST_LABELS].copy()
         spec.roi = roi_array
         batch.arrays[ArrayKeys.TEST_LABELS] = Array(data, spec=spec)
 
-        points = {}
-        for i, point in self.points.items():
-            if roi_points.contains(point.location):
-                points[i] = point
-        batch.points[PointsKeys.TEST_POINTS] = Points(
-            points, PointsSpec(roi=roi_points)
-        )
+        points = []
+        for node in self.points:
+            if roi_points.contains(node.location):
+                points.append(node)
+        batch.graphs[GraphKeys.TEST_POINTS] = Graph(
+            points,
+            [],
+            GraphSpec(roi=roi_points))
 
         return batch
 
@@ -96,14 +100,14 @@ class PointTestSource3D(BatchProvider):
 class DensePointTestSource3D(BatchProvider):
     def setup(self):
 
-        self.points = {
-            i: Point([(i // 100) % 10 * 4, (i // 10) % 10 * 4, i % 10 * 4])
+        self.points = [
+            Node(i, np.array([(i // 100) % 10 * 4, (i // 10) % 10 * 4, i % 10 * 4]))
             for i in range(1000)
-        }
+        ]
 
         self.provides(
-            PointsKeys.TEST_POINTS,
-            PointsSpec(roi=Roi((-40, -40, -40), (120, 120, 120))),
+            GraphKeys.TEST_POINTS,
+            GraphSpec(roi=Roi((-40, -40, -40), (120, 120, 120))),
         )
 
         self.provides(
@@ -129,27 +133,27 @@ class DensePointTestSource3D(BatchProvider):
 
         batch = Batch()
 
-        roi_points = request[PointsKeys.TEST_POINTS].roi
+        roi_points = request[GraphKeys.TEST_POINTS].roi
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
         data[:, ::2] = 100
 
-        for i, point in self.points.items():
-            loc = self.point_to_voxel(roi_array, point.location)
-            data[loc] = i
+        for node in self.points:
+            loc = self.point_to_voxel(roi_array, node.location)
+            data[loc] = node.id
 
         spec = self.spec[ArrayKeys.TEST_LABELS].copy()
         spec.roi = roi_array
         batch.arrays[ArrayKeys.TEST_LABELS] = Array(data, spec=spec)
 
-        points = {}
-        for i, point in self.points.items():
+        points = []
+        for point in self.points:
             if roi_points.contains(point.location):
-                points[i] = point
-        batch.points[PointsKeys.TEST_POINTS] = Points(
-            points, PointsSpec(roi=roi_points)
+                points.append(point)
+        batch.points[GraphKeys.TEST_POINTS] = Graph(
+            points, [], GraphSpec(roi=roi_points)
         )
 
         return batch
@@ -159,7 +163,7 @@ class TestElasticAugment(ProviderTest):
     def test_3d_basics(self):
 
         test_labels = ArrayKey("TEST_LABELS")
-        test_points = PointsKey("TEST_POINTS")
+        test_points = GraphKey("TEST_POINTS")
         test_raster = ArrayKey("TEST_RASTER")
 
         pipeline = (
@@ -191,7 +195,7 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest()
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 batch = pipeline.request_batch(request)
@@ -199,24 +203,24 @@ class TestElasticAugment(ProviderTest):
                 points = batch[test_points]
 
                 # the point at (0, 0, 0) should not have moved
-                self.assertTrue(0 in points.data)
+                self.assertTrue(points.contains(0))
 
                 labels_data_roi = (
                     labels.spec.roi - labels.spec.roi.get_begin()
                 ) / labels.spec.voxel_size
 
                 # points should have moved together with the voxels
-                for i, point in points.data.items():
+                for point in points.nodes:
                     loc = point.location - labels.spec.roi.get_begin()
                     loc = loc / labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):
-                        self.assertEqual(labels.data[loc], i)
+                        self.assertEqual(labels.data[loc], point.id)
 
     def test_random_seed(self):
 
         test_labels = ArrayKey('TEST_LABELS')
-        test_points = PointsKey('TEST_POINTS')
+        test_points = GraphKey('TEST_POINTS')
         test_raster = ArrayKey('TEST_RASTER')
 
         pipeline = (
@@ -257,39 +261,40 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest(random_seed=10)
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
                 batch = pipeline.request_batch(request)
                 labels = batch[test_labels]
                 points = batch[test_points]
                 batch_points.append(
                     tuple(
-                        (key, tuple(point.location))
-                        for key, point in points.data.items()
+                        (node.id, tuple(node.location))
+                        for node in points.nodes
                     )
                 )
 
                 # the point at (0, 0, 0) should not have moved
-                self.assertTrue(0 in points.data)
+                data = {node.id: node for node in points.nodes}
+                self.assertTrue(0 in data)
 
                 labels_data_roi = (
                     labels.spec.roi -
                     labels.spec.roi.get_begin())/labels.spec.voxel_size
 
                 # points should have moved together with the voxels
-                for i, point in points.data.items():
-                    loc = point.location - labels.spec.roi.get_begin()
+                for node in points.nodes:
+                    loc = node.location - labels.spec.roi.get_begin()
                     loc = loc/labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):
-                        self.assertEqual(labels.data[loc], i)
+                        self.assertEqual(labels.data[loc], node.id)
 
         for point_data in zip(*batch_points):
             self.assertEqual(len(set(point_data)), 1)
 
     def test_fast_transform(self):
         test_labels = ArrayKey("TEST_LABELS")
-        test_points = PointsKey("TEST_POINTS")
+        test_points = GraphKey("TEST_POINTS")
         test_raster = ArrayKey("TEST_RASTER")
         fast_pipeline = (
             DensePointTestSource3D()
@@ -328,13 +333,13 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest(random_seed=seed)
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 t1_fast = time.time()
                 batch = fast_pipeline.request_batch(request)
                 t2_fast = time.time()
-                points_fast = batch[test_points].data
+                points_fast = {node.id: node for node in batch[test_points].nodes}
 
             with build(reference_pipeline):
 
@@ -342,13 +347,13 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest(random_seed=seed)
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 t1_ref = time.time()
                 batch = reference_pipeline.request_batch(request)
                 t2_ref = time.time()
-                points_reference = batch[test_points].data
+                points_reference = {node.id: node for node in batch[test_points].nodes}
 
             timings.append((t2_fast - t1_fast, t2_ref - t1_ref))
             diffs = []
@@ -375,7 +380,7 @@ class TestElasticAugment(ProviderTest):
 
     def test_fast_transform_no_recompute(self):
         test_labels = ArrayKey("TEST_LABELS")
-        test_points = PointsKey("TEST_POINTS")
+        test_points = GraphKey("TEST_POINTS")
         test_raster = ArrayKey("TEST_RASTER")
         fast_pipeline = (
             DensePointTestSource3D()
@@ -415,13 +420,13 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest(random_seed=seed)
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 t1_fast = time.time()
                 batch = fast_pipeline.request_batch(request)
                 t2_fast = time.time()
-                points_fast = batch[test_points].data
+                points_fast = {node.id: node for node in batch[test_points].nodes}
 
             with build(reference_pipeline):
 
@@ -429,13 +434,13 @@ class TestElasticAugment(ProviderTest):
 
                 request = BatchRequest(random_seed=seed)
                 request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_points] = PointsSpec(roi=request_roi)
+                request[test_points] = GraphSpec(roi=request_roi)
                 request[test_raster] = ArraySpec(roi=request_roi)
 
                 t1_ref = time.time()
                 batch = reference_pipeline.request_batch(request)
                 t2_ref = time.time()
-                points_reference = batch[test_points].data
+                points_reference = {node.id: node for node in batch[test_points].nodes}
 
             timings.append((t2_fast - t1_fast, t2_ref - t1_ref))
             diffs = []

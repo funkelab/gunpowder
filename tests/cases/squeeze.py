@@ -5,7 +5,7 @@ import gunpowder as gp
 from .provider_test import ProviderTest
 
 
-class TestSourceSqueeze(gp.BatchProvider):
+class ExampleSourceSqueeze(gp.BatchProvider):
     def __init__(self, voxel_size):
         self.voxel_size = gp.Coordinate(voxel_size)
         self.roi = gp.Roi((0, 0, 0), (10, 10, 10)) * self.voxel_size
@@ -88,7 +88,7 @@ class TestSqueeze(ProviderTest):
         request.add(labels, input_size)
 
         pipeline = (
-            TestSourceSqueeze(voxel_size)
+            ExampleSourceSqueeze(voxel_size)
             + gp.Squeeze([raw], axis=1)
             + gp.Squeeze([raw, labels])
         )
@@ -111,10 +111,10 @@ class TestSqueeze(ProviderTest):
         request.add(labels, input_size)
 
         pipeline = (
-            TestSourceSqueeze(voxel_size)
+            ExampleSourceSqueeze(voxel_size)
             + gp.Squeeze([raw], axis=2)
         )
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(gp.PipelineRequestError):
             with gp.build(pipeline) as p:
                 batch = p.request_batch(request)

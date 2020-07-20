@@ -3,7 +3,7 @@ from gunpowder.contrib import PrepareMalis
 import numpy as np
 from .provider_test import ProviderTest
 
-class TestSourcePrepareMalis(BatchProvider):
+class ExampleSourcePrepareMalis(BatchProvider):
 
     def setup(self):
 
@@ -62,14 +62,14 @@ class TestPrepareMalis(ProviderTest):
         ArrayKey('MALIS_COMP_LABEL')
 
         pipeline_with_ignore = (
-            TestSourcePrepareMalis() +
+            ExampleSourcePrepareMalis() +
             PrepareMalis(
                 ArrayKeys.GT_LABELS,
                 ArrayKeys.MALIS_COMP_LABEL,
                 ignore_array_key=ArrayKeys.GT_IGNORE)
         )
         pipeline_without_ignore = (
-            TestSourcePrepareMalis() +
+            ExampleSourcePrepareMalis() +
             PrepareMalis(
                 ArrayKeys.GT_LABELS,
                 ArrayKeys.MALIS_COMP_LABEL,)

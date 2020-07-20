@@ -22,6 +22,7 @@ from gunpowder import (
     MergeProvider,
     build,
 )
+from gunpowder.pipeline import PipelineRequestError
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -111,7 +112,7 @@ class TestShiftAugment2D(unittest.TestCase):
 
         shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=1, shift_axis=0)
         with build((hdf5_source + shift_node)) as b:
-            with self.assertRaises(AssertionError):
+            with self.assertRaises(PipelineRequestError):
                 b.request_batch(request)
 
     def test_pipeline2(self):

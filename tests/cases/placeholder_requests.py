@@ -1,4 +1,5 @@
 from gunpowder import (
+    PipelineRequestError,
     BatchProvider,
     BatchRequest,
     Batch,
@@ -123,7 +124,7 @@ class TestPlaceholderRequest(ProviderTest):
                 request_b.add(test_labels, request_size)
 
                 # No array to provide a voxel size to ElasticAugment
-                with pytest.raises(RuntimeError):
+                with pytest.raises(PipelineRequestError):
                     pipeline.request_batch(request_a)
                 batch_b = pipeline.request_batch(request_b)
 

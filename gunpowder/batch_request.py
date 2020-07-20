@@ -33,7 +33,7 @@ class BatchRequest(ProviderSpec):
         )
         super().__init__(*args, **kwargs)
 
-    def add(self, key, shape, voxel_size=None, placeholder=False):
+    def add(self, key, shape, voxel_size=None, directed=None, placeholder=False):
         """Convenience method to add an array or graph spec by providing only
         the shape of a ROI (in world units).
 
@@ -60,7 +60,7 @@ class BatchRequest(ProviderSpec):
         if isinstance(key, ArrayKey):
             spec = ArraySpec(placeholder=placeholder)
         elif isinstance(key, GraphKey):
-            spec = GraphSpec(placeholder=placeholder)
+            spec = GraphSpec(placeholder=placeholder, directed=directed)
         else:
             raise RuntimeError("Only ArrayKey or GraphKey can be added.")
 

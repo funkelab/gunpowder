@@ -109,7 +109,7 @@ class Pad(BatchFilter):
 
         else:
 
-            points = batch.points[self.key]
+            points = batch.graphs[self.key]
             points.spec.roi = request[self.key].roi
 
     def __expand(self, a, from_roi, to_roi, value):

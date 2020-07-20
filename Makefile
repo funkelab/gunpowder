@@ -8,11 +8,12 @@ install-full:
 
 .PHONY: install-dev
 install-dev:
+	pip install -r requirements-dev.txt
 	pip install -e .[full]
 
 .PHONY: test
 test:
-	python -m tests -v
+	pytest -v --cov gunpowder
 
 .PHONY: publish
 publish:
