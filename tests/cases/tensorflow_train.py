@@ -101,7 +101,7 @@ class TestTensorflowTrain(ProviderTest):
         # create model meta graph file and get input/output names
         (a, b, c, optimizer, loss) = self.create_meta_graph(meta_base)
 
-        source = TestTensorflowTrainSource()
+        source = ExampleTensorflowTrainSource()
         train = Train(
             meta_base,
             optimizer=optimizer,
@@ -147,7 +147,7 @@ class TestTensorflowTrain(ProviderTest):
                 self.assertLess(loss2, loss1)
 
         # predict
-        # source = TestTensorflowTrainSource()
+        # source = ExampleTensorflowTrainSource()
         # predict = Predict(
             # meta_base + '_checkpoint_300',
             # inputs={a: ArrayKeys.A, b: ArrayKeys.B},
