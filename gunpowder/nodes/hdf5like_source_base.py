@@ -66,6 +66,9 @@ class Hdf5LikeSource(BatchProvider):
         # number of spatial dimensions
         self.ndims = None
 
+        # offsets of dataset sources
+        self.offsets_source = {}
+
     def _open_file(self, filename):
         raise NotImplementedError('Only implemented in subclasses')
 
@@ -96,8 +99,8 @@ class Hdf5LikeSource(BatchProvider):
                 # scale request roi to voxel units
                 dataset_roi = request_spec.roi / voxel_size
 
-                # shift request roi into dataset
-                dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset() / voxel_size
+                # shift request roi into dataset source
+                dataset_roi = dataset_roi - self.offsets_source[array_key] / voxel_size
 
                 # create array spec
                 array_spec = self.spec[array_key].copy()
@@ -127,6 +130,12 @@ class Hdf5LikeSource(BatchProvider):
         except Exception:  # todo: make specific when z5py supports it
             return None
 
+    def __get_offset_default(self, dataset):
+        offset = self._get_offset(dataset)
+        if offset is None:
+            offset = Coordinate((0,)*self.ndims)
+        return offset
+
     def __read_spec(self, array_key, data_file, ds_name):
 
         dataset = data_file[ds_name]
@@ -148,10 +157,10 @@ class Hdf5LikeSource(BatchProvider):
 
         self.ndims = len(spec.voxel_size)
 
+        self.offsets_source[array_key] = self.__get_offset_default(dataset)
+
         if spec.roi is None:
-            offset = self._get_offset(dataset)
-            if offset is None:
-                offset = Coordinate((0,)*self.ndims)
+            offset = self.__get_offset_default(dataset)
 
             if self.channels_first:
                 shape = Coordinate(dataset.shape[-self.ndims:])
@@ -159,6 +168,7 @@ class Hdf5LikeSource(BatchProvider):
                 shape = Coordinate(dataset.shape[:self.ndims])
 
             spec.roi = Roi(offset, shape*spec.voxel_size)
+
 
         if spec.dtype is not None:
             assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
