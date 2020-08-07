@@ -330,19 +330,6 @@ class RandomLocation(BatchFilter):
             #         point-request.begin-request.shape+1
             #                   ==
             #                   request.shape
-            #
-            # In the most shifted scenario, it could happen that the point lies
-            # exactly at the lower boundary (17 in the example). This will cause
-            # trouble if later we mirror the batch. The point would end up lying
-            # on the other boundary, which is exclusive and thus not part of the
-            # ROI. Therefore, we have to ensure that the point is well inside
-            # the shifted ROI, not just on the boundary:
-            #
-            #         all possible shifts
-            #         [--------)
-            #         8       +9
-            #                 ==
-            #                 request.shape-1
 
             # pick a random point
             point = choice(self.points.data)
@@ -354,23 +341,6 @@ class RandomLocation(BatchFilter):
             logger.debug(
                 "belongs to lcm voxel %s",
                 lcm_location)
-
-            # mark all dimensions in which the point lies on the lower boundary
-            # of the lcm voxel
-            on_lower_boundary = lcm_location*lcm_voxel_size == point
-            logger.debug(
-                "lies on the lower boundary of the lcm voxel in dimensions %s",
-                on_lower_boundary)
-
-            # for each of these dimensions, we have to change the shape of the
-            # shift ROI using the following correction
-            lower_boundary_correction = Coordinate((
-                -1 if o else 0
-                for o in on_lower_boundary
-            ))
-            logger.debug(
-                "lower bound correction for shape of shift ROI %s",
-                lower_boundary_correction)
 
             # get the request ROI's shape in lcm
             lcm_roi_begin = request_points_roi.get_begin()/lcm_voxel_size
@@ -384,10 +354,7 @@ class RandomLocation(BatchFilter):
                 lcm_location - lcm_roi_begin - lcm_roi_shape +
                 Coordinate((1,)*len(lcm_location))
             )
-            lcm_shift_roi_shape = (
-                lcm_roi_shape + lower_boundary_correction
-            )
-            lcm_point_shift_roi = Roi(lcm_shift_roi_begin, lcm_shift_roi_shape)
+            lcm_point_shift_roi = Roi(lcm_shift_roi_begin, lcm_roi_shape)
             logger.debug("lcm point shift roi: %s", lcm_point_shift_roi)
 
             # intersect with total shift ROI
