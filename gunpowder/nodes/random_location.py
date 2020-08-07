@@ -131,23 +131,24 @@ class RandomLocation(BatchFilter):
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)
 
-        shift_roi = self.__get_possible_shifts(request)
+        if request.array_specs.keys():
+            lcm_voxel_size = self.spec.get_lcm_voxel_size(
+                request.array_specs.keys())
+        else:
+            lcm_voxel_size = Coordinate((1,)*request.get_total_roi().dims())
+
+        shift_roi = self.__get_possible_shifts(request, lcm_voxel_size)
 
         if request.array_specs.keys():
 
-            lcm_voxel_size = self.spec.get_lcm_voxel_size(
-                request.array_specs.keys())
             shift_roi = shift_roi.snap_to_grid(lcm_voxel_size, mode='shrink')
             lcm_shift_roi = shift_roi/lcm_voxel_size
-            logger.debug("lcm voxel size: %s", lcm_voxel_size)
-
             logger.debug(
                 "restricting random locations to multiples of voxel size %s",
                 lcm_voxel_size)
 
         else:
 
-            lcm_voxel_size = Coordinate((1,)*shift_roi.dims())
             lcm_shift_roi = shift_roi
 
         assert not lcm_shift_roi.unbounded(), (
@@ -187,7 +188,7 @@ class RandomLocation(BatchFilter):
 
         return True
 
-    def __get_possible_shifts(self, request):
+    def __get_possible_shifts(self, request, voxel_size):
 
         total_shift_roi = None
 
@@ -203,7 +204,7 @@ class RandomLocation(BatchFilter):
                 -request_roi.get_begin()
             ).grow(
                 (0,)*request_roi.dims(),
-                -(request_roi.get_shape() - (1,)*request_roi.dims())
+                -(request_roi.get_shape() - voxel_size)
             )
 
             if total_shift_roi is None:
