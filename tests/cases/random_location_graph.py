@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class TestBatch(BatchFilter):
+class BatchTester(BatchFilter):
     def __init__(self, roi_to_match, exact=True):
         self.roi_to_match = roi_to_match
         self.exact = exact
@@ -16,7 +16,7 @@ class TestBatch(BatchFilter):
 
     def prepare(self, request):
         for key, v in request.items():
-            print(
+            logger.debug(
                 f"PREPARE TESTBATCH ======== {key} ROI: {self.spec[key].roi}")
 
     def process(self, batch, request):
@@ -34,7 +34,7 @@ class TestBatch(BatchFilter):
             self.visted = True
 
 
-class TestSourceRandomOneLocation(BatchProvider):
+class SourceGraphLocation(BatchProvider):
     def __init__(self):
 
         self.graph = Graph(
@@ -62,12 +62,11 @@ class TestRandomLocationGraph(ProviderTest):
 
         GraphKey("TEST_GRAPH")
         upstream_roi = Roi((500, 401, 401), (1, 200, 200))
-        pipeline = (TestSourceRandomOneLocation() +
-                    TestBatch(upstream_roi, exact=False) +
+        pipeline = (SourceGraphLocation() +
+                    BatchTester(upstream_roi, exact=False) +
                     RandomLocation(ensure_nonempty=GraphKeys.TEST_GRAPH))
 
         # count the number of times we get each node
-        possible_roi = Roi((0, 0, 0), (1, 100, 100))
         with build(pipeline):
 
             for i in range(500):
@@ -79,17 +78,14 @@ class TestRandomLocationGraph(ProviderTest):
 
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
 
-                assert possible_roi.contains(
-                    batch[GraphKeys.TEST_GRAPH].spec.roi)
-
     def test_req_full_roi(self):
 
         GraphKey("TEST_GRAPH")
 
         possible_roi = Roi((0, 0, 0), (1000, 1000, 1000))
 
-        pipeline = (TestSourceRandomOneLocation() +
-                    TestBatch(possible_roi, exact=False) +
+        pipeline = (SourceGraphLocation() +
+                    BatchTester(possible_roi, exact=False) +
                     RandomLocation(ensure_nonempty=GraphKeys.TEST_GRAPH))
         with build(pipeline):
 
@@ -100,18 +96,16 @@ class TestRandomLocationGraph(ProviderTest):
                 }))
 
             assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
-            assert batch[GraphKeys.TEST_GRAPH].spec.roi == possible_roi
 
     def test_roi_one_point(self):
 
         GraphKey("TEST_GRAPH")
         upstream_roi = Roi((500, 500, 500), (1, 1, 1))
 
-        pipeline = (TestSourceRandomOneLocation() +
-                    TestBatch(upstream_roi, exact=True) +
+        pipeline = (SourceGraphLocation() +
+                    BatchTester(upstream_roi, exact=True) +
                     RandomLocation(ensure_nonempty=GraphKeys.TEST_GRAPH))
 
-        possible_roi = Roi((0, 0, 0), (1, 1, 1))
         with build(pipeline):
             for i in range(500):
                 batch = pipeline.request_batch(
@@ -121,18 +115,16 @@ class TestRandomLocationGraph(ProviderTest):
                     }))
 
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
-                assert batch[GraphKeys.TEST_GRAPH].spec.roi == possible_roi
 
     def test_iso_roi(self):
 
         GraphKey("TEST_GRAPH")
         upstream_roi = Roi((401, 401, 401), (200, 200, 200))
 
-        pipeline = (TestSourceRandomOneLocation() +
-                    TestBatch(upstream_roi, exact=False) +
+        pipeline = (SourceGraphLocation() +
+                    BatchTester(upstream_roi, exact=False) +
                     RandomLocation(ensure_nonempty=GraphKeys.TEST_GRAPH))
 
-        possible_roi = Roi((0, 0, 0), (100, 100, 100))
         with build(pipeline):
             for i in range(500):
                 batch = pipeline.request_batch(
@@ -142,5 +134,3 @@ class TestRandomLocationGraph(ProviderTest):
                     }))
 
                 assert len(list(batch[GraphKeys.TEST_GRAPH].nodes)) == 1
-                assert possible_roi.contains(
-                    batch[GraphKeys.TEST_GRAPH].spec.roi)
