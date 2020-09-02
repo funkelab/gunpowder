@@ -137,6 +137,10 @@ IntensityAugment
 ^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityAugment
 
+NoiseAugment
+^^^^^^^^^^^^^^^^
+  .. autoclass:: NoiseAugment
+
 SimpleAugment
 ^^^^^^^^^^^^^
   .. autoclass:: SimpleAugment
@@ -161,10 +165,6 @@ RandomLocation
 Reject
 ^^^^^^
   .. autoclass:: Reject
-
-Scan
-^^^^
-  .. autoclass:: Scan
 
 SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
@@ -288,6 +288,10 @@ Hdf5Write
 ^^^^^^^^^
   .. autoclass:: Hdf5Write
 
+ZarrWrite
+^^^^^^^^^
+  .. autoclass:: ZarrWrite
+
 .. _sec_api_snapshot:
 
 Snapshot
@@ -310,3 +314,14 @@ PreCache
 PrintProfilingStats
 ^^^^^^^^^^^^^^^^^^^
   .. autoclass:: PrintProfilingStats
+
+Iterative Processing Nodes
+--------------------------
+
+DaisyRequestBlocks
+^^^^^
+  .. autoclass:: DaisyRequestBlocks
+
+Scan
+^^^^
+  .. autoclass:: Scan
