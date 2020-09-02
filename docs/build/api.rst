@@ -137,6 +137,10 @@ IntensityAugment
 ^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityAugment
 
+NoiseAugment
+^^^^^^^^^^^^^^^^
+  .. autoclass:: NoiseAugment
+
 SimpleAugment
 ^^^^^^^^^^^^^
   .. autoclass:: SimpleAugment
@@ -287,6 +291,14 @@ Output Nodes
 Hdf5Write
 ^^^^^^^^^
   .. autoclass:: Hdf5Write
+
+ZarrWrite
+^^^^^^^^^
+  .. autoclass:: ZarrWrite
+
+N5Write
+^^^^^^^^^
+  .. autoclass:: N5Write
 
 .. _sec_api_snapshot:
 
