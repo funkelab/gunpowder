@@ -57,7 +57,8 @@ class AddAffinities(BatchFilter):
             affinities,
             labels_mask=None,
             unlabelled=None,
-            affinities_mask=None):
+            affinities_mask=None,
+            dtype=np.uint8):
 
         self.affinity_neighborhood = np.array(affinity_neighborhood)
         self.labels = labels
@@ -65,6 +66,7 @@ class AddAffinities(BatchFilter):
         self.labels_mask = labels_mask
         self.affinities = affinities
         self.affinities_mask = affinities_mask
+        self.dtype = dtype
 
     def setup(self):
 
@@ -91,7 +93,7 @@ class AddAffinities(BatchFilter):
         spec = self.spec[self.labels].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
-        spec.dtype = np.uint8
+        spec.dtype = self.dtype
 
         self.provides(self.affinities, spec)
         if self.affinities_mask:
@@ -125,6 +127,7 @@ class AddAffinities(BatchFilter):
             -self.padding_neg,
             self.padding_pos)
         deps[self.labels] = request[self.affinities].copy()
+        deps[self.labels].dtype = None
         deps[self.labels].roi = labels_roi
 
         if self.labels_mask:
@@ -139,11 +142,11 @@ class AddAffinities(BatchFilter):
         affinities_roi = request[self.affinities].roi
 
         logger.debug("computing ground-truth affinities from labels")
-        affinities = malis.seg_to_affgraph(
-                batch.arrays[self.labels].data.astype(np.int32),
-                self.affinity_neighborhood
-        ).astype(np.uint8)
 
+        affinities = malis.seg_to_affgraph(
+            batch.arrays[self.labels].data.astype(np.int32),
+            self.affinity_neighborhood
+        ).astype(self.dtype)
 
         # crop affinities to requested ROI
         offset = affinities_roi.get_offset()
