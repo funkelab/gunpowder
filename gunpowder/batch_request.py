@@ -105,13 +105,13 @@ class BatchRequest(ProviderSpec):
         merged = self.copy()
 
         for key, spec in request.items():
-            if key not in merged:
-                merged[key] = spec
-            else:
-                if isinstance(spec, ArraySpec) and merged[key].nonspatial:
-                    merged[key] = spec
-                else:
-                    merged[key].roi = merged[key].roi.union(spec.roi)
+            downstream_spec = merged[key] if key in merged else None
+            merged[key] = spec
+
+            if downstream_spec is not None:
+                if isinstance(spec, GraphSpec) or \
+                   not downstream_spec.nonspatial:
+                    merged[key].roi = downstream_spec.roi.union(spec.roi)
 
         return merged
 
