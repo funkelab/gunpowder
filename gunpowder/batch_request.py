@@ -113,6 +113,15 @@ class BatchRequest(ProviderSpec):
                 else:
                     merged[key].roi = merged[key].roi.union(spec.roi)
 
+                if merged[key].voxel_size is None:
+                    merged[key].voxel_size = spec.voxel_size
+
+                if merged[key].dtype is None:
+                    merged[key].dtype = spec.dtype
+
+                if merged[key].interpolatable is None:
+                    merged[key].interpolatable = spec.interpolatable
+
         return merged
 
     def __eq__(self, other):
