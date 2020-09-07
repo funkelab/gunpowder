@@ -97,21 +97,18 @@ class BatchRequest(ProviderSpec):
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())
 
-    def merge(self, request):
-        """Merge another request with current request"""
+    def update_with(self, request):
+        """Update current request with another"""
 
         assert isinstance(request, BatchRequest)
 
         merged = self.copy()
 
         for key, spec in request.items():
-            downstream_spec = merged[key] if key in merged else None
-            merged[key] = spec
-
-            if downstream_spec is not None:
-                if isinstance(spec, GraphSpec) or \
-                   not downstream_spec.nonspatial:
-                    merged[key].roi = downstream_spec.roi.union(spec.roi)
+            if key not in merged:
+                merged[key] = spec
+            else:
+                merged[key].update_with(spec)
 
         return merged
 
