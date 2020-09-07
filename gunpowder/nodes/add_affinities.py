@@ -143,8 +143,12 @@ class AddAffinities(BatchFilter):
 
         logger.debug("computing ground-truth affinities from labels")
 
+        # remove superfluous channel dim if it exists
+        arr = batch.arrays[self.labels].data.astype(np.int32)
+        if arr.shape[0] == 1:
+            arr.shape = arr.shape[1:]
         affinities = malis.seg_to_affgraph(
-            batch.arrays[self.labels].data.astype(np.int32),
+            arr,
             self.affinity_neighborhood
         ).astype(self.dtype)
 
