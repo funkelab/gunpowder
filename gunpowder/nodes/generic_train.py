@@ -113,7 +113,11 @@ class GenericTrain(BatchFilter):
     def prepare(self, request):
         deps = BatchRequest()
         for key in self.inputs.values():
-            deps[key] = request[key]
+            if key in self.array_specs:
+                deps[key] = self.array_specs[key].copy()
+            else:
+                deps[key] = request[key]
+
         return deps
 
     def teardown(self):
