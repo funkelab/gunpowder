@@ -24,12 +24,22 @@ class Array(Freezable):
         attrs (``dict``, optional):
 
             Optional attributes to describe this array.
+
+        is_empty (``bool``):
+
+            If data array does not contain data, only state
+            (empty object with .shape and .dtype attrs, for tf_data node)
     '''
 
-    def __init__(self, data, spec=None, attrs=None):
+    def __init__(self, data, spec=None, attrs=None,
+                 is_empty=False):
 
         self.spec = deepcopy(spec)
-        self.data = np.asarray(data)
+        self.is_empty = is_empty
+        if self.is_empty:
+            self.data = data
+        else:
+            self.data = np.asarray(data)
         self.attrs = attrs
 
         if attrs is None:
