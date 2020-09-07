@@ -62,6 +62,7 @@ class Batch(Freezable):
         self.affinity_neighborhood = None
         self.loss = None
         self.iteration = None
+        self.tf_data = None
 
         self.freeze()
 
@@ -169,6 +170,7 @@ class Batch(Freezable):
         cropped.profiling_stats = self.profiling_stats
         cropped.loss = self.loss
         cropped.iteration = self.iteration
+        cropped.tf_data = self.tf_data
 
         for key, val in request.items():
             assert key in self, "%s not contained in this batch" % key
