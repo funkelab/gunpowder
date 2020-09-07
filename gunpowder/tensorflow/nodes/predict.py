@@ -54,6 +54,11 @@ class Predict(GenericPredict):
             Skip prediction, if all inputs are empty (contain only 0). In this
             case, outputs are simply set to 0.
 
+        is_training: (``string``, optional):
+
+            Name of is_training placeholder tensor used to switch between
+            training and evaluation mode for dropout/batch norm etc
+
         max_shared_memory (``int``, optional):
 
             The maximal amount of shared memory in bytes to allocate to send
@@ -68,6 +73,7 @@ class Predict(GenericPredict):
             array_specs=None,
             graph=None,
             skip_empty=False,
+            is_training=None,
             max_shared_memory=1024*1024*1024):
 
         super(Predict, self).__init__(
@@ -80,6 +86,7 @@ class Predict(GenericPredict):
         self.session = None
         self.graph = None
         self.skip_empty = skip_empty
+        self.is_training = is_training
 
         self.manager = mp.Manager()
         self.max_shared_memory = max_shared_memory
@@ -260,9 +267,14 @@ class Predict(GenericPredict):
             "Reading graph from %s and weights from %s...",
             meta_graph_file, self.checkpoint)
 
+        input_map = None
+        if self.is_training is not None:
+            input_map = {}
+            input_map[self.is_training] = tf.constant(False)
         saver = tf.train.import_meta_graph(
-                meta_graph_file,
-                clear_devices=True)
+            meta_graph_file,
+            input_map=input_map,
+            clear_devices=True)
 
         # restore variables from checkpoint
         saver.restore(self.session, self.checkpoint)
