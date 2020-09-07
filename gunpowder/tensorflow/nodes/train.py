@@ -178,7 +178,14 @@ class Train(GenericTrain):
                 self.loss,
                 [tensor])[0]
 
+        self.initialized = True
+
     def train_step(self, batch, request):
+
+        # initialize tf graph before first step
+        if not self.initialized:
+            logger.info("first step, loading tf graph...")
+            self.start()
 
         array_outputs = self.__collect_requested_outputs(request)
         inputs = self.__collect_provided_inputs(batch)

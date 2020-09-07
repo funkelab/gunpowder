@@ -109,10 +109,6 @@ class GenericTrain(BatchFilter):
             # anything goes wrong
             self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
             self.batch_in = multiprocessing.Queue(maxsize=1)
-            self.worker.start()
-        else:
-            self.start()
-            self.initialized = True
 
     def prepare(self, request):
         deps = BatchRequest()
@@ -213,11 +209,6 @@ class GenericTrain(BatchFilter):
 
     def __produce_train_batch(self):
         '''Process one train batch.'''
-
-        if not self.initialized:
-
-            self.start()
-            self.initialized = True
 
         batch, request = self.batch_in.get()
 
