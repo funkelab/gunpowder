@@ -97,6 +97,17 @@ class Train(GenericTrain):
             After how many iterations to create a checkpoint to store the
             learnt weights.
 
+        auto_mixed_precision (``bool``, optional):
+
+            Switch to turn on automatic mixed precision (rtx 2080ti and up)
+            Warning: creates a new optimizer, make sure parameters match
+            the one in mknet, and additionally pass learning rate to node.
+
+        learning_rate (``float``, optional):
+
+            Only used in combination with auto_mixed_precision, as this
+            causes a new optimizer to be created.
+
         log_dir (``string``, optional):
 
             Directory for saving tensorboard summaries.
@@ -110,7 +121,6 @@ class Train(GenericTrain):
             Only used in combination with use_tf_data, should have same
             value as in potentially following snapshot node. Pass on inputs
             downstream only in the matching iterations.
-
     '''
 
     def __init__(
@@ -125,6 +135,8 @@ class Train(GenericTrain):
             summary=None,
             array_specs=None,
             save_every=2000,
+            auto_mixed_precision=False,
+            learning_rate=None,
             use_tf_data=False,
             log_dir='./',
             log_every=1,
@@ -149,6 +161,8 @@ class Train(GenericTrain):
         self.basic_saver = None
         self.full_saver = None
         self.save_every = save_every
+        self.auto_mixed_precision = auto_mixed_precision
+        self.learning_rate = learning_rate
         self.iteration = None
         self.iteration_increment = None
         self.summary_saver = None
@@ -172,6 +186,22 @@ class Train(GenericTrain):
         target = LocalServer.get_target()
         logger.info("Initializing tf session, connecting to %s...", target)
 
+        if self.auto_mixed_precision:
+            with tf.variable_scope("amp_opt"):
+                assert self.learning_rate is not None, (
+                    "when using auto_mixed_precision, new optimizer has to be"
+                    "created, supply value for learning_rate!")
+                learning_rate = tf.placeholder_with_default(
+                    self.learning_rate, shape=(),
+                    name="learning-rate")
+
+                logger.warning("Recreating optimizer for mixed precision, "
+                               "make sure same parameters as in mknet are used!")
+                opt = tf.train.AdamOptimizer(
+                    learning_rate=learning_rate,
+                    beta1=0.95,
+                    beta2=0.999,
+                    epsilon=1e-8)
         checkpoint = self.__read_meta_graph()
 
         if self.summary is not None:
@@ -179,7 +209,6 @@ class Train(GenericTrain):
                 self.log_dir, tf.get_default_graph())
 
         if self.optimizer_func is None:
-
             self.loss = tf.get_default_graph().get_tensor_by_name(
                 self.optimizer_loss_names[1])
 
@@ -191,10 +220,15 @@ class Train(GenericTrain):
                 self.loss,
                 [tensor])[0]
 
-        if self.optimizer_func is None:
-            # get actual operations/tensors from names
-            self.optimizer = tf.get_default_graph().get_operation_by_name(
-                self.optimizer_loss_names[0])
+        if self.auto_mixed_precision:
+            opt = tf.train.experimental.enable_mixed_precision_graph_rewrite(opt)
+            with tf.variable_scope("amp_opt"):
+                self.optimizer = opt.minimize(self.loss)
+        else:
+            if self.optimizer_func is None:
+                # get actual operations/tensors from names
+                self.optimizer = tf.get_default_graph().get_operation_by_name(
+                    self.optimizer_loss_names[0])
 
         if self.session is None:
             self.session = tf.Session(
