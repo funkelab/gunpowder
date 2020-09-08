@@ -5,6 +5,7 @@ except:
 import logging
 import multiprocessing
 import os
+import signal
 import sys
 import time
 import traceback
@@ -122,6 +123,8 @@ class ProducerPool(object):
             logger.info("done")
 
     def __run_worker(self, target):
+
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         parent_pid = os.getppid()
 
