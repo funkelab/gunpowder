@@ -87,6 +87,8 @@ class SimpleAugment(BatchFilter):
 
         # mirror and transpose ROIs of arrays & points in batch
         total_roi = batch.get_total_roi().copy()
+        lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
+
         for collection_type in [batch.arrays, batch.graphs]:
             for (key, collector) in collection_type.items():
                 if key not in request:
@@ -97,7 +99,7 @@ class SimpleAugment(BatchFilter):
                 logger.debug("upstream %s ROI: %s"%(key, collector.spec.roi))
                 self.__mirror_roi(collector.spec.roi, total_roi, self.mirror)
                 logger.debug("mirrored %s ROI: %s"%(key,collector.spec.roi))
-                self.__transpose_roi(collector.spec.roi, total_roi, self.transpose)
+                self.__transpose_roi(collector.spec.roi, total_roi, self.transpose, lcm_voxel_size)
                 logger.debug("transposed %s ROI: %s"%(key,collector.spec.roi))
 
         mirror = tuple(
@@ -156,9 +158,10 @@ class SimpleAugment(BatchFilter):
 
     def __transpose_request(self, request, transpose):
         total_roi = request.get_total_roi().copy()
+        lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__transpose_roi(spec.roi, total_roi, transpose)
+                self.__transpose_roi(spec.roi, total_roi, transpose, lcm_voxel_size)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
@@ -186,15 +189,18 @@ class SimpleAugment(BatchFilter):
 
         roi.set_offset(roi_offset)
 
-    def __transpose_roi(self, roi, total_roi, transpose):
+    def __transpose_roi(self, roi, total_roi, transpose, lcm_voxel_size):
         
         logger.debug(f"Original roi: {roi}")
 
         center = total_roi.get_center()
+        if lcm_voxel_size is not None:
+            nearest_voxel_shift = Coordinate((d % v) for d, v in zip(center, lcm_voxel_size))
+            center = center - nearest_voxel_shift
         logger.debug(f"Center: {center}")
 
         # Get distance from center, then transpose
-        dist_to_center = center - roi.get_offset() 
+        dist_to_center = center - roi.get_offset()
         dist_to_center = Coordinate(dist_to_center[transpose[d]]
                                     for d in range(self.dims))
         logger.debug(f"dist_to_center: {dist_to_center}")

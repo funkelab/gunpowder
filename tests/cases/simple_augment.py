@@ -403,7 +403,7 @@ def test_mismatched_voxel_multiples():
             batch = pipeline.request_batch(request)
             data = batch[test_array].data
 
-            if data.sum(axis=0) == 1:
+            if data.sum(axis=1)[0] == 1:
                 loop = -1
         assert loop < 0, "Data was never transposed!"
 
