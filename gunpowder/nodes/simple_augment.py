@@ -7,6 +7,7 @@ from gunpowder.coordinate import Coordinate
 
 logger = logging.getLogger(__name__)
 
+
 class SimpleAugment(BatchFilter):
     '''Randomly mirror and transpose all :class:`Arrays<Array>` and
     :class:`Graph` in a batch.
@@ -42,9 +43,11 @@ class SimpleAugment(BatchFilter):
         # dimension
 
         if self.mirror_only is None:
-            self.mirror_mask = [ True ]*self.dims
+            self.mirror_mask = [True]*self.dims
         else:
-            self.mirror_mask = [ d in self.mirror_only for d in range(self.dims) ]
+            self.mirror_mask = [
+                d in self.mirror_only
+                for d in range(self.dims)]
 
         if self.transpose_only is None:
             self.transpose_dims = list(range(self.dims))
@@ -54,7 +57,7 @@ class SimpleAugment(BatchFilter):
     def prepare(self, request):
 
         self.mirror = [
-            random.randint(0,1)
+            random.randint(0, 1)
             if self.mirror_mask[d] else 0
             for d in range(self.dims)
         ]
@@ -85,7 +88,8 @@ class SimpleAugment(BatchFilter):
 
         # mirror and transpose ROIs of arrays & points in batch
         total_roi = batch.get_total_roi().copy()
-        lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
+        requested_keys = request.array_specs.keys()
+        lcm_voxel_size = self.spec.get_lcm_voxel_size(requested_keys)
 
         for collection_type in [batch.arrays, batch.graphs]:
             for (key, collector) in collection_type.items():
@@ -95,10 +99,16 @@ class SimpleAugment(BatchFilter):
                     continue
                 logger.debug("total ROI = %s", batch.get_total_roi())
                 logger.debug("upstream %s ROI = %s", key, collector.spec.roi)
-                self.__mirror_roi(collector.spec.roi, total_roi, self.mirror)
-                logger.debug("mirrored %s ROI = %s", key,collector.spec.roi)
-                self.__transpose_roi(collector.spec.roi, total_roi, self.transpose, lcm_voxel_size)
-                logger.debug("transposed %s ROI = %s", key,collector.spec.roi)
+                self.__mirror_roi(
+                    collector.spec.roi,
+                    total_roi, self.mirror)
+                logger.debug("mirrored %s ROI = %s", key, collector.spec.roi)
+                self.__transpose_roi(
+                    collector.spec.roi,
+                    total_roi,
+                    self.transpose,
+                    lcm_voxel_size)
+                logger.debug("transposed %s ROI = %s", key, collector.spec.roi)
 
         mirror = tuple(
                 slice(None, None, -1 if m else 1)
@@ -119,7 +129,8 @@ class SimpleAugment(BatchFilter):
             array.data = array.data[channel_slices + mirror]
 
             transpose = [t + num_channels for t in self.transpose]
-            array.data = array.data = array.data.transpose(list(range(num_channels)) + transpose)
+            array.data = array.data = array.data.transpose(
+                list(range(num_channels)) + transpose)
 
         # graphs
         total_roi_offset = batch.get_total_roi().get_offset()
@@ -176,10 +187,15 @@ class SimpleAugment(BatchFilter):
 
     def __transpose_request(self, request, transpose):
         total_roi = request.get_total_roi().copy()
-        lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
+        requested_keys = request.array_specs.keys()
+        lcm_voxel_size = self.spec.get_lcm_voxel_size(requested_keys)
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__transpose_roi(spec.roi, total_roi, transpose, lcm_voxel_size)
+                self.__transpose_roi(
+                    spec.roi,
+                    total_roi,
+                    transpose,
+                    lcm_voxel_size)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
@@ -193,7 +209,8 @@ class SimpleAugment(BatchFilter):
         end_of_roi_in_total = roi_in_total_offset + roi_shape
         roi_in_total_offset_mirrored = total_roi_shape - end_of_roi_in_total
         roi_offset = Coordinate(
-                total_roi_offset[d] + roi_in_total_offset_mirrored[d] if mirror[d] else roi_offset[d]
+                total_roi_offset[d] + roi_in_total_offset_mirrored[d]
+                if mirror[d] else roi_offset[d]
                 for d in range(self.dims)
         )
 
@@ -205,7 +222,9 @@ class SimpleAugment(BatchFilter):
 
         center = total_roi.get_center()
         if lcm_voxel_size is not None:
-            nearest_voxel_shift = Coordinate((d % v) for d, v in zip(center, lcm_voxel_size))
+            nearest_voxel_shift = Coordinate(
+                (d % v)
+                for d, v in zip(center, lcm_voxel_size))
             center = center - nearest_voxel_shift
         logger.debug("center = %s", center)
 
