@@ -100,13 +100,19 @@ class Train(GenericTrain):
         auto_mixed_precision (``bool``, optional):
 
             Switch to turn on automatic mixed precision (rtx 2080ti and up)
-            Warning: creates a new optimizer, make sure parameters match
-            the one in mknet, and additionally pass learning rate to node.
+            Warning: creates a new optimizer, additionally pass optimizer_args
+            to node.
 
-        learning_rate (``float``, optional):
+        optimizer_args (``tuple``, optional):
 
             Only used in combination with auto_mixed_precision, as this
             causes a new optimizer to be created.
+            Tuple:
+              first value: Name of optimizer, has to match tensorflow class name;
+              second value: Dict with two entries:
+                'args': positional args of optimizer,
+                        list or dict inserted in the correct order (py3.6+)
+                'kwargs': kwargs of optimizer
 
         log_dir (``string``, optional):
 
@@ -136,7 +142,7 @@ class Train(GenericTrain):
             array_specs=None,
             save_every=2000,
             auto_mixed_precision=False,
-            learning_rate=None,
+            optimizer_args=None,
             use_tf_data=False,
             log_dir='./',
             log_every=1,
@@ -162,7 +168,7 @@ class Train(GenericTrain):
         self.full_saver = None
         self.save_every = save_every
         self.auto_mixed_precision = auto_mixed_precision
-        self.learning_rate = learning_rate
+        self.optimizer_args = optimizer_args
         self.iteration = None
         self.iteration_increment = None
         self.summary_saver = None
@@ -188,20 +194,18 @@ class Train(GenericTrain):
 
         if self.auto_mixed_precision:
             with tf.variable_scope("amp_opt"):
-                assert self.learning_rate is not None, (
+                assert self.optimizer_args is not None, (
                     "when using auto_mixed_precision, new optimizer has to be"
-                    "created, supply value for learning_rate!")
-                learning_rate = tf.placeholder_with_default(
-                    self.learning_rate, shape=(),
-                    name="learning-rate")
-
+                    "created, supply optimizer name and parameters!")
                 logger.warning("Recreating optimizer for mixed precision, "
                                "make sure same parameters as in mknet are used!")
-                opt = tf.train.AdamOptimizer(
-                    learning_rate=learning_rate,
-                    beta1=0.95,
-                    beta2=0.999,
-                    epsilon=1e-8)
+                pos_args = self.optimizer_args[1]["args"]
+                if isinstance(self.optimizer_args[1]["args"], dict):
+                    pos_args = pos_args.values()
+
+                opt = getattr(tf.train, self.optimizer_args[0])(
+                    *pos_args,
+                    **self.optimizer_args[1]["kwargs"])
         checkpoint = self.__read_meta_graph()
 
         if self.summary is not None:
