@@ -123,6 +123,7 @@ class SimpleAugment(BatchFilter):
 
         # graphs
         total_roi_offset = batch.get_total_roi().get_offset()
+        total_roi_end = batch.get_total_roi().get_end()
 
         for (graph_key, graph) in batch.graphs.items():
 
@@ -135,13 +136,24 @@ class SimpleAugment(BatchFilter):
                 logger.debug("old location: %s, %s", node.id, node.location)
 
                 # mirror
-                location_in_total_offset = np.asarray(node.location) - total_roi_offset
-                node.location[:] = np.asarray([batch.get_total_roi().get_end()[dim] - location_in_total_offset[dim]
-                                                 if m else node.location[dim] for dim, m in enumerate(self.mirror)])
+                location_in_total_offset = (
+                    np.asarray(node.location) -
+                    total_roi_offset)
+                node.location[:] = np.asarray(
+                    [
+                        total_roi_end[dim] -
+                        location_in_total_offset[dim]
+                        if m else node.location[dim]
+                        for dim, m in enumerate(self.mirror)
+                    ])
 
                 logger.debug("after mirror: %s, %s", node.id, node.location)
 
                 # transpose
+                location_in_total_offset = (
+                    np.asarray(node.location) -
+                    total_roi_offset)
+
                 if self.transpose != list(range(self.dims)):
                     for d in range(self.dims):
                         node.location[d] = \
