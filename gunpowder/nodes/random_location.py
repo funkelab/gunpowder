@@ -242,7 +242,7 @@ class RandomLocation(BatchFilter):
         assert not total_shift_roi.unbounded() or self.ensure_nonempty is not None, (
             "Can not pick a random location, intersection of upstream ROIs is "
             "unbounded.")
-        assert total_shift_roi.get_begin() is not None, (
+        assert sum(total_shift_roi.get_shape()) > 0, (
             "Can not satisfy batch request, no location covers all requested "
             "ROIs.")
 

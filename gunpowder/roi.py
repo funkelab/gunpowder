@@ -196,9 +196,6 @@ class Roi(Freezable):
 
         assert self.dims() == other.dims()
 
-        if self.empty() or other.empty():
-            return False
-
         # separated if at least one dimension is separated
         separated = any([
             # a dimension is separated if:
