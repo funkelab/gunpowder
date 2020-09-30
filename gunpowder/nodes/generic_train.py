@@ -158,9 +158,15 @@ class GenericTrain(BatchFilter):
 
         time_of_iteration = time.time() - start
 
-        logger.info(
-            "Train process: iteration=%d loss=%f time=%f",
-            batch.iteration, batch.loss, time_of_iteration)
+        if hasattr(self, 'current_lr'):
+            logger.info(
+                "Train process: iteration=%d loss=%.6f lr=%.7f time=%.3f",
+                batch.iteration, batch.loss, self.current_lr,
+                time_of_iteration)
+        else:
+            logger.info(
+                "Train process: iteration=%d loss=%.6f time=%.3f",
+                batch.iteration, batch.loss, time_of_iteration)
 
     def start(self):
         '''To be implemented in subclasses.
