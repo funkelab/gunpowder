@@ -37,18 +37,20 @@ class CsvPointsSource(BatchProvider):
             positions to convert them to world units.
     '''
 
-    def __init__(self, filename, points, points_spec=None, scale=None):
+    def __init__(self, filename, points, points_spec=None, scale=None,
+                 ndims=None, id_dim=None):
 
         self.filename = filename
         self.points = points
         self.points_spec = points_spec
         self.scale = scale
-        self.ndims = None
+        self.ndims = ndims
+        self.id_dim = id_dim
         self.data = None
 
     def setup(self):
 
-        self._read_points()
+        self._parse_csv()
 
         if self.points_spec is not None:
 
@@ -92,18 +94,19 @@ class CsvPointsSource(BatchProvider):
 
     def _get_points(self, point_filter):
 
-        filtered = self.data[point_filter]
-        ids = np.arange(len(self.data))[point_filter]
+        if self.id_dim is not None:
+            filtered = self.data[point_filter][:,:self.ndims]
+            ids = self.data[point_filter][:,self.id_dim]
+        else:
+            filtered = self.data[point_filter]
+            ids = np.arange(len(self.data))[point_filter]
 
         return [
             Node(id=i, location=p)
             for i, p in zip(ids, filtered)
         ]
 
-    def _read_points(self):
-        self.data, self.ndims = self._parse_csv()
-
-    def _parse_csv(self, ndims=0):
+    def _parse_csv(self):
         '''Read one point per line. If ``ndims`` is 0, all values in one line
         are considered as the location of the point. If positive, only the
         first ``ndims`` are used. If negative, all but the last ``-ndims`` are
@@ -111,17 +114,13 @@ class CsvPointsSource(BatchProvider):
         '''
 
         with open(self.filename, "r") as f:
-            points = np.array(
+            self.data = np.array(
                 [[float(t.strip(",")) for t in line.split()] for line in f],
                 dtype=np.float32,
             )
 
-        if ndims == 0:
-            ndims = points.shape[1]
-        elif ndims < 0:
-            ndims = points.shape[1] + ndims
+        if self.ndims is None:
+            self.ndims = points.shape[1]
 
         if self.scale is not None:
-            points[:,:ndims] *= self.scale
-
-        return points, ndims
+            self.data[:,:self.ndims] *= self.scale
