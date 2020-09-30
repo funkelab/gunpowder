@@ -269,7 +269,7 @@ class Predict(GenericPredict):
 
         input_map = {}
         if self.is_training is not None:
-            input_map[self.is_training] = True
+            input_map[self.is_training] = False
         saver = tf.train.import_meta_graph(
             meta_graph_file,
             input_map=input_map,
