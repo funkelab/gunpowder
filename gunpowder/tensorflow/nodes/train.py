@@ -119,6 +119,13 @@ class Train(GenericTrain):
                         list or dict inserted in the correct order (py3.6+)
                 'kwargs': kwargs of optimizer
 
+        learning_rate (``string``, optional):
+
+            Only used in combination with auto_mixed_precision.
+            Name of learning rate tensor, in case an e.g. decaying learning
+            rate is used. Overwrites a potential static learning_rate in
+            optimizer_args.
+
         log_dir (``string``, optional):
 
             Directory for saving tensorboard summaries.
@@ -141,6 +148,7 @@ class Train(GenericTrain):
             save_every=2000,
             auto_mixed_precision=False,
             optimizer_args=None,
+            learning_rate=None,
             log_dir='./',
             log_every=1):
 
@@ -164,6 +172,7 @@ class Train(GenericTrain):
         self.save_every = save_every
         self.auto_mixed_precision = auto_mixed_precision
         self.optimizer_args = optimizer_args
+        self.learning_rate = learning_rate
         self.iteration = None
         self.iteration_increment = None
         self.summary_saver = None
@@ -192,13 +201,21 @@ class Train(GenericTrain):
                     "created, supply optimizer name and parameters!")
                 logger.warning("Recreating optimizer for mixed precision, "
                                "make sure same parameters as in mknet are used!")
-                pos_args = self.optimizer_args[1]["args"]
+                opt_pos_args = self.optimizer_args[1]["args"]
                 if isinstance(self.optimizer_args[1]["args"], dict):
-                    pos_args = pos_args.values()
+                    opt_pos_args = opt_pos_args.values()
 
+                opt_kw_args = self.optimizer_args[1]["kwargs"]
+                if self.learning_rate is not None:
+                    if "learning_rate" in opt_kw_args:
+                        del opt_kw_args["learning_rate"]
+                    else:
+                        del opt_pos_args[0]
+                    lr = tf.get_default_graph().get_tensor_by_name(self.learning_rate)
+                    opt_pos_args.insert(0, lr)
                 opt = getattr(tf.train, self.optimizer_args[0])(
-                    *pos_args,
-                    **self.optimizer_args[1]["kwargs"])
+                    *opt_pos_args,
+                    **opt_kw_args)
         checkpoint = self.__read_meta_graph()
 
         if self.summary is not None:
