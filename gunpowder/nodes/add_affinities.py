@@ -189,7 +189,7 @@ class AddAffinities(BatchFilter):
                 # combine with mask
                 affinities_mask = affinities_mask*unlabelled_mask
 
-            affinities_mask = affinities_mask.astype(np.float32)
+            affinities_mask = affinities_mask.astype(affinities.dtype)
             batch.arrays[self.affinities_mask] = Array(affinities_mask, spec)
 
         else:
