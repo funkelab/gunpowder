@@ -217,7 +217,7 @@ class Graph(Freezable):
 
     def create_graph(self, nodes: Iterator[Node], edges: Iterator[Edge]):
         if self.__spec.directed is None:
-            logger.warning(
+            logger.debug(
                 "Trying to create a Graph without specifying directionality. Using default Directed!"
                 )
             graph = nx.DiGraph()
