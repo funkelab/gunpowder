@@ -290,10 +290,11 @@ class BatchProvider(object):
                 )
             if request_spec.dtype is not None:
                 assert batch[array_key].data.dtype == request_spec.dtype, \
-                    "dtype of array %s (%s) does not match requested dtype %s" % (
+                    "dtype of array %s (%s) does not match requested dtype %s by %s" % (
                         array_key,
                         batch[array_key].data.dtype,
-                        request_spec.dtype)
+                        request_spec.dtype,
+                        self.name())
 
         for (graph_key, request_spec) in request.graph_specs.items():
 
