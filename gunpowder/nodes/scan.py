@@ -252,7 +252,8 @@ class Scan(BatchFilter):
         in this dimension.'''
 
         min_shift = shift_roi.get_offset()
-        max_shift = Coordinate(m - 1 for m in shift_roi.get_end())
+        max_shift = max(min_shift,
+                        Coordinate(m - 1 for m in shift_roi.get_end()))
 
         shift = np.array(min_shift)
         shifts = []
