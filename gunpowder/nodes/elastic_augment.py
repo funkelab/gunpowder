@@ -496,7 +496,8 @@ class ElasticAugment(BatchFilter):
         logger.debug("dist shape: %s", dist.shape)
         logger.debug("dist.argmin(): %s", dist.argmin())
         logger.debug("dist[argmin]: %s", dist[center_grid])
-        logger.debug("transform[argmin]: %s", transformation[:,center_grid[0],center_grid[1],center_grid[2]])
+        logger.debug("transform[argmin]: %s",
+                     transformation[(slice(None),) + center_grid])
         logger.debug("min dist: %s", dist.min())
         logger.debug("center source: %s", center_source)
 
