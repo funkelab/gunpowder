@@ -4,6 +4,7 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 import logging
 import numpy as np
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +148,11 @@ class Array(Freezable):
 
     def __repr__(self):
         return str(self.spec)
+
+    def copy(self):
+        '''Create a copy of this array.'''
+        return copy.deepcopy(self)
+
 
 class ArrayKey(Freezable):
     '''A key to identify arrays in requests, batches, and across nodes.
