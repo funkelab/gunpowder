@@ -1,5 +1,8 @@
 import logging
+import copy
 import numpy as np
+
+from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 
@@ -32,6 +35,17 @@ class Normalize(BatchFilter):
         self.factor = factor
         self.dtype = dtype
 
+    def setup(self):
+        self.enable_autoskip()
+        array_spec = copy.deepcopy(self.spec[self.array])
+        array_spec.dtype = self.dtype
+        self.updates(self.array, array_spec)
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        deps[self.array] = request[self.array]
+        return deps
+
     def process(self, batch, request):
 
         if self.array not in batch.arrays:
@@ -39,6 +53,7 @@ class Normalize(BatchFilter):
 
         factor = self.factor
         array = batch.arrays[self.array]
+        array.spec.dtype = self.dtype
 
         if factor is None:
 

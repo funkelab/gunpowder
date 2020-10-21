@@ -48,8 +48,8 @@ class MergeProvider(BatchProvider):
             batch = provider.request_batch(upstream_request)
             for key, array in batch.arrays.items():
                 merged_batch.arrays[key] = array
-            for key, points in batch.points.items():
-                merged_batch.points[key] = points
+            for key, graph in batch.graphs.items():
+                merged_batch.graphs[key] = graph
             merged_batch.profiling_stats.merge_with(batch.profiling_stats)
 
         return merged_batch

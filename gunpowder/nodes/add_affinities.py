@@ -2,9 +2,10 @@ import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
+from gunpowder.array import Array
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import malis
-from gunpowder.array import Array
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class AddAffinities(BatchFilter):
         spec = self.spec[self.labels].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
-        spec.dtype = np.float32
+        spec.dtype = np.uint8
 
         self.provides(self.affinities, spec)
         if self.affinities_mask:
@@ -117,29 +118,21 @@ class AddAffinities(BatchFilter):
                     request[self.labels].roi,
                     request[self.unlabelled].roi))
 
-        if self.labels not in request:
-            request[self.labels] = request[self.affinities].copy()
-
-        labels_roi = request[self.labels].roi
-        context_roi = request[self.affinities].roi.grow(
-            -self.padding_neg,
-            self.padding_pos)
+        deps = BatchRequest()
 
         # grow labels ROI to accomodate padding
-        labels_roi = labels_roi.union(context_roi)
-        request[self.labels].roi = labels_roi
+        labels_roi = request[self.affinities].roi.grow(
+            -self.padding_neg,
+            self.padding_pos)
+        deps[self.labels] = request[self.affinities].copy()
+        deps[self.labels].roi = labels_roi
 
-        # same for label mask
-        if self.labels_mask and self.labels_mask in request:
-            request[self.labels_mask].roi = \
-                request[self.labels_mask].roi.union(context_roi)
+        if self.labels_mask:
+            deps[self.labels_mask] = deps[self.labels].copy()
+        if self.unlabelled:
+            deps[self.unlabelled] = deps[self.labels].copy()
 
-        # and unlabelled mask
-        if self.unlabelled and self.unlabelled in request:
-            request[self.unlabelled].roi = \
-                request[self.unlabelled].roi.union(context_roi)
-
-        logger.debug("upstream %s request: "%self.labels + str(labels_roi))
+        return deps
 
     def process(self, batch, request):
 
@@ -196,7 +189,7 @@ class AddAffinities(BatchFilter):
                 # combine with mask
                 affinities_mask = affinities_mask*unlabelled_mask
 
-            affinities_mask = affinities_mask.astype(np.float32)
+            affinities_mask = affinities_mask.astype(affinities.dtype)
             batch.arrays[self.affinities_mask] = Array(affinities_mask, spec)
 
         else:

@@ -1,23 +1,20 @@
 import copy
-from .points import PointsKey
-from .points_spec import PointsSpec
 from .provider_spec import ProviderSpec
 from .roi import Roi
 from .array import ArrayKey
 from .array_spec import ArraySpec
+from .graph import GraphKey
+from .graph_spec import GraphSpec
 
 class BatchRequest(ProviderSpec):
     '''A collection of (possibly partial) :class:`ArraySpec` and
-    :class:`PointsSpec` forming a request.
+    :class:`GraphSpec` forming a request.
 
     Inherits from :class:`ProviderSpec`.
-
-    See :ref:`sec_requests_batches` for how to use a batch request to obtain a
-    batch.
     '''
 
-    def add(self, key, shape, voxel_size=None):
-        '''Convenience method to add an array or point spec by providing only
+    def add(self, key, shape, voxel_size=None, directed=None):
+        '''Convenience method to add an array or graph spec by providing only
         the shape of a ROI (in world units).
 
         A ROI with zero-offset will be generated. If more than one request is
@@ -26,7 +23,7 @@ class BatchRequest(ProviderSpec):
 
         Args:
 
-            key (:class:`ArrayKey` or :class:`PointsKey`):
+            key (:class:`ArrayKey` or :class:`GraphKey`):
 
                 The key for which to add a spec.
 
@@ -42,10 +39,10 @@ class BatchRequest(ProviderSpec):
 
         if isinstance(key, ArrayKey):
             spec = ArraySpec()
-        elif isinstance(key, PointsKey):
-            spec = PointsSpec()
+        elif isinstance(key, GraphKey):
+            spec = GraphSpec(directed=directed)
         else:
-            raise RuntimeError("Only ArrayKey or PointsKey can be added.")
+            raise RuntimeError("Only ArrayKey or GraphKey can be added.")
 
         spec.roi = Roi((0,)*len(shape), shape)
 
@@ -68,7 +65,25 @@ class BatchRequest(ProviderSpec):
 
         center = total_roi.get_center()
 
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for key in specs_type:
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())
+
+    def merge(self, request):
+        '''Merge another request with current request'''
+
+        assert isinstance(request, BatchRequest)
+
+        merged = self.copy()
+
+        for key, spec in request.items():
+            if key not in merged:
+                merged[key] = spec
+            else:
+                if isinstance(spec, ArraySpec) and merged[key].nonspatial:
+                    merged[key] = spec
+                else:
+                    merged[key].roi = merged[key].roi.union(spec.roi)
+
+        return merged

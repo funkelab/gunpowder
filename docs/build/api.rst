@@ -4,6 +4,7 @@ API Reference
 =============
 
 .. automodule:: gunpowder
+   :noindex:
 
 Data Containers
 ---------------
@@ -11,30 +12,35 @@ Data Containers
 Batch
 ^^^^^
   .. autoclass:: Batch
-    :members: arrays, points, items
+    :members:
 
 Array
 ^^^^^
   .. autoclass:: Array
     :members:
 
-Points
-^^^^^^
-  .. autoclass:: Points
+Graph
+^^^^^
+  .. autoclass:: Graph
     :members:
 
-Point
-^^^^^
-  .. autoclass:: Point
+Node
+^^^^
+  .. autoclass:: Node
+    :members:
+
+Edge
+^^^^
+  .. autoclass:: Edge
     :members:
 
 ArrayKey
 ^^^^^^^^
   .. autoclass:: ArrayKey
 
-PointsKey
-^^^^^^^^^
-  .. autoclass:: PointsKey
+GraphKey
+^^^^^^^^
+  .. autoclass:: GraphKey
 
 Requests and Specifications
 ---------------------------
@@ -85,6 +91,8 @@ BatchFilter
   .. autoclass:: BatchFilter
     :members: setup, updates, provides, enable_autoskip, prepare, process, teardown, spec, request_batch
 
+.. _sec_api_source_nodes:
+
 Source Nodes
 ------------
 
@@ -112,7 +120,7 @@ KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource
 
-.. _sec_api_augmentation:
+.. _sec_api_augmentation_nodes:
 
 Augmentation Nodes
 ------------------
@@ -129,6 +137,10 @@ IntensityAugment
 ^^^^^^^^^^^^^^^^
   .. autoclass:: IntensityAugment
 
+NoiseAugment
+^^^^^^^^^^^^^^^^
+  .. autoclass:: NoiseAugment
+
 SimpleAugment
 ^^^^^^^^^^^^^
   .. autoclass:: SimpleAugment
@@ -144,6 +156,8 @@ Pad
 ^^^
   .. autoclass:: Pad
 
+.. _sec_api_random_location:
+
 RandomLocation
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomLocation
@@ -152,13 +166,11 @@ Reject
 ^^^^^^
   .. autoclass:: Reject
 
-Scan
-^^^^
-  .. autoclass:: Scan
-
 SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
   .. autoclass:: SpecifiedLocation
+
+.. _sec_api_image_processing_nodes:
 
 Image Processing Nodes
 ----------------------
@@ -166,6 +178,10 @@ Image Processing Nodes
 DownSample
 ^^^^^^^^^^
   .. autoclass:: DownSample
+
+UpSample
+^^^^^^^^
+  .. autoclass:: UpSample
 
 IntensityScaleShift
 ^^^^^^^^^^^^^^^^^^^
@@ -217,18 +233,25 @@ RandomProvider
 ^^^^^^^^^^^^^^
   .. autoclass:: RandomProvider
 
+.. _sec_api_training_and_prediction_nodes:
+
 Training and Prediction Nodes
 -----------------------------
-  .. automodule:: gunpowder.caffe
 
-caffe.Train
+Stack
+^^^^^
+  .. autoclass:: Stack
+
+  .. automodule:: gunpowder.torch
+
+torch.Train
 ^^^^^^^^^^^
   .. autoclass:: Train
-  .. autoclass:: SolverParameters
 
-caffe.Predict
+torch.Predict
 ^^^^^^^^^^^^^
   .. autoclass:: Predict
+
 
   .. automodule:: gunpowder.tensorflow
 
@@ -240,7 +263,23 @@ tensorflow.Predict
 ^^^^^^^^^^^^^^^^^^
   .. autoclass:: Predict
 
+
+  .. automodule:: gunpowder.caffe
+
+caffe.Train
+^^^^^^^^^^^
+  .. autoclass:: Train
+  .. autoclass:: SolverParameters
+
+caffe.Predict
+^^^^^^^^^^^^^
+  .. autoclass:: Predict
+
+
   .. automodule:: gunpowder
+     :noindex:
+
+.. _sec_api_output_nodes:
 
 Output Nodes
 ------------
@@ -249,11 +288,17 @@ Hdf5Write
 ^^^^^^^^^
   .. autoclass:: Hdf5Write
 
+ZarrWrite
+^^^^^^^^^
+  .. autoclass:: ZarrWrite
+
 .. _sec_api_snapshot:
 
 Snapshot
 ^^^^^^^^
   .. autoclass:: Snapshot
+
+.. _sec_api_performance_nodes:
 
 Performance Nodes
 -----------------
@@ -269,3 +314,14 @@ PreCache
 PrintProfilingStats
 ^^^^^^^^^^^^^^^^^^^
   .. autoclass:: PrintProfilingStats
+
+Iterative Processing Nodes
+--------------------------
+
+DaisyRequestBlocks
+^^^^^
+  .. autoclass:: DaisyRequestBlocks
+
+Scan
+^^^^
+  .. autoclass:: Scan

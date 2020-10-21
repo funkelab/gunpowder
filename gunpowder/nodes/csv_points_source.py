@@ -3,8 +3,8 @@ import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.points import Point, Points
-from gunpowder.points_spec import PointsSpec
+from gunpowder.graph import Node, Graph
+from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 
@@ -20,13 +20,13 @@ class CsvPointsSource(BatchProvider):
 
             The file to read from.
 
-        points (:class:`PointsKey`):
+        points (:class:`GraphKey`):
 
             The key of the points set to create.
 
-        points_spec (:class:`PointsSpec`, optional):
+        points_spec (:class:`GraphSpec`, optional):
 
-            An optional :class:`PointsSpec` to overwrite the points specs
+            An optional :class:`GraphSpec` to overwrite the points specs
             automatically determined from the CSV file. This is useful to set
             the :class:`Roi` manually.
 
@@ -60,7 +60,7 @@ class CsvPointsSource(BatchProvider):
 
         roi = Roi(min_bb, max_bb - min_bb)
 
-        self.provides(self.points, PointsSpec(roi=roi))
+        self.provides(self.points, GraphSpec(roi=roi))
 
     def provide(self, request):
 
@@ -80,10 +80,10 @@ class CsvPointsSource(BatchProvider):
             point_filter = np.logical_and(point_filter, self.data[:,d] < max_bb[d])
 
         points_data = self._get_points(point_filter)
-        points_spec = PointsSpec(roi=request[self.points].roi.copy())
+        points_spec = GraphSpec(roi=request[self.points].roi.copy())
 
         batch = Batch()
-        batch.points[self.points] = Points(points_data, points_spec)
+        batch.graphs[self.points] = Graph(points_data, [], points_spec)
 
         timing.stop()
         batch.profiling_stats.add(timing)
@@ -95,10 +95,10 @@ class CsvPointsSource(BatchProvider):
         filtered = self.data[point_filter]
         ids = np.arange(len(self.data))[point_filter]
 
-        return {
-            i: Point(p)
+        return [
+            Node(id=i, location=p)
             for i, p in zip(ids, filtered)
-        }
+        ]
 
     def _read_points(self):
         self.data, self.ndims = self._parse_csv()
@@ -110,11 +110,11 @@ class CsvPointsSource(BatchProvider):
         used.
         '''
 
-        points = np.array(
-            [
-                [ float(t.strip(',')) for t in line.split() ]
-                for line in open(self.filename, 'r')
-            ], dtype=np.float32)
+        with open(self.filename, "r") as f:
+            points = np.array(
+                [[float(t.strip(",")) for t in line.split()] for line in f],
+                dtype=np.float32,
+            )
 
         if ndims == 0:
             ndims = points.shape[1]

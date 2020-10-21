@@ -1,7 +1,8 @@
 from .batch_filter import BatchFilter
-from gunpowder.coordinate import Coordinate
 from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 import logging
 import numbers
 import numpy as np
@@ -13,8 +14,7 @@ class UpSample(BatchFilter):
 
     Args:
 
-        source (:class:`ArrayKey`):
-
+        source (:class:`ArrayKey`): 
             The key of the array to upsample.
 
         factor (``int`` or ``tuple`` of ``int``):
@@ -54,6 +54,7 @@ class UpSample(BatchFilter):
         self.provides(self.target, spec)
 
     def prepare(self, request):
+        deps = BatchRequest()
 
         if self.target not in request:
             return
@@ -68,17 +69,13 @@ class UpSample(BatchFilter):
         logger.debug("expanded request ROI is %s"%request_roi)
 
         # add or merge to batch request
-        if self.source in request:
-            request[self.source].roi = request[self.source].roi.union(request_roi)
-            logger.debug(
-                "merging with existing request to %s",
-                request[self.source].roi)
-        else:
-            request[self.source] = ArraySpec(roi=request_roi)
-            logger.debug("adding as new request")
+        deps[self.source] = ArraySpec(roi=request_roi)
+
+        return deps
 
 
     def process(self, batch, request):
+        outputs = Batch()
 
         if self.target not in request:
             return
@@ -106,20 +103,5 @@ class UpSample(BatchFilter):
         spec.roi = expanded_request_roi
         expanded_array = Array(data, spec)
         array = expanded_array.crop(request_roi)
-        batch.arrays[self.target] = array
-
-        if self.source in request:
-
-            # restore requested rois
-            request_roi = request[self.source].roi
-
-            if input_roi != request_roi:
-
-                assert input_roi.contains(request_roi)
-
-                logger.debug(
-                    "restoring original request roi %s of %s from %s",
-                    request_roi, self.source, input_roi)
-                cropped = batch.arrays[self.source].crop(request_roi)
-                batch.arrays[self.source] = cropped
-
+        outputs.arrays[self.target] = array
+        return outputs

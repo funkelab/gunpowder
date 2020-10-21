@@ -3,7 +3,7 @@ from gunpowder import *
 from gunpowder.contrib import AddBoundaryDistanceGradients
 import numpy as np
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
 
     def setup(self):
 
@@ -38,7 +38,7 @@ class TestAddBoundaryDistanceGradients(ProviderTest):
         ArrayKey('GT_BOUNDARY_GRADIENTS')
 
         pipeline = (
-            TestSource() +
+            ExampleSource() +
             AddBoundaryDistanceGradients(
                 label_array_key=ArrayKeys.GT_LABELS,
                 distance_array_key=ArrayKeys.GT_BOUNDARY_DISTANCES,

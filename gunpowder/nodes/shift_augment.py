@@ -4,6 +4,7 @@ import numpy as np
 import random
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
+from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 
@@ -29,6 +30,7 @@ class ShiftAugment(BatchFilter):
         self.lcm_voxel_size = None
 
     def prepare(self, request):
+
         self.ndim = request.get_total_roi().dims()
         assert self.shift_axis in range(self.ndim)
 
@@ -77,6 +79,9 @@ class ShiftAugment(BatchFilter):
             spec.roi.set_shape(updated_roi.get_shape())
             request[key] = spec
 
+        deps = request
+        return deps
+
     def process(self, batch, request):
         for array_key, array in batch.arrays.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), array.spec.roi,
@@ -91,7 +96,7 @@ class ShiftAugment(BatchFilter):
                     request[array_key].roi.get_shape(), array.data.shape)
             batch[array_key] = array
 
-        for points_key, points in batch.points.items():
+        for points_key, points in batch.graphs.items():
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), points.spec.roi,
                                                        self.shift_array, self.shift_axis, self.lcm_voxel_size)
             points = self.shift_points(points,
@@ -147,26 +152,23 @@ class ShiftAugment(BatchFilter):
         :param sub_shift_array: the cropped section of the global shift array that applies to this specific request
         :param shift_axis: the axis to perform the shift along
         :param lcm_voxel_size: the least common voxel size for the arrays in the request
-        :return a Points object with the updated point locations and ROI
+        :return a Graph object with the updated point locations and ROI
         """
 
-        data = points.data
+        nodes = list(points.nodes)
         spec = points.spec
         shift_axis_start_pos = spec.roi.get_offset()[shift_axis]
 
-        shifted_data = {}
-        for id_, point in data.items():
-            loc = Coordinate(point.location)
+        for node in nodes:
+            loc = node.location
             shift_axis_position = loc[shift_axis]
-            shift_array_index = (shift_axis_position - shift_axis_start_pos) // lcm_voxel_size[shift_axis]
+            shift_array_index = int((shift_axis_position - shift_axis_start_pos) // lcm_voxel_size[shift_axis])
             assert(shift_array_index >= 0)
             shift = Coordinate(sub_shift_array[shift_array_index])
-            new_loc = loc + shift
-            if request_roi.contains(new_loc):
-                point.location = new_loc
-                shifted_data[id_] = point
+            loc += shift
+            if not request_roi.contains(loc):
+                points.remove_node(node)
 
-        points.data = shifted_data
         points.spec.roi = request_roi
         return points
 

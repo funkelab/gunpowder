@@ -1,8 +1,20 @@
 from .provider_test import ProviderTest
-from gunpowder import *
+from gunpowder import (
+    ArraySpec,
+    ArrayKeys,
+    ArrayKey,
+    Array,
+    Roi,
+    BatchProvider,
+    Batch,
+    BatchRequest,
+    build,
+)
+from gunpowder.ext import tensorflow, NoSuchModule
 from gunpowder.tensorflow import Train, Predict, LocalServer
 import multiprocessing
 import numpy as np
+from unittest import skipIf
 
 class TestTensorflowTrainSource(BatchProvider):
 
@@ -36,8 +48,9 @@ class TestTensorflowTrainSource(BatchProvider):
 
         return batch
 
-class TestTensorflowTrain(ProviderTest):
 
+@skipIf(isinstance(tensorflow, NoSuchModule), "tensorflow is not installed")
+class TestTensorflowTrain(ProviderTest):
     def create_meta_graph(self, meta_base):
         """
 
@@ -72,7 +85,8 @@ class TestTensorflowTrain(ProviderTest):
         mknet_proc.start()
         mknet_proc.join()
 
-        names = [line.strip('\n') for line in open(meta_base + '.names')]
+        with open(meta_base + ".names") as f:
+            names = [line.strip("\n") for line in f]
 
         return names
 

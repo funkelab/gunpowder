@@ -42,6 +42,9 @@ class PrintProfilingStats(BatchFilter):
 
         self.__upstream_timing.start()
 
+        deps = request
+        return deps
+
     def process(self, batch, request):
 
         self.__upstream_timing.stop()

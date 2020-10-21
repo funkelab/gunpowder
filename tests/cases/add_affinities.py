@@ -7,7 +7,7 @@ import numpy as np
 import logging
 
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
 
     def setup(self):
 
@@ -68,7 +68,7 @@ class TestAddAffinities(ProviderTest):
         ]
 
         pipeline = (
-                TestSource() +
+                ExampleSource() +
                 AddAffinities(
                     neighborhood,
                     labels=ArrayKeys.GT_LABELS,

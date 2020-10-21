@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.tensorflow.nodes.predict &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>gunpowder.tensorflow.nodes.predict &mdash; gunpowder 1.1.5 documentation</title>
   
 
   
@@ -27,6 +27,8 @@
   
     <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 
@@ -60,7 +62,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -85,23 +87,36 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#random-samples">Random samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#training-a-network">Training a network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_simple_pipeline.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_batch_provider.html">Tutorial: Writing Your Own Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_batch_provider.html#the-basics-prepare-and-process">The basics: <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_batch_provider.html#changing-an-array-in-place">Changing an array in-place</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_batch_provider.html#requesting-additional-data">Requesting additional data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial_batch_provider.html#creating-new-arrays">Creating new arrays</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#edge">Edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -148,6 +163,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#upsample">UpSample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#normalize">Normalize</a></li>
 </ul>
@@ -170,10 +186,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#stack">Stack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#output-nodes">Output Nodes</a><ul>
@@ -188,11 +207,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -263,12 +281,12 @@
 <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">ArrayKey</span><span class="p">,</span> <span class="n">Array</span>
-<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="k">import</span> <span class="n">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
-<span class="kn">from</span> <span class="nn">gunpowder.nodes.generic_predict</span> <span class="k">import</span> <span class="n">GenericPredict</span>
-<span class="kn">from</span> <span class="nn">gunpowder.tensorflow.local_server</span> <span class="k">import</span> <span class="n">LocalServer</span>
-<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">mul</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="kn">import</span> <span class="n">ArrayKey</span><span class="p">,</span> <span class="n">Array</span>
+<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="kn">import</span> <span class="n">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">from</span> <span class="nn">gunpowder.nodes.generic_predict</span> <span class="kn">import</span> <span class="n">GenericPredict</span>
+<span class="kn">from</span> <span class="nn">gunpowder.tensorflow.local_server</span> <span class="kn">import</span> <span class="n">LocalServer</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">mul</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -320,7 +338,7 @@
 <span class="sd">            batches to the GPU processes. Defaults to 1GB.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">checkpoint</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
@@ -362,6 +380,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_sent_outputs</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_process</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_crashed</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
@@ -411,11 +430,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">worker_sent_inputs</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">receive_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_received_inputs</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_background_process</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">receive_lock</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_lock</span><span class="p">])</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_received_inputs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">send_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_sent_outputs</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_sent_outputs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="n">output_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_outputs_from_shared</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">)</span>
@@ -434,51 +457,73 @@
     <span class="k">def</span> <span class="nf">__predict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;The background predict process.&#39;&#39;&#39;</span>
 
-        <span class="c1"># TODO: is the server still needed?</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">LocalServer</span><span class="o">.</span><span class="n">get_target</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing tf session, connecting to </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># TODO: is the server still needed?</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">LocalServer</span><span class="o">.</span><span class="n">get_target</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing tf session, connecting to </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
-            <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__read_checkpoint</span><span class="p">()</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__read_checkpoint</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_output_arrays</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_output_array_config</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__create_shared_output_array_config</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__init_shared_output_arrays</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_output_arrays</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_output_array_config</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__create_shared_output_array_config</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__init_shared_output_arrays</span><span class="p">()</span>
 
-        <span class="c1"># from now on it is save to access the shared array configuration</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_initialized</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="c1"># from now on it is save to access the shared array configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_initialized</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 
-        <span class="c1"># loop predict</span>
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># loop predict</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
 
-            <span class="c1"># wait for inputs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">worker_sent_inputs</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="c1"># wait for inputs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">worker_sent_inputs</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">worker_sent_inputs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_input_arrays</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__init_shared_input_arrays</span><span class="p">()</span>
+
+                <span class="c1"># read inputs</span>
+                <span class="n">input_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_inputs_from_shared</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">predict_received_inputs</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+                <span class="c1"># compute outputs</span>
+                <span class="n">output_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()},</span>
+                    <span class="n">feed_dict</span><span class="o">=</span><span class="n">input_data</span><span class="p">)</span>
+
+                <span class="c1"># write outputs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__write_outputs_to_shared</span><span class="p">(</span><span class="n">output_data</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">predict_sent_outputs</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_crashed</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># release locks and events</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_initialized</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">worker_sent_inputs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_input_arrays</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__init_shared_input_arrays</span><span class="p">()</span>
-
-            <span class="c1"># read inputs</span>
-            <span class="n">input_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_inputs_from_shared</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">predict_received_inputs</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
-
-            <span class="c1"># compute outputs</span>
-            <span class="n">output_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()},</span> <span class="n">feed_dict</span><span class="o">=</span><span class="n">input_data</span><span class="p">)</span>
-
-            <span class="c1"># write outputs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__write_outputs_to_shared</span><span class="p">(</span><span class="n">output_data</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">predict_sent_outputs</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">e</span>
 
     <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__check_background_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locks</span><span class="o">=</span><span class="p">[]):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_process_crashed</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># release all locks before raising exception</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">locks</span><span class="p">:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Background process died.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__read_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -641,7 +686,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -663,7 +708,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.5',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -675,6 +720,8 @@
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -690,7 +737,18 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>

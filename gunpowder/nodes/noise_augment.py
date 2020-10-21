@@ -1,6 +1,8 @@
 import numpy as np
 import skimage
 
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 class NoiseAugment(BatchFilter):
@@ -34,10 +36,24 @@ class NoiseAugment(BatchFilter):
         self.clip = clip
         self.kwargs = kwargs
 
+    def setup(self):
+        self.enable_autoskip()
+        self.updates(self.array, self.spec[self.array])
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        deps[self.array] = request[self.array].copy()
+        return deps
+
     def process(self, batch, request):
 
         raw = batch.arrays[self.array]
 
         assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Noise augmentation requires float types for the raw array (not " + str(raw.data.dtype) + "). Consider using Normalize before."
         assert raw.data.min() >= -1 and raw.data.max() <= 1, "Noise augmentation expects raw values in [-1,1] or [0,1]. Consider using Normalize before."
-        raw.data = skimage.util.random_noise(raw.data, mode=self.mode, seed=self.seed, clip=self.clip, **self.kwargs )
+        raw.data = skimage.util.random_noise(
+            raw.data,
+            mode=self.mode,
+            seed=self.seed,
+            clip=self.clip,
+            **self.kwargs).astype(raw.data.dtype)

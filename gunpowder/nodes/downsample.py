@@ -1,10 +1,9 @@
 from .batch_filter import BatchFilter
-from gunpowder.coordinate import Coordinate
 from gunpowder.array import ArrayKey, Array
-from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 import logging
 import numbers
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -43,36 +42,16 @@ class DownSample(BatchFilter):
         spec = self.spec[self.source].copy()
         spec.voxel_size *= self.factor
         self.provides(self.target, spec)
+        self.enable_autoskip()
 
     def prepare(self, request):
 
-        if self.target not in request:
-            return
-
-        logger.debug("preparing downsampling of " + str(self.source))
-
-        request_roi = request[self.target].roi
-        logger.debug("request ROI is %s"%request_roi)
-
-        # add or merge to batch request
-        if self.source in request:
-            request[self.source].roi = request[self.source].roi.union(request_roi)
-            logger.debug(
-                "merging with existing request to %s",
-                request[self.source].roi)
-        else:
-            request[self.source] = ArraySpec(roi=request_roi)
-            logger.debug("adding as new request")
+        deps = BatchRequest()
+        deps[self.source] = request[self.target]
+        return deps
 
     def process(self, batch, request):
-
-        if self.target not in request:
-            return
-
-        input_roi = batch.arrays[self.source].spec.roi
-        request_roi = request[self.target].roi
-
-        assert input_roi.contains(request_roi)
+        outputs = Batch()
 
         # downsample
         if isinstance(self.factor, tuple):
@@ -82,29 +61,15 @@ class DownSample(BatchFilter):
         else:
             slices = tuple(
                 slice(None, None, self.factor)
-                for i in range(input_roi.dims()))
+                for i in range(batch[self.source].spec.roi.dims()))
 
         logger.debug("downsampling %s with %s", self.source, slices)
 
-        crop = batch.arrays[self.source].crop(request_roi)
-        data = crop.data[slices]
+        data = batch.arrays[self.source].data[slices]
 
         # create output array
         spec = self.spec[self.target].copy()
-        spec.roi = request_roi
-        batch.arrays[self.target] = Array(data, spec)
-
-        if self.source in request:
-
-            # restore requested rois
-            request_roi = request[self.source].roi
-
-            if input_roi != request_roi:
-
-                assert input_roi.contains(request_roi)
-
-                logger.debug(
-                    "restoring original request roi %s of %s from %s",
-                    request_roi, self.source, input_roi)
-                cropped = batch.arrays[self.source].crop(request_roi)
-                batch.arrays[self.source] = cropped
+        spec.roi = request[self.target].roi
+        outputs.arrays[self.target] = Array(data, spec)
+        
+        return outputs

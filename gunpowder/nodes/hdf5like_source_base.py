@@ -197,6 +197,6 @@ class Hdf5LikeSource(BatchProvider):
 
         return array
 
-    def __repr__(self):
+    def name(self):
 
-        return self.filename
+        return super().name() + f"[{self.filename}]"

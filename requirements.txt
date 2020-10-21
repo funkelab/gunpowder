@@ -4,4 +4,4 @@ h5py
 scikit-image
 requests
 augment-nd
-
+networkx

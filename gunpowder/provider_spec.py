@@ -1,33 +1,39 @@
-import fractions
+import math
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import PointsKey
-from gunpowder.points_spec import PointsSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.graph import GraphKey
+from gunpowder.graph_spec import GraphSpec
+from gunpowder.roi import Roi
 from .freezable import Freezable
+
+import logging
+import warnings
+
+logger = logging.getLogger(__file__)
 
 class ProviderSpec(Freezable):
     '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
-    :class:`PointsSpecs<PointsSpec>` describing a
-    :class:`BatchProvider's<BatchProvider>` offered arrays and points.
+    :class:`GraphSpecs<GraphSpec>` describing a
+    :class:`BatchProvider's<BatchProvider>` offered arrays and graphs.
 
     This collection mimics a dictionary. Specs can be added with::
 
         provider_spec = ProviderSpec()
         provider_spec[array_key] = ArraySpec(...)
-        provider_spec[points_key] = PointsSpec(...)
+        provider_spec[graph_key] = GraphSpec(...)
 
-    Here, ``array_key`` and ``points_key`` are :class:`ArrayKey` and
-    :class:`PointsKey`. The specs can be queried with::
+    Here, ``array_key`` and ``graph_key`` are :class:`ArrayKey` and
+    :class:`GraphKey`. The specs can be queried with::
 
         array_spec = provider_spec[array_key]
-        points_spec = provider_spec[points_key]
+        graph_spec = provider_spec[graph_key]
 
     Furthermore, pairs of keys/values can be iterated over using
     ``provider_spec.items()``.
 
-    To access only array or points specs, use the dictionaries
-    ``provider_spec.array_specs`` or ``provider_spec.points_specs``,
+    To access only array or graph specs, use the dictionaries
+    ``provider_spec.array_specs`` or ``provider_spec.graph_specs``,
     respectively.
 
     Args:
@@ -36,9 +42,9 @@ class ProviderSpec(Freezable):
 
             Initial array specs.
 
-        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+        graph_specs (``dict``, :class:`GraphKey` -> :class:`GraphSpec`):
 
-            Initial points specs.
+            Initial graph specs.
 
     Attributes:
 
@@ -46,15 +52,15 @@ class ProviderSpec(Freezable):
 
             Contains all array specs contained in this provider spec.
 
-        points_specs (``dict``, :class:`PointsKey` -> :class:`PointsSpec`):
+        graph_specs (``dict``, :class:`GraphKey` -> :class:`GraphSpec`):
 
-            Contains all points specs contained in this provider spec.
+            Contains all graph specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None, points_specs=None):
+    def __init__(self, array_specs=None,  graph_specs=None, points_specs=None):
 
         self.array_specs = {}
-        self.points_specs = {}
+        self.graph_specs = {}
         self.freeze()
 
         # use __setitem__ instead of copying the dicts, this ensures type tests
@@ -62,57 +68,77 @@ class ProviderSpec(Freezable):
         if array_specs is not None:
             for key, spec in array_specs.items():
                 self[key] = spec
+        if graph_specs is not None:
+            for key, spec in graph_specs.items():
+                self[key] = spec
         if points_specs is not None:
             for key, spec in points_specs.items():
                 self[key] = spec
 
+    @property
+    def points_specs(self):
+        # Alias to graphs
+        warnings.warn(
+            "points_specs are depricated. Please use graph_specs", DeprecationWarning
+        )
+        return self.graph_specs
+
 
     def __setitem__(self, key, spec):
 
-        if isinstance(spec, ArraySpec):
-            assert isinstance(key, ArrayKey), ("Only a ArrayKey is "
-                                                        "allowed as key for a "
-                                                        "ArraySpec value.")
+        assert isinstance(key, ArrayKey) or isinstance(key, GraphKey), \
+            f"Only ArrayKey or GraphKey (not {type(key).__name__} are " \
+            "allowed as key for ProviderSpec, "
+
+        if isinstance(key, ArrayKey):
+
+            if isinstance(spec, Roi):
+                spec = ArraySpec(roi=spec)
+
+            assert isinstance(spec, ArraySpec), \
+                f"Only ArraySpec (not {type(spec).__name__}) can be set for " \
+                "ArrayKey"
+
             self.array_specs[key] = spec.copy()
 
-        elif isinstance(spec, PointsSpec):
-            assert isinstance(key, PointsKey), ("Only a PointsKey is "
-                                                        "allowed as key for a "
-                                                        "PointsSpec value.")
-            self.points_specs[key] = spec.copy()
-
         else:
-            raise RuntimeError("Only ArraySpec or PointsSpec can be set in a "
-                               "%s."%type(self).__name__)
+
+            if isinstance(spec, Roi):
+                spec = GraphSpec(roi=spec)
+
+            assert isinstance(spec, GraphSpec), \
+                f"Only GraphSpec (not {type(spec).__name__}) can be set for " \
+                "GraphKey"
+
+            self.graph_specs[key] = spec.copy()
 
     def __getitem__(self, key):
 
         if isinstance(key, ArrayKey):
             return self.array_specs[key]
 
-        elif isinstance(key, PointsKey):
-            return self.points_specs[key]
-
+        elif isinstance(key, GraphKey):
+            return self.graph_specs[key]
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def __len__(self):
 
-        return len(self.array_specs) + len(self.points_specs)
+        return len(self.array_specs) + len(self.graph_specs)
 
     def __contains__(self, key):
 
         if isinstance(key, ArrayKey):
             return key in self.array_specs
 
-        elif isinstance(key, PointsKey):
-            return key in self.points_specs
+        elif isinstance(key, GraphKey):
+            return key in self.graph_specs
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def __delitem__(self, key):
@@ -120,12 +146,12 @@ class ProviderSpec(Freezable):
         if isinstance(key, ArrayKey):
             del self.array_specs[key]
 
-        elif isinstance(key, PointsKey):
-            del self.points_specs[key]
+        elif isinstance(key, GraphKey):
+            del self.graph_specs[key]
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or PointsKey can be used as keys in a "
+                "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
     def items(self):
@@ -133,14 +159,14 @@ class ProviderSpec(Freezable):
 
         for (k, v) in self.array_specs.items():
             yield k, v
-        for (k, v) in self.points_specs.items():
+        for (k, v) in self.graph_specs.items():
             yield k, v
 
     def get_total_roi(self):
         '''Get the union of all the ROIs.'''
 
         total_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
@@ -152,7 +178,7 @@ class ProviderSpec(Freezable):
         '''Get the intersection of all the requested ROIs.'''
 
         common_roi = None
-        for specs_type in [self.array_specs, self.points_specs]:
+        for specs_type in [self.array_specs, self.graph_specs]:
             for (_, spec) in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi
@@ -174,12 +200,7 @@ class ProviderSpec(Freezable):
             array_keys = self.array_specs.keys()
 
         if not array_keys:
-            raise RuntimeError("Can not compute lcm voxel size -- there are "
-                               "no array specs in this provider spec.")
-        else:
-            if not array_keys:
-                raise RuntimeError("Can not compute lcm voxel size -- list of "
-                                   "given array specs is empty.")
+            return None
 
         lcm_voxel_size = None
         for key in array_keys:
@@ -190,7 +211,7 @@ class ProviderSpec(Freezable):
                 lcm_voxel_size = voxel_size
             else:
                 lcm_voxel_size = Coordinate(
-                    (a * b // fractions.gcd(a, b)
+                    (a * b // math.gcd(a, b)
                      for a, b in zip(lcm_voxel_size, voxel_size)))
 
         return lcm_voxel_size

@@ -9,6 +9,8 @@ import sys
 import time
 import traceback
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 class NoResult(Exception):
@@ -32,6 +34,9 @@ class ProducerPool(object):
 
     def start(self):
         '''Start the pool of producers.'''
+
+        if self.__watch_dog is None:
+            raise RuntimeError("can't start a ProducerPool a second time")
 
         if self.__watch_dog.is_alive():
             logger.warning("trying to start workers, but they are already running")
@@ -70,8 +75,12 @@ class ProducerPool(object):
 
         Items currently being produced will not be waited for and be discarded.'''
 
+        if self.__watch_dog is None:
+            return
+
         self.__stop.set()
         self.__watch_dog.join()
+        self.__watch_dog = None
 
     def __run_watch_dog(self, callables):
 
@@ -120,6 +129,7 @@ class ProducerPool(object):
         logger.debug("parent PID " + str(parent_pid))
 
         result = None
+        np.random.seed(None)
         while True:
 
             if os.getppid() != parent_pid:

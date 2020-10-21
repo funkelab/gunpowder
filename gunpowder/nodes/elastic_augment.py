@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from .batch_filter import BatchFilter
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
@@ -129,7 +130,10 @@ class ElasticAugment(BatchFilter):
         # crop the parts corresponding to the requested ROIs
         self.transformations = {}
         self.target_rois = {}
+        deps = BatchRequest()
         for key, spec in request.items():
+
+            spec = spec.copy()
 
             if spec.roi is None:
                 continue
@@ -193,7 +197,11 @@ class ElasticAugment(BatchFilter):
                 spec.roi.get_begin()[:-self.spatial_dims] + source_roi.get_begin()[-self.spatial_dims:],
                 spec.roi.get_shape()[:-self.spatial_dims] + source_roi.get_shape()[-self.spatial_dims:])
 
+            deps[key] = spec
+
             logger.debug("upstream request roi for %s = %s" % (key, spec.roi))
+
+        return deps
 
     def process(self, batch, request):
 
@@ -231,17 +239,17 @@ class ElasticAugment(BatchFilter):
             # restore original ROIs
             array.spec.roi = request[array_key].roi
 
-        for (points_key, points) in batch.points.items():
+        for (graph_key, graph) in batch.graphs.items():
 
-            for point_id, point in list(points.data.items()):
+            for node in list(graph.nodes):
 
-                logger.debug("projecting %s", point.location)
+                logger.debug("projecting %s", node.location)
 
                 # get location relative to beginning of upstream ROI
-                location = point.location - points.spec.roi.get_begin()
+                location = node.location - graph.spec.roi.get_begin()
                 logger.debug("relative to upstream ROI: %s", location)
 
-                # get spatial coordinates of point in voxels
+                # get spatial coordinates of node in voxels
                 location_voxels = location[-self.spatial_dims:]/self.voxel_size
                 logger.debug(
                     "relative to upstream ROI in voxels: %s",
@@ -250,7 +258,7 @@ class ElasticAugment(BatchFilter):
                 # get projected location in transformation data space, this
                 # yields voxel coordinates relative to target ROI
                 projected_voxels = self.__project(
-                    self.transformations[points_key],
+                    self.transformations[graph_key],
                     location_voxels)
 
                 logger.debug(
@@ -258,8 +266,8 @@ class ElasticAugment(BatchFilter):
                     projected_voxels)
 
                 if projected_voxels is None:
-                    logger.debug("point outside of target, skipping")
-                    del points.data[point_id]
+                    logger.debug("node outside of target, skipping")
+                    graph.remove_node(node, retain_connectivity=True)
                     continue
 
                 # convert to world units (now in float again)
@@ -270,23 +278,23 @@ class ElasticAugment(BatchFilter):
                     projected)
 
                 # get global coordinates
-                projected += np.array(self.target_rois[points_key].get_begin())
+                projected += np.array(self.target_rois[graph_key].get_begin())
 
-                # update spatial coordinates of point location
-                point.location[-self.spatial_dims:] = projected
+                # update spatial coordinates of node location
+                node.location[-self.spatial_dims:] = projected
 
-                logger.debug("final location: %s", point.location)
+                logger.debug("final location: %s", node.location)
 
-                # finally, it can happen that a point no longer is contained in
+                # finally, it can happen that a node no longer is contained in
                 # the requested ROI (because larger ROIs than necessary have
                 # been requested upstream)
-                if not request[points_key].roi.contains(point.location):
-                    logger.debug("point outside of target, skipping")
-                    del points.data[point_id]
+                if not request[graph_key].roi.contains(node.location):
+                    logger.debug("node outside of target, skipping")
+                    graph.remove_node(node, retain_connectivity=True)
                     continue
 
             # restore original ROIs
-            points.spec.roi = request[points_key].roi
+            graph.spec.roi = request[graph_key].roi
 
     def __get_common_voxel_size(self, request):
 
@@ -366,6 +374,10 @@ class ElasticAugment(BatchFilter):
 
         # inspect grid edges incident to center_grid
         for d in range(dims):
+
+            # nothing to do for dimensions without spatial extent
+            if transformation.shape[1 + d] == 1:
+                continue
 
             dim_vector = tuple(1 if dd == d else 0 for dd in range(dims))
             pos_grid = center_grid + dim_vector

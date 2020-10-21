@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.csv_points_source &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
+  <title>gunpowder.nodes.csv_points_source &mdash; gunpowder 1.1.5 documentation</title>
   
 
   
@@ -27,6 +27,8 @@
   
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -60,7 +62,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -85,23 +87,36 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_simple_pipeline.html">Tutorial: A Simple Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#a-minimal-pipeline">A minimal pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#random-samples">Random samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#geometric-augmentation">Geometric augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#intensity-augmentation">Intensity augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#training-a-network">Training a network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#what-next">What next?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_batch_provider.html">Tutorial: Writing Your Own Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#the-basics-prepare-and-process">The basics: <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#changing-an-array-in-place">Changing an array in-place</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#requesting-additional-data">Requesting additional data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#creating-new-arrays">Creating new arrays</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#edge">Edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphkey">GraphKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -148,6 +163,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#upsample">UpSample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
 </ul>
@@ -170,10 +186,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#stack">Stack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-train">torch.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
@@ -188,11 +207,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -260,13 +278,13 @@
   <h1>Source code for gunpowder.nodes.csv_points_source</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="k">import</span> <span class="n">Batch</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.nodes.batch_provider</span> <span class="k">import</span> <span class="n">BatchProvider</span>
-<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Points</span>
-<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
-<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="k">import</span> <span class="n">Timing</span>
-<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="kn">import</span> <span class="n">Batch</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.nodes.batch_provider</span> <span class="kn">import</span> <span class="n">BatchProvider</span>
+<span class="kn">from</span> <span class="nn">gunpowder.graph</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">gunpowder.graph_spec</span> <span class="kn">import</span> <span class="n">GraphSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.profiling</span> <span class="kn">import</span> <span class="n">Timing</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="kn">import</span> <span class="n">Roi</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -280,13 +298,13 @@
 
 <span class="sd">            The file to read from.</span>
 
-<span class="sd">        points (:class:`PointsKey`):</span>
+<span class="sd">        points (:class:`GraphKey`):</span>
 
 <span class="sd">            The key of the points set to create.</span>
 
-<span class="sd">        points_spec (:class:`PointsSpec`, optional):</span>
+<span class="sd">        points_spec (:class:`GraphSpec`, optional):</span>
 
-<span class="sd">            An optional :class:`PointsSpec` to overwrite the points specs</span>
+<span class="sd">            An optional :class:`GraphSpec` to overwrite the points specs</span>
 <span class="sd">            automatically determined from the CSV file. This is useful to set</span>
 <span class="sd">            the :class:`Roi` manually.</span>
 
@@ -297,7 +315,7 @@
 <span class="sd">            positions to convert them to world units.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">points_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">points_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points</span>
@@ -320,7 +338,7 @@
 
         <span class="n">roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">min_bb</span><span class="p">,</span> <span class="n">max_bb</span> <span class="o">-</span> <span class="n">min_bb</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">PointsSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">GraphSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">provide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
@@ -340,10 +358,10 @@
             <span class="n">point_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">point_filter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="n">d</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">max_bb</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
 
         <span class="n">points_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_points</span><span class="p">(</span><span class="n">point_filter</span><span class="p">)</span>
-        <span class="n">points_spec</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">points_spec</span> <span class="o">=</span> <span class="n">GraphSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
 
         <span class="n">batch</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span> <span class="o">=</span> <span class="n">Points</span><span class="p">(</span><span class="n">points_data</span><span class="p">,</span> <span class="n">points_spec</span><span class="p">)</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">points_data</span><span class="p">,</span> <span class="p">[],</span> <span class="n">points_spec</span><span class="p">)</span>
 
         <span class="n">timing</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
         <span class="n">batch</span><span class="o">.</span><span class="n">profiling_stats</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">timing</span><span class="p">)</span>
@@ -355,10 +373,10 @@
         <span class="n">filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point_filter</span><span class="p">]</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))[</span><span class="n">point_filter</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">i</span><span class="p">:</span> <span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">filtered</span><span class="p">)</span>
-        <span class="p">}</span>
+        <span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_read_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_csv</span><span class="p">()</span>
@@ -370,11 +388,11 @@
 <span class="sd">        used.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">]</span>
-                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-            <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ndims</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">ndims</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -397,7 +415,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -419,7 +437,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.0.0rc0.dev0',
+            VERSION:'1.1.5',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -431,6 +449,8 @@
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -446,7 +466,18 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>

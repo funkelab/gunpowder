@@ -8,6 +8,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +63,6 @@ class GenericTrain(BatchFilter):
 
         self.provided_arrays = list(self.outputs.values()) + list(self.gradients.values())
 
-        if self.spawn_subprocess:
-
-            # start training as a producer pool, so that we can gracefully exit if
-            # anything goes wrong
-            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
-            self.batch_in = multiprocessing.Queue(maxsize=1)
-
     def setup(self):
 
         # get common voxel size of inputs, or None if they differ
@@ -111,10 +105,20 @@ class GenericTrain(BatchFilter):
             self.provides(key, spec)
 
         if self.spawn_subprocess:
+            # start training as a producer pool, so that we can gracefully exit if
+            # anything goes wrong
+            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
+            self.batch_in = multiprocessing.Queue(maxsize=1)
             self.worker.start()
         else:
             self.start()
             self.initialized = True
+
+    def prepare(self, request):
+        deps = BatchRequest()
+        for key in self.inputs.values():
+            deps[key] = request[key]
+        return deps
 
     def teardown(self):
         if self.spawn_subprocess:

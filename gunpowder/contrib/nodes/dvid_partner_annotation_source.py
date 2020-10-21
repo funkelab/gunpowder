@@ -36,7 +36,7 @@ class DvidPartnerAnnotationSource(BatchProvider):
         :param uuid: UUID of node on DVID server
         :type uuid: str
 
-        :param datasets: dict {PointsKey: DVID data instance}
+        :param datasets: dict {GraphKey: DVID data instance}
     '''
 
     def __init__(

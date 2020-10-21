@@ -1,89 +1,97 @@
 from .provider_test import ProviderTest
-from gunpowder import *
-from gunpowder.points import PointsKeys, Points, Point
+from gunpowder import (
+    BatchProvider,
+    BatchRequest,
+    Batch,
+    Roi,
+    Coordinate,
+    GraphSpec,
+    Array,
+    ArrayKey,
+    ArrayKeys,
+    ArraySpec,
+    RasterizePoints,
+    RasterizationSettings,
+    build,
+)
+from gunpowder.graph import GraphKeys, GraphKey, Graph, Node
 
 import numpy as np
 import math
 from random import randint
 
-class PointTestSource3D(BatchProvider):
 
+class GraphTestSource3D(BatchProvider):
     def __init__(self):
 
         self.voxel_size = Coordinate((40, 4, 4))
 
-        self.all_points = {
-                # corners
-                1: Point(Coordinate((-200, -200, -200))),
-                2: Point(Coordinate((-200, -200, 199))),
-                3: Point(Coordinate((-200, 199, -200))),
-                4: Point(Coordinate((-200, 199, 199))),
-                5: Point(Coordinate((199, -200, -200))),
-                6: Point(Coordinate((199, -200, 199))),
-                7: Point(Coordinate((199, 199, -200))),
-                8: Point(Coordinate((199, 199, 199))),
-                # center
-                9: Point(Coordinate((0, 0, 0))),
-                10: Point(Coordinate((-1, -1, -1))),
-            }
+        self.nodes = [
+            # corners
+            Node(id=1, location=np.array((-200, -200, -200))),
+            Node(id=2, location=np.array((-200, -200, 199))),
+            Node(id=3, location=np.array((-200, 199, -200))),
+            Node(id=4, location=np.array((-200, 199, 199))),
+            Node(id=5, location=np.array((199, -200, -200))),
+            Node(id=6, location=np.array((199, -200, 199))),
+            Node(id=7, location=np.array((199, 199, -200))),
+            Node(id=8, location=np.array((199, 199, 199))),
+            # center
+            Node(id=9, location=np.array((0, 0, 0))),
+            Node(id=10, location=np.array((-1, -1, -1))),
+        ]
+
+        self.graph_spec = GraphSpec(roi=Roi((-100, -100, -100), (300, 300, 300)))
+        self.array_spec = ArraySpec(
+                roi=Roi((-200, -200, -200), (400, 400, 400)), voxel_size=self.voxel_size
+            )
+
+        self.graph = Graph(self.nodes, [], self.graph_spec)
 
     def setup(self):
 
         self.provides(
-            PointsKeys.TEST_POINTS,
-            PointsSpec(roi=Roi((-100, -100, -100), (300, 300, 300))))
+            GraphKeys.TEST_GRAPH,
+            self.graph_spec,
+        )
 
         self.provides(
             ArrayKeys.GT_LABELS,
-            ArraySpec(
-                roi=Roi((-200, -200, -200), (400, 400, 400)),
-                voxel_size=self.voxel_size))
+            self.array_spec,
+        )
 
     def provide(self, request):
 
         batch = Batch()
 
-        roi_points = request[PointsKeys.TEST_POINTS].roi
+        graph_roi = request[GraphKeys.TEST_GRAPH].roi
 
-        # get all points inside the requested ROI
-        points = {}
-        for point_id, point in self.all_points.items():
-            if roi_points.contains(point.location):
-                points[point_id] = point
-
-        batch.points[PointsKeys.TEST_POINTS] = Points(
-            points,
-            PointsSpec(roi=roi_points))
+        batch.graphs[GraphKeys.TEST_GRAPH] = self.graph.crop(graph_roi).trim(graph_roi)
 
         roi_array = request[ArrayKeys.GT_LABELS].roi
 
-        image = np.ones(roi_array.get_shape()/self.voxel_size, dtype=np.uint64)
+        image = np.ones(roi_array.get_shape() / self.voxel_size, dtype=np.uint64)
         # label half of GT_LABELS differently
         depth = image.shape[0]
-        image[0:depth//2] = 2
+        image[0 : depth // 2] = 2
 
         spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi_array
-        batch.arrays[ArrayKeys.GT_LABELS] = Array(
-            image,
-            spec=spec)
+        batch.arrays[ArrayKeys.GT_LABELS] = Array(image, spec=spec)
 
         return batch
 
-class TestRasterizePoints(ProviderTest):
 
+class TestRasterizePoints(ProviderTest):
     def test_3d(self):
 
-        PointsKey('TEST_POINTS')
-        ArrayKey('RASTERIZED')
+        GraphKey("TEST_GRAPH")
+        ArrayKey("RASTERIZED")
 
-        pipeline = (
-            PointTestSource3D() +
-            RasterizePoints(
-                PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED,
-                ArraySpec(
-                    voxel_size=(40, 4, 4)))
+        pipeline = GraphTestSource3D() + RasterizePoints(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
         )
 
         with build(pipeline):
@@ -91,7 +99,7 @@ class TestRasterizePoints(ProviderTest):
             request = BatchRequest()
             roi = Roi((0, 0, 0), (200, 200, 200))
 
-            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
             request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 
@@ -104,16 +112,11 @@ class TestRasterizePoints(ProviderTest):
 
         # same with different foreground/background labels
 
-        pipeline = (
-            PointTestSource3D() +
-            RasterizePoints(
-                PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED,
-                ArraySpec(voxel_size=(40, 4, 4)),
-                RasterizationSettings(
-                    radius=1,
-                    fg_value=0,
-                    bg_value=1))
+        pipeline = GraphTestSource3D() + RasterizePoints(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
+            RasterizationSettings(radius=1, fg_value=0, bg_value=1),
         )
 
         with build(pipeline):
@@ -121,7 +124,7 @@ class TestRasterizePoints(ProviderTest):
             request = BatchRequest()
             roi = Roi((0, 0, 0), (200, 200, 200))
 
-            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
             request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 
@@ -134,24 +137,20 @@ class TestRasterizePoints(ProviderTest):
 
         # same with different radius and inner radius
 
-        pipeline = (
-            PointTestSource3D() +
-            RasterizePoints(
-                PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED,
-                ArraySpec(voxel_size=(40, 4, 4)),
-                RasterizationSettings(
-                    radius=40,
-                    inner_radius_fraction=0.25,
-                    fg_value=1,
-                    bg_value=0))
+        pipeline = GraphTestSource3D() + RasterizePoints(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
+            RasterizationSettings(
+                radius=40, inner_radius_fraction=0.25, fg_value=1, bg_value=0
+            ),
         )
 
         with build(pipeline):
             request = BatchRequest()
             roi = Roi((0, 0, 0), (200, 200, 200))
 
-            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
             request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 
@@ -172,23 +171,18 @@ class TestRasterizePoints(ProviderTest):
 
         # same with anisotropic radius
 
-        pipeline = (
-            PointTestSource3D() +
-            RasterizePoints(
-                PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED,
-                ArraySpec(voxel_size=(40, 4, 4)),
-                RasterizationSettings(
-                    radius=(40, 40, 20),
-                    fg_value=1,
-                    bg_value=0))
+        pipeline = GraphTestSource3D() + RasterizePoints(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
+            RasterizationSettings(radius=(40, 40, 20), fg_value=1, bg_value=0),
         )
 
         with build(pipeline):
             request = BatchRequest()
             roi = Roi((0, 0, 0), (120, 80, 80))
 
-            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
             request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 
@@ -207,24 +201,20 @@ class TestRasterizePoints(ProviderTest):
 
         # same with anisotropic radius and inner radius
 
-        pipeline = (
-            PointTestSource3D() +
-            RasterizePoints(
-                PointsKeys.TEST_POINTS,
-                ArrayKeys.RASTERIZED,
-                ArraySpec(voxel_size=(40, 4, 4)),
-                RasterizationSettings(
-                    radius=(40, 40, 20),
-                    inner_radius_fraction=0.75,
-                    fg_value=1,
-                    bg_value=0))
+        pipeline = GraphTestSource3D() + RasterizePoints(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
+            RasterizationSettings(
+                radius=(40, 40, 20), inner_radius_fraction=0.75, fg_value=1, bg_value=0
+            ),
         )
 
         with build(pipeline):
             request = BatchRequest()
             roi = Roi((0, 0, 0), (120, 80, 80))
 
-            request[PointsKeys.TEST_POINTS] = PointsSpec(roi=roi)
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
             request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
             request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
 

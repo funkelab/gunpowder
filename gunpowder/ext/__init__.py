@@ -43,14 +43,6 @@ except ImportError as e:
     tensorflow = NoSuchModule('tensorflow')
 
 try:
-    import keras
-except ImportError as e:
-    try:
-        import tensorflow.keras as keras
-    except ImportError as e:
-        keras = NoSuchModule('keras')
-
-try:
     import torch
 except ImportError as e:
     torch = NoSuchModule('torch')

@@ -4,6 +4,10 @@ from .freezable import Freezable
 import numbers
 import numpy as np
 
+import logging
+
+logger = logging.getLogger(__file__)
+
 class Roi(Freezable):
     '''A rectangular region of interest, defined by an offset and a shape.
 
@@ -108,10 +112,11 @@ class Roi(Freezable):
         return self.__offset + self.__shape
 
     def get_shape(self):
+        '''Get the shape of this ROI.'''
         return self.__shape
 
     def get_center(self):
-
+        '''Get the center of this ROI.'''
         return self.__offset + self.__shape/2
 
     def to_slices(self):
@@ -133,6 +138,7 @@ class Roi(Freezable):
         )
 
     def get_bounding_box(self):
+        '''Alias for ``to_slices()``.'''
         return self.to_slices()
 
     def dims(self):

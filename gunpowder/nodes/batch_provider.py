@@ -5,14 +5,33 @@ from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.graph import GraphKey
+from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
+
+
+class BatchRequestError(Exception):
+
+    def __init__(self, provider, request, batch):
+        self.provider = provider
+        self.request = request
+        self.batch = batch
+
+    def __str__(self):
+
+        return \
+            f"Exception in {self.provider.name()} while processing request" \
+            f"{self.request} \n" \
+            "Batch returned so far:\n" \
+            f"{self.batch}"
+
 
 class BatchProvider(object):
     '''Superclass for all nodes in a `gunpowder` graph.
 
     A :class:`BatchProvider` provides :class:`Batches<Batch>` containing
-    :class:`Arrays<Array>` and/or :class:`Points`. The available data is
+    :class:`Arrays<Array>` and/or :class:`Graph`. The available data is
     specified in a :class:`ProviderSpec` instance, accessible via :attr:`spec`.
 
     To create a new node, subclass this class and implement (at least)
@@ -27,6 +46,9 @@ class BatchProvider(object):
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
         return provider
+
+    def remove_upstream_providers(self):
+        self.upstream_providers = []
 
     def get_upstream_providers(self):
         if not hasattr(self, 'upstream_providers'):
@@ -60,11 +82,11 @@ class BatchProvider(object):
 
         Args:
 
-            key (:class:`ArrayKey` or :class:`PointsKey`):
+            key (:class:`ArrayKey` or :class:`GraphKey`):
 
                 The array or point set key provided.
 
-            spec (:class:`ArraySpec` or :class:`PointsSpec`):
+            spec (:class:`ArraySpec` or :class:`GraphSpec`):
 
                 The spec of the array or point set provided.
         '''
@@ -136,20 +158,28 @@ class BatchProvider(object):
 
                 A request containing (possibly partial)
                 :class:`ArraySpecs<ArraySpec>` and
-                :class:`PointSpecs<PointsSpec>`.
+                :class:`GraphSpecs<GraphSpec>`.
         '''
 
-        logger.debug("%s got request %s", self.name(), request)
+        batch = None
 
-        self.check_request_consistency(request)
+        try:
 
-        batch = self.provide(copy.deepcopy(request))
+            logger.debug("%s got request %s", self.name(), request)
 
-        self.check_batch_consistency(batch, request)
+            self.check_request_consistency(request)
 
-        self.remove_unneeded(batch, request)
+            batch = self.provide(request.copy())
 
-        logger.debug("%s provides %s", self.name(), batch)
+            self.check_batch_consistency(batch, request)
+
+            self.remove_unneeded(batch, request)
+
+            logger.debug("%s provides %s", self.name(), batch)
+
+        except Exception as e:
+
+            raise BatchRequestError(self, request, batch) from e
 
         return batch
 
@@ -160,7 +190,8 @@ class BatchProvider(object):
             assert key in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), key)
             assert (
                 isinstance(request_spec, ArraySpec) or
-                isinstance(request_spec, PointsSpec)), ("spec for %s is of type"
+                isinstance(request_spec, PointsSpec) or
+                isinstance(request_spec, GraphSpec)), ("spec for %s is of type"
                                                         "%s"%(
                                                             key,
                                                             type(request_spec)))
@@ -194,6 +225,13 @@ class BatchProvider(object):
                                         key,
                                         provided_spec.voxel_size[d])
 
+            if isinstance(key, GraphKey):
+
+                if request_spec.directed is not None:
+                    assert request_spec.directed == provided_spec.directed, (
+                        f"asked for {key}:  directed={request_spec.directed} but "
+                        f"{self.name()} provides directed={provided_spec.directed}"
+                    )
     def check_batch_consistency(self, batch, request):
 
         for (array_key, request_spec) in request.array_specs.items():
@@ -226,25 +264,46 @@ class BatchProvider(object):
                         data_shape*voxel_size,
                         self.name()
                 )
+            if request_spec.dtype is not None:
+                assert batch[array_key].data.dtype == request_spec.dtype, \
+                    "dtype of array %s (%s) does not match requested dtype %s" % (
+                        array_key,
+                        batch[array_key].data.dtype,
+                        request_spec.dtype)
 
-        for (points_key, request_spec) in request.points_specs.items():
+        for (graph_key, request_spec) in request.graph_specs.items():
 
-            assert points_key in batch.points, "%s requested, but %s did not provide it."%(points_key,self.name())
-            points = batch.points[points_key]
-            assert points.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
-                                            points_key,
+            assert graph_key in batch.graphs, "%s requested, but %s did not provide it."%(graph_key,self.name())
+            graph = batch.graphs[graph_key]
+            assert graph.spec.roi == request_spec.roi, "%s ROI %s requested, but ROI %s provided by %s."%(
+                                            graph_key,
                                             request_spec.roi,
-                                            points.spec.roi,
+                                            graph.spec.roi,
                                             self.name())
 
-            for _, point in points.data.items():
-                assert points.spec.roi.contains(point.location), (
-                    "points provided by %s with ROI %s contain point at %s"%(
-                        self.name(), points.spec.roi, point.location))
+            if request_spec.directed is not None:
+                assert request_spec.directed == graph.directed, (
+                    f"Recieved {graph_key}:  directed={graph.directed} but "
+                    f"{self.name()} should provide directed={request_spec.directed}"
+                )
+
+            for node in graph.nodes:
+                contained = graph.spec.roi.contains(node.location)
+                dangling = not contained and all(
+                    [
+                        graph.spec.roi.contains(v.location)
+                        for v in graph.neighbors(node)
+                    ]
+                )
+                assert contained or dangling, (
+                    f"graph {graph_key} provided by {self.name()} with ROI {graph.spec.roi} "
+                    f"contain point at {node.location} which is neither contained nor "
+                    f"'dangling'"
+                )
 
     def remove_unneeded(self, batch, request):
 
-        batch_keys = set(list(batch.arrays.keys()) + list(batch.points.keys()))
+        batch_keys = set(list(batch.arrays.keys()) + list(batch.graphs.keys()))
         for key in batch_keys:
             if key not in request:
                 del batch[key]

@@ -12,7 +12,7 @@ class Crop(BatchFilter):
 
     Args:
 
-        key (:class:`ArrayKey` or :class:`PointsKey`):
+        key (:class:`ArrayKey` or :class:`GraphKey`):
 
             The key of the array or points set to modify.
 

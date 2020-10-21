@@ -6,7 +6,8 @@ except ImportError:
     string_types = str
 
 extras_require = {
-    'tensorflow': ['tensorflow'],
+    'tensorflow': ['tensorflow<2'],
+    'pytorch': ['torch'],
 }
 
 
@@ -42,8 +43,6 @@ setup(
             'gunpowder.caffe.nodes',
             'gunpowder.tensorflow',
             'gunpowder.tensorflow.nodes',
-            'gunpowder.keras',
-            'gunpowder.keras.nodes',
             'gunpowder.torch',
             'gunpowder.torch.nodes',
             'gunpowder.contrib',

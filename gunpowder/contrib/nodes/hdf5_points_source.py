@@ -16,17 +16,17 @@ from gunpowder.contrib.points import PreSynPoint, PostSynPoint
 logger = logging.getLogger(__name__)
 
 class Hdf5PointsSource(BatchProvider):
-    '''An HDF5 data source for :class:``Points``. Currently only supports a
-    specific case where points represent pre- and post-synaptic markers.
+    '''An HDF5 data source for :class:``Graph``. Currently only supports a
+    specific case where graphs represent pre- and post-synaptic markers.
 
     Args:
 
         filename (string): The HDF5 file.
 
-        datasets (dict): Dictionary of :class:``PointsKey`` -> dataset names
+        datasets (dict): Dictionary of :class:``GraphKey`` -> dataset names
             that this source offers.
 
-        rois (dict): Dictionary of :class:``PointsKey`` -> :class:``Roi`` to
+        rois (dict): Dictionary of :class:``GraphKey`` -> :class:``Roi`` to
             set the ROI for each point set provided by this source.
 
     '''

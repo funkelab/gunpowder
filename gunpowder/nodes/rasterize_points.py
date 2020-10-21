@@ -6,18 +6,19 @@ from scipy.ndimage.filters import gaussian_filter
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map, create_ball_kernel
 from gunpowder.ndarray import replace
-from gunpowder.points import PointsKeys
-from gunpowder.points_spec import PointsSpec
+from gunpowder.graph import GraphKey
+from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 
 logger = logging.getLogger(__name__)
 
 class RasterizationSettings(Freezable):
-    '''Data structure to store parameters for rasterization of points.
+    '''Data structure to store parameters for rasterization of graph.
 
     Args:
 
@@ -91,7 +92,7 @@ class RasterizePoints(BatchFilter):
 
     Args:
 
-        points (:class:`PointsKeys`):
+        points (:class:`GraphKey`):
             The key of the points to rasterize.
 
         array (:class:`ArrayKey`):
@@ -106,9 +107,9 @@ class RasterizePoints(BatchFilter):
             Which settings to use to rasterize the points.
     '''
 
-    def __init__(self, points, array, array_spec=None, settings=None):
+    def __init__(self, graph, array, array_spec=None, settings=None):
 
-        self.points = points
+        self.graph = graph
         self.array = array
         if array_spec is None:
             self.array_spec = ArraySpec()
@@ -121,10 +122,10 @@ class RasterizePoints(BatchFilter):
 
     def setup(self):
 
-        points_roi = self.spec[self.points].roi
+        graph_roi = self.spec[self.graph].roi
 
         if self.array_spec.voxel_size is None:
-            self.array_spec.voxel_size = Coordinate((1,)*points_roi.dims())
+            self.array_spec.voxel_size = Coordinate((1,)*graph_roi.dims())
 
         if self.array_spec.dtype is None:
             if self.settings.mode == 'ball':
@@ -132,7 +133,7 @@ class RasterizePoints(BatchFilter):
             else:
                 self.array_spec.dtype = np.float32
 
-        self.array_spec.roi = points_roi.copy()
+        self.array_spec.roi = graph_roi.copy()
         self.provides(
             self.array,
             self.array_spec)
@@ -159,8 +160,10 @@ class RasterizePoints(BatchFilter):
                 Coordinate(context))
 
         # however, restrict the request to the points actually provided
-        points_roi = points_roi.intersect(self.spec[self.points].roi)
-        request[self.points] = PointsSpec(roi=points_roi)
+        points_roi = points_roi.intersect(self.spec[self.graph].roi)
+
+        deps = BatchRequest()
+        deps[self.graph] = GraphSpec(roi=points_roi)
 
         if self.settings.mask is not None:
 
@@ -169,42 +172,39 @@ class RasterizePoints(BatchFilter):
                 "Voxel size of mask and rasterized volume need to be equal")
 
             new_mask_roi = points_roi.snap_to_grid(mask_voxel_size)
-            if self.settings.mask in request:
-                request[self.settings.mask].roi = \
-                    request[self.settings.mask].roi.union(new_mask_roi)
-            else:
-                request[self.settings.mask] = \
-                    ArraySpec(roi=new_mask_roi)
+            deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
+
+        return deps
 
     def process(self, batch, request):
 
-        points = batch.points[self.points]
+        graph = batch.graphs[self.graph]
         mask = self.settings.mask
         voxel_size = self.spec[self.array].voxel_size
 
         # get roi used for creating the new array (points_roi does no
         # necessarily align with voxel size)
-        enlarged_vol_roi = points.spec.roi.snap_to_grid(voxel_size)
+        enlarged_vol_roi = graph.spec.roi.snap_to_grid(voxel_size)
         offset = enlarged_vol_roi.get_begin() / voxel_size
         shape = enlarged_vol_roi.get_shape() / voxel_size
         data_roi = Roi(offset, shape)
 
-        logger.debug("Points in %s", points.spec.roi)
-        for i, point in points.data.items():
-            logger.debug("%d, %s", i, point.location)
+        logger.debug("Points in %s", graph.spec.roi)
+        for node in graph.nodes:
+            logger.debug("%d, %s", node.id, node.location)
         logger.debug("Data roi in voxels: %s", data_roi)
         logger.debug("Data roi in world units: %s", data_roi*voxel_size)
 
-        if len(points.data.items()) == 0:
-            # If there are no points at all, just create an empty matrix.
+        if graph.num_vertices == 0:
+            # If there are no graph at all, just create an empty matrix.
             rasterized_points_data = np.zeros(data_roi.get_shape(),
                                               dtype=self.spec[self.array].dtype)
         elif mask is not None:
 
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
-            # get those component labels in the mask, that contain points
+            # get those component labels in the mask, that contain graph
             labels = []
-            for i, point in points.data.items():
+            for i, point in graph.data.items():
                 v = Coordinate(point.location / voxel_size)
                 v -= data_roi.get_begin()
                 labels.append(mask_array.data[v])
@@ -216,16 +216,16 @@ class RasterizePoints(BatchFilter):
                 labels.remove(0)
 
             if len(labels) == 0:
-                logger.debug("Points and provided object mask do not overlap. No points to rasterize.")
+                logger.debug("Points and provided object mask do not overlap. No graph to rasterize.")
                 rasterized_points_data = np.zeros(data_roi.get_shape(),
                                                   dtype=self.spec[self.array].dtype)
             else:
-                # create data for the whole points ROI, "or"ed together over
+                # create data for the whole graph ROI, "or"ed together over
                 # individual object masks
                 rasterized_points_data = np.sum(
                     [
                         self.__rasterize(
-                            points,
+                            graph,
                             data_roi,
                             voxel_size,
                             self.spec[self.array].dtype,
@@ -238,9 +238,9 @@ class RasterizePoints(BatchFilter):
 
         else:
 
-            # create data for the whole points ROI without mask
+            # create data for the whole graph ROI without mask
             rasterized_points_data = self.__rasterize(
-                points,
+                graph,
                 data_roi,
                 voxel_size,
                 self.spec[self.array].dtype,
@@ -262,24 +262,14 @@ class RasterizePoints(BatchFilter):
         rasterized_points = Array(
             data=rasterized_points_data,
             spec=spec)
-        batch.arrays[self.array] = rasterized_points.crop(request[self.array].roi)
+        batch[self.array] = rasterized_points.crop(request[self.array].roi)
 
-        # restore requested ROI of points
-        if self.points in request:
-            request_roi = request[self.points].roi
-            points.spec.roi = request_roi
-            points.data = {i: p for i, p in points.data.items() if request_roi.contains(p.location)}
-
-        # restore requested mask
-        if mask is not None:
-            batch.arrays[mask] = batch.arrays[mask].crop(request[mask].roi)
-
-    def __rasterize(self, points, data_roi, voxel_size, dtype, settings, mask_array=None):
-        '''Rasterize 'points' into an array with the given 'voxel_size'''
+    def __rasterize(self, graph, data_roi, voxel_size, dtype, settings, mask_array=None):
+        '''Rasterize 'graph' into an array with the given 'voxel_size'''
 
         mask = mask_array.data if mask_array is not None else None
 
-        logger.debug("Rasterizing points in %s", points.spec.roi)
+        logger.debug("Rasterizing graph in %s", graph.spec.roi)
 
         # prepare output array
         rasterized_points = np.zeros(data_roi.get_shape(), dtype=dtype)
@@ -306,22 +296,22 @@ class RasterizePoints(BatchFilter):
                     shape=Coordinate(ball_kernel.shape))
 
         # Rasterize volume either with single voxel or with defined struct elememt
-        for point in points.data.values():
+        for node in graph.nodes:
 
             # get the voxel coordinate, 'Coordinate' ensures integer
-            v = Coordinate(point.location/voxel_size)
+            v = Coordinate(node.location/voxel_size)
 
             # get the voxel coordinate relative to output array start
             v -= data_roi.get_begin()
 
-            # skip points outside of mask
+            # skip graph outside of mask
             if mask is not None and not mask[v]:
                 continue
 
             logger.debug(
-                "Rasterizing point %s at %s",
-                point.location,
-                point.location/voxel_size - data_roi.get_begin())
+                "Rasterizing node %s at %s",
+                node.location,
+                node.location/voxel_size - data_roi.get_begin())
 
             if use_fast_rasterization:
 
@@ -341,7 +331,7 @@ class RasterizePoints(BatchFilter):
 
                 rasterized_points[v] = 1
 
-        # grow points
+        # grow graph
         if not use_fast_rasterization:
 
             if settings.mode == 'ball':

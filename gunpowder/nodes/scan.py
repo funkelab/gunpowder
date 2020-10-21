@@ -4,12 +4,13 @@ import numpy as np
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points
+from gunpowder.graph import Graph
 from gunpowder.producer_pool import ProducerPool
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
+
 
 class Scan(BatchFilter):
     '''Iteratively requests batches of size ``reference`` from upstream
@@ -46,13 +47,12 @@ class Scan(BatchFilter):
         self.num_workers = num_workers
         self.cache_size = cache_size
         self.workers = None
-        if num_workers > 1:
-            self.request_queue = multiprocessing.Queue(maxsize=0)
         self.batch = None
 
     def setup(self):
 
         if self.num_workers > 1:
+            self.request_queue = multiprocessing.Queue(maxsize=0)
             self.workers = ProducerPool(
                 [self.__worker_get_chunk for _ in range(self.num_workers)],
                 queue_size=self.cache_size)
@@ -175,12 +175,11 @@ class Scan(BatchFilter):
 
             logger.debug("upstream ROI is %s", spec[key].roi)
 
-            for r, s in zip(
-                    reference_spec.roi.get_shape(),
-                    spec[key].roi.get_shape()):
-                assert r <= s, (
+            for r, s in zip(reference_spec.roi.get_shape(), spec[key].roi.get_shape()):
+                assert s is None or r <= s, (
                     "reference %s with ROI %s does not fit into provided "
-                    "upstream %s"%(key, reference_spec.roi, spec[key].roi))
+                    "upstream %s" % (key, reference_spec.roi, spec[key].roi)
+                )
 
             # we have a reference ROI
             #
@@ -308,6 +307,7 @@ class Scan(BatchFilter):
 
         if self.batch.get_total_roi() is None:
             self.batch = self.__setup_batch(spec, chunk)
+        self.batch.profiling_stats.merge_with(chunk.profiling_stats)
 
         for (array_key, array) in chunk.arrays.items():
             if array_key not in spec:
@@ -316,11 +316,11 @@ class Scan(BatchFilter):
                         spec.array_specs[array_key].roi, array.spec.roi,
                         self.spec[array_key].voxel_size)
 
-        for (points_key, points) in chunk.points.items():
-            if points_key not in spec:
+        for (graph_key, graphs) in chunk.graphs.items():
+            if graph_key not in spec:
                 continue
-            self.__fill_points(self.batch.points[points_key].data, points.data,
-                               spec.points_specs[points_key].roi, points.roi)
+            self.__fill_points(self.batch.graphs[graph_key], graphs,
+                               spec.graph_specs[graph_key].roi, graphs.spec.roi)
 
     def __setup_batch(self, batch_spec, chunk):
         '''Allocate a batch matching the sizes of ``batch_spec``, using
@@ -341,14 +341,14 @@ class Scan(BatchFilter):
             spec = self.spec[array_key].copy()
             spec.roi = roi
             logger.info("allocating array of shape %s for %s", shape, array_key)
-            batch.arrays[array_key] = Array(data=np.zeros(shape),
+            batch.arrays[array_key] = Array(data=np.zeros(shape, dtype=spec.dtype),
                                                 spec=spec)
 
-        for (points_key, spec) in batch_spec.points_specs.items():
+        for (graph_key, spec) in batch_spec.graph_specs.items():
             roi = spec.roi
-            spec = self.spec[points_key].copy()
+            spec = self.spec[graph_key].copy()
             spec.roi = roi
-            batch.points[points_key] = Points(data={}, spec=spec)
+            batch.graphs[graph_key] = Graph(nodes=[], edges=[], spec=spec)
 
         logger.debug("setup batch to fill %s", batch)
 
@@ -377,18 +377,31 @@ class Scan(BatchFilter):
         a[slices_a] = b[slices_b]
 
     def __fill_points(self, a, b, roi_a, roi_b):
+        """
+        Take points from b and add them to a.
+        Nodes marked temporary must be ignored. Temporary nodes are nodes
+        that were created during processing. Since it is impossible to know
+        in general, that a node created during processing of a subgraph was
+        not assigned an id that is already used by the full graph, we cannot
+        include temporary nodes and assume there will not be ambiguous node
+        id's that correspond to multiple distinct nodes. 
+        """
         logger.debug("filling points of " + str(roi_b) + " into points of" + str(roi_a))
 
         common_roi = roi_a.intersect(roi_b)
         if common_roi is None:
             return
 
-        # find max point_id in a so far
-        max_point_id = 0
-        for point_id, point in a.items():
-            if point_id > max_point_id:
-                max_point_id = point_id
-
-        for point_id, point in b.items():
-            if roi_a.contains(Coordinate(point.location)):
-                a[point_id + max_point_id] = point
+        for node in b.nodes:
+            if not node.temporary and roi_a.contains(node.location):
+                a.add_node(node)
+        for e in b.edges:
+            bu = b.node(e.u)
+            bv = b.node(e.v)
+            if (
+                not bu.temporary
+                and not bv.temporary
+                and a.contains(bu.id)
+                and a.contains(bv.id)
+            ):
+                a.add_edge(e)

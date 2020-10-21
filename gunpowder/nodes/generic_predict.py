@@ -6,6 +6,7 @@ from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -45,21 +46,10 @@ class GenericPredict(BatchFilter):
             spawn_subprocess=False):
 
         self.initialized = False
-
         self.inputs = inputs
         self.outputs = outputs
         self.array_specs = {} if array_specs is None else array_specs
         self.spawn_subprocess = spawn_subprocess
-
-        if self.spawn_subprocess:
-
-            # start prediction as a producer pool, so that we can gracefully
-            # exit if anything goes wrong
-            self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
-            self.batch_in = multiprocessing.Queue(maxsize=1)
-            self.batch_in_lock = multiprocessing.Lock()
-            self.batch_out_lock = multiprocessing.Lock()
-
         self.timer_start = None
 
     def setup(self):
@@ -87,7 +77,7 @@ class GenericPredict(BatchFilter):
             else:
                 spec = ArraySpec()
 
-            if spec.voxel_size is None:
+            if spec.voxel_size is None and not spec.nonspatial:
 
                 assert common_voxel_size is not None, (
                     "There is no common voxel size of the inputs, and no "
@@ -104,6 +94,12 @@ class GenericPredict(BatchFilter):
             self.provides(key, spec)
 
         if self.spawn_subprocess:
+            # start prediction as a producer pool, so that we can gracefully
+            # exit if anything goes wrong
+            self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
+            self.batch_in = multiprocessing.Queue(maxsize=1)
+            self.batch_in_lock = multiprocessing.Lock()
+            self.batch_out_lock = multiprocessing.Lock()
             self.worker.start()
 
     def teardown(self):
@@ -123,6 +119,12 @@ class GenericPredict(BatchFilter):
         if not self.initialized and not self.spawn_subprocess:
             self.start()
             self.initialized = True
+
+        deps = BatchRequest()
+        for key in self.inputs.values():
+            deps[key] = request[key]
+        return deps
+
 
     def process(self, batch, request):
 
