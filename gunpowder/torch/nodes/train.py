@@ -201,7 +201,8 @@ class Train(GenericTrain):
 
         # keys are argument names of model forward pass
         device_inputs = {
-            k: torch.as_tensor(v, device=self.device) for k, v in inputs.items()
+            k: torch.as_tensor(v).to(device=self.device, non_blocking=True)
+            for k, v in inputs.items()
         }
 
         # get outputs. Keys are tuple indices or model attr names as in self.outputs
@@ -222,7 +223,7 @@ class Train(GenericTrain):
         provided_loss_inputs = self.__collect_provided_loss_inputs(batch)
 
         device_loss_inputs = {
-            k: torch.as_tensor(v, device=self.device)
+            k: torch.as_tensor(v).to(device=self.device, non_blocking=True)
             for k, v in provided_loss_inputs.items()
         }
 
