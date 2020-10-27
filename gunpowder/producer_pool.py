@@ -84,6 +84,8 @@ class ProducerPool(object):
         self.__watch_dog = None
 
     def __run_watch_dog(self, callables):
+        
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         parent_pid = os.getppid()
 
