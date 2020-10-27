@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class CsvPointsSource(BatchProvider):
     '''Read a set of points from a comma-separated-values text file. Each line
-    in the file represents one point.
+    in the file represents one point, e.g. z y x (id)
 
     Args:
 
@@ -35,6 +35,17 @@ class CsvPointsSource(BatchProvider):
             An optional scaling to apply to the coordinates of the points read
             from the CSV file. This is useful if the points refer to voxel
             positions to convert them to world units.
+
+        ndims (``int``):
+
+            If ``ndims`` is None, all values in one line are considered as the
+            location of the point. If positive, only the first ``ndims`` are used.
+            If negative, all but the last ``-ndims`` are used.
+
+         id_dim (``int``):
+
+            Each line may optionally contain an id for each point. This parameter
+            specifies its location, has to come after the position values.
     '''
 
     def __init__(self, filename, points, points_spec=None, scale=None,
@@ -107,7 +118,7 @@ class CsvPointsSource(BatchProvider):
         ]
 
     def _parse_csv(self):
-        '''Read one point per line. If ``ndims`` is 0, all values in one line
+        '''Read one point per line. If ``ndims`` is None, all values in one line
         are considered as the location of the point. If positive, only the
         first ``ndims`` are used. If negative, all but the last ``-ndims`` are
         used.
