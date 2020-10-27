@@ -90,6 +90,10 @@ class Snapshot(BatchFilter):
 
     def setup(self):
 
+        for key, _ in self.additional_request.items():
+            assert key in self.dataset_names, (
+                "%s requested but not in dataset_names"% key)
+
         for array_key in self.additional_request.array_specs.keys():
             spec = self.spec[array_key]
             self.updates(array_key, spec)
@@ -98,6 +102,7 @@ class Snapshot(BatchFilter):
             self.updates(graph_key, spec)
 
     def prepare(self, request):
+
         deps = BatchRequest()
         for key, spec in request.items():
             if key in self.dataset_names:
@@ -113,6 +118,11 @@ class Snapshot(BatchFilter):
             for graph_key, spec in self.additional_request.graph_specs.items():
                 if graph_key not in deps:
                     deps[graph_key] = spec
+
+            for key in self.dataset_names.keys():
+                assert key in deps, (
+                    "%s wanted for %s, but not in request." %
+                    (key, self.name()))
 
         return deps
 
