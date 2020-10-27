@@ -105,11 +105,11 @@ class CsvPointsSource(BatchProvider):
 
     def _get_points(self, point_filter):
 
+        filtered = self.data[point_filter][:,:self.ndims]
+
         if self.id_dim is not None:
-            filtered = self.data[point_filter][:,:self.ndims]
             ids = self.data[point_filter][:,self.id_dim]
         else:
-            filtered = self.data[point_filter]
             ids = np.arange(len(self.data))[point_filter]
 
         return [
