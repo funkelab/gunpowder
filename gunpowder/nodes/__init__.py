@@ -26,7 +26,7 @@ from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
 from .random_provider import RandomProvider
-from .rasterize_points import RasterizationSettings, RasterizePoints
+from .rasterize_graph import RasterizationSettings, RasterizeGraph
 from .reject import Reject
 from .renumber_connected_components import RenumberConnectedComponents
 from .scan import Scan

@@ -5,7 +5,7 @@ from scipy import ndimage
 
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.array import Array, ArrayKeys
-from gunpowder.nodes.rasterize_points import RasterizationSettings
+from gunpowder.nodes.rasterize_graph import RasterizationSettings
 from gunpowder.morphology import enlarge_binary_map
 
 logger = logging.getLogger(__name__)
