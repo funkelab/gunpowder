@@ -131,7 +131,7 @@ class CsvPointsSource(BatchProvider):
             )
 
         if self.ndims is None:
-            self.ndims = points.shape[1]
+            self.ndims = self.data.shape[1]
 
         if self.scale is not None:
             self.data[:,:self.ndims] *= self.scale

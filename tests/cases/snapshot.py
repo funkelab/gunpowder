@@ -99,6 +99,7 @@ class TestSnapshot(unittest.TestCase):
             roi = Roi((0, 0, 0), (5, 5, 5))
 
             request[test_array] = ArraySpec(roi=roi)
+            request[test_array2] = ArraySpec(roi=roi)
 
             pipeline.request_batch(request)
 

@@ -285,9 +285,9 @@ class Graph(Freezable):
         attrs = self.__graph.nodes[id]
         return Node.from_attrs(attrs)
 
-    def contains(self, node_id):
+    def contains(self, node_id: int):
         return node_id in self.__graph.nodes
-        
+
     def remove_node(self, node: Node, retain_connectivity=False):
         """
         Remove a node.

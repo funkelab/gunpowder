@@ -195,7 +195,7 @@ class TestRandomLocationPoints(ProviderTest):
                     if point_id not in histogram:
                         histogram[point_id] = 1
                     else:
-                        histogram[point_id] += 1
+                        histogram[node.id] += 1
 
         total = sum(histogram.values())
         for k, v in histogram.items():

@@ -209,12 +209,7 @@ class ProviderSpec(Freezable):
             array_keys = self.array_specs.keys()
 
         if not array_keys:
-            raise RuntimeError("Can not compute lcm voxel size -- there are "
-                               "no array specs in this provider spec.")
-        else:
-            if not array_keys:
-                raise RuntimeError("Can not compute lcm voxel size -- list of "
-                                   "given array specs is empty.")
+            return None
 
         lcm_voxel_size = None
         for key in array_keys:
