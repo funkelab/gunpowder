@@ -1,11 +1,11 @@
 import logging
 import numpy as np
 import os
-import copy
 
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
+from gunpowder.ext import ZarrFile
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class Snapshot(BatchFilter):
         self,
         dataset_names,
         output_dir="snapshots",
-        output_filename="{id}.hdf",
+        output_filename="{id}.zarr",
         every=1,
         additional_request=None,
         compression_type=None,
@@ -87,6 +87,8 @@ class Snapshot(BatchFilter):
             self.dataset_dtypes = {}
         else:
             self.dataset_dtypes = dataset_dtypes
+
+        self.mode = "w"
 
     def setup(self):
 
@@ -142,8 +144,15 @@ class Snapshot(BatchFilter):
                 ),
             )
             logger.info("saving to %s" % snapshot_name)
-            with h5py.File(snapshot_name, "w") as f:
+            if snapshot_name.endswith(".hdf"):
+                open_func = h5py.File
+            elif snapshot_name.endswith(".zarr"):
+                open_func = ZarrFile
+            else:
+                logger.warning("ambiguous file type")
+                open_func = h5py.File
 
+            with open_func(snapshot_name, self.mode) as f:
                 for (array_key, array) in batch.arrays.items():
 
                     if array_key not in self.dataset_names:
