@@ -52,34 +52,39 @@ class Node(Freezable):
         temporary: bool = False,
         attrs: Optional[Dict[str, Any]] = None,
     ):
-        self.__id = id
-        self.__location = location
+        self.__attrs = attrs if attrs is not None else {}
+        self.attrs["id"] = id
+        self.location = location
         # purpose is to keep track of nodes that were created during
         # processing and do not have a corresponding node in the original source
-        self.__temporary = temporary
-        self.attrs = attrs
+        self.attrs["temporary"] = temporary
         self.freeze()
+
+    def __getattr__(self, attr):
+        if "__" not in attr:
+            return self.attrs[attr]
+        else:
+            return super().__getattr__(attr)
+
+    def __setattr__(self, attr, value):
+        if "__" not in attr:
+            self.attrs[attr] = value
+        else:
+            super().__setattr__(attr, value)
 
     @property
     def location(self):
-        assert isinstance(self.__location, np.ndarray)
-        return self.__location
+        location = self.attrs["location"]
+        return location
 
     @location.setter
     def location(self, new_location):
-        self.__location = new_location
-
-    @property
-    def attrs(self):
-        return self.__attrs
-
-    @attrs.setter
-    def attrs(self, attrs):
-        self.__attrs = attrs if attrs is not None else {}
+        assert isinstance(new_location, np.ndarray)
+        self.attrs["location"] = new_location
 
     @property
     def id(self):
-        return self.__id
+        return self.attrs["id"]
 
     @property
     def original_id(self):
@@ -87,25 +92,23 @@ class Node(Freezable):
 
     @property
     def temporary(self):
-        return self.__temporary
+        return self.attrs["temporary"]
+
+    @property
+    def attrs(self):
+        return self.__attrs
 
     @property
     def all(self):
-        data = self.__attrs
-        data["id"] = self.id
-        data["location"] = self.location
-        data["temporary"] = self.temporary
-        return data
+        return self.attrs
 
     @classmethod
     def from_attrs(cls, attrs: Dict[str, Any]):
-        special_attrs = ["id", "location", "temporary"]
         node_id = attrs["id"]
         location = attrs["location"]
         temporary = attrs.get("temporary", False)
-        remaining_attrs = {k: v for k, v in attrs.items() if k not in special_attrs}
         return cls(
-            id=node_id, location=location, temporary=temporary, attrs=remaining_attrs
+            id=node_id, location=location, temporary=temporary, attrs=attrs
         )
 
     def __str__(self):
@@ -219,7 +222,7 @@ class Graph(Freezable):
         if self.__spec.directed is None:
             logger.debug(
                 "Trying to create a Graph without specifying directionality. Using default Directed!"
-                )
+            )
             graph = nx.DiGraph()
         elif self.__spec.directed:
             graph = nx.DiGraph()
@@ -291,7 +294,7 @@ class Graph(Freezable):
     def remove_node(self, node: Node, retain_connectivity=False):
         """
         Remove a node.
-        
+
         retain_connectivity: preserve removed nodes neighboring edges.
         Given graph: a->b->c, removing `b` without retain_connectivity
         would leave us with two connected components, {'a'} and {'b'}.
@@ -345,7 +348,7 @@ class Graph(Freezable):
 
         Note there is a helper function `trim` that will remove B and replace it with
         a node at the intersection of the edge (A, B) and the bounding box of `roi`.
-        
+
         Args:
 
             roi (:class:`Roi`):

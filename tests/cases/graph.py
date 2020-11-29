@@ -183,3 +183,31 @@ class TestGraphs(ProviderTest):
         sub_g.spec.directed = False
         self.assertTrue(g.spec.directed)
         self.assertFalse(sub_g.spec.directed)
+
+
+def test_nodes():
+
+    initial_locations = {
+        1: np.array([1, 1, 1], dtype=np.float32),
+        2: np.array([500, 500, 500], dtype=np.float32),
+        3: np.array([550, 550, 550], dtype=np.float32),
+    }
+    replacement_locations = {
+        1: np.array([0, 0, 0], dtype=np.float32),
+        2: np.array([50, 50, 50], dtype=np.float32),
+        3: np.array([55, 55, 55], dtype=np.float32),
+    }
+
+    nodes = [
+        Node(id=id, location=location) for id, location in initial_locations.items()
+    ]
+    edges = [Edge(1, 2), Edge(2, 3)]
+    spec = GraphSpec(
+        roi=Roi(Coordinate([-500, -500, -500]), Coordinate([1500, 1500, 1500]))
+    )
+    graph = Graph(nodes, edges, spec)
+    for node in graph.nodes:
+        node.location = replacement_locations[node.id]
+
+    for node in graph.nodes:
+        assert all(np.isclose(node.location, replacement_locations[node.id]))
