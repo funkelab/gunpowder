@@ -11,7 +11,7 @@ from gunpowder import (
     GraphKey,
     BatchRequest,
     RasterizationSettings,
-    RasterizePoints,
+    RasterizeGraph,
     Snapshot,
     ElasticAugment,
     build,
@@ -107,7 +107,7 @@ class TestElasticAugment(ProviderTest):
             +  # rotate randomly
             # [math.pi/4, math.pi/4]) + # rotate by 45 deg
             # [0, 0]) + # no rotation
-            RasterizePoints(
+            RasterizeGraph(
                 test_graph,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),

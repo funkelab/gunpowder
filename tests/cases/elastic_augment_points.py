@@ -16,7 +16,7 @@ from gunpowder import (
     Roi,
     Coordinate,
     ElasticAugment,
-    RasterizePoints,
+    RasterizeGraph,
     RasterizationSettings,
     Snapshot,
     build,
@@ -174,7 +174,7 @@ class TestElasticAugment(ProviderTest):
                 # [0, 0, 0], # no jitter
                 [0, 2.0 * math.pi],
             )
-            + RasterizePoints(
+            + RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),
@@ -233,7 +233,7 @@ class TestElasticAugment(ProviderTest):
                 [0, 2.0*math.pi]) + # rotate randomly
                 # [math.pi/4, math.pi/4]) + # rotate by 45 deg
                 # [0, 0]) + # no rotation
-            RasterizePoints(
+            RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(
@@ -304,7 +304,7 @@ class TestElasticAugment(ProviderTest):
                 [0, 2.0 * math.pi],
                 use_fast_points_transform=True,
             )
-            + RasterizePoints(
+            + RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),
@@ -314,7 +314,7 @@ class TestElasticAugment(ProviderTest):
         reference_pipeline = (
             DensePointTestSource3D()
             + ElasticAugment([10, 10, 10], [0.1, 0.1, 0.1], [0, 2.0 * math.pi])
-            + RasterizePoints(
+            + RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),
@@ -391,7 +391,7 @@ class TestElasticAugment(ProviderTest):
                 use_fast_points_transform=True,
                 recompute_missing_points=False,
             )
-            + RasterizePoints(
+            + RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),
@@ -401,7 +401,7 @@ class TestElasticAugment(ProviderTest):
         reference_pipeline = (
             DensePointTestSource3D()
             + ElasticAugment([10, 10, 10], [0.1, 0.1, 0.1], [0, 2.0 * math.pi])
-            + RasterizePoints(
+            + RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(radius=2, mode="peak"),

@@ -10,11 +10,11 @@ from gunpowder import (
     ArrayKey,
     ArrayKeys,
     ArraySpec,
-    RasterizePoints,
+    RasterizeGraph,
     RasterizationSettings,
     build,
 )
-from gunpowder.graph import GraphKeys, GraphKey, Graph, Node
+from gunpowder.graph import GraphKeys, GraphKey, Graph, Node, Edge
 
 import numpy as np
 import math
@@ -81,6 +81,42 @@ class GraphTestSource3D(BatchProvider):
 
         return batch
 
+class GraphTestSourceWithEdge(BatchProvider):
+    def __init__(self):
+
+        self.voxel_size = Coordinate((1, 1, 1))
+
+        self.nodes = [
+            # corners
+            Node(id=1, location=np.array((0, 4, 4))),
+            Node(id=2, location=np.array((9, 4, 4)))
+        ]
+        self.edges = [
+            Edge(1, 2)
+        ]
+
+        self.graph_spec = GraphSpec(roi=Roi((0, 0, 0), (10, 10, 10)))
+        self.graph = Graph(self.nodes, self.edges, self.graph_spec)
+
+    def setup(self):
+
+        self.provides(
+            GraphKeys.TEST_GRAPH_WITH_EDGE,
+            self.graph_spec,
+        )
+
+    def provide(self, request):
+
+        batch = Batch()
+
+        graph_roi = request[GraphKeys.TEST_GRAPH_WITH_EDGE].roi
+
+        batch.graphs[GraphKeys.TEST_GRAPH_WITH_EDGE] = self.graph.crop(graph_roi).trim(
+            graph_roi
+        )
+
+        return batch
+
 
 class TestRasterizePoints(ProviderTest):
     def test_3d(self):
@@ -88,7 +124,7 @@ class TestRasterizePoints(ProviderTest):
         GraphKey("TEST_GRAPH")
         ArrayKey("RASTERIZED")
 
-        pipeline = GraphTestSource3D() + RasterizePoints(
+        pipeline = GraphTestSource3D() + RasterizeGraph(
             GraphKeys.TEST_GRAPH,
             ArrayKeys.RASTERIZED,
             ArraySpec(voxel_size=(40, 4, 4)),
@@ -112,7 +148,7 @@ class TestRasterizePoints(ProviderTest):
 
         # same with different foreground/background labels
 
-        pipeline = GraphTestSource3D() + RasterizePoints(
+        pipeline = GraphTestSource3D() + RasterizeGraph(
             GraphKeys.TEST_GRAPH,
             ArrayKeys.RASTERIZED,
             ArraySpec(voxel_size=(40, 4, 4)),
@@ -137,7 +173,7 @@ class TestRasterizePoints(ProviderTest):
 
         # same with different radius and inner radius
 
-        pipeline = GraphTestSource3D() + RasterizePoints(
+        pipeline = GraphTestSource3D() + RasterizeGraph(
             GraphKeys.TEST_GRAPH,
             ArrayKeys.RASTERIZED,
             ArraySpec(voxel_size=(40, 4, 4)),
@@ -171,7 +207,7 @@ class TestRasterizePoints(ProviderTest):
 
         # same with anisotropic radius
 
-        pipeline = GraphTestSource3D() + RasterizePoints(
+        pipeline = GraphTestSource3D() + RasterizeGraph(
             GraphKeys.TEST_GRAPH,
             ArrayKeys.RASTERIZED,
             ArraySpec(voxel_size=(40, 4, 4)),
@@ -201,7 +237,7 @@ class TestRasterizePoints(ProviderTest):
 
         # same with anisotropic radius and inner radius
 
-        pipeline = GraphTestSource3D() + RasterizePoints(
+        pipeline = GraphTestSource3D() + RasterizeGraph(
             GraphKeys.TEST_GRAPH,
             ArrayKeys.RASTERIZED,
             ArraySpec(voxel_size=(40, 4, 4)),
@@ -232,3 +268,29 @@ class TestRasterizePoints(ProviderTest):
             self.assertEqual(rasterized[0, 0, 6], 0)
             self.assertEqual(rasterized[1, 0, 0], 1)
             self.assertEqual(rasterized[2, 0, 0], 0)
+
+    def test_with_edge(self):
+        graph_with_edge = GraphKey("TEST_GRAPH_WITH_EDGE")
+        array_with_edge = ArrayKey("RASTERIZED_EDGE")
+
+        pipeline = GraphTestSourceWithEdge() + RasterizeGraph(
+            GraphKeys.TEST_GRAPH_WITH_EDGE,
+            ArrayKeys.RASTERIZED_EDGE,
+            ArraySpec(voxel_size=(1, 1, 1)),
+            settings=RasterizationSettings(0.5),
+        )
+
+        with build(pipeline):
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (10, 10, 10))
+
+            request[GraphKeys.TEST_GRAPH_WITH_EDGE] = GraphSpec(roi=roi)
+            request[ArrayKeys.RASTERIZED_EDGE] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED_EDGE].data
+
+            assert (
+                rasterized.sum() == 10
+            ), f"rasterized has ones at: {np.where(rasterized==1)}"

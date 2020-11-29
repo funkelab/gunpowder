@@ -2,6 +2,7 @@ import copy
 import logging
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
+from skimage import draw
 
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
@@ -24,7 +25,7 @@ class RasterizationSettings(Freezable):
 
         radius (``float`` or ``tuple`` of ``float``):
 
-            The radius (for balls) or sigma (for peaks) in world units.
+            The radius (for balls or tubes) or sigma (for peaks) in world units.
 
         mode (``string``):
 
@@ -61,6 +62,21 @@ class RasterizationSettings(Freezable):
 
             The value to use to for the background in the output array,
             defaults to 0.
+
+        edges (``bool``, optional):
+
+            Whether to rasterize edges by linearly interpolating between Nodes.
+            Default is True.
+
+        color_attr (``str``, optional)
+
+            Which graph attribute to use for coloring nodes and edges. One
+            useful example might be `component` which would color your graph
+            based on the component labels.
+            Notes: 
+            - Only available in "ball" mode
+            - Nodes and Edges missing the attribute will be skipped.
+            - color_attr must be populated for nodes and edges upstream of this node
     '''
     def __init__(
             self,
@@ -69,7 +85,10 @@ class RasterizationSettings(Freezable):
             mask=None,
             inner_radius_fraction=None,
             fg_value=1,
-            bg_value=0):
+            bg_value=0,
+            edges=True,
+            color_attr=None,
+            ):
 
         radius = np.array([radius]).flatten().astype(np.float64)
 
@@ -78,6 +97,7 @@ class RasterizationSettings(Freezable):
                 inner_radius_fraction > 0.0 and
                 inner_radius_fraction < 1.0), (
                     "Inner radius fraction has to be between (excluding) 0 and 1")
+            inner_radius_fraction = 1.0 - inner_radius_fraction
 
         self.radius = radius
         self.mode = mode
@@ -85,15 +105,18 @@ class RasterizationSettings(Freezable):
         self.inner_radius_fraction = inner_radius_fraction
         self.fg_value = fg_value
         self.bg_value = bg_value
+        self.edges = edges
+        self.color_attr = color_attr
         self.freeze()
 
-class RasterizePoints(BatchFilter):
-    '''Draw points into a binary array as balls of a given radius.
+
+class RasterizeGraph(BatchFilter):
+    """Draw graphs into a binary array as balls/tubes of a given radius.
 
     Args:
 
-        points (:class:`GraphKey`):
-            The key of the points to rasterize.
+        graph (:class:`GraphKey`):
+            The key of the graph to rasterize.
 
         array (:class:`ArrayKey`):
             The key of the binary array to create.
@@ -104,8 +127,8 @@ class RasterizePoints(BatchFilter):
             voxel size.
 
         settings (:class:`RasterizationSettings`, optional):
-            Which settings to use to rasterize the points.
-    '''
+            Which settings to use to rasterize the graph.
+    """
 
     def __init__(self, graph, array, array_spec=None, settings=None):
 
@@ -153,17 +176,17 @@ class RasterizePoints(BatchFilter):
         if len(context) == 1:
             context = context.repeat(dims)
 
-        # request points in a larger area to get rasterization from outside
-        # points
-        points_roi = request[self.array].roi.grow(
+        # request graph in a larger area to get rasterization from outside
+        # graph
+        graph_roi = request[self.array].roi.grow(
                 Coordinate(context),
                 Coordinate(context))
 
-        # however, restrict the request to the points actually provided
-        points_roi = points_roi.intersect(self.spec[self.graph].roi)
+        # however, restrict the request to the graph actually provided
+        graph_roi = graph_roi.intersect(self.spec[self.graph].roi)
 
         deps = BatchRequest()
-        deps[self.graph] = GraphSpec(roi=points_roi)
+        deps[self.graph] = GraphSpec(roi=graph_roi)
 
         if self.settings.mask is not None:
 
@@ -171,7 +194,7 @@ class RasterizePoints(BatchFilter):
             assert self.spec[self.array].voxel_size == mask_voxel_size, (
                 "Voxel size of mask and rasterized volume need to be equal")
 
-            new_mask_roi = points_roi.snap_to_grid(mask_voxel_size)
+            new_mask_roi = graph_roi.snap_to_grid(mask_voxel_size)
             deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
 
         return deps
@@ -182,23 +205,24 @@ class RasterizePoints(BatchFilter):
         mask = self.settings.mask
         voxel_size = self.spec[self.array].voxel_size
 
-        # get roi used for creating the new array (points_roi does no
+        # get roi used for creating the new array (graph_roi does not
         # necessarily align with voxel size)
         enlarged_vol_roi = graph.spec.roi.snap_to_grid(voxel_size)
         offset = enlarged_vol_roi.get_begin() / voxel_size
         shape = enlarged_vol_roi.get_shape() / voxel_size
         data_roi = Roi(offset, shape)
 
-        logger.debug("Points in %s", graph.spec.roi)
+        logger.debug("Graph in %s", graph.spec.roi)
         for node in graph.nodes:
             logger.debug("%d, %s", node.id, node.location)
         logger.debug("Data roi in voxels: %s", data_roi)
         logger.debug("Data roi in world units: %s", data_roi*voxel_size)
 
         if graph.num_vertices == 0:
-            # If there are no graph at all, just create an empty matrix.
-            rasterized_points_data = np.zeros(data_roi.get_shape(),
-                                              dtype=self.spec[self.array].dtype)
+            # If there are no nodes at all, just create an empty matrix.
+            rasterized_graph_data = np.zeros(
+                data_roi.get_shape(), dtype=self.spec[self.array].dtype
+            )
         elif mask is not None:
 
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
@@ -216,13 +240,13 @@ class RasterizePoints(BatchFilter):
                 labels.remove(0)
 
             if len(labels) == 0:
-                logger.debug("Points and provided object mask do not overlap. No graph to rasterize.")
-                rasterized_points_data = np.zeros(data_roi.get_shape(),
+                logger.debug("Graph and provided object mask do not overlap. No graph to rasterize.")
+                rasterized_graph_data = np.zeros(data_roi.get_shape(),
                                                   dtype=self.spec[self.array].dtype)
             else:
                 # create data for the whole graph ROI, "or"ed together over
                 # individual object masks
-                rasterized_points_data = np.sum(
+                rasterized_graph_data = np.sum(
                     [
                         self.__rasterize(
                             graph,
@@ -239,7 +263,7 @@ class RasterizePoints(BatchFilter):
         else:
 
             # create data for the whole graph ROI without mask
-            rasterized_points_data = self.__rasterize(
+            rasterized_graph_data = self.__rasterize(
                 graph,
                 data_roi,
                 voxel_size,
@@ -251,16 +275,16 @@ class RasterizePoints(BatchFilter):
             self.settings.fg_value != 1):
 
             replaced = replace(
-                rasterized_points_data,
+                rasterized_graph_data,
                 [0, 1],
                 [self.settings.bg_value, self.settings.fg_value])
-            rasterized_points_data = replaced.astype(self.spec[self.array].dtype)
+            rasterized_graph_data = replaced.astype(self.spec[self.array].dtype)
 
         # create array and crop it to requested roi
         spec = self.spec[self.array].copy()
         spec.roi = data_roi*voxel_size
         rasterized_points = Array(
-            data=rasterized_points_data,
+            data=rasterized_graph_data,
             spec=spec)
         batch[self.array] = rasterized_points.crop(request[self.array].roi)
 
@@ -272,25 +296,26 @@ class RasterizePoints(BatchFilter):
         logger.debug("Rasterizing graph in %s", graph.spec.roi)
 
         # prepare output array
-        rasterized_points = np.zeros(data_roi.get_shape(), dtype=dtype)
+        rasterized_graph = np.zeros(data_roi.get_shape(), dtype=dtype)
 
         # Fast rasterization currently only implemented for mode ball without
         # inner radius set
         use_fast_rasterization = (
-            settings.mode == 'ball' and
-            settings.inner_radius_fraction is None
+            settings.mode == "ball"
+            and settings.inner_radius_fraction is None
+            and len(list(graph.edges)) == 0
         )
 
         if use_fast_rasterization:
 
-            dims = len(rasterized_points.shape)
+            dims = len(rasterized_graph.shape)
 
             # get structuring element for mode ball
             ball_kernel = create_ball_kernel(settings.radius, voxel_size)
             radius_voxel = Coordinate(np.array(ball_kernel.shape)/2)
             data_roi_base = Roi(
                     offset=Coordinate((0,)*dims),
-                    shape=Coordinate(rasterized_points.shape))
+                    shape=Coordinate(rasterized_graph.shape))
             kernel_roi_base = Roi(
                     offset=Coordinate((0,)*dims),
                     shape=Coordinate(ball_kernel.shape))
@@ -323,24 +348,56 @@ class RasterizePoints(BatchFilter):
                 arr_crop_ind = arr_crop.get_bounding_box()
                 kernel_crop_ind = kernel_crop.get_bounding_box()
 
-                rasterized_points[arr_crop_ind] = np.logical_or(
-                    ball_kernel[kernel_crop_ind],
-                    rasterized_points[arr_crop_ind])
+                rasterized_graph[arr_crop_ind] = np.logical_or(
+                    ball_kernel[kernel_crop_ind], rasterized_graph[arr_crop_ind]
+                )
 
             else:
 
-                rasterized_points[v] = 1
+                if settings.color_attr is not None:
+                    c = graph.nodes[node].get(settings.color_attr)
+                    if c is None:
+                        logger.debug(f"Skipping node: {node}")
+                        continue
+                    elif np.isclose(c, 1) and not np.isclose(settings.fg_value, 1):
+                        logger.warning(
+                            f"Node {node} is being colored with color {c} according to "
+                            f"attribute {settings.color_attr} "
+                            f"but color 1 will be replaced with fg_value: {settings.fg_value}"
+                            )
+                else:
+                    c = 1
+                rasterized_graph[v] = c
+        if settings.edges:
+            for e in graph.edges:
+                if settings.color_attr is not None:
+                    c = graph.edges[e].get(settings.color_attr)
+                    if c is None:
+                        continue
+                    elif np.isclose(c, 1) and not np.isclose(settings.fg_value, 1):
+                        logger.warning(
+                            f"Edge {e} is being colored with color {c} according to "
+                            f"attribute {settings.color_attr} "
+                            f"but color 1 will be replaced with fg_value: {settings.fg_value}"
+                            )
+
+                u = graph.node(e.u)
+                v = graph.node(e.v)
+                u_coord = Coordinate(u.location / voxel_size)
+                v_coord = Coordinate(v.location / voxel_size)
+                line = draw.line_nd(u_coord, v_coord, endpoint=True)
+                rasterized_graph[line] = 1
 
         # grow graph
         if not use_fast_rasterization:
 
-            if settings.mode == 'ball':
+            if settings.mode == "ball":
 
                 enlarge_binary_map(
-                    rasterized_points,
+                    rasterized_graph,
                     settings.radius,
                     voxel_size,
-                    1.0 - settings.inner_radius_fraction,
+                    settings.inner_radius_fraction,
                     in_place=True)
 
             else:
@@ -348,21 +405,19 @@ class RasterizePoints(BatchFilter):
                 sigmas = settings.radius/voxel_size
 
                 gaussian_filter(
-                    rasterized_points,
-                    sigmas,
-                    output=rasterized_points,
-                    mode='constant')
+                    rasterized_graph, sigmas, output=rasterized_graph, mode="constant"
+                )
 
                 # renormalize to have 1 be the highest value
-                max_value = np.max(rasterized_points)
+                max_value = np.max(rasterized_graph)
                 if max_value > 0:
-                    rasterized_points /= max_value
+                    rasterized_graph /= max_value
 
         if mask_array is not None:
             # use more efficient bitwise operation when possible
-            if settings.mode == 'ball':
-                rasterized_points &= mask
+            if settings.mode == "ball":
+                rasterized_graph &= mask
             else:
-                rasterized_points *= mask
+                rasterized_graph *= mask
 
-        return rasterized_points
+        return rasterized_graph
