@@ -33,11 +33,6 @@ except ImportError as e:
     pyklb = NoSuchModule('pyklb')
 
 try:
-    import caffe
-except ImportError as e:
-    caffe = NoSuchModule('caffe')
-
-try:
     import tensorflow
 except ImportError as e:
     tensorflow = NoSuchModule('tensorflow')

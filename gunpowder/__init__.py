@@ -18,7 +18,6 @@ from .producer_pool import ProducerPool
 from .provider_spec import ProviderSpec
 from .roi import Roi
 from .version_info import _version as version
-import gunpowder.caffe
 import gunpowder.contrib
 import gunpowder.tensorflow
 import gunpowder.torch
