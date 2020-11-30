@@ -57,7 +57,6 @@ class ExampleSource(BatchProvider):
 
 class TestAddAffinities(ProviderTest):
 
-    @skipIf(isinstance(gunpowder.ext.malis, gunpowder.ext.NoSuchModule), "malis not installed")
     def test_output(self):
 
         neighborhood = [
