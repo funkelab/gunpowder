@@ -497,7 +497,7 @@ ground-truth using a binary cross-entropy loss (``loss``). We will use `PyTorch
   .. jupyter-execute::
 
     import torch
-    from funlib.learn.torch.models import UNet
+    from funlib.learn.torch.models import UNet, ConvPass
 
     # make sure we all see the same
     torch.manual_seed(18)
@@ -509,10 +509,12 @@ ground-truth using a binary cross-entropy loss (``loss``). We will use `PyTorch
       downsample_factors=[[2, 2], [2, 2]],
       kernel_size_down=[[[3, 3], [3, 3]]]*3,
       kernel_size_up=[[[3, 3], [3, 3]]]*2,
-      num_fmaps_out=1,
       padding='same')
 
-    model = torch.nn.Sequential(unet, torch.nn.Sigmoid())
+    model = torch.nn.Sequential(
+      unet,
+      ConvPass(4, 1, [(1, 1)], activation=None),
+      torch.nn.Sigmoid())
 
     loss = torch.nn.BCELoss()
 

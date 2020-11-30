@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: A Simple Pipeline &mdash; gunpowder 1.1.5 documentation</title>
+  <title>Tutorial: A Simple Pipeline &mdash; gunpowder 1.2.1 documentation</title>
   
 
   
@@ -27,8 +27,9 @@
   
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorial: Writing Your Own Node" href="tutorial_batch_provider.html" />
@@ -64,7 +65,7 @@
             
             
               <div class="version">
-                1.1
+                1.2
               </div>
             
           
@@ -125,7 +126,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#providerspec">ProviderSpec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#batchrequest">BatchRequest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#arrayspec">ArraySpec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#pointsspec">PointsSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#graphspec">GraphSpec</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#geometry">Geometry</a><ul>
@@ -139,18 +140,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#source-nodes">Source Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#csvpointssource">CsvPointsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#dvidsource">DvidSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#zarrsource">ZarrSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#n5source">N5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#klbsource">KlbSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#csvpointssource">CsvPointsSource</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#augmentation-nodes">Augmentation Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#defectaugment">DefectAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#elasticaugment">ElasticAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#noiseaugment">NoiseAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#simpleaugment">SimpleAugment</a></li>
 </ul>
 </li>
@@ -159,8 +160,12 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#pad">Pad</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#randomlocation">RandomLocation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#reject">Reject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#scan">Scan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#array-manipulation-nodes">Array Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#squeeze">Squeeze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#unsqueeze">Unsqueeze</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#image-processing-nodes">Image Processing Nodes</a><ul>
@@ -179,7 +184,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#point-processing-nodes">Point Processing Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#rasterizepoints">RasterizePoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#rasterizegraph">RasterizeGraph</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
@@ -193,18 +198,22 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#tensorflow-predict">tensorflow.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-gunpowder">Output Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#zarrwrite">ZarrWrite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#snapshot">Snapshot</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#performance-nodes">Performance Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#precache">PreCache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#iterative-processing-nodes">Iterative Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#daisyrequestblocks">DaisyRequestBlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -462,7 +471,7 @@ interest (ROI), i.e., an offset and a size.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>batch returned: 
-	RAW: ROI: [0:64, 0:64] (64, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8
+	RAW: ROI: [0:64, 0:64] (64, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
 
 </pre></div>
 </div>
@@ -480,7 +489,7 @@ request reveals:</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-	RAW: ROI: [0:64, 0:64] (64, 64), voxel size: None, interpolatable: None, non-spatial: False, dtype: None
+	RAW: ROI: [0:64, 0:64] (64, 64), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
 
 </pre></div>
 </div>
@@ -510,7 +519,7 @@ change the offset in the request <a class="reference internal" href="api.html#gu
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>batch returned: 
-	RAW: ROI: [50:114, 150:214] (64, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8
+	RAW: ROI: [50:114, 150:214] (64, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
 
 </pre></div>
 </div>
@@ -677,7 +686,7 @@ random noise, it is helpful to ensure we are dealing with float values between
 it is based on the data type of the source (or, optionally, on a user-specified
 scaling factor).</p>
 <p>Second, we introduced nodes that take array keys as arguments
-(<a class="reference internal" href="api.html#gunpowder.Normalize" title="gunpowder.Normalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalize</span></code></a>, <a class="reference internal" href="api.html#gunpowder.IntensityAugment" title="gunpowder.IntensityAugment"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntensityAugment</span></code></a>, and <code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseAugment</span></code>).
+(<a class="reference internal" href="api.html#gunpowder.Normalize" title="gunpowder.Normalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalize</span></code></a>, <a class="reference internal" href="api.html#gunpowder.IntensityAugment" title="gunpowder.IntensityAugment"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntensityAugment</span></code></a>, and <a class="reference internal" href="api.html#gunpowder.NoiseAugment" title="gunpowder.NoiseAugment"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseAugment</span></code></a>).
 Those nodes limit their operation to the given keys, which is useful if our
 batch also contains other arrays (like a ground-truth segmentation) that we do
 not wish to modify.</p>
@@ -871,7 +880,7 @@ sigmoid function to ensure values are between 0 and 1.</p>
 <div class="jupyter_cell jupyter_container docutils container">
 <div class="cell_input code_cell docutils container">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">funlib.learn.torch.models</span> <span class="kn">import</span> <span class="n">UNet</span>
+<span class="kn">from</span> <span class="nn">funlib.learn.torch.models</span> <span class="kn">import</span> <span class="n">UNet</span><span class="p">,</span> <span class="n">ConvPass</span>
 
 <span class="c1"># make sure we all see the same</span>
 <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>
@@ -883,10 +892,12 @@ sigmoid function to ensure values are between 0 and 1.</p>
   <span class="n">downsample_factors</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
   <span class="n">kernel_size_down</span><span class="o">=</span><span class="p">[[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]]</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span>
   <span class="n">kernel_size_up</span><span class="o">=</span><span class="p">[[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
-  <span class="n">num_fmaps_out</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">unet</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">unet</span><span class="p">,</span>
+  <span class="n">ConvPass</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+  <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
 
 <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
 
@@ -1040,7 +1051,7 @@ node: <a class="reference internal" href="api.html#gunpowder.Scan" title="gunpow
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/tutorial_simple_pipeline_22_0.png" src="_images/tutorial_simple_pipeline_22_0.png" />
+<img alt="_images/tutorial_simple_pipeline_22_9.png" src="_images/tutorial_simple_pipeline_22_9.png" />
 </div>
 </div>
 <p>The main difference to the training pipeline used earlier is that there is no
@@ -1059,7 +1070,7 @@ by <a class="reference internal" href="api.html#gunpowder.Scan" title="gunpowder
 <p>So how do we get access to the prediction then to store it, for example, in a
 <code class="docutils literal notranslate"><span class="pre">zarr</span></code> container? The answer is to add a node <strong>between</strong> predict and scan,
 through which every batch will pass before it is being discarded. The
-<code class="xref py py-class docutils literal notranslate"><span class="pre">ZarrWrite</span></code> node will, for instance, assemble a <code class="docutils literal notranslate"><span class="pre">zarr</span></code> container of
+<a class="reference internal" href="api.html#gunpowder.ZarrWrite" title="gunpowder.ZarrWrite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ZarrWrite</span></code></a> node will, for instance, assemble a <code class="docutils literal notranslate"><span class="pre">zarr</span></code> container of
 all the arrays passing through it.</p>
 <p>The following example illustrates that:</p>
 <div class="jupyter_cell jupyter_container docutils container">
@@ -1104,7 +1115,7 @@ all the arrays passing through it.</p>
 
 </pre></div>
 </div>
-<img alt="_images/tutorial_simple_pipeline_23_1.png" src="_images/tutorial_simple_pipeline_23_1.png" />
+<img alt="_images/tutorial_simple_pipeline_23_14.png" src="_images/tutorial_simple_pipeline_23_14.png" />
 </div>
 </div>
 </div>
@@ -1161,7 +1172,7 @@ For a complete list see the <a class="reference internal" href="api.html#sec-api
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.1.5',
+            VERSION:'1.2.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -1173,9 +1184,10 @@ For a complete list see the <a class="reference internal" href="api.html#sec-api
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -1190,18 +1202,7 @@ For a complete list see the <a class="reference internal" href="api.html#sec-api
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>

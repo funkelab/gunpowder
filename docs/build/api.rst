@@ -278,6 +278,8 @@ tensorflow.Predict
 Output Nodes
 ------------
 
+.. automodule:: gunpowder
+
 Hdf5Write
 ^^^^^^^^^
   .. autoclass:: Hdf5Write

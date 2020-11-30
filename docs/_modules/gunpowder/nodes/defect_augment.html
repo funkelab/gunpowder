@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.defect_augment &mdash; gunpowder 1.1.5 documentation</title>
+  <title>gunpowder.nodes.defect_augment &mdash; gunpowder 1.2.1 documentation</title>
   
 
   
@@ -27,8 +27,9 @@
   
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -62,7 +63,7 @@
             
             
               <div class="version">
-                1.1
+                1.2
               </div>
             
           
@@ -123,7 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphspec">GraphSpec</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
@@ -137,18 +138,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#noiseaugment">NoiseAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
 </ul>
 </li>
@@ -157,8 +158,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#array-manipulation-nodes">Array Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#squeeze">Squeeze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#unsqueeze">Unsqueeze</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
@@ -177,7 +182,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizegraph">RasterizeGraph</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
@@ -191,18 +196,22 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#module-gunpowder">Output Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrwrite">ZarrWrite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#iterative-processing-nodes">Iterative Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#daisyrequestblocks">DaisyRequestBlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -383,6 +392,7 @@
 
     <span class="c1"># send roi request to data-source upstream</span>
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
         <span class="n">deps</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
 
         <span class="c1"># we prepare the augmentations, by determining which slices</span>
@@ -623,7 +633,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.1.5',
+            VERSION:'1.2.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -635,9 +645,10 @@
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="../../../_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -652,18 +663,7 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>

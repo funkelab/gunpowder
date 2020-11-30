@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.torch.nodes.predict &mdash; gunpowder 1.1.5 documentation</title>
+  <title>gunpowder.torch.nodes.predict &mdash; gunpowder 1.2.1 documentation</title>
   
 
   
@@ -27,8 +27,9 @@
   
     <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 
@@ -62,7 +63,7 @@
             
             
               <div class="version">
-                1.1
+                1.2
               </div>
             
           
@@ -123,7 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#providerspec">ProviderSpec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#batchrequest">BatchRequest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#arrayspec">ArraySpec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#pointsspec">PointsSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#graphspec">GraphSpec</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#geometry">Geometry</a><ul>
@@ -137,18 +138,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#source-nodes">Source Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#csvpointssource">CsvPointsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#dvidsource">DvidSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#zarrsource">ZarrSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#n5source">N5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#klbsource">KlbSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#csvpointssource">CsvPointsSource</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#defectaugment">DefectAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#elasticaugment">ElasticAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#noiseaugment">NoiseAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#simpleaugment">SimpleAugment</a></li>
 </ul>
 </li>
@@ -157,8 +158,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#pad">Pad</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#randomlocation">RandomLocation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#reject">Reject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#scan">Scan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api.html#array-manipulation-nodes">Array Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#squeeze">Squeeze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#unsqueeze">Unsqueeze</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
@@ -177,7 +182,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#rasterizepoints">RasterizePoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#rasterizegraph">RasterizeGraph</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
@@ -191,18 +196,22 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api.html#module-gunpowder">Output Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#zarrwrite">ZarrWrite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#snapshot">Snapshot</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api.html#performance-nodes">Performance Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#precache">PreCache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api.html#iterative-processing-nodes">Iterative Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api.html#daisyrequestblocks">DaisyRequestBlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -323,10 +332,14 @@
 <span class="sd">            An optional path to the saved parameters for your torch module.</span>
 <span class="sd">            These will be loaded and used for prediction if provided.</span>
 
-<span class="sd">        use_gpus: (``list``, ``int``):</span>
+<span class="sd">        device (``string``, optional):</span>
 
-<span class="sd">            Which gpu&#39;s to use for prediction.</span>
-<span class="sd">            Not yet implemented.</span>
+<span class="sd">            Which device to use for prediction (``&quot;cpu&quot;`` or ``&quot;cuda&quot;``).</span>
+<span class="sd">            Default is ``&quot;cuda&quot;``, which falls back to CPU if CUDA is not</span>
+<span class="sd">            available.</span>
+
+<span class="sd">        spawn_subprocess (bool, optional): Whether to run ``predict`` in a</span>
+<span class="sd">            separate process. Default is false.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -334,25 +347,50 @@
         <span class="n">model</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayKey</span><span class="p">],</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">ArrayKey</span><span class="p">],</span>
-        <span class="n">array_specs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ArrayKey</span><span class="p">,</span> <span class="n">ArraySpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="n">array_specs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ArrayKey</span><span class="p">,</span> <span class="n">ArraySpec</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">gpus</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+        <span class="n">spawn_subprocess</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_specs</span> <span class="o">=</span> <span class="n">array_specs</span> <span class="k">if</span> <span class="n">array_specs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+
         <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Model is in training mode during prediction. &quot;</span>
                 <span class="s2">&quot;Consider using model.eval()&quot;</span>
             <span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">Predict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">array_specs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Predict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="p">,</span>
+            <span class="n">array_specs</span><span class="p">,</span>
+            <span class="n">spawn_subprocess</span><span class="o">=</span><span class="n">spawn_subprocess</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">device</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training on </span><span class="si">{</span><span class="s1">&#39;gpu&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_string</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># to be set in start()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span> <span class="o">=</span> <span class="n">checkpoint</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gpus</span> <span class="o">=</span> <span class="n">gpus</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_layers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_hooks</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device_string</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Predicting on </span><span class="si">{</span><span class="s1">&#39;gpu&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to move model to device. If you are using a child process &quot;</span>
+                <span class="s2">&quot;to run your model, maybe you already initialized CUDA by sending &quot;</span>
+                <span class="s2">&quot;your model to device in the main process.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
@@ -360,11 +398,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">&quot;model_state_dict&quot;</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_layers</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">register_hooks</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
@@ -448,7 +481,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'1.1.5',
+            VERSION:'1.2.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -460,9 +493,10 @@
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="../../../../_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -477,18 +511,7 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>
