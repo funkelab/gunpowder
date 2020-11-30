@@ -45,11 +45,6 @@ class Predict(GenericPredict):
             An optional path to the saved parameters for your torch module.
             These will be loaded and used for prediction if provided.
 
-        gpus: (``list`` of ``int``, optional):
-
-            Which gpu's to use for prediction.
-            Not yet implemented.
-
         device (``string``, optional):
 
             Which device to use for prediction (``"cpu"`` or ``"cuda"``).
@@ -65,12 +60,14 @@ class Predict(GenericPredict):
         model,
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[str, int], ArrayKey],
-        array_specs: Dict[ArrayKey, ArraySpec] = {},
+        array_specs: Dict[ArrayKey, ArraySpec] = None,
         checkpoint: str = None,
-        gpus=[0],
         device="cuda",
         spawn_subprocess=False
     ):
+
+        self.array_specs = array_specs if array_specs is not None else {}
+
         if model.training:
             logger.warning(
                 "Model is in training mode during prediction. "
@@ -87,7 +84,6 @@ class Predict(GenericPredict):
         self.device = None  # to be set in start()
         self.model = model
         self.checkpoint = checkpoint
-        self.gpus = gpus
 
         self.intermediate_layers = {}
         self.register_hooks()
