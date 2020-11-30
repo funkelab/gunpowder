@@ -243,11 +243,6 @@ class ExampleModel(torch.nn.Module):
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 class TestTorchPredictMultiprocessing(ProviderTest):
     def test_scan(self):
-        if torch.cuda.is_initialized():
-            raise RuntimeError(
-                "Cuda is already initialized in the main process! Will not be able "
-                "to reinitialize in forked subprocesses."
-            )
 
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
@@ -283,12 +278,6 @@ class TestTorchPredictMultiprocessing(ProviderTest):
             assert pred in batch
 
     def test_precache(self):
-
-        if torch.cuda.is_initialized():
-            raise RuntimeError(
-                "Cuda is already initialized in the main process! Will not be able "
-                "to reinitialize in forked subprocesses."
-            )
 
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
