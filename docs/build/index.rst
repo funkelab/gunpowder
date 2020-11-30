@@ -21,8 +21,8 @@ augmentation <sec_api_augmentation_nodes>`,
 to :ref:`storage of results <sec_api_output_nodes>`
 on arbitrarily large volumes of multi-dimensional images. Gunpowder is not
 tied to a particular learning framework, and thus complements libraries like
-`PyTorch <https://pytorch.org/>`_, `TensorFlow <https://www.tensorflow.org/>`_,
-or `caffe <http://caffe.berkeleyvision.org/>`_.
+`PyTorch <https://pytorch.org/>`_ or `TensorFlow
+<https://www.tensorflow.org/>`_.
 
 .. toctree::
   :maxdepth: 2
