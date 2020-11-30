@@ -1,7 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
-import collections
+from collections.abc import Iterable
 import itertools
 import logging
 import numpy as np
@@ -69,7 +69,7 @@ class BalanceLabels(BatchFilter):
         self.scales = scales
         if mask is None:
             self.masks = []
-        elif not isinstance(mask, collections.Iterable):
+        elif not isinstance(mask, Iterable):
             self.masks = [mask]
         else:
             self.masks = mask

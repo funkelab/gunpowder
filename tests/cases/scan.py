@@ -1,5 +1,19 @@
 from .provider_test import ProviderTest
-from gunpowder import *
+from gunpowder import (
+    BatchProvider,
+    BatchRequest,
+    Batch,
+    ArrayKeys,
+    ArraySpec,
+    Array,
+    GraphKeys,
+    GraphSpec,
+    Graph,
+    Node,
+    Roi,
+    Scan,
+    build,
+)
 import numpy as np
 import itertools
 
@@ -25,7 +39,7 @@ class ScanTestSource(BatchProvider):
         self.provides(
             GraphKeys.GT_GRAPH,
             GraphSpec(
-                roi=Roi((20000,2000,2000), (2000,200,200)),
+                roi=Roi((None, None, None), (None, None, None)),
             )
         )
 
@@ -59,7 +73,6 @@ class ScanTestSource(BatchProvider):
         
         for graph_key, spec in request.graph_specs.items():
             # node at x, y, z if x%100==0, y%10==0, z%10==0
-            roi = self.spec[graph_key].roi
             nodes = []
             start = spec.roi.get_begin() - tuple(x % s for x, s in zip(spec.roi.get_begin(), [100,10,10]))
             for i, j, k in itertools.product(

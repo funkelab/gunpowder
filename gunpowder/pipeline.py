@@ -4,6 +4,43 @@ from gunpowder.nodes import BatchProvider
 logger = logging.getLogger(__name__)
 
 
+class PipelineSetupError(Exception):
+
+    def __init__(self, provider):
+        self.provider = provider
+
+    def __str__(self):
+
+        return \
+            f"Exception in {self.provider.name()} while calling setup()"
+
+
+class PipelineTeardownError(Exception):
+
+    def __init__(self, provider):
+        self.provider = provider
+
+    def __str__(self):
+
+        return \
+            f"Exception in {self.provider.name()} while calling teardown()"
+
+
+class PipelineRequestError(Exception):
+
+    def __init__(self, pipeline, request):
+        self.pipeline = pipeline
+        self.request = request
+
+    def __str__(self):
+
+        return \
+            "Exception in pipeline:\n" \
+            f"{self.pipeline}\n" \
+            "while trying to process request\n" \
+            f"{self.request}"
+
+
 class Pipeline:
 
     def __init__(self, node):
@@ -55,8 +92,14 @@ class Pipeline:
         # call setup on all nodes
         if not self.initialized:
 
+            def node_setup(node):
+                try:
+                    node.output.setup()
+                except Exception as e:
+                    raise PipelineSetupError(node.output) from e
+
             self.traverse(
-                lambda n: n.output.setup(),
+                node_setup,
                 reverse=True)
             self.initialized = True
         else:
@@ -70,9 +113,15 @@ class Pipeline:
 
         try:
 
+            def node_teardown(node):
+                try:
+                    node.output.internal_teardown()
+                except Exception as e:
+                    raise PipelineTeardownError(node.output) from e
+
             # call internal_teardown on all nodes
             self.traverse(
-                lambda n: n.output.internal_teardown(),
+                node_teardown,
                 reverse=True)
             self.initialized = False
 
@@ -87,7 +136,10 @@ class Pipeline:
     def request_batch(self, request):
         '''Request a batch from the pipeline.'''
 
-        return self.output.request_batch(request)
+        try:
+            return self.output.request_batch(request)
+        except Exception as e:
+            raise PipelineRequestError(self, request) from e
 
     @property
     def spec(self):
@@ -183,7 +235,8 @@ def batch_provider_add(self, other):
 
     if not isinstance(other, Pipeline):
         raise RuntimeError(
-            f"Don't know how to add {type(other)} to BatchProvider")
+            f"Don't know how to add {type(other)} to BatchProvider "
+            f"{self.name()}")
 
     return Pipeline(self) + other
 
@@ -197,7 +250,8 @@ def batch_provider_radd(self, other):
         return other + Pipeline(self)
 
     raise RuntimeError(
-        f"Don't know how to radd {type(other)} to BatchProvider")
+        f"Don't know how to radd {type(other)} to BatchProvider"
+        f"{self.name()}")
 
 
 BatchProvider.__add__ = batch_provider_add

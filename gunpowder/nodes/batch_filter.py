@@ -8,6 +8,17 @@ from gunpowder.profiling import Timing
 logger = logging.getLogger(__name__)
 
 
+class BatchFilterError(Exception):
+
+    def __init__(self, batch_filter, msg):
+        self.batch_filter = batch_filter
+        self.msg = msg
+
+    def __str__(self):
+
+        return f"Error in {self.batch_filter.name()}: {self.msg}"
+
+
 class BatchFilter(BatchProvider):
     """Convenience wrapper for :class:`BatchProviders<BatchProvider>` with
     exactly one input provider.
@@ -34,10 +45,19 @@ class BatchFilter(BatchProvider):
             :func:`process`. Used to communicate dependencies.
     """
 
+    @property
+    def remove_placeholders(self):
+        if not hasattr(self, '_remove_placeholders'):
+            return False
+        return self._remove_placeholders
+
     def get_upstream_provider(self):
-        assert (
-            len(self.get_upstream_providers()) == 1
-        ), "BatchFilters need to have exactly one upstream provider"
+        if len(self.get_upstream_providers()) != 1:
+            raise BatchFilterError(
+                self,
+                "BatchFilters need to have exactly one upstream provider, "
+                f"this one has {len(self.get_upstream_providers())}: "
+                f"({[b.name() for b in self.get_upstream_providers()]}")
         return self.get_upstream_providers()[0]
 
     def updates(self, key, spec):
@@ -57,10 +77,12 @@ class BatchFilter(BatchProvider):
                 The updated spec of the array or point set.
         """
 
-        assert key in self.spec, (
-            "Node %s is trying to change the spec for %s, but is not provided upstream."
-            % (type(self).__name__, key)
-        )
+        if key not in self.spec:
+            raise BatchFilterError(
+                self,
+                f"BatchFilter {self} is trying to change the spec for {key}, "
+                f"but {key} is not provided upstream. Upstream offers: "
+                f"{self.get_upstream_provider().spec}")
         self.spec[key] = copy.deepcopy(spec)
         self.updated_items.append(key)
 
@@ -133,14 +155,15 @@ class BatchFilter(BatchProvider):
             elif dependencies is None:
                 upstream_request = request.copy()
             else:
-                raise Exception(
-                    f"{self.__class__} returned a {type(dependencies)}! "
-                    f"Supported return types are: `BatchRequest` containing your exact "
-                    f"dependencies or `None`, indicating a dependency on the full request."
-                )
+                raise BatchFilterError(
+                    self,
+                    f"This BatchFilter returned a {type(dependencies)}! "
+                    "Supported return types are: `BatchRequest` containing your exact "
+                    "dependencies or `None`, indicating a dependency on the full request.")
             self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
+        self.remove_provided(upstream_request)
 
         timing_prepare.stop()
 
@@ -151,9 +174,11 @@ class BatchFilter(BatchProvider):
 
         if not skip:
             if dependencies is not None:
+                dependencies.remove_placeholders()
                 node_batch = batch.crop(dependencies)
             else:
                 node_batch = batch
+            downstream_request.remove_placeholders()
             processed_batch = self.process(node_batch, downstream_request)
             if processed_batch is None:
                 processed_batch = node_batch
@@ -174,7 +199,9 @@ class BatchFilter(BatchProvider):
         if not self.autoskip_enabled:
             return False
 
-        for key, _ in request.items():
+        for key, spec in request.items():
+            if spec.placeholder:
+                continue
             if key in self.provided_items:
                 return False
             if key in self.updated_items:
@@ -222,6 +249,6 @@ class BatchFilter(BatchProvider):
                 The request this node received. The updated batch should meet
                 this request.
         """
-        raise RuntimeError(
-            "Class %s does not implement 'process'" % type(self).__name__
-        )
+        raise BatchFilterError(
+            self,
+            "does not implement 'process'")

@@ -9,6 +9,10 @@ python:
 jobs:
   allow_failures:
     - python: "3.8"
+  include:
+    - stage: lint
+      python: "3.8"
+      script: flake8 tests gunpowder
 
 before_install:
   - sudo apt-get update
@@ -23,8 +27,7 @@ before_install:
   - source activate gp-env
 
 install:
-  - conda install -c cpape -c conda-forge z5py
-  - make install-full
+  - make install-dev
 
 script:
   - make test

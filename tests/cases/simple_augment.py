@@ -50,7 +50,7 @@ class ArrayTestSource(BatchProvider):
 
         return batch
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
     def __init__(self):
 
         self.graph = Graph(
@@ -80,7 +80,7 @@ class TestSimpleAugment(ProviderTest):
     def test_mirror(self):
         test_graph = GraphKey("TEST_GRAPH")
 
-        pipeline = TestSource() + SimpleAugment(
+        pipeline = ExampleSource() + SimpleAugment(
             mirror_only=[0, 1, 2], transpose_only=[]
         )
 
@@ -115,7 +115,7 @@ class TestSimpleAugment(ProviderTest):
         test_array2 = ArrayKey("TEST_ARRAY2")
 
         transpose_dims = [1, 2]
-        pipeline = (ArrayTestSource(), TestSource()) + MergeProvider() + SimpleAugment(
+        pipeline = (ArrayTestSource(), ExampleSource()) + MergeProvider() + SimpleAugment(
             mirror_only=[], transpose_only=transpose_dims
         )
 
@@ -157,7 +157,7 @@ class TestSimpleAugment(ProviderTest):
         point = np.array([50, 70, 100])
 
         transpose_dims = [0, 1, 2]
-        pipeline = (ArrayTestSource(), TestSource()) + MergeProvider() + SimpleAugment(
+        pipeline = (ArrayTestSource(), ExampleSource()) + MergeProvider() + SimpleAugment(
             mirror_only=[], transpose_only=transpose_dims
         )
 
@@ -206,7 +206,7 @@ class TestSimpleAugment(ProviderTest):
 
         transpose_dims = [0, 1, 2]
         mirror_dims = [0, 1, 2]
-        pipeline = ((ArrayTestSource(), TestSource()) + MergeProvider() + 
+        pipeline = ((ArrayTestSource(), ExampleSource()) + MergeProvider() + 
                     Pad(test_array1, None) + Pad(test_array2, None) + Pad(test_graph, None)
                     + SimpleAugment(
             mirror_only=mirror_dims, transpose_only=transpose_dims
@@ -268,7 +268,7 @@ class TestSimpleAugment(ProviderTest):
         test_array1 = ArrayKey("TEST_ARRAY1")
         test_array2 = ArrayKey("TEST_ARRAY2")
 
-        pipeline = ((ArrayTestSource(), TestSource()) + MergeProvider() + 
+        pipeline = ((ArrayTestSource(), ExampleSource()) + MergeProvider() + 
                     Pad(test_array1, None) + Pad(test_array2, None) + Pad(test_graph, None)
                     + SimpleAugment(
             mirror_only=[1,2], transpose_only=[1,2]
@@ -287,3 +287,88 @@ class TestSimpleAugment(ProviderTest):
 
                 for (array_key, array) in batch.arrays.items():
                     assert batch.arrays[array_key].data.shape == batch.arrays[array_key].spec.roi.get_shape()
+
+
+class CornerSource(BatchProvider):
+    def __init__(self, key, dims=2, voxel_size=None, dtype=None):
+        self.key = key
+        self.dims = dims
+        self.voxel_size = voxel_size
+        self.dtype = dtype
+
+    def setup(self):
+        self.provides(
+            self.key,
+            ArraySpec(
+                roi=Roi((None,) * self.dims, (None,) * self.dims),
+                voxel_size=self.voxel_size,
+                dtype=self.dtype,
+            ),
+        )
+
+    def provide(self, request):
+        outputs = Batch()
+        roi = request[self.key].roi
+
+        shape = roi.get_shape() / self.spec[self.key].voxel_size
+        dtype = self.dtype
+
+        data = np.zeros(shape, dtype=dtype)
+        corner = tuple(shape[i] - 1 if i == len(shape) else 0 for i in range(self.dims))
+        data[corner] = 1
+
+        spec = self.spec[self.key]
+        spec.roi = roi
+
+        outputs[self.key] = Array(data, spec)
+
+        return outputs
+
+
+def test_mismatched_voxel_multiples():
+    """
+    Ensure we don't shift by half a voxel when transposing 2 axes.
+
+    If voxel_size = [2, 2], and we transpose array of shape [4, 6]:
+
+        center = total_roi.get_center() -> [2, 3]
+
+        # Get distance from center, then transpose
+        dist_to_center = center - roi.get_offset() -> [2, 3]
+        dist_to_center = transpose(dist_to_center)  -> [3, 2]
+
+        # Using the tranposed distance to center, get the correct offset.
+        new_offset = center - dist_to_center -> [-1, 1]
+
+        shape = transpose(shape) -> [6, 4]
+
+        original = ((0, 0), (4, 6))
+        transposed = ((-1, 1), (6, 4))
+
+    This result is what we would expect from tranposing, but no longer fits the voxel grid.
+    dist_to_center should be limited to multiples of the lcm_voxel_size.
+    """
+
+    test_array = ArrayKey("TEST_ARRAY")
+
+    pipeline = (
+        CornerSource(test_array, voxel_size=(2, 2))
+        + SimpleAugment(transpose_only=[0, 1])
+    )
+
+    request = BatchRequest()
+    request[test_array] = ArraySpec(roi=Roi((0, 0), (4, 6)))
+
+    with build(pipeline):
+        loop = 100
+        while loop > 0:
+            loop -= 1
+
+            batch = pipeline.request_batch(request)
+            data = batch[test_array].data
+
+            if data.sum(axis=1)[0] == 1:
+                loop = -1
+        assert loop < 0, "Data was never transposed!"
+
+

@@ -1,4 +1,4 @@
-# from .provider_test import ProviderTest, TestSource
+# from .provider_test import ProviderTest, ExampleSource
 from gunpowder import (BatchProvider, ArrayKeys, ArraySpec, Roi, Batch,
                        Coordinate, SpecifiedLocation, build,
                        BatchRequest, Array, ArrayKey)
@@ -6,7 +6,7 @@ import numpy as np
 import unittest
 
 
-class TestSourceSpecifiedLocation(BatchProvider):
+class ExampleSourceSpecifiedLocation(BatchProvider):
     def __init__(self, roi, voxel_size):
         self.voxel_size = Coordinate(voxel_size)
         self.roi = roi
@@ -51,7 +51,7 @@ class TestSpecifiedLocation(unittest.TestCase):
                 ]
 
         pipeline = (
-            TestSourceSpecifiedLocation(
+            ExampleSourceSpecifiedLocation(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=(1, 1, 1)) +
             SpecifiedLocation(
@@ -82,7 +82,7 @@ class TestSpecifiedLocation(unittest.TestCase):
                 ]
 
         pipeline = (
-            TestSourceSpecifiedLocation(
+            ExampleSourceSpecifiedLocation(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=(5, 2, 2)) +
             SpecifiedLocation(
@@ -122,7 +122,7 @@ class TestSpecifiedLocation(unittest.TestCase):
                 ]
 
         pipeline = (
-            TestSourceSpecifiedLocation(
+            ExampleSourceSpecifiedLocation(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=(5, 2, 2)) +
             SpecifiedLocation(

@@ -42,13 +42,15 @@ class ArraySpec(Freezable):
             voxel_size=None,
             interpolatable=None,
             nonspatial=False,
-            dtype=None):
+            dtype=None,
+            placeholder=False):
 
         self.roi = roi
         self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)
         self.interpolatable = interpolatable
         self.nonspatial = nonspatial
         self.dtype = dtype
+        self.placeholder = placeholder
 
         if nonspatial:
             assert roi is None, "Non-spatial arrays can not have a ROI"
@@ -79,5 +81,6 @@ class ArraySpec(Freezable):
         r += "voxel size: " + str(self.voxel_size) + ", "
         r += "interpolatable: " + str(self.interpolatable) + ", "
         r += "non-spatial: " + str(self.nonspatial) + ", "
-        r += "dtype: " + str(self.dtype)
+        r += "dtype: " + str(self.dtype) + ", "
+        r += "placeholder: " + str(self.placeholder)
         return r

@@ -105,6 +105,7 @@ class DefectAugment(BatchFilter):
 
     # send roi request to data-source upstream
     def prepare(self, request):
+        random.seed(request.random_seed)
         deps = BatchRequest()
 
         # we prepare the augmentations, by determining which slices

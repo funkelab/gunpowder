@@ -44,6 +44,7 @@ class Normalize(BatchFilter):
     def prepare(self, request):
         deps = BatchRequest()
         deps[self.array] = request[self.array]
+        deps[self.array].dtype = None
         return deps
 
     def process(self, batch, request):

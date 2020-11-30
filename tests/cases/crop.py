@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class TestSourceCrop(BatchProvider):
+class ExampleSourceCrop(BatchProvider):
     def setup(self):
 
         self.provides(
@@ -40,7 +40,7 @@ class TestCrop(ProviderTest):
         GraphKey("PRESYN")
 
         pipeline = (
-            TestSourceCrop()
+            ExampleSourceCrop()
             + Crop(ArrayKeys.RAW, cropped_roi_raw)
             + Crop(GraphKeys.PRESYN, cropped_roi_presyn)
         )
@@ -50,7 +50,7 @@ class TestCrop(ProviderTest):
             self.assertTrue(pipeline.spec[ArrayKeys.RAW].roi == cropped_roi_raw)
             self.assertTrue(pipeline.spec[GraphKeys.PRESYN].roi == cropped_roi_presyn)
 
-        pipeline = TestSourceCrop() + Crop(
+        pipeline = ExampleSourceCrop() + Crop(
             ArrayKeys.RAW,
             fraction_negative=(0.25, 0, 0),
             fraction_positive=(0.25, 0, 0),
