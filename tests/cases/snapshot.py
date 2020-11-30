@@ -7,7 +7,7 @@ from gunpowder import (
     ArrayKeys,
     ArraySpec,
     Array,
-    RasterizePoints,
+    RasterizeGraph,
     Snapshot,
     BatchProvider,
     BatchRequest,
