@@ -1,44 +1,50 @@
-import numpy as np
-
 from .provider_test import ProviderTest
 from gunpowder import (
     RandomLocation,
     BatchProvider,
     Roi,
     Coordinate,
+    ArrayKeys,
     ArrayKey,
     ArraySpec,
-    Batch,
     Array,
+    Roi,
+    Coordinate,
+    Batch,
     BatchRequest,
-    build,
+    BatchProvider,
+    RandomLocation,
     MergeProvider,
+    build,
 )
+import numpy as np
+from gunpowder.pipeline import PipelineRequestError
 
 
-class TestSourceRandomLocation(BatchProvider):
+class ExampleSourceRandomLocation(BatchProvider):
     def __init__(self, array):
         self.array = array
         self.roi = Roi((-200, -20, -20), (1000, 100, 100))
-        self.voxel_size = Coordinate((20, 2, 2))
+        self.data_shape = (60, 60, 60)
+        self.voxel_size = (20, 2, 2)
+        x = np.linspace(-10, 49, 60).reshape((-1, 1, 1))
+        self.data = x + x.transpose([1, 2, 0]) + x.transpose([2, 0, 1])
 
     def setup(self):
-        self.provides(
-            self.array,
-            ArraySpec(
-                roi=self.roi,
-                voxel_size=self.voxel_size))
+        self.provides(self.array, ArraySpec(roi=self.roi, voxel_size=self.voxel_size))
 
     def provide(self, request):
 
         batch = Batch()
 
         spec = request[self.array].copy()
-        spec.voxel_size = self.voxel_size
+        spec.voxel_size = Coordinate((20, 2, 2))
 
-        data = np.zeros(request[self.array].roi.get_shape() / self.voxel_size)
-        if request.array_specs[self.array].roi.contains((0, 0, 0)):
-            data[:] = 1
+        start = (request[self.array].roi.get_begin() / self.voxel_size) + (10, 10, 10,)
+        end = (request[self.array].roi.get_end() / self.voxel_size) + (10, 10, 10)
+        data_slices = tuple(map(slice, start, end))
+
+        data = self.data[data_slices]
 
         batch.arrays[self.array] = Array(data=data, spec=spec)
 
@@ -46,21 +52,23 @@ class TestSourceRandomLocation(BatchProvider):
 
 
 class CustomRandomLocation(RandomLocation):
+    def __init__(self, array, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.array = array
 
     # only accept random locations that contain (0, 0, 0)
     def accepts(self, request):
-        return request.array_specs[ArrayKey('A')].roi.contains((0, 0, 0))
+        return request.array_specs[self.array].roi.contains((0, 0, 0))
 
 
 class TestRandomLocation(ProviderTest):
     def test_output(self):
         a = ArrayKey("A")
         b = ArrayKey("B")
-        source_a = TestSourceRandomLocation(a)
-        source_b = TestSourceRandomLocation(b)
+        source_a = ExampleSourceRandomLocation(a)
+        source_b = ExampleSourceRandomLocation(b)
 
-        pipeline = (source_a, source_b) + \
-            MergeProvider() + CustomRandomLocation()
+        pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(a)
 
         with build(pipeline):
 
@@ -68,47 +76,65 @@ class TestRandomLocation(ProviderTest):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
-                            a: ArraySpec(
-                                roi=Roi((0, 0, 0), (20, 20, 20))),
-                            b: ArraySpec(
-                                roi=Roi((0, 0, 0), (20, 20, 20)))
+                            a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                            b: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
                         }
                     )
                 )
 
-                self.assertTrue(np.sum(batch.arrays[a].data) > 0)
-                self.assertTrue(np.sum(batch.arrays[b].data) > 0)
+                self.assertTrue(0 in batch.arrays[a].data)
+                self.assertTrue(0 in batch.arrays[b].data)
 
                 # Request a ROI with the same shape as the entire ROI
                 full_roi_a = Roi((0, 0, 0), source_a.roi.get_shape())
                 full_roi_b = Roi((0, 0, 0), source_b.roi.get_shape())
                 batch = pipeline.request_batch(
                     BatchRequest(
-                        {
-                            a: ArraySpec(roi=full_roi_a),
-                            b: ArraySpec(roi=full_roi_b)
-                        }
+                        {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
                     )
                 )
+
+    def test_random_seed(self):
+        raw = ArrayKey("RAW")
+        pipeline = ExampleSourceRandomLocation(raw) + CustomRandomLocation(raw)
+
+        with build(pipeline):
+            seeded_sums = []
+            unseeded_sums = []
+            for i in range(10):
+                batch_seeded = pipeline.request_batch(
+                    BatchRequest(
+                        {raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))},
+                        random_seed=10,
+                    )
+                )
+                seeded_sums.append(batch_seeded[raw].data.sum())
+                batch_unseeded = pipeline.request_batch(
+                    BatchRequest({raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
+                )
+                unseeded_sums.append(batch_unseeded[raw].data.sum())
+
+            self.assertEqual(len(set(seeded_sums)), 1)
+            self.assertGreater(len(set(unseeded_sums)), 1)
 
     def test_impossible(self):
         a = ArrayKey("A")
         b = ArrayKey("B")
-        source_a = TestSourceRandomLocation(a)
-        source_b = TestSourceRandomLocation(b)
+        null_key = ArrayKey("NULL")
+        source_a = ExampleSourceRandomLocation(a)
+        source_b = ExampleSourceRandomLocation(b)
 
-        pipeline = (source_a, source_b) + \
-            MergeProvider() + CustomRandomLocation()
+        pipeline = (
+            (source_a, source_b) + MergeProvider() + CustomRandomLocation(null_key)
+        )
 
         with build(pipeline):
-            with self.assertRaises(AssertionError):
+            with self.assertRaises(PipelineRequestError):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
-                            a: ArraySpec(
-                                roi=Roi((0, 0, 0), (200, 20, 20))),
-                            b: ArraySpec(
-                                roi=Roi((1000, 100, 100), (220, 22, 22))),
+                            a: ArraySpec(roi=Roi((0, 0, 0), (200, 20, 20))),
+                            b: ArraySpec(roi=Roi((1000, 100, 100), (220, 22, 22))),
                         }
                     )
                 )

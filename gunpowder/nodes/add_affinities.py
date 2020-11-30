@@ -4,6 +4,7 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import malis
 
@@ -57,7 +58,8 @@ class AddAffinities(BatchFilter):
             affinities,
             labels_mask=None,
             unlabelled=None,
-            affinities_mask=None):
+            affinities_mask=None,
+            dtype=np.uint8):
 
         self.affinity_neighborhood = np.array(affinity_neighborhood)
         self.labels = labels
@@ -65,6 +67,7 @@ class AddAffinities(BatchFilter):
         self.labels_mask = labels_mask
         self.affinities = affinities
         self.affinities_mask = affinities_mask
+        self.dtype = dtype
 
     def setup(self):
 
@@ -91,7 +94,7 @@ class AddAffinities(BatchFilter):
         spec = self.spec[self.labels].copy()
         if spec.roi is not None:
             spec.roi = spec.roi.grow(self.padding_neg, -self.padding_pos)
-        spec.dtype = np.uint8
+        spec.dtype = self.dtype
 
         self.provides(self.affinities, spec)
         if self.affinities_mask:
@@ -125,6 +128,7 @@ class AddAffinities(BatchFilter):
             -self.padding_neg,
             self.padding_pos)
         deps[self.labels] = request[self.affinities].copy()
+        deps[self.labels].dtype = None
         deps[self.labels].roi = labels_roi
 
         if self.labels_mask:
@@ -135,15 +139,16 @@ class AddAffinities(BatchFilter):
         return deps
 
     def process(self, batch, request):
+        outputs = Batch()
 
         affinities_roi = request[self.affinities].roi
 
         logger.debug("computing ground-truth affinities from labels")
-        affinities = malis.seg_to_affgraph(
-                batch.arrays[self.labels].data.astype(np.int32),
-                self.affinity_neighborhood
-        ).astype(np.uint8)
 
+        affinities = malis.seg_to_affgraph(
+            batch.arrays[self.labels].data.astype(np.int32),
+            self.affinity_neighborhood
+        ).astype(self.dtype)
 
         # crop affinities to requested ROI
         offset = affinities_roi.get_offset()
@@ -157,7 +162,7 @@ class AddAffinities(BatchFilter):
 
         spec = self.spec[self.affinities].copy()
         spec.roi = affinities_roi
-        batch.arrays[self.affinities] = Array(affinities, spec)
+        outputs.arrays[self.affinities] = Array(affinities, spec)
 
         if self.affinities_mask and self.affinities_mask in request:
 
@@ -189,8 +194,8 @@ class AddAffinities(BatchFilter):
                 # combine with mask
                 affinities_mask = affinities_mask*unlabelled_mask
 
-            affinities_mask = affinities_mask.astype(np.float32)
-            batch.arrays[self.affinities_mask] = Array(affinities_mask, spec)
+            affinities_mask = affinities_mask.astype(affinities.dtype)
+            outputs.arrays[self.affinities_mask] = Array(affinities_mask, spec)
 
         else:
 
@@ -198,21 +203,7 @@ class AddAffinities(BatchFilter):
                 logger.warning("GT labels does have a mask, but affinities "
                                "mask is not requested.")
 
-        # crop labels to original label ROI
-        if self.labels in request:
-            roi = request[self.labels].roi
-            batch.arrays[self.labels] = batch.arrays[self.labels].crop(roi)
-
-        # same for label mask
-        if self.labels_mask and self.labels_mask in request:
-            roi = request[self.labels_mask].roi
-            batch.arrays[self.labels_mask] = \
-                batch.arrays[self.labels_mask].crop(roi)
-
-        # and unlabelled mask
-        if self.unlabelled and self.unlabelled in request:
-            roi = request[self.unlabelled].roi
-            batch.arrays[self.unlabelled] = \
-                batch.arrays[self.unlabelled].crop(roi)
-
+        # Should probably have a better way of handling arbitrary batch attributes
         batch.affinity_neighborhood = self.affinity_neighborhood
+
+        return outputs

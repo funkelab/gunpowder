@@ -6,6 +6,12 @@ from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 from .freezable import Freezable
+import time
+import logging
+import copy
+
+logger = logging.getLogger(__name__)
+
 
 import logging
 import warnings
@@ -57,7 +63,7 @@ class ProviderSpec(Freezable):
             Contains all graph specs contained in this provider spec.
     '''
 
-    def __init__(self, array_specs=None,  graph_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, graph_specs=None, points_specs=None):
 
         self.array_specs = {}
         self.graph_specs = {}
@@ -82,7 +88,6 @@ class ProviderSpec(Freezable):
             "points_specs are depricated. Please use graph_specs", DeprecationWarning
         )
         return self.graph_specs
-
 
     def __setitem__(self, key, spec):
 
@@ -138,8 +143,8 @@ class ProviderSpec(Freezable):
 
         else:
             raise RuntimeError(
-                "Only ArrayKey or GraphKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "Only ArrayKey or GraphKey, can be used as keys in a "
+                "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
 
     def __delitem__(self, key):
 
@@ -153,6 +158,10 @@ class ProviderSpec(Freezable):
             raise RuntimeError(
                 "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
+
+    def remove_placeholders(self):
+        self.array_specs = {k: v for k, v in self.array_specs.items() if not v.placeholder}
+        self.graph_specs = {k: v for k, v in self.graph_specs.items() if not v.placeholder}
 
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
@@ -200,12 +209,7 @@ class ProviderSpec(Freezable):
             array_keys = self.array_specs.keys()
 
         if not array_keys:
-            raise RuntimeError("Can not compute lcm voxel size -- there are "
-                               "no array specs in this provider spec.")
-        else:
-            if not array_keys:
-                raise RuntimeError("Can not compute lcm voxel size -- list of "
-                                   "given array specs is empty.")
+            return None
 
         lcm_voxel_size = None
         for key in array_keys:
@@ -224,7 +228,9 @@ class ProviderSpec(Freezable):
     def __eq__(self, other):
 
         if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
+            other_dict = copy.deepcopy(other.__dict__)
+            self_dict = copy.deepcopy(self.__dict__)
+            return self_dict == other_dict
         return NotImplemented
 
     def __ne__(self, other):

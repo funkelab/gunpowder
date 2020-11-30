@@ -1,6 +1,8 @@
 import copy
 import logging
 import multiprocessing
+import time
+import random
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
@@ -89,7 +91,8 @@ class PreCache(BatchFilter):
 
                 self.current_request = copy.deepcopy(request)
 
-                logger.info("starting new set of workers...")
+                logger.info("starting new set of workers (%s, cache size %s)...",
+                            self.num_workers, self.cache_size)
                 self.workers = ProducerPool(
                     [lambda i=i: self.__run_worker(i) for i in range(self.num_workers)],
                     queue_size=self.cache_size,
@@ -119,5 +122,9 @@ class PreCache(BatchFilter):
         return batch
 
     def __run_worker(self, i):
-
-        return self.get_upstream_provider().request_batch(self.current_request)
+        request = copy.deepcopy(self.current_request)
+        # Note that using a precache node breaks determinism in batches recieved since we do not
+        # keep a mapping of the order in which random seeds were used, and the order in which
+        # the corresponding batch gets returned.
+        request._random_seed = random.randint(0, 2**32)
+        return self.get_upstream_provider().request_batch(request)

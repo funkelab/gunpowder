@@ -9,7 +9,7 @@ from datetime import datetime
 from tempfile import mkdtemp
 import numpy as np
 
-class TestSource(BatchProvider):
+class ExampleSource(BatchProvider):
 
     def setup(self):
 
@@ -118,7 +118,7 @@ class ProviderTest(TestWithTempFiles):
         ArrayKey('LOSS_SCALE')
         GraphKey('GT_GRAPH')
 
-        self.test_source = TestSource()
+        self.test_source = ExampleSource()
         self.test_request = BatchRequest()
         self.test_request[ArrayKeys.RAW] = ArraySpec(
             roi=Roi((20, 20, 20),(10, 10, 10)))

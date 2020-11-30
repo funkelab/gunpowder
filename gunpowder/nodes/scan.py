@@ -4,7 +4,7 @@ import numpy as np
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.points import Points
+from gunpowder.graph import Graph
 from gunpowder.producer_pool import ProducerPool
 from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
@@ -175,12 +175,11 @@ class Scan(BatchFilter):
 
             logger.debug("upstream ROI is %s", spec[key].roi)
 
-            for r, s in zip(
-                    reference_spec.roi.get_shape(),
-                    spec[key].roi.get_shape()):
-                assert r <= s, (
+            for r, s in zip(reference_spec.roi.get_shape(), spec[key].roi.get_shape()):
+                assert s is None or r <= s, (
                     "reference %s with ROI %s does not fit into provided "
-                    "upstream %s"%(key, reference_spec.roi, spec[key].roi))
+                    "upstream %s" % (key, reference_spec.roi, spec[key].roi)
+                )
 
             # we have a reference ROI
             #
@@ -253,7 +252,8 @@ class Scan(BatchFilter):
         in this dimension.'''
 
         min_shift = shift_roi.get_offset()
-        max_shift = Coordinate(m - 1 for m in shift_roi.get_end())
+        max_shift = max(min_shift,
+                        Coordinate(m - 1 for m in shift_roi.get_end()))
 
         shift = np.array(min_shift)
         shifts = []
@@ -349,7 +349,7 @@ class Scan(BatchFilter):
             roi = spec.roi
             spec = self.spec[graph_key].copy()
             spec.roi = roi
-            batch.graphs[graph_key] = Points(data={}, spec=spec)
+            batch.graphs[graph_key] = Graph(nodes=[], edges=[], spec=spec)
 
         logger.debug("setup batch to fill %s", batch)
 

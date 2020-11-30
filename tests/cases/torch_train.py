@@ -21,7 +21,7 @@ import numpy as np
 import logging
 
 
-class TestTorchTrain2DSource(BatchProvider):
+class ExampleTorchTrain2DSource(BatchProvider):
     def __init__(self):
         pass
 
@@ -48,7 +48,7 @@ class TestTorchTrain2DSource(BatchProvider):
         return batch
 
 
-class TestTorchTrainSource(BatchProvider):
+class ExampleTorchTrainSource(BatchProvider):
     def setup(self):
 
         spec = ArraySpec(
@@ -102,9 +102,9 @@ class TestTorchTrain(ProviderTest):
         ArrayKey("C_PREDICTED")
         ArrayKey("C_GRADIENT")
 
-        class TestModel(torch.nn.Module):
+        class ExampleModel(torch.nn.Module):
             def __init__(self):
-                super(TestModel, self).__init__()
+                super(ExampleModel, self).__init__()
                 self.linear = torch.nn.Linear(4, 1, False)
 
             def forward(self, a, b):
@@ -112,11 +112,11 @@ class TestTorchTrain(ProviderTest):
                 b = b.reshape(-1)
                 return self.linear(a * b)
 
-        model = TestModel()
+        model = ExampleModel()
         loss = torch.nn.MSELoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=1e-7, momentum=0.999)
 
-        source = TestTorchTrainSource()
+        source = ExampleTorchTrainSource()
         train = Train(
             model=model,
             optimizer=optimizer,
@@ -177,9 +177,9 @@ class TestTorchPredict(ProviderTest):
         c_pred = ArrayKey("C_PREDICTED")
         d_pred = ArrayKey("D_PREDICTED")
 
-        class TestModel(torch.nn.Module):
+        class ExampleModel(torch.nn.Module):
             def __init__(self):
-                super(TestModel, self).__init__()
+                super(ExampleModel, self).__init__()
                 self.linear = torch.nn.Linear(4, 1, False)
                 self.linear.weight.data = torch.Tensor([1, 1, 1, 1])
 
@@ -190,9 +190,9 @@ class TestTorchPredict(ProviderTest):
                 d_pred = c_pred * 2
                 return d_pred
 
-        model = TestModel()
+        model = ExampleModel()
 
-        source = TestTorchTrainSource()
+        source = ExampleTorchTrainSource()
         predict = Predict(
             model=model,
             inputs={"a": a, "b": b},
@@ -227,9 +227,9 @@ class TestTorchPredict(ProviderTest):
             assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 + 9))
 
 
-class TestModel(torch.nn.Module):
+class ExampleModel(torch.nn.Module):
     def __init__(self):
-        super(TestModel, self).__init__()
+        super(ExampleModel, self).__init__()
         self.linear = torch.nn.Conv2d(1, 1, 3)
 
     def forward(self, a):
@@ -243,24 +243,19 @@ class TestModel(torch.nn.Module):
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 class TestTorchPredictMultiprocessing(ProviderTest):
     def test_scan(self):
-        if torch.cuda.is_initialized():
-            raise RuntimeError(
-                "Cuda is already initialized in the main process! Will not be able "
-                "to reinitialize in forked subprocesses."
-            )
 
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
         a = ArrayKey("A")
         pred = ArrayKey("PRED")
 
-        model = TestModel()
+        model = ExampleModel()
 
         reference_request = BatchRequest()
         reference_request[a] = ArraySpec(roi=Roi((0, 0), (7, 7)))
         reference_request[pred] = ArraySpec(roi=Roi((1, 1), (5, 5)))
 
-        source = TestTorchTrain2DSource()
+        source = ExampleTorchTrain2DSource()
         predict = Predict(
             model=model,
             inputs={"a": a},
@@ -284,24 +279,18 @@ class TestTorchPredictMultiprocessing(ProviderTest):
 
     def test_precache(self):
 
-        if torch.cuda.is_initialized():
-            raise RuntimeError(
-                "Cuda is already initialized in the main process! Will not be able "
-                "to reinitialize in forked subprocesses."
-            )
-
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
         a = ArrayKey("A")
         pred = ArrayKey("PRED")
 
-        model = TestModel()
+        model = ExampleModel()
 
         reference_request = BatchRequest()
         reference_request[a] = ArraySpec(roi=Roi((0, 0), (7, 7)))
         reference_request[pred] = ArraySpec(roi=Roi((1, 1), (5, 5)))
 
-        source = TestTorchTrain2DSource()
+        source = ExampleTorchTrain2DSource()
         predict = Predict(
             model=model,
             inputs={"a": a},

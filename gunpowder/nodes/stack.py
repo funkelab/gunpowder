@@ -25,15 +25,18 @@ class Stack(BatchFilter):
 
     def provide(self, request):
 
-        timing = Timing(self)
-        timing.start()
-
         batches = [
             self.get_upstream_provider().request_batch(request)
             for _ in range(self.num_repetitions)
         ]
 
+        timing = Timing(self)
+        timing.start()
+
         batch = Batch()
+        for b in batches:
+            batch.profiling_stats.merge_with(b.profiling_stats)
+
         for key, spec in request.array_specs.items():
 
             data = np.stack([b[key].data for b in batches])

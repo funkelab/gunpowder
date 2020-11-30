@@ -28,21 +28,30 @@ class IntensityAugment(BatchFilter):
 
             Perform the augmentation z-section wise. Requires 3D arrays and
             assumes that z is the first dimension.
+
+        clip (``bool``):
+
+            Set to False if modified values should not be clipped to [0, 1]
+            Disables range check!
     '''
 
-    def __init__(self, array, scale_min, scale_max, shift_min, shift_max, z_section_wise=False):
+    def __init__(self, array, scale_min, scale_max, shift_min, shift_max, z_section_wise=False, clip=True):
         self.array = array
         self.scale_min = scale_min
         self.scale_max = scale_max
         self.shift_min = shift_min
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
+        self.clip = clip
 
     def setup(self):
         self.enable_autoskip()
         self.updates(self.array, self.spec[self.array])
 
     def prepare(self, request):
+        # TODO: move all randomness into the prepare method
+        # TODO: write a test for this node
+        np.random.seed(request.random_seed)
         deps = BatchRequest()
         deps[self.array] = request[self.array].copy()
         return deps
@@ -53,7 +62,8 @@ class IntensityAugment(BatchFilter):
 
         assert not self.z_section_wise or raw.spec.roi.dims() == 3, "If you specify 'z_section_wise', I expect 3D data."
         assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw array (not " + str(raw.data.dtype) + "). Consider using Normalize before."
-        assert raw.data.min() >= 0 and raw.data.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
+        if self.clip:
+            assert raw.data.min() >= 0 and raw.data.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
 
         if self.z_section_wise:
             for z in range((raw.spec.roi/self.spec[self.array].voxel_size).get_shape()[0]):
@@ -68,8 +78,9 @@ class IntensityAugment(BatchFilter):
                     np.random.uniform(low=self.shift_min, high=self.shift_max))
 
         # clip values, we might have pushed them out of [0,1]
-        raw.data[raw.data>1] = 1
-        raw.data[raw.data<0] = 0
+        if self.clip:
+            raw.data[raw.data>1] = 1
+            raw.data[raw.data<0] = 0
 
     def __augment(self, a, scale, shift):
 

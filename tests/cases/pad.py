@@ -18,7 +18,7 @@ from gunpowder import (
 import numpy as np
 
 
-class TestSourcePad(BatchProvider):
+class ExampleSourcePad(BatchProvider):
     def setup(self):
 
         self.provides(
@@ -54,7 +54,7 @@ class TestPad(ProviderTest):
         labels = ArrayKey("TEST_LABELS")
 
         pipeline = (
-            TestSourcePad()
+            ExampleSourcePad()
             + Pad(labels, Coordinate((20, 20, 20)), value=1)
             + Pad(graph, Coordinate((10, 10, 10)))
         )

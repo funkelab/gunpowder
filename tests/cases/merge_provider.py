@@ -16,6 +16,7 @@ from gunpowder import (
     build,
 )
 from gunpowder.graph import GraphKeys, Graph
+from gunpowder.pipeline import PipelineSetupError
 
 import numpy as np
 
@@ -87,7 +88,7 @@ class TestMergeProvider(unittest.TestCase):
         # Check that it fails, when having two sources that provide the same type.
         arraysource2 = ArrayTestSoure(voxel_size)
         pipeline_fail = (arraysource, arraysource2) + MergeProvider() + RandomLocation()
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(PipelineSetupError):
             with build(pipeline_fail):
                 pass
 

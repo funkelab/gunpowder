@@ -19,8 +19,6 @@ from .intensity_augment import IntensityAugment
 from .intensity_scale_shift import IntensityScaleShift
 from .klb_source import KlbSource
 from .merge_provider import MergeProvider
-from .n5_source import N5Source
-from .n5_write import N5Write
 from .noise_augment import NoiseAugment
 from .normalize import Normalize
 from .pad import Pad
@@ -28,7 +26,7 @@ from .precache import PreCache
 from .print_profiling_stats import PrintProfilingStats
 from .random_location import RandomLocation
 from .random_provider import RandomProvider
-from .rasterize_points import RasterizationSettings, RasterizePoints
+from .rasterize_graph import RasterizationSettings, RasterizeGraph
 from .reject import Reject
 from .renumber_connected_components import RenumberConnectedComponents
 from .scan import Scan
@@ -36,7 +34,9 @@ from .shift_augment import ShiftAugment
 from .simple_augment import SimpleAugment
 from .snapshot import Snapshot
 from .specified_location import SpecifiedLocation
+from .squeeze import Squeeze
 from .stack import Stack
+from .unsqueeze import Unsqueeze
 from .upsample import UpSample
 from .zarr_source import ZarrSource
 from .zarr_write import ZarrWrite
