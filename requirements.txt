@@ -1,8 +1,9 @@
-numpy
-scipy
-h5py
-scikit-image
-requests
 augment-nd
+h5py
 networkx
+numpy
+requests
+scikit-image
+scipy
+tqdm
 zarr
