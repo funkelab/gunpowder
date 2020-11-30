@@ -5,3 +5,4 @@ scikit-image
 requests
 augment-nd
 networkx
+zarr
