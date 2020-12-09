@@ -240,6 +240,8 @@ class Graph(Freezable):
     @property
     def nodes(self):
         for node_id, node_attrs in self.__graph.nodes.items():
+            if "id" not in node_attrs:
+                node_attrs["id"] = node_id
             v = Node.from_attrs(node_attrs)
             if not np.issubdtype(v.location.dtype, self.spec.dtype):
                 raise Exception(
