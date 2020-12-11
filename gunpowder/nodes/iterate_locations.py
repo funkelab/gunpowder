@@ -92,11 +92,16 @@ class IterateLocations(BatchFilter):
         request_center = total_roi.get_shape()/2 + total_roi.get_offset()
 
         self.shift = self._get_next_shift(request_center, lcm_voxel_size)
+        max_tries = 15
+        tries = 0
         while not self.__check_shift(request):
             logger.warning("Location %s (shift %s) skipped"
                            % (self.coordinates[self.local_index],
                               self.shift))
+            assert tries < max_tries, (
+                    "Unable to find valid shift after %d tries", tries)
             self.shift = self._get_next_shift(request_center, lcm_voxel_size)
+            tries += 1
 
         # Set shift for all requests
         for specs_type in [request.array_specs, request.graph_specs]:
