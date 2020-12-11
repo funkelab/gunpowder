@@ -576,7 +576,10 @@ class Graph(Freezable):
     @classmethod
     def from_nx_graph(cls, graph, spec):
         """
-        Create a gunpowder graph from a networkx graph
+        Create a gunpowder graph from a networkx graph.
+        The network graph is expected to have a "location"
+        attribute for each node. If it is a subclass of a networkx
+        graph with extra functionality, this may not work.
         """
         if spec.directed is None:
             spec.directed = graph.is_directed()
