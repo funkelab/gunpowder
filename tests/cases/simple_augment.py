@@ -359,7 +359,7 @@ class CornerSource(BatchProvider):
         corner = tuple(shape[i] - 1 if i == len(shape) else 0 for i in range(self.dims))
         data[corner] = 1
 
-        spec = self.spec[self.key]
+        spec = self.spec[self.key].copy()
         spec.roi = roi
 
         outputs[self.key] = Array(data, spec)
@@ -398,23 +398,19 @@ def test_mismatched_voxel_multiples():
         transpose_only=[0, 1]
     )
 
-    request = BatchRequest()
-    request[test_array] = ArraySpec(roi=Roi((0, 0), (4, 6)))
-
     with build(pipeline):
-        assert pipeline.spec[test_array].roi.unbounded()
-        try:
-            loop = 100
-            while loop > 0:
-                loop -= 1
+        loop = 100
+        while loop > 0:
+            request = BatchRequest()
+            request[test_array] = ArraySpec(roi=Roi((0, 0), (4, 6)))
+            loop -= 1
 
-                batch = pipeline.request_batch(request)
-                data = batch[test_array].data
+            pre_request_provided_roi = source.spec[test_array].roi
+            batch = pipeline.request_batch(request)
+            assert pre_request_provided_roi == source.spec[test_array].roi
+            data = batch[test_array].data
 
-                if data.sum(axis=1)[0] == 1:
-                    loop = -1
-            assert loop < 0, "Data was never transposed!"
-        except PipelineRequestError as e:
-            print(e)
-            raise ValueError(source.spec)
+            if data.sum(axis=1)[0] == 1:
+                loop = -1
+        assert loop < 0, "Data was never transposed!"
 
