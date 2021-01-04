@@ -151,7 +151,7 @@ class BatchFilter(BatchProvider):
         if not skip:
             dependencies = self.prepare(request)
             if isinstance(dependencies, BatchRequest):
-                upstream_request = request.merge(dependencies)
+                upstream_request = request.update_with(dependencies)
             elif dependencies is None:
                 upstream_request = request.copy()
             else:

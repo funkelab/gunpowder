@@ -97,8 +97,8 @@ class BatchRequest(ProviderSpec):
                 roi = specs_type[key].roi
                 specs_type[key].roi = roi.shift(center - roi.get_center())
 
-    def merge(self, request):
-        """Merge another request with current request"""
+    def update_with(self, request):
+        """Update current request with another"""
 
         assert isinstance(request, BatchRequest)
 
@@ -108,10 +108,7 @@ class BatchRequest(ProviderSpec):
             if key not in merged:
                 merged[key] = spec
             else:
-                if isinstance(spec, ArraySpec) and merged[key].nonspatial:
-                    merged[key] = spec
-                else:
-                    merged[key].roi = merged[key].roi.union(spec.roi)
+                merged[key].update_with(spec)
 
         return merged
 
