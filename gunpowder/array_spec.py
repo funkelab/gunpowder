@@ -66,21 +66,13 @@ class ArraySpec(Freezable):
         elif spec.roi is not None:
             self.roi = spec.roi
 
-        if self.voxel_size is not None and \
-           spec.voxel_size is not None:
-            assert self.voxel_size == spec.voxel_size, \
-                "cannot merge arrays with unequal voxel_size"
-        elif spec.voxel_size is not None:
+        if spec.voxel_size is not None:
             self.voxel_size = spec.voxel_size
 
         if spec.interpolatable is not None:
             self.interpolatable = spec.interpolatable
 
-        if self.nonspatial is not None and \
-               spec.nonspatial is not None:
-            assert self.nonspatial == spec.nonspatial, \
-                "cannot merge spatial and nonspatial arrays"
-        elif spec.nonspatial is not None:
+        if spec.nonspatial is not None:
             self.nonspatial = spec.nonspatial
 
         if spec.dtype is not None:
