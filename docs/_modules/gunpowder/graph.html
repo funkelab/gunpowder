@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.graph &mdash; gunpowder 1.1.5 documentation</title>
+  <title>gunpowder.graph &mdash; gunpowder 1.2.1 documentation</title>
   
 
   
@@ -27,8 +27,9 @@
   
     <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 
@@ -62,7 +63,7 @@
             
             
               <div class="version">
-                1.1
+                1.2
               </div>
             
           
@@ -123,7 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#providerspec">ProviderSpec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#batchrequest">BatchRequest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#arrayspec">ArraySpec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#pointsspec">PointsSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#graphspec">GraphSpec</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#geometry">Geometry</a><ul>
@@ -137,18 +138,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#source-nodes">Source Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#csvpointssource">CsvPointsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#dvidsource">DvidSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#zarrsource">ZarrSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#n5source">N5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#klbsource">KlbSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#csvpointssource">CsvPointsSource</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#defectaugment">DefectAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#elasticaugment">ElasticAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#noiseaugment">NoiseAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#simpleaugment">SimpleAugment</a></li>
 </ul>
 </li>
@@ -157,8 +158,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#pad">Pad</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#randomlocation">RandomLocation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#reject">Reject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#scan">Scan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#array-manipulation-nodes">Array Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#squeeze">Squeeze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#unsqueeze">Unsqueeze</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
@@ -177,7 +182,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#rasterizepoints">RasterizePoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#rasterizegraph">RasterizeGraph</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
@@ -191,18 +196,22 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#module-gunpowder">Output Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#zarrwrite">ZarrWrite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#snapshot">Snapshot</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api.html#performance-nodes">Performance Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#precache">PreCache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#iterative-processing-nodes">Iterative Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#daisyrequestblocks">DaisyRequestBlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -330,32 +339,39 @@
         <span class="n">temporary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__id</span> <span class="o">=</span> <span class="nb">id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__location</span> <span class="o">=</span> <span class="n">location</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__temporary</span> <span class="o">=</span> <span class="n">temporary</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attrs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__attrs</span> <span class="o">=</span> <span class="n">attrs</span> <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+        <span class="c1"># purpose is to keep track of nodes that were created during</span>
+        <span class="c1"># processing and do not have a corresponding node in the original source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;temporary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temporary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;__&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;__&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attr</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__location</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__location</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">location</span>
 
     <span class="nd">@location</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_location</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__location</span> <span class="o">=</span> <span class="n">new_location</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__attrs</span>
-
-    <span class="nd">@attrs</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__attrs</span> <span class="o">=</span> <span class="n">attrs</span> <span class="k">if</span> <span class="n">attrs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_location</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_location</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__id</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -363,25 +379,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">temporary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__temporary</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;temporary&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__attrs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__attrs</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;temporary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temporary</span>
-        <span class="k">return</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_attrs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-        <span class="n">special_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;temporary&quot;</span><span class="p">]</span>
         <span class="n">node_id</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
         <span class="n">location</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
-        <span class="n">temporary</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;temporary&quot;</span><span class="p">]</span>
-        <span class="n">remaining_attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">special_attrs</span><span class="p">}</span>
+        <span class="n">temporary</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;temporary&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="nb">id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">temporary</span><span class="o">=</span><span class="n">temporary</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">remaining_attrs</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">temporary</span><span class="o">=</span><span class="n">temporary</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -485,10 +499,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">directed</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">directed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">directed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">edges</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Edge</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__spec</span><span class="o">.</span><span class="n">directed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Trying to create a Graph without specifying directionality. Using default Directed!&quot;</span>
+            <span class="p">)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__spec</span><span class="o">.</span><span class="n">directed</span><span class="p">:</span>
             <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
@@ -506,11 +529,16 @@
         <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_attrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="n">node_attrs</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;expected location to have dtype </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> but it had </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
             <span class="k">yield</span> <span class="n">v</span>
 
     <span class="k">def</span> <span class="nf">num_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">num_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -547,10 +575,13 @@
         <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">nodes</span>
+
 <div class="viewcode-block" id="Graph.remove_node"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">retain_connectivity</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a node.</span>
-<span class="sd">        </span>
+
 <span class="sd">        retain_connectivity: preserve removed nodes neighboring edges.</span>
 <span class="sd">        Given graph: a-&gt;b-&gt;c, removing `b` without retain_connectivity</span>
 <span class="sd">        would leave us with two connected components, {&#39;a&#39;} and {&#39;b&#39;}.</span>
@@ -567,7 +598,6 @@
                     <span class="k">if</span> <span class="n">pred_id</span> <span class="o">!=</span> <span class="n">succ_id</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">pred_id</span><span class="p">,</span> <span class="n">succ_id</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="Graph.add_node"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -605,7 +635,7 @@
 
 <span class="sd">        Note there is a helper function `trim` that will remove B and replace it with</span>
 <span class="sd">        a node at the intersection of the edge (A, B) and the bounding box of `roi`.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 
 <span class="sd">            roi (:class:`Roi`):</span>
@@ -833,14 +863,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a gunpowder graph from a networkx graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">]</span>
-        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">Edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">]</span>
-        <span class="n">directed</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-        <span class="n">spec</span><span class="o">.</span><span class="n">directed</span> <span class="o">=</span> <span class="n">directed</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">directed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">directed</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">__graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="k">return</span> <span class="n">g</span></div>
 
 <div class="viewcode-block" id="Graph.relabel_connected_components"><a class="viewcode-back" href="../../api.html#gunpowder.Graph.relabel_connected_components">[docs]</a>    <span class="k">def</span> <span class="nf">relabel_connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -955,7 +982,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.1.5',
+            VERSION:'1.2.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -967,9 +994,10 @@
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" src="../../_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -984,18 +1012,7 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>

@@ -39,8 +39,6 @@ setup(
         packages=[
             'gunpowder',
             'gunpowder.nodes',
-            'gunpowder.caffe',
-            'gunpowder.caffe.nodes',
             'gunpowder.tensorflow',
             'gunpowder.tensorflow.nodes',
             'gunpowder.torch',

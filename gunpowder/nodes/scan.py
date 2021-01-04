@@ -1,6 +1,7 @@
 import logging
 import multiprocessing
 import numpy as np
+import tqdm
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
@@ -88,18 +89,18 @@ class Scan(BatchFilter):
                 shifted_reference = self.__shift_request(self.reference, shift)
                 self.request_queue.put(shifted_reference)
 
-            for i in range(num_chunks):
+            for i in tqdm.tqdm(range(num_chunks)):
 
                 chunk = self.workers.get()
 
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
 
-                logger.info("processed chunk %d/%d", i + 1, num_chunks)
+                logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
         else:
 
-            for i, shift in enumerate(shifts):
+            for i, shift in tqdm.tqdm(enumerate(shifts)):
 
                 shifted_reference = self.__shift_request(self.reference, shift)
                 chunk = self.__get_chunk(shifted_reference)
@@ -107,7 +108,7 @@ class Scan(BatchFilter):
                 if not empty_request:
                     self.__add_to_batch(request, chunk)
 
-                logger.info("processed chunk %d/%d", i + 1, num_chunks)
+                logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
         batch = self.batch
         self.batch = None

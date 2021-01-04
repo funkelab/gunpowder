@@ -60,9 +60,9 @@ ArraySpec
   .. autoclass:: ArraySpec
     :members:
 
-PointsSpec
-^^^^^^^^^^
-  .. autoclass:: PointsSpec
+GraphSpec
+^^^^^^^^^
+  .. autoclass:: GraphSpec
     :members:
 
 Geometry
@@ -96,29 +96,25 @@ BatchFilter
 Source Nodes
 ------------
 
-CsvPointsSource
-^^^^^^^^^^^^^^^
-  .. autoclass:: CsvPointsSource
-
-DvidSource
+ZarrSource
 ^^^^^^^^^^
-  .. autoclass:: DvidSource
+  .. autoclass:: ZarrSource
 
 Hdf5Source
 ^^^^^^^^^^
   .. autoclass:: Hdf5Source
 
-ZarrSource
-^^^^^^^^^^
-  .. autoclass:: ZarrSource
-
-N5Source
-^^^^^^^^
-  .. autoclass:: N5Source
-
 KlbSource
 ^^^^^^^^^
   .. autoclass:: KlbSource
+
+DvidSource
+^^^^^^^^^^
+  .. autoclass:: DvidSource
+
+CsvPointsSource
+^^^^^^^^^^^^^^^
+  .. autoclass:: CsvPointsSource
 
 .. _sec_api_augmentation_nodes:
 
@@ -170,6 +166,19 @@ SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
   .. autoclass:: SpecifiedLocation
 
+.. _sec_api_array_manipulation_nodes:
+
+Array Manipulation Nodes
+------------------------
+
+Squeeze
+^^^^^^^
+  .. autoclass:: Squeeze
+
+Unsqueeze
+^^^^^^^^^
+  .. autoclass:: Unsqueeze
+
 .. _sec_api_image_processing_nodes:
 
 Image Processing Nodes
@@ -217,9 +226,9 @@ RenumberConnectedComponents
 Point Processing Nodes
 ----------------------
 
-RasterizePoints
-^^^^^^^^^^^^^^^
-  .. autoclass:: RasterizePoints
+RasterizeGraph
+^^^^^^^^^^^^^^
+  .. autoclass:: RasterizeGraph
   .. autoclass:: RasterizationSettings
 
 Provider Combination Nodes
@@ -264,25 +273,12 @@ tensorflow.Predict
   .. autoclass:: Predict
 
 
-  .. automodule:: gunpowder.caffe
-
-caffe.Train
-^^^^^^^^^^^
-  .. autoclass:: Train
-  .. autoclass:: SolverParameters
-
-caffe.Predict
-^^^^^^^^^^^^^
-  .. autoclass:: Predict
-
-
-  .. automodule:: gunpowder
-     :noindex:
-
 .. _sec_api_output_nodes:
 
 Output Nodes
 ------------
+
+.. automodule:: gunpowder
 
 Hdf5Write
 ^^^^^^^^^
@@ -318,10 +314,10 @@ PrintProfilingStats
 Iterative Processing Nodes
 --------------------------
 
-DaisyRequestBlocks
-^^^^^
-  .. autoclass:: DaisyRequestBlocks
-
 Scan
 ^^^^
   .. autoclass:: Scan
+
+DaisyRequestBlocks
+^^^^^^^^^^^^^^^^^^
+  .. autoclass:: DaisyRequestBlocks

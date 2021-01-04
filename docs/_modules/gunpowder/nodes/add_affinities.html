@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.add_affinities &mdash; gunpowder 1.1.5 documentation</title>
+  <title>gunpowder.nodes.add_affinities &mdash; gunpowder 1.2.1 documentation</title>
   
 
   
@@ -27,8 +27,9 @@
   
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -62,7 +63,7 @@
             
             
               <div class="version">
-                1.1
+                1.2
               </div>
             
           
@@ -123,7 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#providerspec">ProviderSpec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batchrequest">BatchRequest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arrayspec">ArraySpec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointsspec">PointsSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphspec">GraphSpec</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#geometry">Geometry</a><ul>
@@ -137,18 +138,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#source-nodes">Source Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrsource">ZarrSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#n5source">N5Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5source">Hdf5Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#klbsource">KlbSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#dvidsource">DvidSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#csvpointssource">CsvPointsSource</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#augmentation-nodes">Augmentation Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#defectaugment">DefectAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#elasticaugment">ElasticAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityaugment">IntensityAugment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#noiseaugment">NoiseAugment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#simpleaugment">SimpleAugment</a></li>
 </ul>
 </li>
@@ -157,8 +158,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#pad">Pad</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#randomlocation">RandomLocation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#reject">Reject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#specifiedlocation">SpecifiedLocation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#array-manipulation-nodes">Array Manipulation Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#squeeze">Squeeze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#unsqueeze">Unsqueeze</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
@@ -177,7 +182,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#point-processing-nodes">Point Processing Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizepoints">RasterizePoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#rasterizegraph">RasterizeGraph</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#provider-combination-nodes">Provider Combination Nodes</a><ul>
@@ -191,18 +196,22 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#module-gunpowder">Output Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#hdf5write">Hdf5Write</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#zarrwrite">ZarrWrite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#snapshot">Snapshot</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#performance-nodes">Performance Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#precache">PreCache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#printprofilingstats">PrintProfilingStats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#iterative-processing-nodes">Iterative Processing Nodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#scan">Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#daisyrequestblocks">DaisyRequestBlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -282,10 +291,41 @@
 <span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="kn">import</span> <span class="n">BatchFilter</span>
 <span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="kn">import</span> <span class="n">Array</span>
 <span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="kn">import</span> <span class="n">BatchRequest</span>
+<span class="kn">from</span> <span class="nn">gunpowder.batch</span> <span class="kn">import</span> <span class="n">Batch</span>
 <span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.ext</span> <span class="kn">import</span> <span class="n">malis</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">seg_to_affgraph</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span><span class="n">nhood</span><span class="p">):</span>
+    <span class="c1"># constructs an affinity graph from a segmentation</span>
+    <span class="c1"># assume affinity graph is represented as:</span>
+    <span class="c1"># shape = (e, z, y, x)</span>
+    <span class="c1"># nhood.shape = (edges, 3)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">seg</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">nEdge</span> <span class="o">=</span> <span class="n">nhood</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">aff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nEdge</span><span class="p">,)</span><span class="o">+</span><span class="n">shape</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nEdge</span><span class="p">):</span>
+        <span class="n">aff</span><span class="p">[</span><span class="n">e</span><span class="p">,</span> \
+            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> \
+            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> \
+            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span> <span class="o">=</span> \
+                        <span class="p">(</span><span class="n">seg</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span> <span class="o">==</span> \
+                         <span class="n">seg</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span> <span class="p">)</span> \
+                        <span class="o">*</span> <span class="p">(</span> <span class="n">seg</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> \
+                        <span class="o">*</span> <span class="p">(</span> <span class="n">seg</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> \
+                            <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span><span class="nb">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">nhood</span><span class="p">[</span><span class="n">e</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">aff</span>
+
 
 <div class="viewcode-block" id="AddAffinities"><a class="viewcode-back" href="../../../api.html#gunpowder.AddAffinities">[docs]</a><span class="k">class</span> <span class="nc">AddAffinities</span><span class="p">(</span><span class="n">BatchFilter</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Add an array with affinities for a given label array and neighborhood to </span>
@@ -335,7 +375,8 @@
             <span class="n">affinities</span><span class="p">,</span>
             <span class="n">labels_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">unlabelled</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">affinities_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">affinities_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
@@ -343,6 +384,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span> <span class="o">=</span> <span class="n">labels_mask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">affinities</span> <span class="o">=</span> <span class="n">affinities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">affinities_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -369,7 +411,7 @@
         <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">grow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span><span class="p">)</span>
-        <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span><span class="p">:</span>
@@ -403,6 +445,7 @@
             <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_neg</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">padding_pos</span><span class="p">)</span>
         <span class="n">deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">labels_roi</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span><span class="p">:</span>
@@ -413,15 +456,16 @@
         <span class="k">return</span> <span class="n">deps</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">Batch</span><span class="p">()</span>
 
         <span class="n">affinities_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;computing ground-truth affinities from labels&quot;</span><span class="p">)</span>
-        <span class="n">affinities</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
-                <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
+        <span class="n">affinities</span> <span class="o">=</span> <span class="n">seg_to_affgraph</span><span class="p">(</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
         <span class="c1"># crop affinities to requested ROI</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">affinities_roi</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
@@ -435,7 +479,7 @@
 
         <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">affinities_roi</span>
-        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">affinities</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">affinities</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
 
@@ -443,7 +487,7 @@
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;computing ground-truth affinities mask from &quot;</span>
                              <span class="s2">&quot;labels mask&quot;</span><span class="p">)</span>
-                <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
+                <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">seg_to_affgraph</span><span class="p">(</span>
                     <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
                 <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">affinities_mask</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
@@ -456,7 +500,7 @@
 
                 <span class="c1"># 1 for all affinities between unlabelled voxels</span>
                 <span class="n">unlabelled</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-                <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="n">malis</span><span class="o">.</span><span class="n">seg_to_affgraph</span><span class="p">(</span>
+                <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="n">seg_to_affgraph</span><span class="p">(</span>
                     <span class="n">unlabelled</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span><span class="p">)</span>
                 <span class="n">unlabelled_mask</span> <span class="o">=</span> <span class="n">unlabelled_mask</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span><span class="o">+</span><span class="n">crop</span><span class="p">]</span>
@@ -467,8 +511,8 @@
                 <span class="c1"># combine with mask</span>
                 <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">affinities_mask</span><span class="o">*</span><span class="n">unlabelled_mask</span>
 
-            <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">affinities_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">affinities_mask</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+            <span class="n">affinities_mask</span> <span class="o">=</span> <span class="n">affinities_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">affinities</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">affinities_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">affinities_mask</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
 
@@ -476,24 +520,10 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;GT labels does have a mask, but affinities &quot;</span>
                                <span class="s2">&quot;mask is not requested.&quot;</span><span class="p">)</span>
 
-        <span class="c1"># crop labels to original label ROI</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
-            <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="c1"># Should probably have a better way of handling arbitrary batch attributes</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span>
 
-        <span class="c1"># same for label mask</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
-            <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span><span class="p">]</span> <span class="o">=</span> \
-                <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
-
-        <span class="c1"># and unlabelled mask</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
-            <span class="n">roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
-            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span><span class="p">]</span> <span class="o">=</span> \
-                <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabelled</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
-
-        <span class="n">batch</span><span class="o">.</span><span class="n">affinity_neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affinity_neighborhood</span></div>
+        <span class="k">return</span> <span class="n">outputs</span></div>
 </pre></div>
 
            </div>
@@ -528,7 +558,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.1.5',
+            VERSION:'1.2.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -540,9 +570,10 @@
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="../../../_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -557,18 +588,7 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>

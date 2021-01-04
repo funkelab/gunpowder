@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gunpowder.nodes.rasterize_points &mdash; gunpowder 1.1.5 documentation</title>
+  <title>gunpowder.nodes.rasterize_points &mdash; gunpowder 1.0.0rc0.dev0 documentation</title>
   
 
   
@@ -27,8 +27,6 @@
   
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -62,7 +60,7 @@
             
             
               <div class="version">
-                1.1
+                1.0
               </div>
             
           
@@ -87,36 +85,23 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_simple_pipeline.html">Tutorial: A Simple Pipeline</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#a-minimal-pipeline">A minimal pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#random-samples">Random samples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#geometric-augmentation">Geometric augmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#intensity-augmentation">Intensity augmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#creating-batches-with-multiple-samples">Creating batches with multiple samples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#requesting-multiple-arrays">Requesting multiple arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#training-a-network">Training a network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#predicting-on-a-whole-image">Predicting on a whole image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_simple_pipeline.html#what-next">What next?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#declaring-arrays">Declaring arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#creating-a-source">Creating a source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#chaining-batch-providers">Chaining batch providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../first_steps.html#going-further">Going Further</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_batch_provider.html">Tutorial: Writing Your Own Node</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#the-basics-prepare-and-process">The basics: <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">process</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#changing-an-array-in-place">Changing an array in-place</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#requesting-additional-data">Requesting additional data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../tutorial_batch_provider.html#creating-new-arrays">Creating new arrays</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">Pipelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#data-containers">Data Containers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#batch">Batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#array">Array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graph">Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#node">Node</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#edge">Edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#points">Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#point">Point</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#arraykey">ArrayKey</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#graphkey">GraphKey</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#pointskey">PointsKey</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#requests-and-specifications">Requests and Specifications</a><ul>
@@ -163,7 +148,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#image-processing-nodes">Image Processing Nodes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#downsample">DownSample</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#upsample">UpSample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#intensityscaleshift">IntensityScaleShift</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#normalize">Normalize</a></li>
 </ul>
@@ -186,13 +170,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#training-and-prediction-nodes">Training and Prediction Nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#stack">Stack</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-train">torch.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#torch-predict">torch.Predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-train">caffe.Train</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#caffe-predict">caffe.Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-train">tensorflow.Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#tensorflow-predict">tensorflow.Predict</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#output-nodes">Output Nodes</a><ul>
@@ -207,10 +188,11 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../example_boundaries.html">Example: Boundary Prediction for Instance Segmentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#create-a-network-to-train-with">Create a network to train with</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../example_boundaries.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../custom_providers.html">Writing Custom Batch Providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial: boundary prediction for instance segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#create-a-network-to-train-with">Create a network to train with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-training-pipeline">Assemble the training pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial.html#assemble-the-testing-pipeline">Assemble the testing pipeline</a></li>
 </ul>
 </li>
 </ul>
@@ -279,24 +261,23 @@
 <span></span><span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">gaussian_filter</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="k">import</span> <span class="n">gaussian_filter</span>
 
-<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="kn">import</span> <span class="n">BatchFilter</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="kn">import</span> <span class="n">Array</span>
-<span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="kn">import</span> <span class="n">ArraySpec</span>
-<span class="kn">from</span> <span class="nn">gunpowder.batch_request</span> <span class="kn">import</span> <span class="n">BatchRequest</span>
-<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
-<span class="kn">from</span> <span class="nn">gunpowder.freezable</span> <span class="kn">import</span> <span class="n">Freezable</span>
-<span class="kn">from</span> <span class="nn">gunpowder.morphology</span> <span class="kn">import</span> <span class="n">enlarge_binary_map</span><span class="p">,</span> <span class="n">create_ball_kernel</span>
-<span class="kn">from</span> <span class="nn">gunpowder.ndarray</span> <span class="kn">import</span> <span class="n">replace</span>
-<span class="kn">from</span> <span class="nn">gunpowder.graph</span> <span class="kn">import</span> <span class="n">GraphKey</span>
-<span class="kn">from</span> <span class="nn">gunpowder.graph_spec</span> <span class="kn">import</span> <span class="n">GraphSpec</span>
-<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="kn">import</span> <span class="n">Roi</span>
+<span class="kn">from</span> <span class="nn">.batch_filter</span> <span class="k">import</span> <span class="n">BatchFilter</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array</span> <span class="k">import</span> <span class="n">Array</span>
+<span class="kn">from</span> <span class="nn">gunpowder.array_spec</span> <span class="k">import</span> <span class="n">ArraySpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.coordinate</span> <span class="k">import</span> <span class="n">Coordinate</span>
+<span class="kn">from</span> <span class="nn">gunpowder.freezable</span> <span class="k">import</span> <span class="n">Freezable</span>
+<span class="kn">from</span> <span class="nn">gunpowder.morphology</span> <span class="k">import</span> <span class="n">enlarge_binary_map</span><span class="p">,</span> <span class="n">create_ball_kernel</span>
+<span class="kn">from</span> <span class="nn">gunpowder.ndarray</span> <span class="k">import</span> <span class="n">replace</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points</span> <span class="k">import</span> <span class="n">PointsKeys</span>
+<span class="kn">from</span> <span class="nn">gunpowder.points_spec</span> <span class="k">import</span> <span class="n">PointsSpec</span>
+<span class="kn">from</span> <span class="nn">gunpowder.roi</span> <span class="k">import</span> <span class="n">Roi</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RasterizationSettings"><a class="viewcode-back" href="../../../api.html#gunpowder.RasterizationSettings">[docs]</a><span class="k">class</span> <span class="nc">RasterizationSettings</span><span class="p">(</span><span class="n">Freezable</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Data structure to store parameters for rasterization of graph.</span>
+    <span class="sd">&#39;&#39;&#39;Data structure to store parameters for rasterization of points.</span>
 
 <span class="sd">    Args:</span>
 
@@ -340,7 +321,7 @@
 <span class="sd">            The value to use to for the background in the output array,</span>
 <span class="sd">            defaults to 0.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">radius</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;ball&#39;</span><span class="p">,</span>
@@ -370,7 +351,7 @@
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        points (:class:`GraphKey`):</span>
+<span class="sd">        points (:class:`PointsKeys`):</span>
 <span class="sd">            The key of the points to rasterize.</span>
 
 <span class="sd">        array (:class:`ArrayKey`):</span>
@@ -385,9 +366,9 @@
 <span class="sd">            Which settings to use to rasterize the points.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">array_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">array_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">array</span>
         <span class="k">if</span> <span class="n">array_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">()</span>
@@ -400,10 +381,10 @@
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="n">graph_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+        <span class="n">points_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="n">graph_roi</span><span class="o">.</span><span class="n">dims</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="n">points_roi</span><span class="o">.</span><span class="n">dims</span><span class="p">())</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
@@ -411,7 +392,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">graph_roi</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array_spec</span><span class="p">)</span>
@@ -438,10 +419,8 @@
                 <span class="n">Coordinate</span><span class="p">(</span><span class="n">context</span><span class="p">))</span>
 
         <span class="c1"># however, restrict the request to the points actually provided</span>
-        <span class="n">points_roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
-
-        <span class="n">deps</span> <span class="o">=</span> <span class="n">BatchRequest</span><span class="p">()</span>
-        <span class="n">deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">]</span> <span class="o">=</span> <span class="n">GraphSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">points_roi</span><span class="p">)</span>
+        <span class="n">points_roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span> <span class="o">=</span> <span class="n">PointsSpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">points_roi</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -450,39 +429,42 @@
                 <span class="s2">&quot;Voxel size of mask and rasterized volume need to be equal&quot;</span><span class="p">)</span>
 
             <span class="n">new_mask_roi</span> <span class="o">=</span> <span class="n">points_roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">mask_voxel_size</span><span class="p">)</span>
-            <span class="n">deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">ArraySpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">new_mask_roi</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">deps</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> \
+                    <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">new_mask_roi</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">ArraySpec</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">new_mask_roi</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
 
-        <span class="n">graph</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">]</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">mask</span>
         <span class="n">voxel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">voxel_size</span>
 
         <span class="c1"># get roi used for creating the new array (points_roi does no</span>
         <span class="c1"># necessarily align with voxel size)</span>
-        <span class="n">enlarged_vol_roi</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span>
+        <span class="n">enlarged_vol_roi</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">snap_to_grid</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">enlarged_vol_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span> <span class="o">/</span> <span class="n">voxel_size</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="n">enlarged_vol_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span> <span class="o">/</span> <span class="n">voxel_size</span>
         <span class="n">data_roi</span> <span class="o">=</span> <span class="n">Roi</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data roi in voxels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_roi</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data roi in world units: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_roi</span><span class="o">*</span><span class="n">voxel_size</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">num_vertices</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># If there are no graph at all, just create an empty matrix.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If there are no points at all, just create an empty matrix.</span>
             <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
                                               <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
             <span class="n">mask_array</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">enlarged_vol_roi</span><span class="p">)</span>
-            <span class="c1"># get those component labels in the mask, that contain graph</span>
+            <span class="c1"># get those component labels in the mask, that contain points</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">location</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">)</span>
                 <span class="n">v</span> <span class="o">-=</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span>
                 <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask_array</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
@@ -494,16 +476,16 @@
                 <span class="n">labels</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points and provided object mask do not overlap. No graph to rasterize.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Points and provided object mask do not overlap. No points to rasterize.&quot;</span><span class="p">)</span>
                 <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
                                                   <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># create data for the whole graph ROI, &quot;or&quot;ed together over</span>
+                <span class="c1"># create data for the whole points ROI, &quot;or&quot;ed together over</span>
                 <span class="c1"># individual object masks</span>
                 <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                     <span class="p">[</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">__rasterize</span><span class="p">(</span>
-                            <span class="n">graph</span><span class="p">,</span>
+                            <span class="n">points</span><span class="p">,</span>
                             <span class="n">data_roi</span><span class="p">,</span>
                             <span class="n">voxel_size</span><span class="p">,</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
@@ -516,9 +498,9 @@
 
         <span class="k">else</span><span class="p">:</span>
 
-            <span class="c1"># create data for the whole graph ROI without mask</span>
+            <span class="c1"># create data for the whole points ROI without mask</span>
             <span class="n">rasterized_points_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rasterize</span><span class="p">(</span>
-                <span class="n">graph</span><span class="p">,</span>
+                <span class="n">points</span><span class="p">,</span>
                 <span class="n">data_roi</span><span class="p">,</span>
                 <span class="n">voxel_size</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
@@ -540,14 +522,24 @@
         <span class="n">rasterized_points</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">rasterized_points_data</span><span class="p">,</span>
             <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
-        <span class="n">batch</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span> <span class="o">=</span> <span class="n">rasterized_points</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span> <span class="o">=</span> <span class="n">rasterized_points</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__rasterize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">data_roi</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">mask_array</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Rasterize &#39;graph&#39; into an array with the given &#39;voxel_size&#39;&#39;&#39;</span>
+        <span class="c1"># restore requested ROI of points</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
+            <span class="n">request_roi</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span> <span class="o">=</span> <span class="n">request_roi</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">p</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">request_roi</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">location</span><span class="p">)}</span>
+
+        <span class="c1"># restore requested mask</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rasterize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">data_roi</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">mask_array</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Rasterize &#39;points&#39; into an array with the given &#39;voxel_size&#39;&#39;&#39;</span>
 
         <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_array</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">mask_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rasterizing graph in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rasterizing points in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
 
         <span class="c1"># prepare output array</span>
         <span class="n">rasterized_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data_roi</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
@@ -574,22 +566,22 @@
                     <span class="n">shape</span><span class="o">=</span><span class="n">Coordinate</span><span class="p">(</span><span class="n">ball_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
         <span class="c1"># Rasterize volume either with single voxel or with defined struct elememt</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
 
             <span class="c1"># get the voxel coordinate, &#39;Coordinate&#39; ensures integer</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">voxel_size</span><span class="p">)</span>
 
             <span class="c1"># get the voxel coordinate relative to output array start</span>
             <span class="n">v</span> <span class="o">-=</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">()</span>
 
-            <span class="c1"># skip graph outside of mask</span>
+            <span class="c1"># skip points outside of mask</span>
             <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">mask</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
                 <span class="k">continue</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Rasterizing node </span><span class="si">%s</span><span class="s2"> at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">voxel_size</span> <span class="o">-</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
+                <span class="s2">&quot;Rasterizing point </span><span class="si">%s</span><span class="s2"> at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
+                <span class="n">point</span><span class="o">.</span><span class="n">location</span><span class="o">/</span><span class="n">voxel_size</span> <span class="o">-</span> <span class="n">data_roi</span><span class="o">.</span><span class="n">get_begin</span><span class="p">())</span>
 
             <span class="k">if</span> <span class="n">use_fast_rasterization</span><span class="p">:</span>
 
@@ -609,7 +601,7 @@
 
                 <span class="n">rasterized_points</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="c1"># grow graph</span>
+        <span class="c1"># grow points</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">use_fast_rasterization</span><span class="p">:</span>
 
             <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;ball&#39;</span><span class="p">:</span>
@@ -656,7 +648,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Jan Funke, Will Patton, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
+        &copy; Copyright 2019, Jan Funke, Renate Krause, Julia Buhmann, Rodrigo Ceballos Lentini, William Grisaitis, Chris Barnes, Caroline Malin-Mayor, Larissa Heinrich, Philipp Hanslovsky, Sherry Ding, Andrew Champion, Arlo Sheridan, Constantin Pape.
 
     </p>
   </div>
@@ -678,7 +670,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.1.5',
+            VERSION:'1.0.0rc0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -690,8 +682,6 @@
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
       <script type="text/javascript" src="../../../_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-      <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
@@ -707,18 +697,7 @@
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .admonition-title").show();
-        $(".toggle .admonition-title").click(function() {
-            $(this).parent().children().not(".admonition-title").toggle(400);
-            $(this).parent().children(".admonition-title").toggleClass("open");
-        })
-    });
-</script>
-
+  </script> 
 
 </body>
 </html>

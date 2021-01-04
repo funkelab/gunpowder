@@ -6,9 +6,39 @@ from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import malis
 
 logger = logging.getLogger(__name__)
+
+
+def seg_to_affgraph(seg,nhood):
+    # constructs an affinity graph from a segmentation
+    # assume affinity graph is represented as:
+    # shape = (e, z, y, x)
+    # nhood.shape = (edges, 3)
+    shape = seg.shape
+    nEdge = nhood.shape[0]
+    aff = np.zeros((nEdge,)+shape,dtype=np.int32)
+
+    for e in range(nEdge):
+        aff[e, \
+            max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] = \
+                        (seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+                            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] == \
+                         seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                            max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
+                            max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] ) \
+                        * ( seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+                            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] > 0 ) \
+                        * ( seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                            max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
+                            max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] > 0 )
+
+    return aff
+
 
 class AddAffinities(BatchFilter):
     '''Add an array with affinities for a given label array and neighborhood to 
@@ -145,7 +175,7 @@ class AddAffinities(BatchFilter):
 
         logger.debug("computing ground-truth affinities from labels")
 
-        affinities = malis.seg_to_affgraph(
+        affinities = seg_to_affgraph(
             batch.arrays[self.labels].data.astype(np.int32),
             self.affinity_neighborhood
         ).astype(self.dtype)
@@ -170,7 +200,7 @@ class AddAffinities(BatchFilter):
 
                 logger.debug("computing ground-truth affinities mask from "
                              "labels mask")
-                affinities_mask = malis.seg_to_affgraph(
+                affinities_mask = seg_to_affgraph(
                     batch.arrays[self.labels_mask].data.astype(np.int32),
                     self.affinity_neighborhood)
                 affinities_mask = affinities_mask[(slice(None),)+crop]
@@ -183,7 +213,7 @@ class AddAffinities(BatchFilter):
 
                 # 1 for all affinities between unlabelled voxels
                 unlabelled = (1 - batch.arrays[self.unlabelled].data)
-                unlabelled_mask = malis.seg_to_affgraph(
+                unlabelled_mask = seg_to_affgraph(
                     unlabelled.astype(np.int32),
                     self.affinity_neighborhood)
                 unlabelled_mask = unlabelled_mask[(slice(None),)+crop]

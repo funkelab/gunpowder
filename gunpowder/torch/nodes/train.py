@@ -74,6 +74,10 @@ class Train(GenericTrain):
         log_every (``int``, optional):
 
             After how many iterations to write out tensorboard summaries.
+
+        spawn_subprocess (``bool``, optional):
+        
+            Whether to run the ``train_step`` in a separate process. Default is false.
     """
 
     def __init__(

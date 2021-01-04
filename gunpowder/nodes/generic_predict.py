@@ -200,7 +200,7 @@ class GenericPredict(BatchFilter):
 
         if self.timer_start is not None:
             self.time_out = time.time() - self.timer_start
-            logger.info(
+            logger.debug(
                 "batch in: %.3fs, predict: %.3fs, batch out: %.3fs",
                 self.time_in, self.time_predict, self.time_out)
 

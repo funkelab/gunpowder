@@ -17,8 +17,7 @@ on arbitrarily large volumes of
 multi-dimensional images. `gunpowder` is not tied to a particular learning
 framework, and thus complements libraries like
 [`torch`](https://pytorch.org/),
-[`tensorflow`](https://www.tensorflow.org/), or
-[`caffe`](http://caffe.berkeleyvision.org/).
+[`tensorflow`](https://www.tensorflow.org/).
 
 The full documentation can be found [here](https://funkey.github.io/gunpowder).
 
