@@ -152,7 +152,7 @@ class DensePointTestSource3D(BatchProvider):
         for point in self.points:
             if roi_points.contains(point.location):
                 points.append(point)
-        batch.points[GraphKeys.TEST_POINTS] = Graph(
+        batch[GraphKeys.TEST_POINTS] = Graph(
             points, [], GraphSpec(roi=roi_points)
         )
 

@@ -5,8 +5,8 @@ from gunpowder import (
     Batch,
     Roi,
     Coordinate,
-    PointsSpec,
-    PointsKey,
+    GraphSpec,
+    GraphKey,
     ArrayKeys,
     ArrayKey,
     ArraySpec,
@@ -16,7 +16,7 @@ from gunpowder import (
     Snapshot,
     build,
 )
-from gunpowder.points import Points, PointsKeys, Point
+from gunpowder.graph import Graph, GraphKeys, Node
 from .provider_test import ProviderTest
 
 import pytest
@@ -29,17 +29,17 @@ import copy
 class PointTestSource3D(BatchProvider):
     def setup(self):
 
-        self.points = {
-            0: Point([0, 10, 0]),
-            1: Point([0, 30, 0]),
-            2: Point([0, 50, 0]),
-            3: Point([0, 70, 0]),
-            4: Point([0, 90, 0]),
-        }
+        self.points = [
+            Node(0, np.array([0, 10, 0])),
+            Node(1, np.array([0, 30, 0])),
+            Node(2, np.array([0, 50, 0])),
+            Node(3, np.array([0, 70, 0])),
+            Node(4, np.array([0, 90, 0])),
+        ]
 
         self.provides(
-            PointsKeys.TEST_POINTS,
-            PointsSpec(roi=Roi((-100, -100, -100), (300, 300, 300))),
+            GraphKeys.TEST_POINTS,
+            GraphSpec(roi=Roi((-100, -100, -100), (300, 300, 300))),
         )
 
         self.provides(
@@ -65,15 +65,15 @@ class PointTestSource3D(BatchProvider):
 
         batch = Batch()
 
-        if PointsKeys.TEST_POINTS in request:
-            roi_points = request[PointsKeys.TEST_POINTS].roi
+        if GraphKeys.TEST_POINTS in request:
+            roi_points = request[GraphKeys.TEST_POINTS].roi
 
-            points = {}
-            for i, point in self.points.items():
+            contained_points = []
+            for point in self.points:
                 if roi_points.contains(point.location):
-                    points[i] = copy.deepcopy(point)
-            batch.points[PointsKeys.TEST_POINTS] = Points(
-                points, PointsSpec(roi=roi_points)
+                    contained_points.append(copy.deepcopy(point))
+            batch[GraphKeys.TEST_POINTS] = Graph(
+                contained_points, [], GraphSpec(roi=roi_points)
             )
 
         if ArrayKeys.TEST_LABELS in request:
@@ -83,9 +83,9 @@ class PointTestSource3D(BatchProvider):
             data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
             data[:, ::2] = 100
 
-            for i, point in self.points.items():
+            for point in self.points:
                 loc = self.point_to_voxel(roi_array, point.location)
-                data[loc] = i
+                data[loc] = point.id
 
             spec = self.spec[ArrayKeys.TEST_LABELS].copy()
             spec.roi = roi_array
@@ -98,7 +98,7 @@ class TestPlaceholderRequest(ProviderTest):
     def test_without_placeholder(self):
 
         test_labels = ArrayKey("TEST_LABELS")
-        test_points = PointsKey("TEST_POINTS")
+        test_points = GraphKey("TEST_POINTS")
 
         pipeline = (
             PointTestSource3D()
@@ -112,7 +112,7 @@ class TestPlaceholderRequest(ProviderTest):
         )
 
         with build(pipeline):
-            for i in range(100):
+            for i in range(2):
 
                 request_size = Coordinate((40, 40, 40))
 
@@ -133,7 +133,7 @@ class TestPlaceholderRequest(ProviderTest):
     def test_placeholder(self):
 
         test_labels = ArrayKey("TEST_LABELS")
-        test_points = PointsKey("TEST_POINTS")
+        test_points = GraphKey("TEST_POINTS")
 
         pipeline = (
             PointTestSource3D()
@@ -147,7 +147,7 @@ class TestPlaceholderRequest(ProviderTest):
         )
 
         with build(pipeline):
-            for i in range(100):
+            for i in range(2):
 
                 request_size = Coordinate((40, 40, 40))
 

@@ -5,14 +5,12 @@ import requests
 from copy import deepcopy
 
 from gunpowder.batch import Batch
-from gunpowder.coordinate import Coordinate
-from gunpowder.ext import dvision
 from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.points import PointsKeys, Points
+from gunpowder.graph import GraphKey, Graph
+from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
-from gunpowder.roi import Roi
 
-from gunpowder.contrib.points import PreSynPoint, PostSynPoint
+from gunpowder.graph import Node
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +61,7 @@ class DvidPartnerAnnotationSource(BatchProvider):
         for points_key, points_name in self.datasets.items():
             self.provides(
                 points_key,
-                PointsSpec(roi=self.points_rois[points_key]))
+                GraphSpec(roi=self.points_rois[points_key]))
 
         logger.info("DvidPartnerAnnotationSource.spec:\n{}".format(self.spec))
 
@@ -76,15 +74,15 @@ class DvidPartnerAnnotationSource(BatchProvider):
 
         # if pre and postsynaptic locations requested, their id : SynapseLocation dictionaries should be created
         # together s.t. the ids are unique and allow to find partner locations
-        if PointsKeys.PRESYN in request.points or PointsKeys.POSTSYN in request.points:
+        if GraphKey.PRESYN in request.points or GraphKey.POSTSYN in request.points:
             try:  # either both have the same roi, or only one of them is requested
-                assert request.points[PointsKeys.PRESYN] == request.points[PointsKeys.POSTSYN]
-            except:
-                assert PointsKeys.PRESYN not in request.points or PointsKeys.POSTSYN not in request.points
-            if PointsKeys.PRESYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsKeys.PRESYN])
-            elif PointsKeys.POSTSYN in request.points:
-                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[PointsKeys.POSTSYN])
+                assert request.points[GraphKey.PRESYN] == request.points[GraphKey.POSTSYN]
+            except AssertionError:
+                assert GraphKey.PRESYN not in request.points or GraphKey.POSTSYN not in request.points
+            if GraphKey.PRESYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[GraphKey.PRESYN])
+            elif GraphKey.POSTSYN in request.points:
+                presyn_points, postsyn_points = self.__read_syn_points(roi=request.points[GraphKey.POSTSYN])
 
         for (points_key, roi) in request.points.items():
             # check if requested points can be provided
@@ -95,12 +93,12 @@ class DvidPartnerAnnotationSource(BatchProvider):
                 raise RuntimeError("%s's ROI %s outside of my ROI %s"%(points_key,roi,self.spec[points_key].roi))
 
             logger.debug("Reading %s in %s..."%(points_key, roi))
-            id_to_point = {PointsKeys.PRESYN: presyn_points,
-                           PointsKeys.POSTSYN: postsyn_points}[points_key]
+            id_to_point = {GraphKey.PRESYN: presyn_points,
+                           GraphKey.POSTSYN: postsyn_points}[points_key]
 
-            batch.points[points_key] = Points(
+            batch.points[points_key] = Graph(
                 data=id_to_point,
-                spec=PointsSpec(roi=roi))
+                spec=GraphSpec(roi=roi))
 
         logger.debug("done")
 
@@ -121,16 +119,16 @@ class DvidPartnerAnnotationSource(BatchProvider):
         return json_annotations
 
     def __read_syn_points(self, roi):
-        """ read json file from dvid source, in json format to create a PreSynPoint/PostSynPoint for every location given """
+        """ read json file from dvid source, in json format to create for every location given """
 
-        if PointsKeys.PRESYN in self.points_voxel_size:
-            voxel_size = self.points_voxel_size[PointsKeys.PRESYN]
-        elif PointsKeys.POSTSYN in self.points_voxel_size:
-            voxel_size = self.points_voxel_size[PointsKeys.POSTSYN]
+        if GraphKey.PRESYN in self.points_voxel_size:
+            voxel_size = self.points_voxel_size[GraphKey.PRESYN]
+        elif GraphKey.POSTSYN in self.points_voxel_size:
+            voxel_size = self.points_voxel_size[GraphKey.POSTSYN]
 
         syn_file_json = self.__load_json_annotations(array_shape_voxel  = roi.get_shape() // voxel_size,
                                                      array_offset_voxel = roi.get_offset() // voxel_size,
-                                                     array_name    = self.datasets[PointsKeys.PRESYN])
+                                                     array_name    = self.datasets[GraphKey.PRESYN])
 
         presyn_points_dict, postsyn_points_dict = {}, {}
         location_to_location_id_dict, location_id_to_partner_locations = {}, {}
@@ -169,11 +167,11 @@ class DvidPartnerAnnotationSource(BatchProvider):
 
             # create synPoint with information collected so far (partner_ids not completed yet)
             if kind == 'PreSyn':
-                syn_point = PreSynPoint(location=location, location_id=location_id,
+                syn_point = Node(location=location, location_id=location_id,
                                      synapse_id=syn_id, partner_ids=[], props=props)
                 presyn_points_dict[int(node_nr)] = deepcopy(syn_point)
             elif kind == 'PostSyn':
-                syn_point = PostSynPoint(location=location, location_id=location_id,
+                syn_(location=location, location_id=location_id,
                                      synapse_id=syn_id, partner_ids=[], props=props)
                 postsyn_points_dict[int(node_nr)] = deepcopy(syn_point)
 

@@ -7,13 +7,13 @@ from gunpowder import (
     Roi,
     Array,
     GraphKeys,
+    GraphKey,
     Batch,
     BatchProvider,
     Graph,
     Node,
     Coordinate,
     ArrayKey,
-    PointsKey,
     BatchRequest,
     build,
 )
@@ -190,8 +190,8 @@ class TestAddVectorMap(ProviderTest):
         voxel_size = Coordinate((20, 2, 2))
 
         ArrayKey("GT_VECTORS_MAP_PRESYN")
-        PointsKey("PRESYN")
-        PointsKey("POSTSYN")
+        GraphKey("PRESYN")
+        GraphKey("POSTSYN")
 
         arraytypes_to_source_target_pointstypes = {
             ArrayKeys.GT_VECTORS_MAP_PRESYN: (GraphKeys.PRESYN, GraphKeys.POSTSYN)
