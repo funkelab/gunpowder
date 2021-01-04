@@ -6,6 +6,7 @@ from .array_spec import ArraySpec
 from .graph import GraphKey
 from .graph_spec import GraphSpec
 
+from warnings import warn
 import time
 
 
@@ -109,6 +110,27 @@ class BatchRequest(ProviderSpec):
                 merged[key] = spec
             else:
                 merged[key].update_with(spec)
+
+        return merged
+
+    def merge(self, request):
+        """Merge another request with current request"""
+        warn(
+            "merge is deprecated! please use update_with "
+            "as it accounts for spec metadata"
+        )
+        assert isinstance(request, BatchRequest)
+
+        merged = self.copy()
+
+        for key, spec in request.items():
+            if key not in merged:
+                merged[key] = spec
+            else:
+                if isinstance(spec, ArraySpec) and merged[key].nonspatial:
+                    merged[key] = spec
+                else:
+                    merged[key].roi = merged[key].roi.union(spec.roi)
 
         return merged
 
