@@ -123,8 +123,7 @@ class RandomLocation(BatchFilter):
             logger.debug("chose %s as integral array dtype", mask_integral_dtype)
 
             self.mask_integral = np.array(mask_data > 0, dtype=mask_integral_dtype)
-            self.mask_integral = integral_image(self.mask_integral,
-                                                dtype=mask_integral_dtype)
+            self.mask_integral = integral_image(self.mask_integral)
 
         if self.ensure_nonempty:
 
