@@ -121,7 +121,7 @@ class Predict(GenericPredict):
 
     def get_inputs(self, batch):
         model_inputs = {
-            key: torch.as_tensor(batch[value].data, device=self.device)
+            key: torch.as_tensor(batch[value].data).to(device=self.device, non_blocking=True)
             for key, value in self.inputs.items()
         }
         return model_inputs
