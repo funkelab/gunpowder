@@ -201,7 +201,7 @@ class Train(GenericTrain):
 
         # keys are argument names of model forward pass
         device_inputs = {
-            k: torch.as_tensor(v).to(device=self.device, non_blocking=True)
+            k: torch.as_tensor(np.ascontiguousarray(v)).to(device=self.device, non_blocking=True)
             for k, v in inputs.items()
         }
 
@@ -223,7 +223,7 @@ class Train(GenericTrain):
         provided_loss_inputs = self.__collect_provided_loss_inputs(batch)
 
         device_loss_inputs = {
-            k: torch.as_tensor(v).to(device=self.device, non_blocking=True)
+            k: torch.as_tensor(np.ascontiguousarray(v)).to(device=self.device, non_blocking=True)
             for k, v in provided_loss_inputs.items()
         }
 
