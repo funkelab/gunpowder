@@ -50,7 +50,7 @@ class Squeeze(BatchFilter):
                             "non-spatial dimensions of Array."
                         ))
 
-                outputs[array] = copy.deepcopy(batch[array])
+                outputs[array] = batch[array]
                 outputs[array].data = np.squeeze(batch[array].data, self.axis)
                 logger.debug(f'{array} shape: {outputs[array].data.shape}')
 
