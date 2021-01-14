@@ -156,7 +156,7 @@ class Predict(GenericPredict):
         for array_key, tensor in requested_outputs.items():
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(tensor.cpu().detach().numpy(), spec)
+            batch.arrays[array_key] = Array(tensor.detach().cpu().numpy(), spec)
 
     def stop(self):
         pass
