@@ -135,6 +135,7 @@ class SimpleAugment(BatchFilter):
 
         # graphs
         total_roi_offset = batch.get_total_roi().get_offset()
+        total_roi_center = batch.get_total_roi().get_center()
         total_roi_end = batch.get_total_roi().get_end()
 
         for (graph_key, graph) in batch.graphs.items():
@@ -164,13 +165,13 @@ class SimpleAugment(BatchFilter):
                 # transpose
                 location_in_total_offset = (
                     np.asarray(node.location) -
-                    total_roi_offset)
+                    total_roi_center)
 
                 if self.transpose != list(range(self.dims)):
                     for d in range(self.dims):
                         node.location[d] = \
                             location_in_total_offset[self.transpose[d]] + \
-                            total_roi_offset[d]
+                            total_roi_center[d]
 
                 logger.debug("after transpose: %s, %s", node.id, node.location)
 
