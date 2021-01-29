@@ -148,13 +148,14 @@ class SimpleAugment(BatchFilter):
                 continue
 
             num_channels = len(array.data.shape) - self.dims
-            channel_slices = (slice(None, None),)*num_channels
+            channel_slices = (slice(None, None),) * num_channels
 
             array.data = array.data[channel_slices + mirror]
 
             transpose = [t + num_channels for t in self.transpose]
             array.data = array.data = array.data.transpose(
-                list(range(num_channels)) + transpose)
+                list(range(num_channels)) + transpose
+            )
 
         # graphs
         total_roi_offset = total_roi.get_offset()
@@ -178,14 +179,12 @@ class SimpleAugment(BatchFilter):
                 logger.debug("old location: %s, %s", node.id, node.location)
 
                 # mirror
-                location_in_total_offset = (
-                    np.asarray(node.location) -
-                    total_roi_offset)
+                location_in_total_offset = np.asarray(node.location) - total_roi_offset
                 node.location = np.asarray(
                     [
-                        total_roi_end[dim] -
-                        location_in_total_offset[dim]
-                        if m else node.location[dim]
+                        total_roi_end[dim] - location_in_total_offset[dim]
+                        if m
+                        else node.location[dim]
                         for dim, m in enumerate(self.mirror)
                     ],
                     dtype=graph.spec.dtype,
@@ -194,15 +193,14 @@ class SimpleAugment(BatchFilter):
                 logger.debug("after mirror: %s, %s", node.id, node.location)
 
                 # transpose
-                location_in_total_offset = (
-                    np.asarray(node.location) -
-                    total_roi_center)
+                location_in_total_center = np.asarray(node.location) - total_roi_center
 
                 if self.transpose != list(range(self.dims)):
                     for d in range(self.dims):
-                        node.location[d] = \
-                            location_in_total_offset[self.transpose[d]] + \
-                            total_roi_center[d]
+                        node.location[d] = (
+                            location_in_total_center[self.transpose[d]]
+                            + total_roi_center[d]
+                        )
 
                 logger.debug("after transpose: %s, %s", node.id, node.location)
 
@@ -224,11 +222,7 @@ class SimpleAugment(BatchFilter):
         lcm_voxel_size = self.spec.get_lcm_voxel_size(requested_keys)
         for key, spec in request.items():
             if spec.roi is not None:
-                self.__transpose_roi(
-                    spec.roi,
-                    total_roi,
-                    transpose,
-                    lcm_voxel_size)
+                self.__transpose_roi(spec.roi, total_roi, transpose, lcm_voxel_size)
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
@@ -242,9 +236,10 @@ class SimpleAugment(BatchFilter):
         end_of_roi_in_total = roi_in_total_offset + roi_shape
         roi_in_total_offset_mirrored = total_roi_shape - end_of_roi_in_total
         roi_offset = Coordinate(
-                total_roi_offset[d] + roi_in_total_offset_mirrored[d]
-                if mirror[d] else roi_offset[d]
-                for d in range(self.dims)
+            total_roi_offset[d] + roi_in_total_offset_mirrored[d]
+            if mirror[d]
+            else roi_offset[d]
+            for d in range(self.dims)
         )
 
         roi.set_offset(roi_offset)
@@ -256,15 +251,16 @@ class SimpleAugment(BatchFilter):
         center = total_roi.get_center()
         if lcm_voxel_size is not None:
             nearest_voxel_shift = Coordinate(
-                (d % v)
-                for d, v in zip(center, lcm_voxel_size))
+                (d % v) for d, v in zip(center, lcm_voxel_size)
+            )
             center = center - nearest_voxel_shift
         logger.debug("center = %s", center)
 
         # Get distance from center, then transpose
         dist_to_center = center - roi.get_offset()
-        dist_to_center = Coordinate(dist_to_center[transpose[d]]
-                                    for d in range(self.dims))
+        dist_to_center = Coordinate(
+            dist_to_center[transpose[d]] for d in range(self.dims)
+        )
         logger.debug("dist_to_center = %s", dist_to_center)
 
         # Using the tranposed distance to center, get the correct offset.
