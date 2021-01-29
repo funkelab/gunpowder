@@ -157,9 +157,15 @@ class SimpleAugment(BatchFilter):
                 list(range(num_channels)) + transpose)
 
         # graphs
-        total_roi_offset = batch.get_total_roi().get_offset()
-        total_roi_center = batch.get_total_roi().get_center()
-        total_roi_end = batch.get_total_roi().get_end()
+        total_roi_offset = total_roi.get_offset()
+        total_roi_center = total_roi.get_center()
+        if lcm_voxel_size is not None:
+            nearest_voxel_shift = Coordinate(
+                (d % v) for d, v in zip(total_roi_center, lcm_voxel_size)
+            )
+            total_roi_center = total_roi_center - nearest_voxel_shift
+        total_roi_end = total_roi.get_end()
+        logger.debug("augmenting in %s and center %s", total_roi, total_roi_center)
 
         for (graph_key, graph) in batch.graphs.items():
 
