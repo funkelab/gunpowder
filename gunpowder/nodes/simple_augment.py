@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleAugment(BatchFilter):
-    '''Randomly mirror and transpose all :class:`Arrays<Array>` and
+    """Randomly mirror and transpose all :class:`Arrays<Array>` and
     :class:`Graph` in a batch.
 
     Args:
@@ -24,12 +24,37 @@ class SimpleAugment(BatchFilter):
             If set, only transpose between the given axes. This is useful to
             limit the transpose to axes with the same resolution or to exclude
             non-spatial dimensions.
-    '''
 
-    def __init__(self, mirror_only=None, transpose_only=None):
+        mirror_probs (``list`` of ``float``, optional):
+
+            If set, provides the probability for mirroring given axes. Default
+            is 0.5 per axis. If given, must be given for every axis. i.e.
+            [0,1,0] for 100% chance of mirroring axis 1 an no others.
+
+        transpose_probs (``float``, optional):
+
+            The probability of transposing. If None, each transpose is equally
+            likely. If 0, simple augment will never transpose, if 1, simple
+            augment is guaranteed to pick some permutation of the axes that
+            is not the original.
+            TODO: it would be better to provide a probability
+            or odds of transposing per axis, but this seems to be a challenging
+            problem. See here:
+            https://cs.stackexchange.com/questions/43354/permutations-sampling-by-probability-matrix
+    """
+
+    def __init__(
+        self,
+        mirror_only=None,
+        transpose_only=None,
+        mirror_probs=None,
+        transpose_probs=None,
+    ):
 
         self.mirror_only = mirror_only
+        self.mirror_probs = mirror_probs
         self.transpose_only = transpose_only
+        self.transpose_probs = transpose_probs
         self.mirror_mask = None
         self.dims = None
         self.transpose_dims = None
@@ -43,11 +68,11 @@ class SimpleAugment(BatchFilter):
         # dimension
 
         if self.mirror_only is None:
-            self.mirror_mask = [True]*self.dims
+            self.mirror_mask = [True] * self.dims
         else:
-            self.mirror_mask = [
-                d in self.mirror_only
-                for d in range(self.dims)]
+            self.mirror_mask = [d in self.mirror_only for d in range(self.dims)]
+        if self.mirror_probs is None:
+            self.mirror_probs = [0.5] * self.dims
 
         if self.transpose_only is None:
             self.transpose_dims = list(range(self.dims))
@@ -58,13 +83,18 @@ class SimpleAugment(BatchFilter):
         random.seed(request.random_seed)
 
         self.mirror = [
-            random.randint(0, 1)
-            if self.mirror_mask[d] else 0
+            random.random() < self.mirror_probs[d] if self.mirror_mask[d] else 0
             for d in range(self.dims)
         ]
 
-        t = list(self.transpose_dims)
-        random.shuffle(t)
+        if self.transpose_probs is not None:
+            t = self.transpose_dims
+            if random.random() < self.transpose_probs:
+                while t == self.transpose_dims:
+                    t = random.sample(self.transpose_dims, k=len(self.transpose_dims))
+        else:
+            t = random.sample(self.transpose_dims, k=len(self.transpose_dims))
+
         self.transpose = list(range(self.dims))
         for o, n in zip(self.transpose_dims, t):
             self.transpose[o] = n
@@ -72,7 +102,7 @@ class SimpleAugment(BatchFilter):
         logger.debug("mirror = %s", self.mirror)
         logger.debug("transpose = %s", self.transpose)
 
-        reverse_transpose = [0]*self.dims
+        reverse_transpose = [0] * self.dims
         for d in range(self.dims):
             reverse_transpose[self.transpose[d]] = d
 
@@ -100,21 +130,14 @@ class SimpleAugment(BatchFilter):
                     continue
                 logger.debug("total ROI = %s", batch.get_total_roi())
                 logger.debug("upstream %s ROI = %s", key, collector.spec.roi)
-                self.__mirror_roi(
-                    collector.spec.roi,
-                    total_roi, self.mirror)
+                self.__mirror_roi(collector.spec.roi, total_roi, self.mirror)
                 logger.debug("mirrored %s ROI = %s", key, collector.spec.roi)
                 self.__transpose_roi(
-                    collector.spec.roi,
-                    total_roi,
-                    self.transpose,
-                    lcm_voxel_size)
+                    collector.spec.roi, total_roi, self.transpose, lcm_voxel_size
+                )
                 logger.debug("transposed %s ROI = %s", key, collector.spec.roi)
 
-        mirror = tuple(
-                slice(None, None, -1 if m else 1)
-                for m in self.mirror
-        )
+        mirror = tuple(slice(None, None, -1 if m else 1) for m in self.mirror)
         # arrays
         for (array_key, array) in batch.arrays.items():
 
