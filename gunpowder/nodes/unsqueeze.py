@@ -50,6 +50,7 @@ class Unsqueeze(BatchFilter):
                             "non-spatial dimensions of Array."
                         ))
 
-                outputs[array] = copy.deepcopy(batch[array])
-                outputs[array].data = np.expand_dims(batch[array].data, self.axis)
+                outputs[array] = batch[array]
+                outputs[array].data = np.expand_dims(
+                    batch[array].data, self.axis)
         return outputs
