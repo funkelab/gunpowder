@@ -55,7 +55,8 @@ setup(
             "h5py",
             "scikit-image",
             "requests",
-            "augment-nd"
+            "augment-nd",
+            "tqdm"
         ],
         extras_require=extras_require,
 )
