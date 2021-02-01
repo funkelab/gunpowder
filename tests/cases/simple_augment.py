@@ -96,13 +96,13 @@ def test_transpose():
     default_pipeline = (
         (GraphSource(graph_key, graph), ArraySource(array_key, array))
         + MergeProvider()
-        + SimpleAugment(mirror_only=[], transpose_only=[0, 1], transpose_probs=0)
+        + SimpleAugment(mirror_only=[], transpose_only=[0, 1], transpose_probs=[0, 0])
     )
 
     transpose_pipeline = (
         (GraphSource(graph_key, graph), ArraySource(array_key, array))
         + MergeProvider()
-        + SimpleAugment(mirror_only=[], transpose_only=[0, 1], transpose_probs=1)
+        + SimpleAugment(mirror_only=[], transpose_only=[0, 1], transpose_probs=[1, 1])
     )
 
     request = BatchRequest()
@@ -159,7 +159,7 @@ def test_mirror_and_transpose():
             mirror_only=[0, 1],
             transpose_only=[0, 1],
             mirror_probs=[0, 0],
-            transpose_probs=0,
+            transpose_probs={(0, 1): 1},
         )
     )
 
@@ -170,7 +170,7 @@ def test_mirror_and_transpose():
             mirror_only=[0, 1],
             transpose_only=[0, 1],
             mirror_probs=[0, 1],
-            transpose_probs=1,
+            transpose_probs={(1, 0): 1},
         )
     )
 
@@ -246,7 +246,7 @@ def test_mismatched_voxel_multiples():
         ),
     )
     pipeline = source + SimpleAugment(
-        mirror_only=[], transpose_only=[0, 1], transpose_probs=1
+        mirror_only=[], transpose_only=[0, 1], transpose_probs={(1, 0): 1}
     )
 
     with build(pipeline):

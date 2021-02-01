@@ -1,5 +1,7 @@
 import logging
 import random
+import itertools
+
 import numpy as np
 
 from .batch_filter import BatchFilter
@@ -31,16 +33,20 @@ class SimpleAugment(BatchFilter):
             is 0.5 per axis. If given, must be given for every axis. i.e.
             [0,1,0] for 100% chance of mirroring axis 1 an no others.
 
-        transpose_probs (``float``, optional):
+        transpose_probs (``dict`` of ``tuple`` -> ``float``
+        or ``list`` of ``float``, optional):
 
             The probability of transposing. If None, each transpose is equally
-            likely. If 0, simple augment will never transpose, if 1, simple
-            augment is guaranteed to pick some permutation of the axes that
-            is not the original.
-            TODO: it would be better to provide a probability
-            or odds of transposing per axis, but this seems to be a challenging
-            problem. See here:
-            https://cs.stackexchange.com/questions/43354/permutations-sampling-by-probability-matrix
+            likely.
+            Can also be a dictionary of for ``tuple`` -> ``float``. For example
+            {(0,1,2):0.5, (1,0,2):0.5} to define a 50% chance of transposing axes
+            0 and 1. Note that if a provided option violates the `transpose_only`
+            arg it will be dropped and remaining options will be reweighted.
+            Can also be provided as a list of ``float``. i.e. [0.3, 0.5, 0.7].
+            This will automatically generate a list of possible permutations
+            and attempt to weight them appropriately. A weight of 0 means
+            this axis will never be transposed, a weight of 1 means this axis
+            will always be transposed.
     """
 
     def __init__(
@@ -78,6 +84,28 @@ class SimpleAugment(BatchFilter):
             self.transpose_dims = list(range(self.dims))
         else:
             self.transpose_dims = self.transpose_only
+        if self.transpose_probs is None:
+            self.permutation_dict = None
+        elif isinstance(self.transpose_probs, list):
+            self.permutation_dict = {}
+            for permutation in itertools.permutations(range(self.dims), self.dims):
+                total_prob = 1
+                for i, j, p in zip(range(self.dims), permutation, self.transpose_probs):
+                    if i not in self.transpose_dims and i != j:
+                        total_prob = 0
+                    else:
+                        total_prob *= (1 - p) if i == j else p
+                if total_prob > 0:
+                    self.permutation_dict[permutation] = total_prob
+        elif isinstance(self.transpose_probs, dict):
+            self.permutation_dict = {}
+            for k, v in self.transpose_probs.items():
+                valid = True
+                for i, j in enumerate(k):
+                    if i not in self.transpose_only and i != j:
+                        valid = False
+                if valid:
+                    self.permutation_dict[k] = v
 
     def prepare(self, request):
         random.seed(request.random_seed)
@@ -87,11 +115,12 @@ class SimpleAugment(BatchFilter):
             for d in range(self.dims)
         ]
 
-        if self.transpose_probs is not None:
-            t = self.transpose_dims
-            if random.random() < self.transpose_probs:
-                while t == self.transpose_dims:
-                    t = random.sample(self.transpose_dims, k=len(self.transpose_dims))
+        if self.permutation_dict is not None:
+            t = random.choices(
+                list(self.permutation_dict.keys()),
+                weights=list(self.permutation_dict.values()),
+                k=1,
+            )[0]
         else:
             t = random.sample(self.transpose_dims, k=len(self.transpose_dims))
 
