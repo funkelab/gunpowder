@@ -125,13 +125,6 @@ class Batch(Freezable):
                 "Only ArrayKey or GraphKey can be used as keys in a "
                 "%s."%type(self).__name__)
 
-    @property
-    def points(self):
-        warnings.warn(
-            "points are depricated. Please use graphs", DeprecationWarning
-        )
-        return self.graphs
-
     def items(self):
         '''Provides a generator iterating over key/value pairs.'''
 
