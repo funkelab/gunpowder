@@ -1,11 +1,8 @@
-import copy
 import logging
 import numpy as np
 
 from .batch_filter import BatchFilter
 from gunpowder.array import ArrayKey
-from gunpowder.coordinate import Coordinate
-from gunpowder.points import PointsKey
 from gunpowder.roi import Roi
 from gunpowder.batch_request import BatchRequest
 

@@ -59,6 +59,28 @@ class ArraySpec(Freezable):
 
         self.freeze()
 
+    def update_with(self, spec):
+        if self.roi is not None and \
+           spec.roi is not None:
+            self.roi = self.roi.union(spec.roi)
+        elif spec.roi is not None:
+            self.roi = spec.roi
+
+        if spec.voxel_size is not None:
+            self.voxel_size = spec.voxel_size
+
+        if spec.interpolatable is not None:
+            self.interpolatable = spec.interpolatable
+
+        if spec.nonspatial is not None:
+            self.nonspatial = spec.nonspatial
+
+        if spec.dtype is not None:
+            self.dtype = spec.dtype
+
+        if spec.placeholder is not None:
+            self.placeholder = spec.placeholder
+
     def copy(self):
         '''Create a copy of this spec.'''
         return copy.deepcopy(self)

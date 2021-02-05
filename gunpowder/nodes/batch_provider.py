@@ -5,7 +5,6 @@ import logging
 import random
 
 from gunpowder.coordinate import Coordinate
-from gunpowder.points_spec import PointsSpec
 from gunpowder.provider_spec import ProviderSpec
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
@@ -214,7 +213,7 @@ class BatchProvider(object):
             assert key in self.spec, "%s: Asked for %s which this node does not provide"%(self.name(), key)
             assert (
                 isinstance(request_spec, ArraySpec) or
-                isinstance(request_spec, PointsSpec) or
+                isinstance(request_spec, GraphSpec) or
                 isinstance(request_spec, GraphSpec)), ("spec for %s is of type"
                                                         "%s"%(
                                                             key,
