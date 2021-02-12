@@ -90,6 +90,26 @@ class Snapshot(BatchFilter):
 
         self.mode = "w"
 
+    def write_if(self, batch):
+        """To be implemented in subclasses.
+
+        This function is run in :func:`process` and enables data-dependent
+        snapshots. The snapshot will not contain the keys in
+        ``additional_request``.
+
+        Args:
+
+            batch (:class:`Batch`):
+
+                The batch received from upstream to be modified by this node.
+
+        Returns:
+
+            ``True`` if ``batch`` should be written to snapshot, ``False``
+            otherwise.
+        """
+        return False
+
     def setup(self):
 
         for key, _ in self.additional_request.items():
@@ -129,6 +149,9 @@ class Snapshot(BatchFilter):
         return deps
 
     def process(self, batch, request):
+
+        if self.write_if(batch):
+            self.record_snapshot = True
 
         if self.record_snapshot:
 
