@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 class Snapshot(BatchFilter):
     """Save a passing batch in an HDF file.
 
+    The default behaviour is to periodically save a snapshot after
+    ``every`` iterations.
+
+    Data-dependent criteria for saving can be implemented by subclassing and
+    overwriting :func:`write_if`. This method is applied as an additional
+    filter to the batches picked for periodic saving. It should return ``True``
+    if a batch meets the criteria for saving.
+
     Args:
 
         dataset_names (``dict``, :class:`ArrayKey` -> ``string``):
@@ -90,6 +98,26 @@ class Snapshot(BatchFilter):
 
         self.mode = "w"
 
+    def write_if(self, batch):
+        """To be implemented in subclasses.
+
+        This function is run in :func:`process` and acts as a data-dependent
+        filter for saving snapshots.
+
+        Args:
+
+            batch (:class:`Batch`):
+
+                The batch received from upstream.
+
+        Returns:
+
+            ``True`` if ``batch`` should be written to snapshot, ``False``
+            otherwise.
+        """
+
+        return True
+
     def setup(self):
 
         for key, _ in self.additional_request.items():
@@ -130,7 +158,7 @@ class Snapshot(BatchFilter):
 
     def process(self, batch, request):
 
-        if self.record_snapshot:
+        if self.record_snapshot and self.write_if(batch):
 
             try:
                 os.makedirs(self.output_dir)
