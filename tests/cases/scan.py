@@ -11,6 +11,7 @@ from gunpowder import (
     Graph,
     Node,
     Roi,
+    Coordinate,
     Scan,
     build,
 )
@@ -74,7 +75,7 @@ class ScanTestSource(BatchProvider):
         for graph_key, spec in request.graph_specs.items():
             # node at x, y, z if x%100==0, y%10==0, z%10==0
             nodes = []
-            start = spec.roi.begin - tuple(x % s for x, s in zip(spec.roi.begin, [100,10,10]))
+            start = spec.roi.begin - (spec.roi.begin % Coordinate(100, 10, 10))
             for i, j, k in itertools.product(
                 *[
                     range(a, b, s)
