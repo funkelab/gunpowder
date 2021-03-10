@@ -48,7 +48,7 @@ class ExampleSource(BatchProvider):
             if isinstance(key, ArrayKey):
                 spec.voxel_size = self.spec[key].voxel_size
                 outputs[key] = Array(
-                    np.zeros(spec.roi.get_shape(), dtype=spec.dtype), spec
+                    np.zeros(spec.roi.shape, dtype=spec.dtype), spec
                 )
         self.n += 1
         return outputs

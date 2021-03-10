@@ -95,7 +95,7 @@ class KlbSource(BatchProvider):
         dataset_roi = request_spec.roi/voxel_size
 
         # shift request roi into dataset
-        dataset_roi = dataset_roi - self.spec[self.array].roi.get_offset()/voxel_size
+        dataset_roi = dataset_roi - self.spec[self.array].roi.offset/voxel_size
 
         # create array spec
         array_spec = self.spec[self.array].copy()
@@ -188,12 +188,12 @@ class KlbSource(BatchProvider):
         else:
 
             file_indices = range(
-                roi.get_begin()[0],
-                roi.get_end()[0])
+                roi.begin[0],
+                roi.end[0])
 
             file_roi = Roi(
-                roi.get_begin()[1:],
-                roi.get_shape()[1:])
+                roi.begin[1:],
+                roi.shape[1:])
 
             return np.array([
                     self.__read_file(self.files[i], file_roi)
@@ -207,14 +207,14 @@ class KlbSource(BatchProvider):
         if self.num_threads:
             return pyklb.readroi(
                 filename,
-                roi.get_begin(),
-                roi.get_end() - (1,)*roi.dims(),
+                roi.begin,
+                roi.end - (1,)*roi.dims,
                 numthreads=self.num_threads)
         else:
             return pyklb.readroi(
                 filename,
-                roi.get_begin(),
-                roi.get_end() - (1,)*roi.dims())
+                roi.begin,
+                roi.end - (1,)*roi.dims)
 
     def __repr__(self):
 

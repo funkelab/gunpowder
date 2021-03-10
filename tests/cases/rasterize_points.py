@@ -70,7 +70,7 @@ class GraphTestSource3D(BatchProvider):
 
         roi_array = request[ArrayKeys.GT_LABELS].roi
 
-        image = np.ones(roi_array.get_shape() / self.voxel_size, dtype=np.uint64)
+        image = np.ones(roi_array.shape / self.voxel_size, dtype=np.uint64)
         # label half of GT_LABELS differently
         depth = image.shape[0]
         image[0 : depth // 2] = 2

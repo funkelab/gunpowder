@@ -62,7 +62,7 @@ class PointTestSource3D(BatchProvider):
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         # shift location relative to beginning of array roi
-        location -= array_roi.get_begin() / self.spec[ArrayKeys.TEST_LABELS].voxel_size
+        location -= array_roi.begin / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         return tuple(slice(int(l - 2), int(l + 3)) for l in location)
 
@@ -74,7 +74,7 @@ class PointTestSource3D(BatchProvider):
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
-        data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
+        data = np.zeros(roi_voxel.shape, dtype=np.uint32)
         data[:, ::2] = 100
 
         for node in self.points:
@@ -125,7 +125,7 @@ class DensePointTestSource3D(BatchProvider):
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         # shift location relative to beginning of array roi
-        location -= array_roi.get_begin() / self.spec[ArrayKeys.TEST_LABELS].voxel_size
+        location -= array_roi.begin / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
         return tuple(slice(int(l - 2), int(l + 3)) for l in location)
 
@@ -137,7 +137,7 @@ class DensePointTestSource3D(BatchProvider):
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
-        data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
+        data = np.zeros(roi_voxel.shape, dtype=np.uint32)
         data[:, ::2] = 100
 
         for node in self.points:
@@ -206,12 +206,12 @@ class TestElasticAugment(ProviderTest):
                 self.assertTrue(points.contains(0))
 
                 labels_data_roi = (
-                    labels.spec.roi - labels.spec.roi.get_begin()
+                    labels.spec.roi - labels.spec.roi.begin
                 ) / labels.spec.voxel_size
 
                 # points should have moved together with the voxels
                 for point in points.nodes:
-                    loc = point.location - labels.spec.roi.get_begin()
+                    loc = point.location - labels.spec.roi.begin
                     loc = loc / labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):
@@ -279,11 +279,11 @@ class TestElasticAugment(ProviderTest):
 
                 labels_data_roi = (
                     labels.spec.roi -
-                    labels.spec.roi.get_begin())/labels.spec.voxel_size
+                    labels.spec.roi.begin)/labels.spec.voxel_size
 
                 # points should have moved together with the voxels
                 for node in points.nodes:
-                    loc = node.location - labels.spec.roi.get_begin()
+                    loc = node.location - labels.spec.roi.begin
                     loc = loc/labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):

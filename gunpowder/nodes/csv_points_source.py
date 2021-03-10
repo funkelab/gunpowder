@@ -80,8 +80,8 @@ class CsvPointsSource(BatchProvider):
         timing = Timing(self)
         timing.start()
 
-        min_bb = request[self.points].roi.get_begin()
-        max_bb = request[self.points].roi.get_end()
+        min_bb = request[self.points].roi.begin
+        max_bb = request[self.points].roi.end
 
         logger.debug(
             "CSV points source got request for %s",

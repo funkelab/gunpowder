@@ -24,7 +24,7 @@ class ExampleSource(BatchProvider):
     def provide(self, request):
 
         data = np.zeros(
-            request[ArrayKeys.RAW].roi.get_shape()/self.spec[ArrayKeys.RAW].voxel_size,
+            request[ArrayKeys.RAW].roi.shape/self.spec[ArrayKeys.RAW].voxel_size,
             dtype=np.uint8)
         spec = copy.deepcopy(self.spec[ArrayKeys.RAW])
         spec.roi = request[ArrayKeys.RAW].roi

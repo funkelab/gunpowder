@@ -10,7 +10,7 @@ class ExampleSourceSpecifiedLocation(BatchProvider):
     def __init__(self, roi, voxel_size):
         self.voxel_size = Coordinate(voxel_size)
         self.roi = roi
-        size = self.roi.get_shape() / self.voxel_size
+        size = self.roi.shape / self.voxel_size
         self.data = np.arange(np.prod(size)).reshape(size)
 
     def setup(self):
@@ -25,8 +25,8 @@ class ExampleSourceSpecifiedLocation(BatchProvider):
 
         spec = request[ArrayKeys.RAW].copy()
         spec.voxel_size = self.voxel_size
-        size = spec.roi.get_shape() / spec.voxel_size
-        offset = spec.roi.get_offset() / spec.voxel_size
+        size = spec.roi.shape / spec.voxel_size
+        offset = spec.roi.offset / spec.voxel_size
         slce = tuple(slice(o, o + s) for o, s in zip(offset, size))
 
         batch.arrays[ArrayKeys.RAW] = Array(

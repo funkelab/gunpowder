@@ -21,7 +21,7 @@ import pytest
 class ArrayTestSource(BatchProvider):
     def __init__(self, key, spec):
         default_spec = ArraySpec(
-            voxel_size=(1,) * spec.roi.dims(),
+            voxel_size=(1,) * spec.roi.dims,
             interpolatable=False,
             nonspatial=False,
             dtype=np.uint8,
@@ -30,7 +30,7 @@ class ArrayTestSource(BatchProvider):
         spec = default_spec
         self.key = key
         self.array = Array(
-            np.zeros(spec.roi.get_shape() / spec.voxel_size, dtype=spec.dtype,),
+            np.zeros(spec.roi.shape / spec.voxel_size, dtype=spec.dtype,),
             spec=spec,
         )
 

@@ -148,12 +148,12 @@ class AddVectorMap(BatchFilter):
         src_points_key, trg_points_key = self.array_to_src_trg_points[
             vector_map_array_key
         ]
-        dim_vectors = len(request[vector_map_array_key].roi.get_shape())
+        dim_vectors = len(request[vector_map_array_key].roi.shape)
         voxel_size_vm = self.voxel_sizes[vector_map_array_key]
-        offset_vector_map_phys = request[vector_map_array_key].roi.get_offset()
+        offset_vector_map_phys = request[vector_map_array_key].roi.offset
         vector_map_total = np.zeros(
             (dim_vectors,)
-            + (request[vector_map_array_key].roi.get_shape() // voxel_size_vm),
+            + (request[vector_map_array_key].roi.shape // voxel_size_vm),
             dtype=np.float32,
         )
 
@@ -298,8 +298,8 @@ class AddVectorMap(BatchFilter):
 
         voxel_size = self.voxel_sizes[vector_map_array_key]
 
-        offset_bm_phys = request[vector_map_array_key].roi.get_offset()
-        shape_bm_array_vx = request[vector_map_array_key].roi.get_shape() // voxel_size
+        offset_bm_phys = request[vector_map_array_key].roi.offset
+        shape_bm_array_vx = request[vector_map_array_key].roi.shape // voxel_size
         binary_map = np.zeros(shape_bm_array_vx, dtype="uint8")
 
         if self.array_keys_to_stayinside_array_keys is None:

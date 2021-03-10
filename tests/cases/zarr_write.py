@@ -92,8 +92,8 @@ class TestZarrWrite(ProviderTest):
 
             self.assertEqual(
                 stored_raw.shape[-3:],
-                batch_raw.spec.roi.get_shape()//batch_raw.spec.voxel_size)
-            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.get_offset())
+                batch_raw.spec.roi.shape//batch_raw.spec.voxel_size)
+            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.offset)
             self.assertEqual(tuple(ds.attrs['resolution']), batch_raw.spec.voxel_size)
             self.assertTrue((stored_raw == batch.arrays[ArrayKeys.RAW].data).all())
 

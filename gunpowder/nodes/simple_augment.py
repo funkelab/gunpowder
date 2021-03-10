@@ -67,7 +67,7 @@ class SimpleAugment(BatchFilter):
 
     def setup(self):
 
-        self.dims = self.spec.get_total_roi().dims()
+        self.dims = self.spec.get_total_roi().dims
 
         # mirror_mask and transpose_dims refer to the indices of the spatial
         # dimensions only, starting counting at 0 for the first spatial
@@ -187,14 +187,14 @@ class SimpleAugment(BatchFilter):
             )
 
         # graphs
-        total_roi_offset = total_roi.get_offset()
-        total_roi_center = total_roi.get_center()
+        total_roi_offset = total_roi.offset
+        total_roi_center = total_roi.center
         if lcm_voxel_size is not None:
             nearest_voxel_shift = Coordinate(
                 (d % v) for d, v in zip(total_roi_center, lcm_voxel_size)
             )
             total_roi_center = total_roi_center - nearest_voxel_shift
-        total_roi_end = total_roi.get_end()
+        total_roi_end = total_roi.end
         logger.debug("augmenting in %s and center %s", total_roi, total_roi_center)
 
         for (graph_key, graph) in batch.graphs.items():
@@ -255,11 +255,11 @@ class SimpleAugment(BatchFilter):
 
     def __mirror_roi(self, roi, total_roi, mirror):
 
-        total_roi_offset = total_roi.get_offset()
-        total_roi_shape = total_roi.get_shape()
+        total_roi_offset = total_roi.offset
+        total_roi_shape = total_roi.shape
 
-        roi_offset = roi.get_offset()
-        roi_shape = roi.get_shape()
+        roi_offset = roi.offset
+        roi_shape = roi.shape
 
         roi_in_total_offset = roi_offset - total_roi_offset
         end_of_roi_in_total = roi_in_total_offset + roi_shape
@@ -271,13 +271,13 @@ class SimpleAugment(BatchFilter):
             for d in range(self.dims)
         )
 
-        roi.set_offset(roi_offset)
+        roi.offset = roi_offset
 
     def __transpose_roi(self, roi, total_roi, transpose, lcm_voxel_size):
 
         logger.debug("original roi = %s", roi)
 
-        center = total_roi.get_center()
+        center = total_roi.center
         if lcm_voxel_size is not None:
             nearest_voxel_shift = Coordinate(
                 (d % v) for d, v in zip(center, lcm_voxel_size)
@@ -286,7 +286,7 @@ class SimpleAugment(BatchFilter):
         logger.debug("center = %s", center)
 
         # Get distance from center, then transpose
-        dist_to_center = center - roi.get_offset()
+        dist_to_center = center - roi.offset
         dist_to_center = Coordinate(
             dist_to_center[transpose[d]] for d in range(self.dims)
         )
@@ -296,7 +296,7 @@ class SimpleAugment(BatchFilter):
         new_offset = center - dist_to_center
         logger.debug("new_offset = %s", new_offset)
 
-        shape = tuple(roi.get_shape()[transpose[d]] for d in range(self.dims))
-        roi.set_offset(new_offset)
-        roi.set_shape(shape)
+        shape = tuple(roi.shape[transpose[d]] for d in range(self.dims))
+        roi.offset = new_offset
+        roi.shape = shape
         logger.debug("tranposed roi = %s", roi)

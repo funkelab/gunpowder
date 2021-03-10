@@ -128,7 +128,7 @@ class DefectAugment(BatchFilter):
         self.slice_to_augmentation = {}
         # store the transformations for deform slice
         self.deform_slice_transformations = {}
-        for c in range((roi / raw_voxel_size).get_shape()[self.axis]):
+        for c in range((roi / raw_voxel_size).shape[self.axis]):
             r = random.random()
 
             if r < prob_missing_threshold:
@@ -147,7 +147,7 @@ class DefectAugment(BatchFilter):
                 logger.debug("Add deformed slice " + str(c))
                 self.slice_to_augmentation[c] = 'deformed_slice'
                 # get the shape of a single slice
-                slice_shape = (roi / raw_voxel_size).get_shape()
+                slice_shape = (roi / raw_voxel_size).shape
                 slice_shape = slice_shape[:self.axis] + slice_shape[self.axis+1:]
                 self.deform_slice_transformations[c] = self.__prepare_deform_slice(slice_shape)
 
@@ -159,7 +159,7 @@ class DefectAugment(BatchFilter):
             logger.debug("before growth: %s" % spec.roi)
             growth = Coordinate(
                 tuple(0 if d == self.axis else raw_voxel_size[d] * self.deformation_strength
-                      for d in range(spec.roi.dims()))
+                      for d in range(spec.roi.dims))
             )
             logger.debug("growing request by %s" % str(growth))
             source_roi = roi.grow(growth, growth)
@@ -173,7 +173,7 @@ class DefectAugment(BatchFilter):
 
     def process(self, batch, request):
 
-        assert batch.get_total_roi().dims() == 3, "defectaugment works on 3d batches only"
+        assert batch.get_total_roi().dims == 3, "defectaugment works on 3d batches only"
 
         raw = batch.arrays[self.intensities]
         raw_voxel_size = self.spec[self.intensities].voxel_size
@@ -182,7 +182,7 @@ class DefectAugment(BatchFilter):
 
             section_selector = tuple(
                 slice(None if d != self.axis else c, None if d != self.axis else c+1)
-                for d in range(raw.spec.roi.dims())
+                for d in range(raw.spec.roi.dims)
             )
 
             if augmentation_type == 'zero_out':
@@ -254,7 +254,7 @@ class DefectAugment(BatchFilter):
             logger.debug("resetting roi to %s" % old_roi)
             crop = tuple(
                 slice(None) if d == self.axis else slice(self.deformation_strength, -self.deformation_strength)
-                for d in range(raw.spec.roi.dims())
+                for d in range(raw.spec.roi.dims)
             )
             raw.data = raw.data[crop]
             raw.spec.roi = old_roi

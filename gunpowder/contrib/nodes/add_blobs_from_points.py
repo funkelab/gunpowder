@@ -90,7 +90,7 @@ class AddBlobsFromPoints(BatchFilter):
 
                 # If point is not already requested, add to request
                 if points_key not in request.points_specs:
-                    request.add(points_key, request_roi.get_shape())
+                    request.add(points_key, request_roi.shape)
                 else:
                     request[points_key].roi =\
                      request[points_key].roi.union(request_roi)
@@ -98,7 +98,7 @@ class AddBlobsFromPoints(BatchFilter):
                 # Get correct size for restrictive_mask_key
                 restrictive_mask_key = settings['restrictive_mask_key']
                 if restrictive_mask_key not in request.array_specs:
-                    request.add(restrictive_mask_key, request_roi.get_shape())
+                    request.add(restrictive_mask_key, request_roi.shape)
                 else:
                     request[restrictive_mask_key].roi =\
                      request[restrictive_mask_key].roi.union(request_roi)
@@ -162,14 +162,14 @@ class AddBlobsFromPoints(BatchFilter):
                 id_mapper.make_map(all_points)
 
             # Initialize output array
-            shape_array = np.asarray(request[array_key].roi.get_shape())/voxel_size
+            shape_array = np.asarray(request[array_key].roi.shape)/voxel_size
             blob_map = np.zeros(shape_array, dtype=dtype)
 
             # Get point data
             points = batch.points[points_key]
 
 
-            offset = np.asarray(points.spec.roi.get_offset())
+            offset = np.asarray(points.spec.roi.offset)
             for point_id, point_data in points.data.items():
                 voxel_location = np.round(((point_data.location - offset)/(voxel_size))).astype('int32')
 

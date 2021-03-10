@@ -26,7 +26,7 @@ class ExampleSourceRandomLocation(BatchProvider):
         self.array = array
         self.roi = Roi((-200, -20, -20), (1000, 100, 100))
         self.data_shape = (60, 60, 60)
-        self.voxel_size = (20, 2, 2)
+        self.voxel_size = Coordinate(20, 2, 2)
         x = np.linspace(-10, 49, 60).reshape((-1, 1, 1))
         self.data = x + x.transpose([1, 2, 0]) + x.transpose([2, 0, 1])
 
@@ -38,10 +38,10 @@ class ExampleSourceRandomLocation(BatchProvider):
         batch = Batch()
 
         spec = request[self.array].copy()
-        spec.voxel_size = Coordinate((20, 2, 2))
+        spec.voxel_size = self.voxel_size
 
-        start = (request[self.array].roi.get_begin() / self.voxel_size) + (10, 10, 10,)
-        end = (request[self.array].roi.get_end() / self.voxel_size) + (10, 10, 10)
+        start = (request[self.array].roi.begin / self.voxel_size) + 10
+        end = (request[self.array].roi.end / self.voxel_size) + 10
         data_slices = tuple(map(slice, start, end))
 
         data = self.data[data_slices]
@@ -86,8 +86,8 @@ class TestRandomLocation(ProviderTest):
                 self.assertTrue(0 in batch.arrays[b].data)
 
                 # Request a ROI with the same shape as the entire ROI
-                full_roi_a = Roi((0, 0, 0), source_a.roi.get_shape())
-                full_roi_b = Roi((0, 0, 0), source_b.roi.get_shape())
+                full_roi_a = Roi((0, 0, 0), source_a.roi.shape)
+                full_roi_b = Roi((0, 0, 0), source_b.roi.shape)
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}

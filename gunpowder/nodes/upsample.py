@@ -10,8 +10,9 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+
 class UpSample(BatchFilter):
-    '''Upsample arrays in a batch by given factors.
+    """Upsample arrays in a batch by given factors.
 
     Args:
 
@@ -19,22 +20,22 @@ class UpSample(BatchFilter):
 
             The key of the array to upsample.
 
-        factor (``int`` or ``tuple`` of ``int``):
+        factor (``int`` or ``Coordinate``):
 
             The factor to upsample with.
 
         target (:class:`ArrayKey`):
 
             The key of the array to store the upsampled ``source``.
-    '''
+    """
 
     def __init__(self, source, factor, target):
 
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
-        assert (
-            isinstance(factor, numbers.Number) or isinstance(factor, tuple)), (
-            "Scaling factor should be a number or a tuple of numbers.")
+        assert isinstance(factor, numbers.Number) or isinstance(
+            factor, Coordinate
+        ), "Scaling factor should be a number or a Coordinate."
 
         self.source = source
         self.factor = factor
@@ -44,14 +45,16 @@ class UpSample(BatchFilter):
 
         spec = self.spec[self.source].copy()
 
-        if not isinstance(self.factor, tuple):
-            self.factor = (self.factor,)*spec.roi.dims()
+        if not isinstance(self.factor, Coordinate):
+            self.factor = Coordinate((self.factor,) * spec.roi.dims)
 
-        assert spec.voxel_size % self.factor == (0,)*len(spec.voxel_size), \
-            "voxel size of upsampled volume is not integer: %s/%s = %s" % (
-                spec.voxel_size,
-                self.factor,
-                tuple(v/f for v, f in zip(spec.voxel_size, self.factor)))
+        assert spec.voxel_size % self.factor == (0,) * len(
+            spec.voxel_size
+        ), "voxel size of upsampled volume is not integer: %s/%s = %s" % (
+            spec.voxel_size,
+            self.factor,
+            tuple(v / f for v, f in zip(spec.voxel_size, self.factor)),
+        )
         spec.voxel_size /= self.factor
         self.provides(self.target, spec)
 
@@ -64,7 +67,7 @@ class UpSample(BatchFilter):
         logger.debug("preparing upsampling of " + str(self.source))
 
         request_roi = request[self.target].roi
-        logger.debug("request ROI is %s"%request_roi)
+        logger.debug("request ROI is %s" % request_roi)
 
         # add or merge to batch request
         deps[self.source] = ArraySpec(roi=request_roi)

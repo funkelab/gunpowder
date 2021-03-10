@@ -16,7 +16,7 @@ class ZeroOutConstSections(BatchFilter):
 
     def process(self, batch, request):
 
-        assert batch.get_total_roi().dims() == 3, "This filter only works on 3D data."
+        assert batch.get_total_roi().dims == 3, "This filter only works on 3D data."
 
         raw = batch.arrays[self.intensities]
 

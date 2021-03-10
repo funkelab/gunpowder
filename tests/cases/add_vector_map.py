@@ -53,9 +53,9 @@ class AddVectorMapTestSource(BatchProvider):
             roi = request[ArrayKeys.RAW].roi
             roi_voxel = roi // self.spec[ArrayKeys.RAW].voxel_size
             meshgrids = np.meshgrid(
-                range(roi_voxel.get_begin()[0], roi_voxel.get_end()[0]),
-                range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
-                range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]),
+                range(roi_voxel.begin[0], roi_voxel.end[0]),
+                range(roi_voxel.begin[1], roi_voxel.end[1]),
+                range(roi_voxel.begin[2], roi_voxel.end[2]),
                 indexing="ij",
             )
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
@@ -68,7 +68,7 @@ class AddVectorMapTestSource(BatchProvider):
             roi = request[ArrayKeys.GT_LABELS].roi
             roi_voxel_shape = (
                 roi // self.spec[ArrayKeys.GT_LABELS].voxel_size
-            ).get_shape()
+            ).shape
             data = np.ones(roi_voxel_shape)
             data[roi_voxel_shape[0] // 2 :, roi_voxel_shape[1] // 2 :, :] = 2
             data[roi_voxel_shape[0] // 2 :, -(roi_voxel_shape[1] // 2) :, :] = 3
@@ -103,7 +103,7 @@ class AddVectorMapTestSource(BatchProvider):
         min_dist_between_presyn_locs = 250
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
         min_dist_pre_to_postsyn_loc, max_dist_pre_to_postsyn_loc = 60, 120
-        num_presyn_locations = roi.size() // (
+        num_presyn_locations = roi.size // (
             np.prod(50 * np.asarray(voxel_size_points))
         )  # 1 synapse per 50vx^3 cube
         num_postsyn_locations = np.random.randint(
@@ -121,13 +121,13 @@ class AddVectorMapTestSource(BatchProvider):
                 presyn_location = np.asarray(
                     [
                         np.random.randint(
-                            low=roi.get_begin()[0], high=roi.get_end()[0]
+                            low=roi.begin[0], high=roi.end[0]
                         ),
                         np.random.randint(
-                            low=roi.get_begin()[1], high=roi.get_end()[1]
+                            low=roi.begin[1], high=roi.end[1]
                         ),
                         np.random.randint(
-                            low=roi.get_begin()[2], high=roi.get_end()[2]
+                            low=roi.begin[2], high=roi.end[2]
                         ),
                     ]
                 )
@@ -218,13 +218,13 @@ class TestAddVectorMap(ProviderTest):
             gt_labels_roi = pipeline_min_distance.spec[ArrayKeys.GT_LABELS].roi
             presyn_roi = pipeline_min_distance.spec[GraphKeys.PRESYN].roi
 
-            request.add(ArrayKeys.RAW, raw_roi.get_shape())
-            request.add(ArrayKeys.GT_LABELS, gt_labels_roi.get_shape())
-            request.add(GraphKeys.PRESYN, presyn_roi.get_shape())
-            request.add(GraphKeys.POSTSYN, presyn_roi.get_shape())
-            request.add(ArrayKeys.GT_VECTORS_MAP_PRESYN, presyn_roi.get_shape())
+            request.add(ArrayKeys.RAW, raw_roi.shape)
+            request.add(ArrayKeys.GT_LABELS, gt_labels_roi.shape)
+            request.add(GraphKeys.PRESYN, presyn_roi.shape)
+            request.add(GraphKeys.POSTSYN, presyn_roi.shape)
+            request.add(ArrayKeys.GT_VECTORS_MAP_PRESYN, presyn_roi.shape)
             for identifier, spec in request.items():
-                spec.roi = spec.roi.shift((1000, 1000, 1000))
+                spec.roi = spec.roi.shift(Coordinate(1000, 1000, 1000))
 
             batch = pipeline_min_distance.request_batch(request)
 
@@ -233,7 +233,7 @@ class TestAddVectorMap(ProviderTest):
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[
             ArrayKeys.GT_VECTORS_MAP_PRESYN
-        ].roi.get_offset()
+        ].roi.offset
 
         self.assertTrue(len(presyn_locs) > 0)
         self.assertTrue(len(postsyn_locs) > 0)
@@ -316,7 +316,7 @@ class TestAddVectorMap(ProviderTest):
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
         offset_vector_map_presyn = request[
             ArrayKeys.GT_VECTORS_MAP_PRESYN
-        ].roi.get_offset()
+        ].roi.offset
 
         self.assertTrue(len(presyn_locs) > 0)
         self.assertTrue(len(postsyn_locs) > 0)

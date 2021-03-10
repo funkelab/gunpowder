@@ -76,8 +76,8 @@ class Crop(BatchFilter):
             if max(total_fraction) >= 1:
                 raise RuntimeError("Sum of crop fractions exeeds 1")
 
-            crop_positive = spec.roi.get_shape()*self.fraction_positive
-            crop_negative = spec.roi.get_shape()*self.fraction_negative
+            crop_positive = Coordinate(a*b for a, b in zip(spec.roi.shape, self.fraction_positive))
+            crop_negative = Coordinate(a*b for a, b in zip(spec.roi.shape, self.fraction_negative))
             cropped_roi = spec.roi.grow(
                 -crop_positive,
                 -crop_negative)

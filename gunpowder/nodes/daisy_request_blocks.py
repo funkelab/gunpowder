@@ -120,12 +120,12 @@ class DaisyRequestBlocks(BatchFilter):
 
                 if roi_type == 'read_roi':
                     chunk_request[key].roi = Roi(
-                        block.read_roi.get_offset(),
-                        block.read_roi.get_shape())
+                        block.read_roi.offset,
+                        block.read_roi.shape)
                 elif roi_type == 'write_roi':
                     chunk_request[key].roi = Roi(
-                        block.write_roi.get_offset(),
-                        block.write_roi.get_shape())
+                        block.write_roi.offset,
+                        block.write_roi.shape)
                 else:
                     raise RuntimeError(
                         "%s is not a vaid ROI type (read_roi or write_roi)")

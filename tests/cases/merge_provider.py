@@ -51,7 +51,7 @@ class ArrayTestSoure(BatchProvider):
     def provide(self, request):
         roi_array = request[ArrayKeys.GT_LABELS].roi
         data = np.zeros(
-            roi_array.get_shape() / self.spec[ArrayKeys.GT_LABELS].voxel_size
+            roi_array.shape / self.spec[ArrayKeys.GT_LABELS].voxel_size
         )
         batch = Batch()
         spec = self.spec[ArrayKeys.GT_LABELS].copy()

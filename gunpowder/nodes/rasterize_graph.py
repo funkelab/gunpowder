@@ -148,7 +148,7 @@ class RasterizeGraph(BatchFilter):
         graph_roi = self.spec[self.graph].roi
 
         if self.array_spec.voxel_size is None:
-            self.array_spec.voxel_size = Coordinate((1,)*graph_roi.dims())
+            self.array_spec.voxel_size = Coordinate((1,)*graph_roi.dims)
 
         if self.array_spec.dtype is None:
             if self.settings.mode == 'ball':
@@ -172,7 +172,7 @@ class RasterizeGraph(BatchFilter):
         else:
             raise RuntimeError('unknown raster mode %s'%self.settings.mode)
 
-        dims = self.array_spec.roi.dims()
+        dims = self.array_spec.roi.dims
         if len(context) == 1:
             context = context.repeat(dims)
 
@@ -208,8 +208,8 @@ class RasterizeGraph(BatchFilter):
         # get roi used for creating the new array (graph_roi does not
         # necessarily align with voxel size)
         enlarged_vol_roi = graph.spec.roi.snap_to_grid(voxel_size)
-        offset = enlarged_vol_roi.get_begin() / voxel_size
-        shape = enlarged_vol_roi.get_shape() / voxel_size
+        offset = enlarged_vol_roi.begin / voxel_size
+        shape = enlarged_vol_roi.shape / voxel_size
         data_roi = Roi(offset, shape)
 
         logger.debug("Graph in %s", graph.spec.roi)
@@ -221,7 +221,7 @@ class RasterizeGraph(BatchFilter):
         if graph.num_vertices == 0:
             # If there are no nodes at all, just create an empty matrix.
             rasterized_graph_data = np.zeros(
-                data_roi.get_shape(), dtype=self.spec[self.array].dtype
+                data_roi.shape, dtype=self.spec[self.array].dtype
             )
         elif mask is not None:
 
@@ -230,7 +230,7 @@ class RasterizeGraph(BatchFilter):
             labels = []
             for i, point in graph.data.items():
                 v = Coordinate(point.location / voxel_size)
-                v -= data_roi.get_begin()
+                v -= data_roi.begin
                 labels.append(mask_array.data[v])
             # Make list unique
             labels = list(set(labels))
@@ -241,7 +241,7 @@ class RasterizeGraph(BatchFilter):
 
             if len(labels) == 0:
                 logger.debug("Graph and provided object mask do not overlap. No graph to rasterize.")
-                rasterized_graph_data = np.zeros(data_roi.get_shape(),
+                rasterized_graph_data = np.zeros(data_roi.shape,
                                                   dtype=self.spec[self.array].dtype)
             else:
                 # create data for the whole graph ROI, "or"ed together over
@@ -296,7 +296,7 @@ class RasterizeGraph(BatchFilter):
         logger.debug("Rasterizing graph in %s", graph.spec.roi)
 
         # prepare output array
-        rasterized_graph = np.zeros(data_roi.get_shape(), dtype=dtype)
+        rasterized_graph = np.zeros(data_roi.shape, dtype=dtype)
 
         # Fast rasterization currently only implemented for mode ball without
         # inner radius set
@@ -327,7 +327,7 @@ class RasterizeGraph(BatchFilter):
             v = Coordinate(node.location/voxel_size)
 
             # get the voxel coordinate relative to output array start
-            v -= data_roi.get_begin()
+            v -= data_roi.begin
 
             # skip graph outside of mask
             if mask is not None and not mask[v]:
@@ -336,7 +336,7 @@ class RasterizeGraph(BatchFilter):
             logger.debug(
                 "Rasterizing node %s at %s",
                 node.location,
-                node.location/voxel_size - data_roi.get_begin())
+                node.location/voxel_size - data_roi.begin)
 
             if use_fast_rasterization:
 

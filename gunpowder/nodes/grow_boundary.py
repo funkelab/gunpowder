@@ -52,8 +52,8 @@ class GrowBoundary(BatchFilter):
             if crop is None:
                 raise RuntimeError("GT_LABELS %s and GT_MASK %s ROIs don't intersect."%(gt.spec.roi,gt_mask.spec.roi))
             voxel_size = self.spec[self.labels].voxel_size
-            crop_in_gt = (crop.shift(-gt.spec.roi.get_offset())/voxel_size).get_bounding_box()
-            crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.get_offset())/voxel_size).get_bounding_box()
+            crop_in_gt = (crop.shift(-gt.spec.roi.offset)/voxel_size).get_bounding_box()
+            crop_in_gt_mask = (crop.shift(-gt_mask.spec.roi.offset)/voxel_size).get_bounding_box()
 
             self.__grow(gt.data[crop_in_gt], gt_mask.data[crop_in_gt_mask], self.only_xy)
 
