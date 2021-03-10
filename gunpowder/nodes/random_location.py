@@ -299,8 +299,8 @@ class RandomLocation(BatchFilter):
         # get number of masked-in voxels
         num_masked_in = integrate(
             self.mask_integral,
-            [request_mask_roi_in_array.get_begin()],
-            [request_mask_roi_in_array.get_end()-(1,)*self.mask_integral.ndim]
+            [request_mask_roi_in_array.begin],
+            [request_mask_roi_in_array.end-(1,)*self.mask_integral.ndim]
         )[0]
 
         mask_ratio = float(num_masked_in)/request_mask_roi_in_array.size()
