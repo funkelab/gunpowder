@@ -138,12 +138,18 @@ class Batch(Freezable):
 
         total_roi = None
 
-        for collection_type in [self.arrays, self.graphs]:
-            for (key, obj) in collection_type.items():
+        for _, array in self.arrays.items():
+            if not array.spec.nonspatial:
                 if total_roi is None:
-                    total_roi = obj.spec.roi
+                    total_roi = array.spec.roi
                 else:
-                    total_roi = total_roi.union(obj.spec.roi)
+                    total_roi = total_roi.union(array.spec.roi)
+
+        for _, graph in self.graphs.items():
+            if total_roi is None:
+                total_roi = graph.spec.roi
+            else:
+                total_roi = total_roi.union(graph.spec.roi)
 
         return total_roi
 
