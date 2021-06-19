@@ -115,7 +115,7 @@ class Predict(GenericPredict):
 
             can_skip = True
             for array_key in self.inputs.values():
-                if batch[array_key].data.sum() != 0:
+                if batch[array_key].data.any():
                     can_skip = False
                     break
 
