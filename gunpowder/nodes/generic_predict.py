@@ -198,11 +198,9 @@ class GenericPredict(BatchFilter):
             self.start()
             self.initialized = True
 
+        self.time_out = 0
         if self.timer_start is not None:
             self.time_out = time.time() - self.timer_start
-            logger.debug(
-                "batch in: %.3fs, predict: %.3fs, batch out: %.3fs",
-                self.time_in, self.time_predict, self.time_out)
 
         self.timer_start = time.time()
         batch, request = self.batch_in.get()
@@ -217,6 +215,10 @@ class GenericPredict(BatchFilter):
         self.predict(batch, request)
         self.time_predict = time.time() - self.timer_start
         self.timer_start = time.time()
+
+        logger.debug(
+            "batch in: %.3fs, predict: %.3fs, batch out: %.3fs",
+            self.time_in, self.time_predict, self.time_out)
 
         return batch
 
