@@ -100,7 +100,7 @@ class Scan(BatchFilter):
 
         else:
 
-            for i, shift in tqdm.tqdm(enumerate(shifts)):
+            for i, shift in enumerate(tqdm.tqdm(shifts)):
 
                 shifted_reference = self.__shift_request(self.reference, shift)
                 chunk = self.__get_chunk(shifted_reference)
