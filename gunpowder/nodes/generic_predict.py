@@ -7,6 +7,7 @@ from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
+from queue import Full
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,11 @@ class GenericPredict(BatchFilter):
     def teardown(self):
         if self.spawn_subprocess:
             # signal "stop"
-            self.batch_in.put((None, None))
+            try:
+                self.batch_in.put((None, None), timeout=2)
+            except Full:
+                # worker process might be stopped already
+                pass
             try:
                 self.worker.get(timeout=2)
             except NoResult:
