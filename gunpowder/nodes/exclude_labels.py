@@ -90,8 +90,8 @@ class ExcludeLabels(BatchFilter):
         gt_ignore_roi = request[self.ignore_mask].roi
 
         intersection = gt.spec.roi.intersect(gt_ignore_roi)
-        intersection_in_gt = intersection - gt.spec.roi.get_offset()
-        intersection_in_gt_ignore = intersection - gt_ignore_roi.get_offset()
+        intersection_in_gt = intersection - gt.spec.roi.offset
+        intersection_in_gt_ignore = intersection - gt_ignore_roi.offset
 
         # to voxel coordinates
         intersection_in_gt //= voxel_size

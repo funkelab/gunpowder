@@ -154,7 +154,7 @@ class RandomLocation(BatchFilter):
         # RandomLocation does not have limits (offsets are ignored)
         for key, spec in self.spec.items():
             if spec.roi is not None:
-                spec.roi.set_shape(None)
+                spec.roi.shape = Coordinate((None,)*spec.roi.dims)
                 self.updates(key, spec)
 
     def prepare(self, request):
@@ -167,7 +167,7 @@ class RandomLocation(BatchFilter):
             lcm_voxel_size = self.spec.get_lcm_voxel_size(
                 request.array_specs.keys())
         else:
-            lcm_voxel_size = Coordinate((1,)*request.get_total_roi().dims())
+            lcm_voxel_size = Coordinate((1,)*request.get_total_roi().dims)
 
         shift_roi = self.__get_possible_shifts(request, lcm_voxel_size)
 
@@ -183,10 +183,10 @@ class RandomLocation(BatchFilter):
 
             lcm_shift_roi = shift_roi
 
-        assert not lcm_shift_roi.unbounded(), (
+        assert not lcm_shift_roi.unbounded, (
             "Can not pick a random location, intersection of upstream ROIs is "
             "unbounded.")
-        assert not lcm_shift_roi.empty(), (
+        assert not lcm_shift_roi.empty, (
             "Can not satisfy batch request, no location covers all requested "
             "ROIs.")
 
@@ -233,10 +233,10 @@ class RandomLocation(BatchFilter):
             provided_roi = self.upstream_spec[key].roi
 
             shift_roi = provided_roi.shift(
-                -request_roi.get_begin()
+                -request_roi.begin
             ).grow(
-                (0,)*request_roi.dims(),
-                -(request_roi.get_shape() - voxel_size)
+                (0,)*request_roi.dims,
+                -(request_roi.shape - voxel_size)
             )
 
             if total_shift_roi is None:
@@ -294,13 +294,13 @@ class RandomLocation(BatchFilter):
         # get coordinates inside mask array
         mask_voxel_size = self.spec[self.mask].voxel_size
         request_mask_roi_in_array = request_mask_roi/mask_voxel_size
-        request_mask_roi_in_array -= self.mask_spec.roi.get_offset()/mask_voxel_size
+        request_mask_roi_in_array -= self.mask_spec.roi.offset/mask_voxel_size
 
         # get number of masked-in voxels
         num_masked_in = integrate(
             self.mask_integral,
-            [request_mask_roi_in_array.get_begin()],
-            [request_mask_roi_in_array.get_end()-(1,)*self.mask_integral.ndim]
+            [request_mask_roi_in_array.begin],
+            [request_mask_roi_in_array.end-(1,)*self.mask_integral.ndim]
         )[0]
 
         mask_ratio = float(num_masked_in)/request_mask_roi_in_array.size()
@@ -386,8 +386,8 @@ class RandomLocation(BatchFilter):
                 lcm_location)
 
             # get the request ROI's shape in lcm
-            lcm_roi_begin = request_points_roi.get_begin()/lcm_voxel_size
-            lcm_roi_shape = request_points_roi.get_shape()/lcm_voxel_size
+            lcm_roi_begin = request_points_roi.begin/lcm_voxel_size
+            lcm_roi_shape = request_points_roi.shape/lcm_voxel_size
             logger.debug("Point request ROI: %s", request_points_roi)
             logger.debug("Point request lcm ROI shape: %s", lcm_roi_shape)
 
@@ -441,7 +441,7 @@ class RandomLocation(BatchFilter):
         # select a random point inside ROI
         random_shift = Coordinate(
             randint(begin, end - 1)
-            for begin, end in zip(lcm_shift_roi.get_begin(), lcm_shift_roi.get_end()))
+            for begin, end in zip(lcm_shift_roi.begin, lcm_shift_roi.end))
 
         random_shift *= lcm_voxel_size
 
@@ -451,8 +451,8 @@ class RandomLocation(BatchFilter):
 
         points = []
 
-        center = roi.get_center()
-        radius = math.ceil(float(max(roi.get_shape()))/2)
+        center = roi.center
+        radius = math.ceil(float(max(roi.shape))/2)
         candidates = self.points.query_ball_point(center, radius, p=np.inf)
 
         for i in candidates:

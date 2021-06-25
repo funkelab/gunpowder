@@ -59,7 +59,7 @@ def test_mirror():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.get_offset()) / voxel_size
+            (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
         assert batch[array_key].data[node_voxel_index] == 1
 
@@ -71,7 +71,7 @@ def test_mirror():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.get_offset()) / voxel_size
+            (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
         assert (
             batch[array_key].data[node_voxel_index] == 1
@@ -116,7 +116,7 @@ def test_transpose():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.get_offset()) / voxel_size
+            (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
         assert (
             batch[array_key].data[node_voxel_index] == 1
@@ -130,7 +130,7 @@ def test_transpose():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.get_offset()) / voxel_size
+            (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
         assert (
             batch[array_key].data[node_voxel_index] == 1
@@ -185,7 +185,7 @@ def test_mirror_and_transpose():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.get_offset()) / voxel_size
+            (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
         assert batch[array_key].data[node_voxel_index] == 1
 
@@ -197,7 +197,7 @@ def test_mirror_and_transpose():
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
-            (np.array(expected_location) - batch[array_key].spec.roi.get_offset())
+            (np.array(expected_location) - batch[array_key].spec.roi.offset)
             / voxel_size
         )
         assert (
@@ -211,10 +211,10 @@ def test_mismatched_voxel_multiples():
 
     If voxel_size = [2, 2], and we transpose array of shape [4, 6]:
 
-        center = total_roi.get_center() -> [2, 3]
+        center = total_roi.center -> [2, 3]
 
         # Get distance from center, then transpose
-        dist_to_center = center - roi.get_offset() -> [2, 3]
+        dist_to_center = center - roi.offset -> [2, 3]
         dist_to_center = transpose(dist_to_center)  -> [3, 2]
 
         # Using the transposed distance to center, get the offset.

@@ -11,6 +11,7 @@ from gunpowder import (
     Graph,
     Node,
     Roi,
+    Coordinate,
     Scan,
     build,
 )
@@ -58,9 +59,9 @@ class ScanTestSource(BatchProvider):
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(roi_voxel.get_begin()[0], roi_voxel.get_end()[0]),
-                    range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
-                    range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]), indexing='ij')
+                    range(roi_voxel.begin[0], roi_voxel.end[0]),
+                    range(roi_voxel.begin[1], roi_voxel.end[1]),
+                    range(roi_voxel.begin[2], roi_voxel.end[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             # print("Roi is: " + str(roi))
@@ -74,11 +75,11 @@ class ScanTestSource(BatchProvider):
         for graph_key, spec in request.graph_specs.items():
             # node at x, y, z if x%100==0, y%10==0, z%10==0
             nodes = []
-            start = spec.roi.get_begin() - tuple(x % s for x, s in zip(spec.roi.get_begin(), [100,10,10]))
+            start = spec.roi.begin - (spec.roi.begin % Coordinate(100, 10, 10))
             for i, j, k in itertools.product(
                 *[
                     range(a, b, s)
-                    for a, b, s in zip(start, spec.roi.get_end(), [100, 10, 10])
+                    for a, b, s in zip(start, spec.roi.end, [100, 10, 10])
                 ]
             ):
                 location = np.array([i, j, k])
@@ -126,9 +127,9 @@ class TestScan(ProviderTest):
             # the z,y,x coordinates of the ROI
             roi = array.spec.roi
             meshgrids = np.meshgrid(
-                    range(roi.get_begin()[0]//voxel_size[0], roi.get_end()[0]//voxel_size[0]),
-                    range(roi.get_begin()[1]//voxel_size[1], roi.get_end()[1]//voxel_size[1]),
-                    range(roi.get_begin()[2]//voxel_size[2], roi.get_end()[2]//voxel_size[2]), indexing='ij')
+                    range(roi.begin[0]//voxel_size[0], roi.end[0]//voxel_size[0]),
+                    range(roi.begin[1]//voxel_size[1], roi.end[1]//voxel_size[1]),
+                    range(roi.begin[2]//voxel_size[2], roi.end[2]//voxel_size[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             self.assertTrue((array.data == data).all())
@@ -139,7 +140,7 @@ class TestScan(ProviderTest):
             for i, j, k in itertools.product(range(20000, 22000, 100), range(2000, 2200, 10), range(2000, 2200, 10)):
                 assert all(np.isclose(graph.node(coordinate_to_id(i, j, k)).location, np.array([i, j, k])))
 
-        assert(batch.arrays[ArrayKeys.RAW].spec.roi.get_offset() == (20000, 2000, 2000))
+        assert(batch.arrays[ArrayKeys.RAW].spec.roi.offset == (20000, 2000, 2000))
 
         # test scanning with empty request
 

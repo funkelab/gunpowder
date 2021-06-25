@@ -99,7 +99,7 @@ class DvidSource(BatchProvider):
             dataset_roi = request_spec.roi/voxel_size
 
             # shift request roi into dataset
-            dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset()/voxel_size
+            dataset_roi = dataset_roi - self.spec[array_key].roi.offset/voxel_size
 
             # create array spec
             array_spec = self.spec[array_key].copy()
@@ -163,7 +163,7 @@ class DvidSource(BatchProvider):
         data_roi = Roi(
             offset=roi_min,
             shape=(roi_max - roi_min))
-        data_dims = Coordinate(data_roi.get_shape())
+        data_dims = Coordinate(data_roi.shape)
 
         if self.ndims is None:
             self.ndims = len(data_dims)

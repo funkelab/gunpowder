@@ -34,9 +34,9 @@ class ZarrWriteTestSource(BatchProvider):
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(roi_voxel.get_begin()[0], roi_voxel.get_end()[0]),
-                    range(roi_voxel.get_begin()[1], roi_voxel.get_end()[1]),
-                    range(roi_voxel.get_begin()[2], roi_voxel.get_end()[2]), indexing='ij')
+                    range(roi_voxel.begin[0], roi_voxel.end[0]),
+                    range(roi_voxel.begin[1], roi_voxel.end[1]),
+                    range(roi_voxel.begin[2], roi_voxel.end[2]), indexing='ij')
             data = np.array(meshgrids)
 
             # print("Roi is: " + str(roi))
@@ -92,8 +92,8 @@ class TestZarrWrite(ProviderTest):
 
             self.assertEqual(
                 stored_raw.shape[-3:],
-                batch_raw.spec.roi.get_shape()//batch_raw.spec.voxel_size)
-            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.get_offset())
+                batch_raw.spec.roi.shape//batch_raw.spec.voxel_size)
+            self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.offset)
             self.assertEqual(tuple(ds.attrs['resolution']), batch_raw.spec.voxel_size)
             self.assertTrue((stored_raw == batch.arrays[ArrayKeys.RAW].data).all())
 

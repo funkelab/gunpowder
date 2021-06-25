@@ -72,7 +72,7 @@ class IterateLocations(BatchFilter):
         # clear bounding boxes of all provided arrays and points
         for key, spec in self.spec.items():
             if spec.roi is not None:
-                spec.roi.set_shape(None)
+                spec.roi.shape = Coordinate((None,) * spec.roi.dims)
                 self.updates(key, spec)
         if self.node_id is not None:
             self.provides(self.node_id, ArraySpec(nonspatial=True))
@@ -89,7 +89,7 @@ class IterateLocations(BatchFilter):
 
         # shift to center
         total_roi = request.get_total_roi()
-        request_center = total_roi.get_shape()/2 + total_roi.get_offset()
+        request_center = total_roi.shape/2 + total_roi.offset
 
         self.shift = self._get_next_shift(request_center, lcm_voxel_size)
         max_tries = 15

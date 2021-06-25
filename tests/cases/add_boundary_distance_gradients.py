@@ -18,7 +18,7 @@ class ExampleSource(BatchProvider):
         batch = Batch()
 
         roi = request[ArrayKeys.GT_LABELS].roi
-        shape = (roi/self.spec[ArrayKeys.GT_LABELS].voxel_size).get_shape()
+        shape = (roi/self.spec[ArrayKeys.GT_LABELS].voxel_size).shape
 
         spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi

@@ -240,8 +240,8 @@ class BatchProvider(object):
                         request_roi is not None and
                         provided_spec.voxel_size is not None):
 
-                    for d in range(request_roi.dims()):
-                        assert request_roi.get_shape()[d]%provided_spec.voxel_size[d] == 0, \
+                    for d in range(request_roi.dims):
+                        assert request_roi.shape[d]%provided_spec.voxel_size[d] == 0, \
                                 "in request %s, dimension %d of request %s is not a multiple of voxel_size %d"%(
                                         request,
                                         d,
@@ -276,10 +276,10 @@ class BatchProvider(object):
             # ensure that the spatial dimensions are the same (other dimensions 
             # on top are okay, e.g., for affinities)
             if request_spec.roi is not None:
-                dims = request_spec.roi.dims()
+                dims = request_spec.roi.dims
                 data_shape = Coordinate(array.data.shape[-dims:])
                 voxel_size = self.spec[array_key].voxel_size
-                assert data_shape == request_spec.roi.get_shape()/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
+                assert data_shape == request_spec.roi.shape/voxel_size, "%s ROI %s requested, but size of array is %s*%s=%s provided by %s."%(
                         array_key,
                         request_spec.roi,
                         data_shape,

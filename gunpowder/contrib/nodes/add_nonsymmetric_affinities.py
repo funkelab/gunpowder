@@ -92,7 +92,7 @@ class AddNonsymmetricAffinities(BatchFilter):
         request_vol = request[self.affinity_array_key_1]
         affinity_map = np.zeros(
             (len(self.affinity_vectors),) +
-            tuple(request_vol.roi.get_shape()/request_vol.voxel_size), dtype=full_vol1.spec.dtype)
+            tuple(request_vol.roi.shape/request_vol.voxel_size), dtype=full_vol1.spec.dtype)
 
         # calculate affinities
         vol1 = full_vol1.crop(request_vol.roi)
@@ -113,7 +113,7 @@ class AddNonsymmetricAffinities(BatchFilter):
         request_vol = request[self.affinity_array_key_2]
         affinity_map = np.zeros(
             (len(self.affinity_vectors),) +
-            tuple(request_vol.roi.get_shape()/request_vol.voxel_size), dtype=full_vol1.spec.dtype)
+            tuple(request_vol.roi.shape/request_vol.voxel_size), dtype=full_vol1.spec.dtype)
 
         # calculate affinities
         vol2 = full_vol2.crop(request_vol.roi)

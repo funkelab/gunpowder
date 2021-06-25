@@ -27,7 +27,7 @@ class ExampleSourcePrepareMalis(BatchProvider):
         if ArrayKeys.GT_LABELS in request:
 
             gt_labels_roi   = request[ArrayKeys.GT_LABELS].roi
-            gt_labels_shape = gt_labels_roi.get_shape()
+            gt_labels_shape = gt_labels_roi.shape
 
             data_labels = np.ones(gt_labels_shape)
             data_labels[gt_labels_shape[0]//2:, :, :] = 2
@@ -41,7 +41,7 @@ class ExampleSourcePrepareMalis(BatchProvider):
         if ArrayKeys.GT_IGNORE in request:
 
             gt_ignore_roi   = request[ArrayKeys.GT_IGNORE].roi
-            gt_ignore_shape = gt_ignore_roi.get_shape()
+            gt_ignore_shape = gt_ignore_roi.shape
 
             data_gt_ignore = np.ones(gt_ignore_shape)
             data_gt_ignore[:, gt_ignore_shape[1]//6:, :] = 0

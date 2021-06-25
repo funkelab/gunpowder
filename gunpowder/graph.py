@@ -496,8 +496,8 @@ class Graph(Freezable):
         with np.errstate(divide="ignore", invalid="ignore"):
             bb_x = np.asarray(
                 [
-                    (np.asarray(bb.get_begin()) - inside) / offset,
-                    (np.asarray(bb.get_end()) - inside) / offset,
+                    (np.asarray(bb.begin) - inside) / offset,
+                    (np.asarray(bb.end) - inside) / offset,
                 ],
                 dtype=self.spec.dtype,
             )
@@ -506,9 +506,9 @@ class Graph(Freezable):
             s = np.min(bb_x[np.logical_and((bb_x >= 0), (bb_x <= 1))])
 
         new_location = inside + s * distance * direction
-        upper = np.array(bb.get_end(), dtype=self.spec.dtype)
+        upper = np.array(bb.end, dtype=self.spec.dtype)
         new_location = np.clip(
-            new_location, bb.get_begin(), upper - upper * np.finfo(self.spec.dtype).eps
+            new_location, bb.begin, upper - upper * np.finfo(self.spec.dtype).eps
         )
         return new_location
 

@@ -37,15 +37,15 @@ class NodeDependenciesTestSource(BatchProvider):
             roi = spec.roi
 
             for d in range(3):
-                assert roi.get_begin()[d] % 4 == 0, "roi %s does not align with voxels"
+                assert roi.begin[d] % 4 == 0, "roi %s does not align with voxels"
 
             data_roi = roi / 4
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                range(data_roi.get_begin()[0], data_roi.get_end()[0]),
-                range(data_roi.get_begin()[1], data_roi.get_end()[1]),
-                range(data_roi.get_begin()[2], data_roi.get_end()[2]),
+                range(data_roi.begin[0], data_roi.end[0]),
+                range(data_roi.begin[1], data_roi.end[1]),
+                range(data_roi.begin[2], data_roi.end[2]),
                 indexing="ij",
             )
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]

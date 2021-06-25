@@ -126,8 +126,8 @@ class DvidPartnerAnnotationSource(BatchProvider):
         elif GraphKey.POSTSYN in self.points_voxel_size:
             voxel_size = self.points_voxel_size[GraphKey.POSTSYN]
 
-        syn_file_json = self.__load_json_annotations(array_shape_voxel  = roi.get_shape() // voxel_size,
-                                                     array_offset_voxel = roi.get_offset() // voxel_size,
+        syn_file_json = self.__load_json_annotations(array_shape_voxel  = roi.shape // voxel_size,
+                                                     array_offset_voxel = roi.offset // voxel_size,
                                                      array_name    = self.datasets[GraphKey.PRESYN])
 
         presyn_points_dict, postsyn_points_dict = {}, {}

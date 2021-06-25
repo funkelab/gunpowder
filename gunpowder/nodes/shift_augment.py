@@ -32,7 +32,7 @@ class ShiftAugment(BatchFilter):
     def prepare(self, request):
         random.seed(request.random_seed)
         
-        self.ndim = request.get_total_roi().dims()
+        self.ndim = request.get_total_roi().dims
         assert self.shift_axis in range(self.ndim)
 
         try:
@@ -60,7 +60,7 @@ class ShiftAugment(BatchFilter):
         self.lcm_voxel_size = self.spec.get_lcm_voxel_size(array_keys=request.array_specs.keys())
         assert self.lcm_voxel_size
 
-        roi_shape = request.get_total_roi().get_shape()
+        roi_shape = request.get_total_roi().shape
         assert roi_shape // self.lcm_voxel_size * self.lcm_voxel_size == roi_shape, \
             "total roi shape {} must be divisible by least common voxel size {}".format(roi_shape, self.lcm_voxel_size)
         roi_shape_adjusted = roi_shape // self.lcm_voxel_size
@@ -76,8 +76,8 @@ class ShiftAugment(BatchFilter):
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), spec.roi,
                                                        self.shift_array, self.shift_axis, self.lcm_voxel_size)
             updated_roi = self.compute_upstream_roi(spec.roi, sub_shift_array)
-            spec.roi.set_offset(updated_roi.get_offset())
-            spec.roi.set_shape(updated_roi.get_shape())
+            spec.roi.offset = updated_roi.offset
+            spec.roi.shape = updated_roi.shape
             request[key] = spec
 
         deps = request
@@ -88,13 +88,13 @@ class ShiftAugment(BatchFilter):
             sub_shift_array = self.get_sub_shift_array(request.get_total_roi(), array.spec.roi,
                                                        self.shift_array, self.shift_axis, self.lcm_voxel_size)
             array.data = self.shift_and_crop(array.data,
-                                             request[array_key].roi.get_shape(),
+                                             request[array_key].roi.shape,
                                              sub_shift_array,
                                              array.spec.voxel_size)
             array.spec.roi = request[array_key].roi
-            assert request[array_key].roi.get_shape() == Coordinate(array.data.shape) * self.lcm_voxel_size, \
+            assert request[array_key].roi.shape == Coordinate(array.data.shape) * self.lcm_voxel_size, \
                 'request roi shape {} is not the same as generated array shape {}'.format(
-                    request[array_key].roi.get_shape(), array.data.shape)
+                    request[array_key].roi.shape, array.data.shape)
             batch[array_key] = array
 
         for points_key, points in batch.graphs.items():
@@ -158,7 +158,7 @@ class ShiftAugment(BatchFilter):
 
         nodes = list(points.nodes)
         spec = points.spec
-        shift_axis_start_pos = spec.roi.get_offset()[shift_axis]
+        shift_axis_start_pos = spec.roi.offset[shift_axis]
 
         for node in nodes:
             loc = node.location
@@ -184,9 +184,9 @@ class ShiftAugment(BatchFilter):
         :param lcm_voxel_size: the least common voxel size for the arrays in the request
         :return: the portion of the global shift array that should be used to shift the item
         """
-        item_offset_from_total = item_roi.get_offset() - total_roi.get_offset()
+        item_offset_from_total = item_roi.offset - total_roi.offset
         offset_in_shift_axis = item_offset_from_total[shift_axis] // lcm_voxel_size[shift_axis]
-        len_in_shift_axis = item_roi.get_shape()[shift_axis] // lcm_voxel_size[shift_axis]
+        len_in_shift_axis = item_roi.shape[shift_axis] // lcm_voxel_size[shift_axis]
         return shift_array[offset_in_shift_axis: offset_in_shift_axis + len_in_shift_axis]
 
     @staticmethod
@@ -234,7 +234,7 @@ class ShiftAugment(BatchFilter):
         max_shift = Coordinate(sub_shift_array.max(axis=0))
         min_shift = Coordinate(sub_shift_array.min(axis=0))
 
-        downstream_offset = request_roi.get_offset()
+        downstream_offset = request_roi.offset
         upstream_offset = downstream_offset - max_shift
-        upstream_shape = request_roi.get_shape() + max_shift - min_shift
+        upstream_shape = request_roi.shape + max_shift - min_shift
         return Roi(offset=upstream_offset, shape=upstream_shape)

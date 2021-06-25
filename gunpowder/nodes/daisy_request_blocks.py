@@ -99,41 +99,41 @@ class DaisyRequestBlocks(BatchFilter):
 
         while True:
 
-            block = daisy_client.acquire_block()
+            with daisy_client.acquire_block() as block:
 
-            if block is None:
-                return
+                if block is None:
+                    return
 
-            logger.info("Processing block %s", block)
-            start = time.time()
+                logger.info("Processing block %s", block)
+                start = time.time()
 
-            chunk_request = self.reference.copy()
+                chunk_request = self.reference.copy()
 
-            for key, reference_spec in self.reference.items():
+                for key, reference_spec in self.reference.items():
 
-                roi_type = self.roi_map.get(key, None)
+                    roi_type = self.roi_map.get(key, None)
 
-                if roi_type is None:
-                    raise RuntimeError(
-                        "roi_map does not map item %s to either 'read_roi' "
-                        "or 'write_roi'" % key)
+                    if roi_type is None:
+                        raise RuntimeError(
+                            "roi_map does not map item %s to either 'read_roi' "
+                            "or 'write_roi'" % key)
 
-                if roi_type == 'read_roi':
-                    chunk_request[key].roi = Roi(
-                        block.read_roi.get_offset(),
-                        block.read_roi.get_shape())
-                elif roi_type == 'write_roi':
-                    chunk_request[key].roi = Roi(
-                        block.write_roi.get_offset(),
-                        block.write_roi.get_shape())
-                else:
-                    raise RuntimeError(
-                        "%s is not a vaid ROI type (read_roi or write_roi)")
+                    if roi_type == 'read_roi':
+                        chunk_request[key].roi = Roi(
+                            block.read_roi.offset,
+                            block.read_roi.shape)
+                    elif roi_type == 'write_roi':
+                        chunk_request[key].roi = Roi(
+                            block.write_roi.offset,
+                            block.write_roi.shape)
+                    else:
+                        raise RuntimeError(
+                            "%s is not a vaid ROI type (read_roi or write_roi)")
 
-            self.get_upstream_provider().request_batch(chunk_request)
+                self.get_upstream_provider().request_batch(chunk_request)
 
-            end = time.time()
-            if self.block_done_callback:
-                self.block_done_callback(block, start, end - start)
+                end = time.time()
+                if self.block_done_callback:
+                    self.block_done_callback(block, start, end - start)
 
-            daisy_client.release_block(block, ret=0)
+                daisy_client.release_block(block)

@@ -42,7 +42,7 @@ class Squeeze(BatchFilter):
 
             if array in batch:
                 if not batch[array].spec.nonspatial:
-                    spatial_dims = request[array].roi.dims()
+                    spatial_dims = request[array].roi.dims
                     if self.axis >= batch[array].data.ndim - spatial_dims:
                         raise ValueError((
                             f"Squeeze.axis={self.axis} not permitted. "

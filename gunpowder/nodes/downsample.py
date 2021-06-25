@@ -61,7 +61,7 @@ class DownSample(BatchFilter):
         else:
             slices = tuple(
                 slice(None, None, self.factor)
-                for i in range(batch[self.source].spec.roi.dims()))
+                for i in range(batch[self.source].spec.roi.dims))
 
         logger.debug("downsampling %s with %s", self.source, slices)
 

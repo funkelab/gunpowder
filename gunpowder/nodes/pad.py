@@ -4,6 +4,7 @@ import numpy as np
 from .batch_filter import BatchFilter
 from gunpowder.array import ArrayKey
 from gunpowder.roi import Roi
+from gunpowder.coordinate import Coordinate
 from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class Pad(BatchFilter):
         if self.size is not None:
             spec.roi = spec.roi.grow(self.size, self.size)
         else:
-            spec.roi.set_shape(None)
+            spec.roi.shape = Coordinate((None,) * spec.roi.dims)
         self.updates(self.key, spec)
 
     def prepare(self, request):
@@ -69,7 +70,7 @@ class Pad(BatchFilter):
         # change request to fit into upstream spec
         request[self.key].roi = roi.intersect(upstream_spec[self.key].roi)
 
-        if request[self.key].roi.empty():
+        if request[self.key].roi.empty:
 
             logger.warning(
                 "Requested %s ROI %s lies entirely outside of upstream "
@@ -77,8 +78,8 @@ class Pad(BatchFilter):
 
             # ensure a valid request by asking for empty ROI
             request[self.key].roi = Roi(
-                    upstream_spec[self.key].roi.get_offset(),
-                    (0,)*upstream_spec[self.key].roi.dims()
+                    upstream_spec[self.key].roi.offset,
+                    (0,)*upstream_spec[self.key].roi.dims
             )
 
         logger.debug("new request: %s"%request)
@@ -116,14 +117,14 @@ class Pad(BatchFilter):
             "expanding array of shape %s from %s to %s",
             str(a.shape), from_roi, to_roi)
 
-        num_channels = len(a.shape) - from_roi.dims()
+        num_channels = len(a.shape) - from_roi.dims
         channel_shapes = a.shape[:num_channels]
 
-        b = np.zeros(channel_shapes + to_roi.get_shape(), dtype=a.dtype)
+        b = np.zeros(channel_shapes + to_roi.shape, dtype=a.dtype)
         if value != 0:
             b[:] = value
 
-        shift = tuple(-x for x in to_roi.get_offset())
+        shift = -to_roi.offset
         logger.debug("shifting 'from' by " + str(shift))
         a_in_b = from_roi.shift(shift).to_slices()
 

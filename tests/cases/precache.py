@@ -33,7 +33,7 @@ class TestPreCache(ProviderTest):
 
             # change request
             self.test_request[ArrayKeys.RAW].roi = \
-                self.test_request[ArrayKeys.RAW].roi.shift((1,1,1))
+                self.test_request[ArrayKeys.RAW].roi.shift(1)
 
             start = time.time()
 

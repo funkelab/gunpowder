@@ -128,10 +128,10 @@ class ElasticAugment(BatchFilter):
 
         # get master ROI
         master_roi = Roi(
-            total_roi.get_begin()[-self.spatial_dims :],
-            total_roi.get_shape()[-self.spatial_dims :],
+            total_roi.begin[-self.spatial_dims :],
+            total_roi.shape[-self.spatial_dims :],
         )
-        self.spatial_dims = master_roi.dims()
+        self.spatial_dims = master_roi.dims
         logger.debug("master ROI is %s" % master_roi)
 
         # make sure the master ROI aligns with the voxel size
@@ -148,7 +148,7 @@ class ElasticAugment(BatchFilter):
 
         # create a transformation with the size of the master ROI in voxels
         self.master_transformation = self.__create_transformation(
-            master_roi_voxels.get_shape()
+            master_roi_voxels.shape
         )
 
         # Third, crop out parts of the master transformation for each of the
@@ -168,8 +168,8 @@ class ElasticAugment(BatchFilter):
                 continue
 
             target_roi = Roi(
-                spec.roi.get_begin()[-self.spatial_dims :],
-                spec.roi.get_shape()[-self.spatial_dims :],
+                spec.roi.begin[-self.spatial_dims :],
+                spec.roi.shape[-self.spatial_dims :],
             )
             logger.debug("downstream request spatial ROI for %s is %s", key, target_roi)
 
@@ -192,7 +192,7 @@ class ElasticAugment(BatchFilter):
 
             # get ROI relative to master ROI
             target_roi_in_master_roi_voxels = (
-                target_roi_voxels - master_roi_voxels.get_begin()
+                target_roi_voxels - master_roi_voxels.begin
             )
 
             # crop out relevant part of transformation for this request
@@ -210,7 +210,7 @@ class ElasticAugment(BatchFilter):
             # reverse
             source_roi_in_master_roi_voxels = self.__get_source_roi(transformation)
             source_roi_voxels = (
-                source_roi_in_master_roi_voxels + master_roi_voxels.get_begin()
+                source_roi_in_master_roi_voxels + master_roi_voxels.begin
             )
             source_roi = source_roi_voxels * self.voxel_size
 
@@ -221,15 +221,15 @@ class ElasticAugment(BatchFilter):
             # shift transformation to be indexed relative to beginning of
             # source_roi_voxels
             self.__shift_transformation(
-                -source_roi_in_master_roi_voxels.get_begin(), transformation
+                -source_roi_in_master_roi_voxels.begin, transformation
             )
 
             # update upstream request
             spec.roi = Roi(
-                spec.roi.get_begin()[: -self.spatial_dims]
-                + source_roi.get_begin()[-self.spatial_dims :],
-                spec.roi.get_shape()[: -self.spatial_dims]
-                + source_roi.get_shape()[-self.spatial_dims :],
+                spec.roi.begin[: -self.spatial_dims]
+                + source_roi.begin[-self.spatial_dims :],
+                spec.roi.shape[: -self.spatial_dims]
+                + source_roi.shape[-self.spatial_dims :],
             )
 
             deps[key] = spec
@@ -248,19 +248,19 @@ class ElasticAugment(BatchFilter):
             # for arrays, the target ROI and the requested ROI should be the
             # same in spatial coordinates
             assert (
-                self.target_rois[array_key].get_begin()
-                == request[array_key].roi.get_begin()[-self.spatial_dims :]
+                self.target_rois[array_key].begin
+                == request[array_key].roi.begin[-self.spatial_dims :]
             ), "Target roi offset {} does not match request roi offset {}".format(
-                self.target_rois[array_key].get_begin(),
-                request[array_key].roi.get_begin()[-self.spatial_dims :],
+                self.target_rois[array_key].begin,
+                request[array_key].roi.begin[-self.spatial_dims :],
             )
 
             assert (
-                self.target_rois[array_key].get_shape()
-                == request[array_key].roi.get_shape()[-self.spatial_dims :]
+                self.target_rois[array_key].shape
+                == request[array_key].roi.shape[-self.spatial_dims :]
             ), "Target roi offset {} does not match request roi offset {}".format(
-                self.target_rois[array_key].get_shape(),
-                request[array_key].roi.get_shape()[-self.spatial_dims :],
+                self.target_rois[array_key].shape,
+                request[array_key].roi.shape[-self.spatial_dims :],
             )
 
             # reshape array data into (channels,) + spatial dims
@@ -281,7 +281,7 @@ class ElasticAugment(BatchFilter):
             )
 
             data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            array.data = data.reshape(channel_shape + data_roi.get_shape()[-self.spatial_dims:])
+            array.data = data.reshape(channel_shape + data_roi.shape[-self.spatial_dims:])
 
             # restore original ROIs
             array.spec.roi = request[array_key].roi
@@ -308,7 +308,7 @@ class ElasticAugment(BatchFilter):
                 # logger.debug("projecting %s", node.location)
 
                 # get location relative to beginning of upstream ROI
-                location = node.location - graph.spec.roi.get_begin()
+                location = node.location - graph.spec.roi.begin
                 logger.debug("relative to upstream ROI: %s", location)
 
                 # get spatial coordinates of node in voxels
@@ -337,7 +337,7 @@ class ElasticAugment(BatchFilter):
                     projected)
 
                 # get global coordinates
-                projected += np.array(self.target_rois[graph_key].get_begin())
+                projected += np.array(self.target_rois[graph_key].begin)
 
                 # update spatial coordinates of node location
                 node.location[-self.spatial_dims:] = projected
@@ -373,7 +373,7 @@ class ElasticAugment(BatchFilter):
         if voxel_size is None:
             raise RuntimeError("voxel size must not be None")
 
-        return voxel_size
+        return Coordinate(voxel_size)
 
     def __create_transformation(self, target_shape):
 
@@ -413,7 +413,7 @@ class ElasticAugment(BatchFilter):
             *[
                 (
                     node.id,
-                    (np.floor(node.location).astype(int) - source_roi.get_begin())
+                    (np.floor(node.location).astype(int) - source_roi.begin)
                     // self.voxel_size,
                 )
                 for node in nodes
@@ -422,7 +422,7 @@ class ElasticAugment(BatchFilter):
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
         points_array = np.zeros(
-            source_roi.get_shape() / self.voxel_size, dtype=np.int64
+            source_roi.shape / self.voxel_size, dtype=np.int64
         )
         points_array[locs] = ids
 
@@ -444,7 +444,7 @@ class ElasticAugment(BatchFilter):
         projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
         projected_locs = [
             np.array(loc[-self.spatial_dims :]) * self.voxel_size
-            + target_roi.get_begin()
+            + target_roi.begin
             for loc in projected_locs
         ]
         node_dict = {node.id:node for node in nodes}
@@ -508,7 +508,7 @@ class ElasticAugment(BatchFilter):
             if transformation.shape[1 + d] == 1:
                 continue
 
-            dim_vector = tuple(1 if dd == d else 0 for dd in range(dims))
+            dim_vector = Coordinate(1 if dd == d else 0 for dd in range(dims))
             pos_grid = center_grid + dim_vector
             neg_grid = center_grid - dim_vector
             logger.debug("interpolating along %s", dim_vector)

@@ -71,7 +71,7 @@ class SpecifiedLocation(BatchFilter):
         # clear bounding boxes of all provided arrays and points --
         # SpecifiedLocation does know its locations at setup (checks on the fly)
         for key, spec in self.spec.items():
-            spec.roi.set_shape(None)
+            spec.roi.shape = (None,) * spec.roi.dims
             self.updates(key, spec)
 
     def prepare(self, request):
@@ -82,7 +82,7 @@ class SpecifiedLocation(BatchFilter):
 
         # shift to center
         total_roi = request.get_total_roi()
-        request_center = total_roi.get_shape()/2 + total_roi.get_offset()
+        request_center = total_roi.shape/2 + total_roi.offset
 
         self.specified_shift = self._get_next_shift(request_center, lcm_voxel_size)
         while not self.__check_shift(request):

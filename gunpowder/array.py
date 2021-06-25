@@ -42,12 +42,12 @@ class Array(Freezable):
                 spec.voxel_size is not None):
 
             for d in range(len(spec.voxel_size)):
-                assert spec.voxel_size[d]*data.shape[-spec.roi.dims()+d] == spec.roi.get_shape()[d], \
+                assert spec.voxel_size[d]*data.shape[-spec.roi.dims+d] == spec.roi.shape[d], \
                         "ROI %s does not align with voxel size %s * data shape %s"%(spec.roi, spec.voxel_size, data.shape)
-                if spec.roi.get_offset()[d] is not None:
-                    assert spec.roi.get_offset()[d] % spec.voxel_size[d] == 0,\
+                if spec.roi.offset[d] is not None:
+                    assert spec.roi.offset[d] % spec.voxel_size[d] == 0,\
                             "ROI offset %s must be a multiple of voxel size %s"\
-                            % (spec.roi.get_offset(), spec.voxel_size)
+                            % (spec.roi.offset, spec.voxel_size)
 
         if spec.dtype is not None:
             assert data.dtype == spec.dtype, \
@@ -77,7 +77,7 @@ class Array(Freezable):
             return self
 
         voxel_size = self.spec.voxel_size
-        data_roi = (roi - self.spec.roi.get_offset())/voxel_size
+        data_roi = (roi - self.spec.roi.offset)/voxel_size
         slices = data_roi.get_bounding_box()
 
         while len(slices) < len(self.data.shape):
@@ -136,7 +136,7 @@ class Array(Freezable):
         merged = deepcopy(self)
 
         voxel_size = self.spec.voxel_size
-        data_roi = (array_roi - self_roi.get_offset())/voxel_size
+        data_roi = (array_roi - self_roi.offset)/voxel_size
         slices = data_roi.get_bounding_box()
 
         while len(slices) < len(self.data.shape):

@@ -37,7 +37,7 @@ class ExampleSourcePad(BatchProvider):
         roi_array = request[ArrayKeys.TEST_LABELS].roi
         roi_voxel = roi_array // self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
-        data = np.zeros(roi_voxel.get_shape(), dtype=np.uint32)
+        data = np.zeros(roi_voxel.shape, dtype=np.uint32)
         data[:, ::2] = 100
 
         spec = self.spec[ArrayKeys.TEST_LABELS].copy()

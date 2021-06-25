@@ -73,7 +73,7 @@ class Hdf5PointsSource(BatchProvider):
                 assert request.points_specs[PointsKeys.PRESYN].roi == request.points_specs[PointsKeys.POSTSYN].roi
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
-                dataset_offset = self.spec[PointsKeys.PRESYN].roi.get_offset()
+                dataset_offset = self.spec[PointsKeys.PRESYN].roi.offset
                 presyn_points, postsyn_points = self.__get_syn_points(
                     roi=request.points_specs[PointsKeys.PRESYN].roi,
                     syn_file=hdf_file,

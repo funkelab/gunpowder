@@ -352,7 +352,7 @@ The next version of our smooth node will therefore do the following:
       roi = request[self.array].roi
 
       # 1. compute the context
-      context = gp.Coordinate((self.truncate,)*roi.dims()) * self.sigma
+      context = gp.Coordinate((self.truncate,)*roi.dims) * self.sigma
 
       # 2. enlarge the requested ROI by the context
       context_roi = roi.grow(context, context)

@@ -28,15 +28,15 @@ class DownSampleTestSource(BatchProvider):
             roi = spec.roi
 
             for d in range(3):
-                assert roi.get_begin()[d]%4 == 0, "roi %s does not align with voxels"
+                assert roi.begin[d]%4 == 0, "roi %s does not align with voxels"
 
             data_roi = roi/4
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(data_roi.get_begin()[0], data_roi.get_end()[0]),
-                    range(data_roi.get_begin()[1], data_roi.get_end()[1]),
-                    range(data_roi.get_begin()[2], data_roi.get_end()[2]), indexing='ij')
+                    range(data_roi.begin[0], data_roi.end[0]),
+                    range(data_roi.begin[1], data_roi.end[1]),
+                    range(data_roi.begin[2], data_roi.end[2]), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             spec = self.spec[array_key].copy()
@@ -79,9 +79,9 @@ class TestDownSample(ProviderTest):
                 # the z,y,x coordinates of the ROI
                 roi = array.spec.roi/4
                 meshgrids = np.meshgrid(
-                        range(roi.get_begin()[0], roi.get_end()[0]),
-                        range(roi.get_begin()[1], roi.get_end()[1]),
-                        range(roi.get_begin()[2], roi.get_end()[2]), indexing='ij')
+                        range(roi.begin[0], roi.end[0]),
+                        range(roi.begin[1], roi.end[1]),
+                        range(roi.begin[2], roi.end[2]), indexing='ij')
                 data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
                 self.assertTrue(np.array_equal(array.data, data), str(array_key))

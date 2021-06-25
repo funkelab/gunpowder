@@ -22,7 +22,7 @@ class ExampleSource(BatchProvider):
         batch = Batch()
 
         roi = request[ArrayKeys.GT_AFFINITIES].roi
-        shape_vx = roi.get_shape()//self.spec[ArrayKeys.GT_AFFINITIES].voxel_size
+        shape_vx = roi.shape//self.spec[ArrayKeys.GT_AFFINITIES].voxel_size
 
         spec = self.spec[ArrayKeys.GT_AFFINITIES].copy()
         spec.roi = roi

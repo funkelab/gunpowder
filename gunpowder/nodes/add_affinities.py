@@ -181,7 +181,7 @@ class AddAffinities(BatchFilter):
         ).astype(self.dtype)
 
         # crop affinities to requested ROI
-        offset = affinities_roi.get_offset()
+        offset = affinities_roi.offset
         shift = -offset - self.padding_neg
         crop_roi = affinities_roi.shift(shift)
         crop_roi /= self.spec[self.labels].voxel_size

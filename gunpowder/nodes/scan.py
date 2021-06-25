@@ -131,7 +131,7 @@ class Scan(BatchFilter):
         # that's just the minimal size in each dimension
         for key, reference_spec in self.reference.items():
 
-            shape = reference_spec.roi.get_shape()
+            shape = reference_spec.roi.shape
 
             for d in range(len(lcm_voxel_size)):
                 assert shape[d] >= lcm_voxel_size[d], ("Shape of reference "
@@ -176,7 +176,7 @@ class Scan(BatchFilter):
 
             logger.debug("upstream ROI is %s", spec[key].roi)
 
-            for r, s in zip(reference_spec.roi.get_shape(), spec[key].roi.get_shape()):
+            for r, s in zip(reference_spec.roi.shape, spec[key].roi.shape):
                 assert s is None or r <= s, (
                     "reference %s with ROI %s does not fit into provided "
                     "upstream %s" % (key, reference_spec.roi, spec[key].roi)
@@ -211,14 +211,14 @@ class Scan(BatchFilter):
 
             # 1. get the starting point of the shift ROI
             shift_begin = (
-                spec[key].roi.get_begin() -
-                reference_spec.roi.get_begin())
+                spec[key].roi.begin -
+                reference_spec.roi.begin)
 
             # 2. get the shape of the shift ROI
             shift_shape = (
-                spec[key].roi.get_shape() -
-                reference_spec.roi.get_shape() +
-                (1,)*reference_spec.roi.dims())
+                spec[key].roi.shape -
+                reference_spec.roi.shape +
+                1)
 
             # create a ROI...
             shift_roi = Roi(shift_begin, shift_shape)
@@ -230,7 +230,7 @@ class Scan(BatchFilter):
                 total_shift_roi = shift_roi
             else:
                 total_shift_roi = total_shift_roi.intersect(shift_roi)
-                if total_shift_roi.empty():
+                if total_shift_roi.empty:
                     raise RuntimeError("There is no location where the ROIs "
                                        "the reference %s are contained in the "
                                        "request/upstream ROIs "
@@ -252,9 +252,9 @@ class Scan(BatchFilter):
         coordinate in any dimension will be the last point inside the shift roi
         in this dimension.'''
 
-        min_shift = shift_roi.get_offset()
+        min_shift = shift_roi.offset
         max_shift = max(min_shift,
-                        Coordinate(m - 1 for m in shift_roi.get_end()))
+                        Coordinate(m - 1 for m in shift_roi.end))
 
         shift = np.array(min_shift)
         shifts = []
@@ -337,8 +337,8 @@ class Scan(BatchFilter):
             # get the 'non-spatial' shape of the chunk-batch
             # and append the shape of the request to it
             array = chunk.arrays[array_key]
-            shape = array.data.shape[:-roi.dims()]
-            shape += (roi.get_shape() // voxel_size)
+            shape = array.data.shape[:-roi.dims]
+            shape += (roi.shape // voxel_size)
 
             spec = self.spec[array_key].copy()
             spec.roi = roi
@@ -363,11 +363,11 @@ class Scan(BatchFilter):
         roi_b = roi_b // voxel_size
 
         common_roi = roi_a.intersect(roi_b)
-        if common_roi.empty():
+        if common_roi.empty:
             return
 
-        common_in_a_roi = common_roi - roi_a.get_offset()
-        common_in_b_roi = common_roi - roi_b.get_offset()
+        common_in_a_roi = common_roi - roi_a.offset
+        common_in_b_roi = common_roi - roi_b.offset
 
         slices_a = common_in_a_roi.get_bounding_box()
         slices_b = common_in_b_roi.get_bounding_box()

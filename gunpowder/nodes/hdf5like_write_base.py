@@ -108,7 +108,7 @@ class Hdf5LikeWrite(BatchFilter):
                 "Asked to store %s, but is not part of batch."%array_key)
 
             array = batch.arrays[array_key]
-            dims = array.spec.roi.dims()
+            dims = array.spec.roi.dims
             batch_shape = array.data.shape
 
             with self._open_file(filename) as data_file:
@@ -129,9 +129,9 @@ class Hdf5LikeWrite(BatchFilter):
                             "provided for %s. I don't know how to initialize "
                             "the dataset."%(dataset_name, filename, array_key))
 
-                    offset = provided_roi.get_offset()
+                    offset = provided_roi.offset
                     voxel_size = array.spec.voxel_size
-                    data_shape = provided_roi.get_shape()//voxel_size
+                    data_shape = provided_roi.shape//voxel_size
 
                     logger.debug("Shape in voxels: %s", data_shape)
                     # add channel dimensions (if present)
@@ -180,7 +180,7 @@ class Hdf5LikeWrite(BatchFilter):
 
                 array_roi = batch.arrays[array_key].spec.roi
                 voxel_size = self.spec[array_key].voxel_size
-                dims = array_roi.dims()
+                dims = array_roi.dims
                 channel_slices = (slice(None),)*max(0, len(dataset.shape) - dims)
 
                 dataset_roi = Roi(
@@ -188,7 +188,7 @@ class Hdf5LikeWrite(BatchFilter):
                     Coordinate(dataset.shape[-dims:])*voxel_size)
                 common_roi = array_roi.intersect(dataset_roi)
 
-                if common_roi.empty():
+                if common_roi.empty:
                     logger.warn(
                         "array %s with ROI %s lies outside of dataset ROI %s, "
                         "skipping writing"%(
@@ -199,7 +199,7 @@ class Hdf5LikeWrite(BatchFilter):
 
                 dataset_voxel_roi = (common_roi - self.dataset_offsets[array_key])//voxel_size
                 dataset_voxel_slices = dataset_voxel_roi.to_slices()
-                array_voxel_roi = (common_roi - array_roi.get_offset())//voxel_size
+                array_voxel_roi = (common_roi - array_roi.offset)//voxel_size
                 array_voxel_slices = array_voxel_roi.to_slices()
 
                 logger.debug(

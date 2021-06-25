@@ -91,12 +91,12 @@ class BatchRequest(ProviderSpec):
         if total_roi is None:
             return
 
-        center = total_roi.get_center()
+        center = total_roi.center
 
         for specs_type in [self.array_specs, self.graph_specs]:
             for key in specs_type:
                 roi = specs_type[key].roi
-                specs_type[key].roi = roi.shift(center - roi.get_center())
+                specs_type[key].roi = roi.shift(center - roi.center)
 
     def update_with(self, request):
         """Update current request with another"""
