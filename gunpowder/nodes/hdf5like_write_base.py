@@ -41,6 +41,12 @@ class Hdf5LikeWrite(BatchFilter):
             A dictionary from array keys to datatype (eg. ``np.int8``). If
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
+
+        chunks (``tuple`` of ``int``, or ``bool``):
+
+            Chunk shape for output datasets. Set to ``True`` for auto-chunking,
+            set to ``False`` to obtain a chunk equal to the dataset size.
+            Defaults to ``True``.
         '''
 
     def __init__(
@@ -49,7 +55,8 @@ class Hdf5LikeWrite(BatchFilter):
             output_dir='.',
             output_filename='output.hdf',
             compression_type=None,
-            dataset_dtypes=None):
+            dataset_dtypes=None,
+            chunks=True):
 
         self.dataset_names = dataset_names
         self.output_dir = output_dir
@@ -59,6 +66,7 @@ class Hdf5LikeWrite(BatchFilter):
             self.dataset_dtypes = {}
         else:
             self.dataset_dtypes = dataset_dtypes
+        self.chunks = chunks
 
         self.dataset_offsets = {}
 
@@ -149,10 +157,12 @@ class Hdf5LikeWrite(BatchFilter):
                         offset, voxel_size)
 
                     dataset = data_file.create_dataset(
-                            name=dataset_name,
-                            shape=data_shape,
-                            compression=self.compression_type,
-                            dtype=dtype)
+                        name=dataset_name,
+                        shape=data_shape,
+                        compression=self.compression_type,
+                        dtype=dtype,
+                        chunks=self.chunks
+                    )
 
                     self._set_offset(dataset, offset)
                     self._set_voxel_size(dataset, voxel_size)
