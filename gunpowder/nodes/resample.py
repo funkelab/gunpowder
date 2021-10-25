@@ -1,5 +1,10 @@
-from gunpowder import Coordinate, Roi, Batch, Array, ArrayKey, BatchRequest, BatchFilter
-from skimage.transform import rescale, resize, downscale_local_mean
+from .batch_filter import BatchFilter
+from gunpowder.array import ArrayKey, Array
+from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
+from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
+from skimage.transform import rescale
 import numpy as np
 import logging
 
@@ -37,7 +42,7 @@ class Resample(BatchFilter):
 
         spec = self.spec[self.source].copy()
         spec.voxel_size = self.target_voxel_size
-        spec.roi = spec.roi.snap_to_grid(spec.voxel_size, mode='shrink')
+        # spec.roi = spec.roi.snap_to_grid(spec.voxel_size, mode='shrink')
         self.provides(self.target, spec)
         self.enable_autoskip()
 
@@ -54,6 +59,7 @@ class Resample(BatchFilter):
         source_voxel_size = self.spec[self.source].voxel_size
 
         source_request = request[self.target].copy()
+        source_request.voxel_size = source_voxel_size
         source_request.roi = source_request.roi.snap_to_grid(
             source_voxel_size,
             mode='grow')
@@ -72,10 +78,11 @@ class Resample(BatchFilter):
 
         if self.spec[self.source].interpolatable:
             resampled_data = rescale(source_data, scales, order=self.interp_order)
+            resampled_data = resampled_data.astype(np.float32)
         else: # Force nearest-neighbor interpolation for non-interpolatable arrays
             if self.interp_order is not None and self.interp_order != 0:
                 logger.warning('Interpolation other than nearest-neighbor requested for non-interpolatable array. Using nearest-neighbor instead.')
-            resampled_data = rescale(source_data, scales, order=0)
+            resampled_data = rescale(source_data, scales, order=0, anti_aliasing=False)
 
         target_spec = source.spec.copy()
         target_spec.roi = Roi(
@@ -83,6 +90,7 @@ class Resample(BatchFilter):
             self.target_voxel_size * resampled_data.shape
         )
         target_spec.voxel_size = self.target_voxel_size
+        target_spec.dtype = resampled_data.dtype
         target_array = Array(resampled_data, target_spec)
         target_array.crop(request[self.target].roi)
 
