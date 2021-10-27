@@ -26,10 +26,22 @@ class Resample(BatchFilter):
         target (:class:`ArrayKey`):
 
             The key of the array to store the resampled ``source``.
+
+        interp_order (``int``, optional):
+
+            The order of interpolation. The order has to be in the range 0-5:
+                0: Nearest-neighbor
+                1: Bi-linear (default)
+                2: Bi-quadratic
+                3: Bi-cubic
+                4: Bi-quartic
+                5: Bi-quintic
+
+                Default is 0 if image.dtype is bool or interpolatable is False, and 1 otherwise.
+
     '''
 
     def __init__(self, source, target_voxel_size, target, interp_order=None):
-
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
 
@@ -39,25 +51,13 @@ class Resample(BatchFilter):
         self.interp_order = interp_order
 
     def setup(self):
-
         spec = self.spec[self.source].copy()
         spec.voxel_size = self.target_voxel_size
-        # spec.roi = spec.roi.snap_to_grid(spec.voxel_size, mode='shrink')
         self.provides(self.target, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
-
-        # source_voxel_size = 2
-        # |-----------------|   (source array ROI)
-        # * * * * * * * * * x
-        #
-        # target_voxel_size = 1
-        # |-----------------|   (source array ROI)
-        # ******************* (odd)
-
         source_voxel_size = self.spec[self.source].voxel_size
-
         source_request = request[self.target].copy()
         source_request.voxel_size = source_voxel_size
         source_request.roi = source_request.roi.snap_to_grid(
@@ -99,3 +99,4 @@ class Resample(BatchFilter):
         outputs.arrays[self.target] = target_array
 
         return outputs
+        
