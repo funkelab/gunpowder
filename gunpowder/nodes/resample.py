@@ -61,7 +61,7 @@ class Resample(BatchFilter):
         source_request = request[self.target].copy()
         source_request.voxel_size = source_voxel_size
         source_request.roi = source_request.roi.snap_to_grid(
-            source_voxel_size,
+            np.lcm(source_voxel_size, self.target_voxel_size),
             mode='grow')
 
         deps = BatchRequest()
@@ -99,4 +99,3 @@ class Resample(BatchFilter):
         outputs.arrays[self.target] = target_array
 
         return outputs
-        
