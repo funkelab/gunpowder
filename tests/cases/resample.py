@@ -61,8 +61,8 @@ class TestResample(ProviderTest):
 
         pipeline = (
                 ResampleTestSource() +
-                Resample(ArrayKeys.RAW, Coordinate((8,8,8)), ArrayKeys.RAW_RESAMPLED, interp_order=0) +
-                Resample(ArrayKeys.GT_LABELS, Coordinate((8,8,8)), ArrayKeys.GT_LABELS_RESAMPLED, interp_order=0)
+                Resample(ArrayKeys.RAW, Coordinate((8,8,8)), ArrayKeys.RAW_RESAMPLED) + #Test downsampling
+                Resample(ArrayKeys.GT_LABELS, Coordinate((2,2,2)), ArrayKeys.GT_LABELS_RESAMPLED, interp_order=0) #Test upsampling, without interpolation
         )
 
         with build(pipeline):
@@ -86,17 +86,21 @@ class TestResample(ProviderTest):
 
             elif array_key == ArrayKeys.RAW_RESAMPLED:
 
-                self.assertTrue(array.data[0,0,0] == 30, 
-                                f'RAW_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 30')
-                self.assertTrue(array.data[1,0,0] == 32, 
-                                f'RAW_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 32')
+                self.assertTrue(array.data[0,0,0] == 31, 
+                                f'RAW_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 31')
+                self.assertTrue(array.data[1,0,0] == 33, 
+                                f'RAW_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 33')
 
             elif array_key == ArrayKeys.GT_LABELS_RESAMPLED:
 
                 self.assertTrue(array.data[0,0,0] == 0, 
                                 f'GT_LABELS_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 0')
-                self.assertTrue(array.data[1,0,0] == 2, 
-                                f'GT_LABELS_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 2')
+                self.assertTrue(array.data[1,0,0] == 0, 
+                                f'GT_LABELS_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 0')
+                self.assertTrue(array.data[2,0,0] == 1, 
+                                f'GT_LABELS_RESAMPLED[2,0,0]: {array.data[2,0,0]} does not equal expected: 1')
+                self.assertTrue(array.data[3,0,0] == 1, 
+                                f'GT_LABELS_RESAMPLED[3,0,0]: {array.data[3,0,0]} does not equal expected: 1')
 
             else:
 
