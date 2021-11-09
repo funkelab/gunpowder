@@ -76,13 +76,12 @@ class Resample(BatchFilter):
 
         scales = np.array(source_voxel_size) / np.array(self.target_voxel_size)
 
-        if self.spec[self.source].interpolatable:
-            resampled_data = rescale(source_data, scales, order=self.interp_order)
-            resampled_data = resampled_data.astype(np.float32)
+        if self.spec[self.source].interpolatable and self.interp_order != 0:
+            resampled_data = rescale(source_data.astype(np.float32), scales, order=self.interp_order).astype(source_data.dtype)
         else: # Force nearest-neighbor interpolation for non-interpolatable arrays
             if self.interp_order is not None and self.interp_order != 0:
                 logger.warning('Interpolation other than nearest-neighbor requested for non-interpolatable array. Using nearest-neighbor instead.')
-            resampled_data = rescale(source_data, scales, order=0, anti_aliasing=False)
+            resampled_data = rescale(source_data.astype(np.float32), scales, order=0, anti_aliasing=False).astype(source_data.dtype)
 
         target_spec = source.spec.copy()
         target_spec.roi = Roi(
