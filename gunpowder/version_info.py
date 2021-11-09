@@ -1,7 +1,7 @@
 __major__   = 1
 __minor__   = 2
 __patch__   = 2
-__tag__     = '-raygun-dev'
+__tag__     = ''
 __version__ = '{}.{}.{}{}'.format(__major__, __minor__, __patch__, __tag__).strip('.')
 
 class _Version(object):
