@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Resample(BatchFilter):
-    '''Up- or downsample arrays in a batch to match a given voxel size.
+    '''Up- or downsample arrays in a batch to match a given voxel size. Note: Behavior is not a pixel-perfect copy of down/upsample nodes, because this node relies on skimage.transform.rescale to perform non-integer scaling factors.
 
     Args:
 
@@ -76,7 +76,7 @@ class Resample(BatchFilter):
 
         scales = np.array(source_voxel_size) / np.array(self.target_voxel_size)
 
-        if self.spec[self.source].interpolatable and self.interp_order != 0:
+        if self.interp_order != 0 and (self.spec[self.source].interpolatable or self.spec[self.source].interpolatable is None):
             resampled_data = rescale(source_data.astype(np.float32), scales, order=self.interp_order).astype(source_data.dtype)
         else: # Force nearest-neighbor interpolation for non-interpolatable arrays
             if self.interp_order is not None and self.interp_order != 0:
