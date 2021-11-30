@@ -315,6 +315,20 @@ class Train(GenericTrain):
 
         if self.summary_writer and batch.iteration % self.log_every == 0:
             self.summary_writer.add_scalar("loss", batch.loss, batch.iteration)
+            if hasattr(self.loss, 'loss_dict'):
+                for key, loss in self.loss.loss_dict.items():
+                    self.summary_writer.add_scalar(key, loss, batch.iteration)
+            for array in self.loss_inputs.values():
+                if len(batch[array].data.shape) > 3: # pull out batch dimension if necessary
+                    img = batch[array].data[0].squeeze()
+                else:
+                    img = batch[array].data.squeeze()
+                if len(img.shape) == 3:
+                    mid = img.shape[0] // 2 # for 3D volume
+                    data = img[mid]
+                else:
+                    data = img
+                self.summary_writer.add_image(array.identifier, data, global_step=batch.iteration, dataformats='HW')
 
     def __collect_requested_outputs(self, request):
 
