@@ -11,7 +11,7 @@ from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
 
-from webknossos import Dataset
+from webknossos import Dataset, Mag
 from webknossos.dataset.properties import _properties_floating_type_to_python_type
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ class WKWSource(BatchProvider):
             filename,
             datasets,
             array_specs=None,
+            mag_specs=None,
             channels_first=True):
 
         self.filename = filename
@@ -31,6 +32,11 @@ class WKWSource(BatchProvider):
             self.array_specs = {}
         else:
             self.array_specs = array_specs
+
+        if mag_specs is None:
+            self.mag_specs = {}
+        else:
+            self.mag_specs = mag_specs
 
         self.channels_first = channels_first
 
@@ -77,7 +83,7 @@ class WKWSource(BatchProvider):
 
             # add array to batch
             batch.arrays[array_key] = Array(
-                self.__read(data_file, self.datasets[array_key], dataset_roi),
+                self.__read(data_file, self.datasets[array_key], self.mag_specs[array_key], dataset_roi),
                 array_spec)
 
         logger.debug("done")
@@ -87,8 +93,10 @@ class WKWSource(BatchProvider):
 
         return batch
 
-    def _get_voxel_size(self, layer):
-        return Coordinate(layer.dataset.scale)
+    def _get_voxel_size(self, layer, mag_spec):
+        mag = Mag(mag_spec).to_np()
+        dset_vox_size = np.array(layer.dataset.scale)
+        return Coordinate(mag*dset_vox_size)
 
     def _get_offset(self, layer):
         return Coordinate(layer._properties.bounding_box.topleft)
@@ -103,7 +111,7 @@ class WKWSource(BatchProvider):
             spec = ArraySpec()
 
         if spec.voxel_size is None:
-            voxel_size = self._get_voxel_size(layer)
+            voxel_size = self._get_voxel_size(layer, self.mag_specs[array_key])
             if voxel_size is None:
                 voxel_size = Coordinate((1,)*len(dataset.shape))
                 logger.warning("WARNING: File %s does not contain resolution information "
@@ -147,11 +155,12 @@ class WKWSource(BatchProvider):
 
         return spec
 
-    def __read(self, data_file, ds_name, roi):
+    def __read(self, data_file, ds_name, mag, roi):
 
+        # TODO(erjel): how determine the most efficient mag to load? Currently only during Source generation? 
         array = data_file\
             .get_layer(ds_name)\
-            .get_mag(1)\
+            .get_mag(mag)\
             .read(roi.get_offset(), roi.get_shape())
 
         return array
