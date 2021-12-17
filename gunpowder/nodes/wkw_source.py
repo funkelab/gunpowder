@@ -1,7 +1,5 @@
-import copy
 import logging
 import numpy as np
-import glob
 
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
@@ -12,9 +10,12 @@ from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
 
 from webknossos import Dataset, Mag
-from webknossos.dataset.properties import _properties_floating_type_to_python_type
+from webknossos.dataset.properties import (
+    _properties_floating_type_to_python_type
+)
 
 logger = logging.getLogger(__name__)
+
 
 class WKWSource(BatchProvider):
     def __init__(
@@ -75,7 +76,8 @@ class WKWSource(BatchProvider):
             dataset_roi = request_spec.roi / voxel_size
 
             # shift request roi into dataset
-            dataset_roi = dataset_roi - self.spec[array_key].roi.get_offset() / voxel_size
+            dataset_roi = dataset_roi \
+                - self.spec[array_key].roi.get_offset() / voxel_size
 
             # create array spec
             array_spec = self.spec[array_key].copy()
@@ -83,7 +85,12 @@ class WKWSource(BatchProvider):
 
             # add array to batch
             batch.arrays[array_key] = Array(
-                self.__read(data_file, self.datasets[array_key], self.mag_specs[array_key], dataset_roi),
+                self.__read(
+                    data_file,
+                    self.datasets[array_key],
+                    self.mag_specs[array_key],
+                    dataset_roi
+                ),
                 array_spec)
 
         logger.debug("done")
@@ -114,10 +121,12 @@ class WKWSource(BatchProvider):
             voxel_size = self._get_voxel_size(layer, self.mag_specs[array_key])
             if voxel_size is None:
                 voxel_size = Coordinate((1,)*len(layer.dataset.shape))
-                logger.warning("WARNING: File %s does not contain resolution information "
-                               "for %s (dataset %s), voxel size has been set to %s. This "
-                               "might not be what you want.",
-                               self.filename, array_key, ds_name, spec.voxel_size)
+                logger.warning(
+                    "WARNING: File %s does not contain resolution information "
+                    "for %s (dataset %s), voxel size has been set to %s. This "
+                    "might not be what you want.",
+                    self.filename, array_key, ds_name, spec.voxel_size
+                )
             spec.voxel_size = voxel_size
 
         self.ndims = len(spec.voxel_size)
@@ -132,12 +141,18 @@ class WKWSource(BatchProvider):
             spec.roi = Roi(offset, shape*spec.voxel_size)
 
         if spec.dtype is not None:
-            assert spec.dtype == layer._properties.element_class, ("dtype %s provided in array_specs for %s, "
-                                                 "but differs from dataset %s dtype %s" %
-                                                 (self.array_specs[array_key].dtype,
-                                                  array_key, ds_name, layer._properties.element_class))
+            assert spec.dtype == layer._properties.element_class, (
+                "dtype %s provided in array_specs for %s, "
+                "but differs from dataset %s dtype %s" %
+                (
+                    self.array_specs[array_key].dtype,
+                    array_key, ds_name, layer._properties.element_class
+                ))
         else:
-            spec.dtype = _properties_floating_type_to_python_type.get(layer._properties.element_class, layer._properties.element_class)
+            spec.dtype = _properties_floating_type_to_python_type.get(
+                layer._properties.element_class,
+                layer._properties.element_class
+            )
 
         if spec.interpolatable is None:
             spec.interpolatable = spec.dtype in [
@@ -156,7 +171,7 @@ class WKWSource(BatchProvider):
         return spec
 
     def __read(self, data_file, ds_name, mag, roi):
- 
+
         array = data_file\
             .get_layer(ds_name)\
             .get_mag(mag)\
@@ -167,4 +182,3 @@ class WKWSource(BatchProvider):
     def name(self):
 
         return super().name() + f"[{self.filename}]"
-
