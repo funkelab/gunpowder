@@ -49,10 +49,10 @@ def test_WKWSource(tmp_path):
             BatchRequest({
                 raw: ArraySpec(roi=Roi((0,0, 0), (100, 100,100))), # ROI in world units (here: nm)
                 raw_low: ArraySpec(roi=Roi((0,0, 0), (128, 128, 128))),
-                #seg: ArraySpec(roi=Roi((0,0,0), (100, 100, 100))),
+                seg: ArraySpec(roi=Roi((0,0,0), (100, 100, 100))),
             })
         )
 
         assert batch.arrays[raw].spec.interpolatable
         assert batch.arrays[raw_low].spec.interpolatable
-        #assert not batch.arrays[seg].spec.interpolatable
+        assert not batch.arrays[seg].spec.interpolatable
