@@ -113,7 +113,7 @@ class WKWSource(BatchProvider):
         if spec.voxel_size is None:
             voxel_size = self._get_voxel_size(layer, self.mag_specs[array_key])
             if voxel_size is None:
-                voxel_size = Coordinate((1,)*len(dataset.shape))
+                voxel_size = Coordinate((1,)*len(layer.dataset.shape))
                 logger.warning("WARNING: File %s does not contain resolution information "
                                "for %s (dataset %s), voxel size has been set to %s. This "
                                "might not be what you want.",
@@ -132,10 +132,10 @@ class WKWSource(BatchProvider):
             spec.roi = Roi(offset, shape*spec.voxel_size)
 
         if spec.dtype is not None:
-            assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
+            assert spec.dtype == layer._properties.element_class, ("dtype %s provided in array_specs for %s, "
                                                  "but differs from dataset %s dtype %s" %
                                                  (self.array_specs[array_key].dtype,
-                                                  array_key, ds_name, dataset.dtype))
+                                                  array_key, ds_name, layer._properties.element_class))
         else:
             spec.dtype = _properties_floating_type_to_python_type.get(layer._properties.element_class, layer._properties.element_class)
 
@@ -156,8 +156,7 @@ class WKWSource(BatchProvider):
         return spec
 
     def __read(self, data_file, ds_name, mag, roi):
-
-        # TODO(erjel): how determine the most efficient mag to load? Currently only during Source generation? 
+ 
         array = data_file\
             .get_layer(ds_name)\
             .get_mag(mag)\
