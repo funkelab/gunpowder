@@ -8,6 +8,7 @@ except ImportError:
 extras_require = {
     'tensorflow': ['tensorflow<2'],
     'pytorch': ['torch'],
+    'webknossos': ['webknossos'],
 }
 
 
