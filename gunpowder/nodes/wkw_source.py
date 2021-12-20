@@ -76,12 +76,15 @@ class WKWSource(BatchProvider):
             dataset_roi = request_spec.roi / voxel_size
 
             # shift request roi into dataset
-            dataset_roi = dataset_roi \
-                - self.spec[array_key].roi.get_offset() / voxel_size
+            # Comment(erjel): Currently I do not see an application for this.
+            # dataset_roi = dataset_roi \
+            #    - self.spec[array_key].roi.get_offset() / voxel_size
+
 
             # create array spec
             array_spec = self.spec[array_key].copy()
             array_spec.roi = request_spec.roi
+
 
             # add array to batch
             batch.arrays[array_key] = Array(
