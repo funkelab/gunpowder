@@ -10,7 +10,7 @@ import random
 class MergeProvider(BatchProvider):
     '''Merges different providers::
 
-        (a + b + c) + MergeProvider()
+        (a, b, c) + MergeProvider()
 
     will create a provider that combines the arrays and points offered by
     ``a``, ``b``, and ``c``. Array and point keys of ``a``, ``b``, and ``c`` should be
