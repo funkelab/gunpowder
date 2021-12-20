@@ -1,5 +1,6 @@
+from gunpowder.batch import Batch
 import numpy as np
-from gunpowder import WKWSource
+from gunpowder import WKWSource, pipeline
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
@@ -16,6 +17,33 @@ def _create_dataset(
         .get_or_add_layer(key, category, dtype_per_layer=data.dtype, **kwargs)\
         .get_or_add_mag(magnification)\
         .write(data)
+
+def test_WKKSource__data_integrity(tmp_path):
+    wkw_file = tmp_path / 'data_integrity'
+
+    data = np.arange(27,dtype=np.uint8).reshape(3,3,3)
+
+
+    Dataset.get_or_create(wkw_file, scale=(1,2,3))\
+        .get_or_add_layer('seg', 'segmentation', largest_segment_id=int(data.max()))\
+        .get_or_add_mag(1)\
+        .write(data)
+
+    seg = ArrayKey('SEG')
+
+    source = WKWSource(
+        wkw_file,
+        {seg: 'seg'},
+        mag_specs = {seg: 1}
+    )
+
+    request = BatchRequest()
+    request[seg] = Roi((0, 0, 0), (3,6,9))
+
+    with build(source):
+        batch = source.request_batch(request)
+
+    assert np.all(batch[seg].data == data)
 
 
 def test_WKWSource(tmp_path):

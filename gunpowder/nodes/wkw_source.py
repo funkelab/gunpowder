@@ -133,6 +133,7 @@ class WKWSource(BatchProvider):
 
         if spec.roi is None:
             offset = self._get_offset(layer)
+            offset *= spec.voxel_size
             if offset is None:
                 offset = Coordinate((0,)*self.ndims)
 
