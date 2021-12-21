@@ -179,7 +179,7 @@ class WKWSource(BatchProvider):
         array = data_file\
             .get_layer(ds_name)\
             .get_mag(mag)\
-            .read(roi.get_offset(), roi.get_shape())
+            .read(roi.offset, roi.shape)
 
         return array
 
