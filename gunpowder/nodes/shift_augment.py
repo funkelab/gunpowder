@@ -31,6 +31,7 @@ class ShiftAugment(BatchFilter):
 
     def prepare(self, request):
         random.seed(request.random_seed)
+        np.random.seed(request.random_seed)
         
         self.ndim = request.get_total_roi().dims()
         assert self.shift_axis in range(self.ndim)

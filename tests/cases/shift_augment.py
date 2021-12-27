@@ -561,6 +561,26 @@ class TestShiftAugment2D(unittest.TestCase):
         result = ShiftAugment.compute_upstream_roi(request_roi, sub_shift_array)
         self.assertTrue(upstream_roi == result)
 
+    #########
+    # DEBUG #
+    #########
+
+    def test_pipeline2__seeded(self):
+
+        key = ArrayKey("TEST_ARRAY")
+        spec = ArraySpec(voxel_size=Coordinate((3, 1)), interpolatable=True)
+
+        hdf5_source = Hdf5Source(
+            self.fake_data_file, {key: "testdata"}, array_specs={key: spec}
+        )
+
+        request = BatchRequest(random_seed=15) # only changed property
+        shape = Coordinate((3, 3))
+        request.add(key, shape, voxel_size=Coordinate((3, 1)))
+
+        shift_node = ShiftAugment(prob_slip=1, prob_shift=1, sigma=1, shift_axis=0)
+        with build((hdf5_source + shift_node)) as b:
+            b.request_batch(request)
 
 if __name__ == "__main__":
     unittest.main()
