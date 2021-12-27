@@ -574,11 +574,11 @@ class TestShiftAugment2D(unittest.TestCase):
             self.fake_data_file, {key: "testdata"}, array_specs={key: spec}
         )
 
-        request = BatchRequest(random_seed=15) # only changed property
+        request = BatchRequest(random_seed=19)
         shape = Coordinate((3, 3))
         request.add(key, shape, voxel_size=Coordinate((3, 1)))
 
-        shift_node = ShiftAugment(prob_slip=1, prob_shift=1, sigma=1, shift_axis=0)
+        shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=1, shift_axis=0)
         with build((hdf5_source + shift_node)) as b:
             b.request_batch(request)
 
