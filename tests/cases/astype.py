@@ -89,7 +89,7 @@ class TestAsType(ProviderTest):
                 self.assertTrue(array.data.dtype == np.float16, 
                                 f'RAW_TYPECAST dtype: {array.data.dtype} does not equal expected: np.float16')
                 self.assertTrue(int(array.data[1,11,1]) == 43, 
-                                f'RAW_TYPECAST[1,11,1]: int({array.data[1,11,1]}) does not equal expected: 13')
+                                f'RAW_TYPECAST[1,11,1]: int({array.data[1,11,1]}) does not equal expected: 43')
 
             elif array_key == ArrayKeys.GT_LABELS_TYPECAST:
 
