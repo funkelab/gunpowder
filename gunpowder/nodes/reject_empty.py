@@ -1,7 +1,6 @@
 import logging
 import random
 import numpy as np
-from numpy.core.numeric import Inf
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing
@@ -22,7 +21,7 @@ class RejectEmpty(BatchFilter):
         min_coefvar (``float``, optional):
 
             The minimal required coefficient of variation of the batch (i.e. standard deviation divided by mean).
-            Defaults to 1e-04.
+            Defaults to 1e-05.
 
         reject_probability (``float``, optional):
 
@@ -35,17 +34,14 @@ class RejectEmpty(BatchFilter):
             self,
             array,
             min_coefvar=None,
-            reject_probability=1.,
-            axis=0
-            ):
+            reject_probability=1.):
 
         self.array = array
         if min_coefvar is None:
-            self.min_coefvar = 1e-04
+            self.min_coefvar = 1e-05
         else:
             self.min_coefvar = min_coefvar
         self.reject_probability = reject_probability
-        self.axis = axis
 
     def setup(self):
         assert self.array in self.spec, (
@@ -69,11 +65,11 @@ class RejectEmpty(BatchFilter):
         while not have_good_batch:
 
             batch = self.upstream_provider.request_batch(request)
-            data = batch.arrays[self.array].data.squeeze()
+            data = batch.arrays[self.array].data
 
-            coefvar = abs(np.std(data, axis=self.axis)) / np.clip(abs(np.mean(data, axis=self.axis)), 1e-10, None) # ensure numerical stability if mean = 0
+            coefvar = abs(np.nanstd(data)) / max(abs(np.nanmean(data)), 1e-10) # ensure numerical stability if mean = 0
 
-            have_good_batch = coefvar.min() > self.min_coefvar
+            have_good_batch = coefvar > self.min_coefvar
 
             if not have_good_batch and self.reject_probability < 1.:
                 have_good_batch = random.random() > self.reject_probability
@@ -81,7 +77,7 @@ class RejectEmpty(BatchFilter):
             if not have_good_batch:
                 logger.debug(
                     "reject batch with coefficient of variation %g at %s, first seed: %d",
-                    coefvar.min(), batch.arrays[self.array].spec.roi, first_seed)
+                    coefvar, batch.arrays[self.array].spec.roi, first_seed)
                 num_rejected += 1
 
                 if timing.elapsed() > report_next_timeout:
@@ -91,13 +87,13 @@ class RejectEmpty(BatchFilter):
                         "since %ds", num_rejected, report_next_timeout)                        
                     logger.warning(
                         "last batch rejected with coefficient of variation %g at %s",
-                        coefvar.min(), batch.arrays[self.array].spec.roi)
+                        coefvar, batch.arrays[self.array].spec.roi)
                     report_next_timeout *= 2
 
             else:
                 logger.debug(
                     "accepted batch with coefficient of variation %g at %s",
-                    coefvar.min(), batch.arrays[self.array].spec.roi)
+                    coefvar, batch.arrays[self.array].spec.roi)
 
         timing.stop()
         batch.profiling_stats.add(timing)
