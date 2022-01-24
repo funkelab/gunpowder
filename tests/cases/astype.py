@@ -27,9 +27,6 @@ class AsTypeTestSource(BatchProvider):
 
             roi = spec.roi
 
-            for d in range(3):
-                assert roi.get_begin()[d]%4 == 0, "roi %s does not align with voxels"
-
             data_roi = roi/4
 
             # the z,y,x coordinates of the ROI
