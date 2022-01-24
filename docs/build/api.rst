@@ -171,6 +171,10 @@ SpecifiedLocation
 Array Manipulation Nodes
 ------------------------
 
+AsType
+^^^^^^^
+  .. autoclass:: AsType
+
 Squeeze
 ^^^^^^^
   .. autoclass:: Squeeze
@@ -183,6 +187,10 @@ Unsqueeze
 
 Image Processing Nodes
 ----------------------
+
+Resample
+^^^^^^^^^^
+  .. autoclass:: Resample
 
 DownSample
 ^^^^^^^^^^
