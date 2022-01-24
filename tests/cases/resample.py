@@ -85,7 +85,8 @@ class TestResample(ProviderTest):
                 self.assertTrue(np.array_equal(array.data, data), str(array_key))
 
             elif array_key == ArrayKeys.RAW_RESAMPLED:
-
+                
+                # Note: First assert averages over the voxels in the raw roi: (40:48, 40:48, 40:48), values of [30,31,31,32,31,32,32,33], the average of which is 31.5. Casting to an integer, in this case, rounds down, resulting in 31.
                 self.assertTrue(array.data[0,0,0] == 31, 
                                 f'RAW_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 31')
                 self.assertTrue(array.data[1,0,0] == 33, 
