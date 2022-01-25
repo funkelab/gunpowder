@@ -27,10 +27,10 @@ class Train(GenericTrain):
             The model to train. This model encapsulates the forward model,
             loss, and optimizer.
 
-        inputs (``dict``, ``string`` -> :class:`ArrayKey`):
+        inputs (``dict``, ``string`` -> Union[np.ndarray, ArrayKey]):
 
-            Dictionary from the names of input tensors (argument names of the
-            ``train_step`` method) in the model to array keys.
+            Dictionary from the names of input tensors expected by the
+            ``train_step`` method to array keys or ndarray.
 
         outputs (``dict``, ``string`` or ``int`` -> :class:`ArrayKey`):
 
@@ -86,7 +86,7 @@ class Train(GenericTrain):
     def __init__(
         self,
         model: GenericJaxModel,
-        inputs: Dict[str, ArrayKey],
+        inputs: Dict[str, Union[np.ndarray, ArrayKey]],
         outputs: Dict[Union[int, str], ArrayKey],
         gradients: Dict[Union[int, str], ArrayKey] = {},
         array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
@@ -275,8 +275,6 @@ class Train(GenericTrain):
                     logger.warn(msg)
             elif isinstance(array_key, np.ndarray):
                 arrays[array_name] = array_key
-            elif isinstance(array_key, str):
-                arrays[array_name] = getattr(batch, array_key)
             else:
                 raise Exception(
                     "Unknown network array key {}, can't be given to "
