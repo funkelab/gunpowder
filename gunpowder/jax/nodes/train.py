@@ -162,7 +162,6 @@ class Train(GenericTrain):
         return outputs
 
     def train_step(self, batch, request):
-
         inputs = self.__collect_provided_inputs(batch)
         if self.n_devices > 1:
             inputs = self.split_inputs(inputs)
@@ -261,7 +260,7 @@ class Train(GenericTrain):
 
     def __collect_provided_inputs(self, batch):
 
-        return self.__collect_provided_arrays(inputs, batch)
+        return self.__collect_provided_arrays(self.inputs, batch)
 
     def __collect_provided_arrays(self, reference, batch):
 
