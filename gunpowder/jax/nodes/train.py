@@ -124,7 +124,8 @@ class Train(GenericTrain):
         else:
             self.summary_writer = None
             if log_dir is not None:
-                logger.warning("log_dir given, but tensorboardX is not installed")
+                logger.warning(
+                    "log_dir given, but tensorboardX is not installed")
 
         self.intermediate_layers = {}
 
@@ -150,7 +151,10 @@ class Train(GenericTrain):
 
     def split_inputs(self, inputs):
         for k, arr in inputs.items():
-            assert arr.shape[0] % self.n_devices == 0
+            assert arr.shape[0] % self.n_devices == 0, (
+                f"Batch size should be evenly divisible by the number of "
+                f"devices. Input array shape is {arr.shape} but n_device is"
+                f" {self.n_devices}")
             inputs[k] = arr.reshape(
                 self.n_devices, arr.shape[0] // self.n_devices, *arr.shape[1:])
             inputs[k] = [x for x in inputs[k]]  # make a sequence for put_sharded
