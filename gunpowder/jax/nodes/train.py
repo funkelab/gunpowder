@@ -32,7 +32,7 @@ class Train(GenericTrain):
             Dictionary from the names of input tensors expected by the
             ``train_step`` method to array keys or ndarray.
 
-        outputs (``dict``, ``string`` or ``int`` -> :class:`ArrayKey`):
+        outputs (``dict``, ``string`` -> :class:`ArrayKey`):
 
             Dictionary from the names of tensors in the network to array
             keys. If the key is a string, the tensor will be retrieved
@@ -184,8 +184,7 @@ class Train(GenericTrain):
                 rng = jnp.broadcast_to(rng, (self.n_devices,) + rng.shape)
                 self.model_params = jax.pmap(self.model.initialize)(rng, inputs)
             else:
-                self.model_params = self.model.initialize(rng, inputs,
-                                                          is_training=True)
+                self.model_params = self.model.initialize(rng, inputs)
 
         requested_outputs = self.__collect_requested_outputs(request)
 
