@@ -260,7 +260,7 @@ class Train(GenericTrain):
 
         return self.__collect_provided_arrays(inputs, batch)
 
-    def __collect_provided_arrays(self, reference, batch, expect_missing_arrays=False):
+    def __collect_provided_arrays(self, reference, batch):
 
         arrays = {}
 
@@ -269,10 +269,8 @@ class Train(GenericTrain):
                 msg = f"batch does not contain {array_key}, array {array_name} will not be set"
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
-                elif not expect_missing_arrays:
-                    logger.warn(msg)
                 else:
-                    logger.debug(msg)
+                    logger.warn(msg)
             elif isinstance(array_key, np.ndarray):
                 arrays[array_name] = array_key
             elif isinstance(array_key, str):
