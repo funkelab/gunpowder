@@ -177,6 +177,9 @@ class Train(GenericTrain):
 
         # initialize model if necessary
         if self.model_params is None:
+            # Using a random key is meant to make training reproducible but
+            # since gunpowder is not deterministic we will leave it hard-
+            # coded for now until gunpowder has the ability to set random seed
             rng = jax.random.PRNGKey(42)
             if self.n_devices > 1:
                 rng = jnp.broadcast_to(rng, (self.n_devices,) + rng.shape)
