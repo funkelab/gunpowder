@@ -258,9 +258,7 @@ class Train(GenericTrain):
 
     def __collect_provided_inputs(self, batch):
 
-        return self.__collect_provided_arrays(
-            {k: v for k, v in self.inputs.items()}, batch
-        )
+        return self.__collect_provided_arrays(inputs, batch)
 
     def __collect_provided_arrays(self, reference, batch, expect_missing_arrays=False):
 
