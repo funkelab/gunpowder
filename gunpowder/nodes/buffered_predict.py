@@ -241,8 +241,6 @@ class BufferedPredict(GenericPredict):
                                 "be set", input_key, input_name)
             elif isinstance(input_key, np.ndarray):
                 inputs[input_name] = input_key
-            elif isinstance(input_key, str):
-                inputs[input_name] = getattr(batch, input_key)
             else:
                 raise Exception(
                     "Unknown network input key {}, can't be given to "
