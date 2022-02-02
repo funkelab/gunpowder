@@ -104,7 +104,7 @@ class TestSnapshot(unittest.TestCase):
             pipeline.request_batch(request)
 
             assert snapshot_file_path.exists()
-            f = h5py.File(snapshot_file_path)
+            f = h5py.File(snapshot_file_path, 'r+')
             assert f["volumes/array"] is not None
             assert f["graphs/graph-ids"] is not None
 

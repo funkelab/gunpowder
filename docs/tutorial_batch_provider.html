@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: Writing Your Own Node &mdash; gunpowder 1.2.1 documentation</title>
+  <title>Tutorial: Writing Your Own Node &mdash; gunpowder 1.2.2 documentation</title>
   
 
   
@@ -27,9 +27,8 @@
   
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
-  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="API Reference" href="api.html" />
@@ -481,16 +480,16 @@ argument for convenience.</p>
 	RAW: ROI: [0:64, 0:128] (64, 128), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
 
 B	Request going upstream: 
-	RAW: ROI: [-32:96, 32:96] (128, 64), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
+	RAW: ROI: [0:64, 0:128] (64, 128), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
 
 A	Request going upstream: 
-	RAW: ROI: [108:236, 13:77] (128, 64), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
+	RAW: ROI: [246:310, 270:398] (64, 128), voxel size: None, interpolatable: None, non-spatial: False, dtype: None, placeholder: False
 
 A	Batch going downstream: 
-	RAW: ROI: [108:236, 13:77] (128, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
+	RAW: ROI: [246:310, 270:398] (64, 128), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
 
 B	Batch going downstream: 
-	RAW: ROI: [-32:96, 32:96] (128, 64), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
+	RAW: ROI: [0:64, 0:128] (64, 128), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
 
 C	Batch going downstream: 
 	RAW: ROI: [0:64, 0:128] (64, 128), voxel size: (1, 1), interpolatable: True, non-spatial: False, dtype: uint8, placeholder: False
@@ -972,7 +971,7 @@ original request for <code class="docutils literal notranslate"><span class="pre
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.2.1',
+            VERSION:'1.2.2',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -984,10 +983,9 @@ original request for <code class="docutils literal notranslate"><span class="pre
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="_static/thebelab-helper.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script type="text/javascript" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -1002,7 +1000,18 @@ original request for <code class="docutils literal notranslate"><span class="pre
           SphinxRtdTheme.Navigation.enableSticky();
           
       });
-  </script> 
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
 
 </body>
 </html>
