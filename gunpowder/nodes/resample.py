@@ -63,6 +63,7 @@ class Resample(BatchFilter):
         source_request.roi = source_request.roi.snap_to_grid(
             np.lcm(source_voxel_size, self.target_voxel_size),
             mode='grow')
+        source_request.roi = source_request.roi.grow(source_voxel_size, source_voxel_size) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
 
         deps = BatchRequest()
         deps[self.source] = source_request
