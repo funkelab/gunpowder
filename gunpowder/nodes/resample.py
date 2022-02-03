@@ -52,7 +52,12 @@ class Resample(BatchFilter):
 
     def setup(self):
         spec = self.spec[self.source].copy()
-        spec.voxel_size = self.target_voxel_size
+        source_voxel_size = self.spec[self.source].voxel_size
+        spec.voxel_size = self.target_voxel_size        
+        spec.roi = spec.roi.grow(-source_voxel_size, -source_voxel_size) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+        spec.roi = spec.roi.snap_to_grid(
+            np.lcm(source_voxel_size, self.target_voxel_size),
+            mode='shrink')
         self.provides(self.target, spec)
         self.enable_autoskip()
 
