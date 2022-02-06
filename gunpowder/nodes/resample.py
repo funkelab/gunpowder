@@ -41,13 +41,14 @@ class Resample(BatchFilter):
 
     '''
 
-    def __init__(self, source, target_voxel_size, target, interp_order=None):
+    def __init__(self, source, target_voxel_size, target, ndim=None, interp_order=None):
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
 
         self.source = source
         self.target_voxel_size = Coordinate(target_voxel_size)
         self.target = target
+        self.ndim = ndim
         self.interp_order = interp_order
 
     def setup(self):
@@ -61,7 +62,8 @@ class Resample(BatchFilter):
         source_request = request[self.target].copy()
         source_request.voxel_size = source_voxel_size
         if self.interp_order != 0 and (self.spec[self.source].interpolatable or self.spec[self.source].interpolatable is None):
-            source_request.roi = source_request.roi.grow(source_voxel_size, source_voxel_size) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+            pad = Coordinate((0,)*(len(source_voxel_size) - self.ndim) + source_voxel_size[-self.ndim:])
+            source_request.roi = source_request.roi.grow(pad, pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         source_request.roi = source_request.roi.snap_to_grid(
             np.lcm(source_voxel_size, self.target_voxel_size),
             mode='grow')
