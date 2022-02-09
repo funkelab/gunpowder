@@ -27,6 +27,12 @@ class Resample(BatchFilter):
 
             The key of the array to store the resampled ``source``.
 
+        ndim (``int``, optional):
+
+            Dimensionality of upsampling. This allows users to, for instance, specify against
+            resampling in unused z-dimension when processing slices of anisotropic data.
+            Default is to use the dimensionality of ``target_voxel_size``.
+
         interp_order (``int``, optional):
 
             The order of interpolation. The order has to be in the range 0-5:
@@ -48,12 +54,22 @@ class Resample(BatchFilter):
         self.source = source
         self.target_voxel_size = Coordinate(target_voxel_size)
         self.target = target
-        self.ndim = ndim
+        if ndim is None:
+            self.ndim = len(target_voxel_size)
+        else:
+            self.ndim = ndim
         self.interp_order = interp_order
 
     def setup(self):
         spec = self.spec[self.source].copy()
+        source_voxel_size = self.spec[self.source].voxel_size
         spec.voxel_size = self.target_voxel_size
+        self.pad = Coordinate((0,)*(len(source_voxel_size) - self.ndim) + source_voxel_size[-self.ndim:])
+        spec.roi = spec.roi.grow(-self.pad, -self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+        spec.roi = spec.roi.snap_to_grid(
+            np.lcm(source_voxel_size, self.target_voxel_size),
+            mode='shrink')
+
         self.provides(self.target, spec)
         self.enable_autoskip()
 
@@ -61,13 +77,10 @@ class Resample(BatchFilter):
         source_voxel_size = self.spec[self.source].voxel_size
         source_request = request[self.target].copy()
         source_request.voxel_size = source_voxel_size
-        if self.interp_order != 0 and (self.spec[self.source].interpolatable or self.spec[self.source].interpolatable is None):
-            pad = Coordinate((0,)*(len(source_voxel_size) - self.ndim) + source_voxel_size[-self.ndim:])
-            source_request.roi = source_request.roi.grow(pad, pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+        source_request.roi = source_request.roi.grow(self.pad, self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         source_request.roi = source_request.roi.snap_to_grid(
             np.lcm(source_voxel_size, self.target_voxel_size),
             mode='grow')
-        source_request.roi = source_request.roi.intersect(self.spec[self.source].roi) # Ensure request doesn't extend beyond available volume
 
         deps = BatchRequest()
         deps[self.source] = source_request

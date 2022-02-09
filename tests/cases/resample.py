@@ -57,7 +57,7 @@ class TestResample(ProviderTest):
         request.add(ArrayKeys.RAW, (200,200,200))
         request.add(ArrayKeys.RAW_RESAMPLED, (120,120,120))
         request.add(ArrayKeys.GT_LABELS, (200,200,200))
-        request.add(ArrayKeys.GT_LABELS_RESAMPLED, (200,200,200))
+        request.add(ArrayKeys.GT_LABELS_RESAMPLED, (192,192,192))
 
         pipeline = (
                 ResampleTestSource() +
@@ -94,13 +94,14 @@ class TestResample(ProviderTest):
 
             elif array_key == ArrayKeys.GT_LABELS_RESAMPLED:
 
-                self.assertTrue(array.data[0,0,0] == 0, 
+                # Note: GT_LABELS_RESAMPLED is shifted a full pixel in from each side of original array to pad upsampling
+                self.assertTrue(array.data[0,0,0] == 3, 
                                 f'GT_LABELS_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 0')
-                self.assertTrue(array.data[1,0,0] == 0, 
+                self.assertTrue(array.data[1,0,0] == 3, 
                                 f'GT_LABELS_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 0')
-                self.assertTrue(array.data[2,0,0] == 1, 
+                self.assertTrue(array.data[2,0,0] == 4, 
                                 f'GT_LABELS_RESAMPLED[2,0,0]: {array.data[2,0,0]} does not equal expected: 1')
-                self.assertTrue(array.data[3,0,0] == 1, 
+                self.assertTrue(array.data[3,0,0] == 4, 
                                 f'GT_LABELS_RESAMPLED[3,0,0]: {array.data[3,0,0]} does not equal expected: 1')
 
             else:
