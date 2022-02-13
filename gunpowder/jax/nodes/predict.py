@@ -1,18 +1,17 @@
-import logging
-import pickle
-from typing import Dict, Union
-import jax
-
 from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
-from gunpowder.nodes.buffered_predict import BufferedPredict
+from gunpowder.ext import jax
+from gunpowder.nodes.generic_predict import GenericPredict
 from gunpowder.jax import GenericJaxModel
+
+import logging
+from typing import Dict, Union
 
 logger = logging.getLogger(__name__)
 
 
-class Predict(BufferedPredict):
-    '''JAX implementation of :class:`gunpowder.nodes.Predict`.
+class Predict(GenericPredict):
+    """JAX implementation of :class:`gunpowder.nodes.Predict`.
 
     Args:
 
@@ -38,48 +37,73 @@ class Predict(BufferedPredict):
             the voxel size of the input arrays. Only fields that are not
             ``None`` in the given :class:`ArraySpec` will be used.
 
-        checkpoint (``string``):
+        checkpoint: (``string``, optional):
 
-            Basename of a `GenericJaxModel` checkpoint.
+            An optional path to the saved parameters for your jax module.
+            These will be loaded and used for prediction if provided.
 
-        skip_empty (``bool``, optional):
-
-            Skip prediction, if all inputs are empty (contain only 0). In this
-            case, outputs are simply set to 0.
-
-        max_shared_memory (``int``, optional):
-
-            The maximal amount of shared memory in bytes to allocate to send
-            batches to the GPU processes. Defaults to 1GB.
-    '''
+        spawn_subprocess (bool, optional): Whether to run ``predict`` in a
+            separate process. Default is false.
+    """
 
     def __init__(
-            self,
-            model: GenericJaxModel,
-            inputs: Dict[str, ArrayKey],
-            outputs: Dict[Union[str, int], ArrayKey],
-            array_specs: Dict[ArrayKey, ArraySpec] = None,
-            checkpoint: str = None,
-            skip_empty=False,
-            max_shared_memory=1024*1024*1024):
+        self,
+        model: GenericJaxModel,
+        inputs: Dict[str, ArrayKey],
+        outputs: Dict[Union[str, int], ArrayKey],
+        array_specs: Dict[ArrayKey, ArraySpec] = None,
+        checkpoint: str = None,
+        spawn_subprocess=False
+    ):
+
+        self.array_specs = array_specs if array_specs is not None else {}
+
+        super(Predict, self).__init__(
+            inputs,
+            outputs,
+            array_specs,
+            spawn_subprocess=spawn_subprocess)
 
         self.model = model
         self.checkpoint = checkpoint
         self.model_params = None
 
-        super().__init__(
-            inputs,
-            outputs,
-            array_specs,
-            skip_empty,
-            max_shared_memory)
-
-    def _init_model(self):
-
+    def start(self):
         if self.checkpoint is not None:
             with open(self.checkpoint, 'rb') as f:
                 self.model_params = pickle.load(f)
 
-    def _compute_prediction(self, input_data):
+    def predict(self, batch, request):
+        inputs = self.get_inputs(batch)
 
-        return jax.jit(self.model.forward)(self.model_params, input_data)
+        if self.model_params is None:
+            # need to init model first
+            rng = jax.random.PRNGKey(request.random_seed)
+            self.model_params = self.model.initialize(rng, inputs)
+
+        out = jax.jit(self.model.forward)(self.model_params, inputs)
+        outputs = self.get_outputs(out, request)
+        self.update_batch(batch, request, outputs)
+
+    def get_inputs(self, batch):
+        model_inputs = {
+            key: jax.device_put(batch[value].data)
+            for key, value in self.inputs.items()
+        }
+        return model_inputs
+
+    def get_outputs(self, module_out, request):
+        outputs = {}
+        for key, value in self.outputs.items():
+            if value in request:
+                outputs[value] = module_out[key]
+        return outputs
+
+    def update_batch(self, batch, request, requested_outputs):
+        for array_key, tensor in requested_outputs.items():
+            spec = self.spec[array_key].copy()
+            spec.roi = request[array_key].roi
+            batch.arrays[array_key] = Array(tensor, spec)
+
+    def stop(self):
+        pass
