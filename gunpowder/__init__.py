@@ -19,4 +19,5 @@ from .version_info import _version as version
 import gunpowder.contrib
 import gunpowder.tensorflow
 import gunpowder.torch
+import gunpowder.jax
 import gunpowder.zoo
