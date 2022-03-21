@@ -1,6 +1,9 @@
 import copy
 import numpy as np
 
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
+
 from .batch_provider import BatchProvider
 
 
@@ -20,8 +23,9 @@ class RandomProvider(BatchProvider):
             is ``None``, corresponding to equal probabilities.
     '''
 
-    def __init__(self, probabilities=None):
+    def __init__(self, probabilities=None, randomness_store_key=None):
         self.probabilities = probabilities
+        self.randomness_store_key = randomness_store_key
 
         # automatically normalize probabilities to sum to 1
         if self.probabilities is not None:
@@ -53,10 +57,24 @@ class RandomProvider(BatchProvider):
         for key, spec in common_spec.items():
             self.provides(key, spec)
 
+        if self.randomness_store_key is not None:
+            self.provides(self.randomness_store_key, ArraySpec(nonspatial=True))
 
     def provide(self, request):
         # Random seed is set in provide rather than prepare since this node
         # is not a batch filter
         np.random.seed(request.random_seed)
-        return np.random.choice(self.get_upstream_providers(),
-                                p=self.probabilities).request_batch(request)
+
+        if self.randomness_store_key is not None:
+            del request[self.randomness_store_key]
+
+        i = np.random.choice(
+            range(len(self.get_upstream_providers())), p=self.probabilities
+        )
+        provider = self.get_upstream_providers()[i]
+        batch = provider.request_batch(request)
+        if self.randomness_store_key is not None:
+            batch[self.randomness_store_key] = Array(
+                np.array(i), ArraySpec(nonspatial=True)
+            )
+        return batch
