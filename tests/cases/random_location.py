@@ -1,4 +1,3 @@
-from .provider_test import ProviderTest
 from gunpowder import (
     RandomLocation,
     BatchProvider,
@@ -19,6 +18,8 @@ from gunpowder import (
 )
 import numpy as np
 from gunpowder.pipeline import PipelineRequestError
+
+import pytest
 
 
 class ExampleSourceRandomLocation(BatchProvider):
@@ -61,80 +62,140 @@ class CustomRandomLocation(RandomLocation):
         return request.array_specs[self.array].roi.contains((0, 0, 0))
 
 
-class TestRandomLocation(ProviderTest):
-    def test_output(self):
-        a = ArrayKey("A")
-        b = ArrayKey("B")
-        source_a = ExampleSourceRandomLocation(a)
-        source_b = ExampleSourceRandomLocation(b)
+def test_output():
+    a = ArrayKey("A")
+    b = ArrayKey("B")
+    random_shift_key = ArrayKey("RANDOM_SHIFT")
+    source_a = ExampleSourceRandomLocation(a)
+    source_b = ExampleSourceRandomLocation(b)
 
-        pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(a)
+    pipeline = (
+        (source_a, source_b)
+        + MergeProvider()
+        + CustomRandomLocation(a, random_store_key=random_shift_key)
+    )
+    pipeline_no_random = (source_a, source_b) + MergeProvider()
 
-        with build(pipeline):
+    with build(pipeline), build(pipeline_no_random):
 
-            for i in range(10):
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {
-                            a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
-                            b: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
-                        }
-                    )
+        sums = set()
+        for i in range(10):
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {
+                        a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                        b: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                        random_shift_key: ArraySpec(nonspatial=True),
+                    }
                 )
+            )
 
-                self.assertTrue(0 in batch.arrays[a].data)
-                self.assertTrue(0 in batch.arrays[b].data)
+            assert 0 in batch.arrays[a].data
+            assert 0 in batch.arrays[b].data
 
-                # Request a ROI with the same shape as the entire ROI
-                full_roi_a = Roi((0, 0, 0), source_a.roi.shape)
-                full_roi_b = Roi((0, 0, 0), source_b.roi.shape)
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
-                    )
+            # check that we can repeat this request without the random location
+            batch_no_random = pipeline_no_random.request_batch(
+                BatchRequest(
+                    {
+                        a: ArraySpec(
+                            roi=Roi(batch[random_shift_key].data, (20, 20, 20))
+                        ),
+                        b: ArraySpec(
+                            roi=Roi(batch[random_shift_key].data, (20, 20, 20))
+                        ),
+                        random_shift_key: ArraySpec(nonspatial=True),
+                    }
                 )
+            )
 
-    def test_random_seed(self):
-        raw = ArrayKey("RAW")
-        pipeline = ExampleSourceRandomLocation(raw) + CustomRandomLocation(raw)
+            assert batch_no_random.arrays[a].data.sum() == batch.arrays[a].data.sum()
 
-        with build(pipeline):
-            seeded_sums = []
-            unseeded_sums = []
-            for i in range(10):
-                batch_seeded = pipeline.request_batch(
-                    BatchRequest(
-                        {raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))},
-                        random_seed=10,
-                    )
+            sums.add(batch[a].data.sum())
+
+            # Request a ROI with the same shape as the entire ROI
+            full_roi_a = Roi((0, 0, 0), source_a.roi.shape)
+            full_roi_b = Roi((0, 0, 0), source_b.roi.shape)
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
                 )
-                seeded_sums.append(batch_seeded[raw].data.sum())
-                batch_unseeded = pipeline.request_batch(
-                    BatchRequest({raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
+            )
+        assert len(sums) > 1
+
+
+def test_output():
+    a = ArrayKey("A")
+    b = ArrayKey("B")
+    source_a = ExampleSourceRandomLocation(a)
+    source_b = ExampleSourceRandomLocation(b)
+
+    pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(a)
+
+    with build(pipeline):
+
+        for i in range(10):
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {
+                        a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                        b: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
+                    }
                 )
-                unseeded_sums.append(batch_unseeded[raw].data.sum())
+            )
 
-            self.assertEqual(len(set(seeded_sums)), 1)
-            self.assertGreater(len(set(unseeded_sums)), 1)
+            assert 0 in batch.arrays[a].data
+            assert 0 in batch.arrays[b].data
 
-    def test_impossible(self):
-        a = ArrayKey("A")
-        b = ArrayKey("B")
-        null_key = ArrayKey("NULL")
-        source_a = ExampleSourceRandomLocation(a)
-        source_b = ExampleSourceRandomLocation(b)
-
-        pipeline = (
-            (source_a, source_b) + MergeProvider() + CustomRandomLocation(null_key)
-        )
-
-        with build(pipeline):
-            with self.assertRaises(PipelineRequestError):
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {
-                            a: ArraySpec(roi=Roi((0, 0, 0), (200, 20, 20))),
-                            b: ArraySpec(roi=Roi((1000, 100, 100), (220, 22, 22))),
-                        }
-                    )
+            # Request a ROI with the same shape as the entire ROI
+            full_roi_a = Roi((0, 0, 0), source_a.roi.shape)
+            full_roi_b = Roi((0, 0, 0), source_b.roi.shape)
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
                 )
+            )
+
+
+def test_random_seed():
+    raw = ArrayKey("RAW")
+    pipeline = ExampleSourceRandomLocation(raw) + CustomRandomLocation(raw)
+
+    with build(pipeline):
+        seeded_sums = []
+        unseeded_sums = []
+        for i in range(10):
+            batch_seeded = pipeline.request_batch(
+                BatchRequest(
+                    {raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))},
+                    random_seed=10,
+                )
+            )
+            seeded_sums.append(batch_seeded[raw].data.sum())
+            batch_unseeded = pipeline.request_batch(
+                BatchRequest({raw: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
+            )
+            unseeded_sums.append(batch_unseeded[raw].data.sum())
+
+        assert len(set(seeded_sums)) == 1
+        assert len(set(unseeded_sums)) > 1
+
+
+def test_impossible():
+    a = ArrayKey("A")
+    b = ArrayKey("B")
+    null_key = ArrayKey("NULL")
+    source_a = ExampleSourceRandomLocation(a)
+    source_b = ExampleSourceRandomLocation(b)
+
+    pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(null_key)
+
+    with build(pipeline):
+        with pytest.raises(PipelineRequestError):
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {
+                        a: ArraySpec(roi=Roi((0, 0, 0), (200, 20, 20))),
+                        b: ArraySpec(roi=Roi((1000, 100, 100), (220, 22, 22))),
+                    }
+                )
+            )

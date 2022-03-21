@@ -9,6 +9,8 @@ from skimage.transform import integral_image, integrate
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
@@ -57,7 +59,7 @@ class RandomLocation(BatchFilter):
             If ``ensure_nonempty`` is set, it defines the probability that a
             request for ``ensure_nonempty`` will contain at least one point.
             Default value is 1.0.
-            
+
         ensure_centered (``bool``, optional):
 
             if ``ensure_nonempty`` is set, ``ensure_centered`` guarantees
@@ -70,7 +72,14 @@ class RandomLocation(BatchFilter):
             probability of picking p is inversely related to the number of
             other points within a distance of ``point_balance_radius`` to p.
             This helps avoid oversampling of dense regions of the graph, and
-            undersampling of sparse regions. 
+            undersampling of sparse regions.
+
+        random_shift_key (``ArrayKey`` optional):
+
+            if ``random_shift_key`` is not None, this node will populate
+            that key with a nonspatial array containing the random shift
+            used for each request. This can be useful for snapshot iterations
+            if you want to figure out where that snapshot came from.
     """
 
     def __init__(
@@ -81,6 +90,7 @@ class RandomLocation(BatchFilter):
         p_nonempty=1.0,
         ensure_centered=None,
         point_balance_radius=1,
+        random_shift_key=None,
     ):
 
         self.min_masked = min_masked
@@ -94,6 +104,7 @@ class RandomLocation(BatchFilter):
         self.random_shift = None
         self.ensure_centered = ensure_centered
         self.point_balance_radius = point_balance_radius
+        self.random_shift_key = random_shift_key
 
     def setup(self):
 
@@ -157,6 +168,10 @@ class RandomLocation(BatchFilter):
                 spec.roi.shape = Coordinate((None,)*spec.roi.dims)
                 self.updates(key, spec)
 
+        # provide randomness if asked for
+        if self.random_shift_key is not None:
+            self.provides(self.random_shift_key, ArraySpec(nonspatial=True))
+
     def prepare(self, request):
         seed(request.random_seed)
 
@@ -201,6 +216,12 @@ class RandomLocation(BatchFilter):
         return request
 
     def process(self, batch, request):
+
+        if self.random_shift_key is not None:
+            batch[self.random_shift_key] = Array(
+                np.array(self.random_shift),
+                ArraySpec(nonspatial=True),
+            )
 
         # reset ROIs to request
         for (array_key, spec) in request.array_specs.items():
