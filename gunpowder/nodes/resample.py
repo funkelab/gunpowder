@@ -65,7 +65,7 @@ class Resample(BatchFilter):
         source_voxel_size = self.spec[self.source].voxel_size
         spec.voxel_size = self.target_voxel_size
         self.pad = Coordinate((0,)*(len(source_voxel_size) - self.ndim) + source_voxel_size[-self.ndim:])
-        if spec.roi.get_shape()[0]:
+        if not spec.roi.unbounded():
             spec.roi = spec.roi.grow(-self.pad, -self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
             spec.roi = spec.roi.snap_to_grid(
                 np.lcm(source_voxel_size, self.target_voxel_size),
