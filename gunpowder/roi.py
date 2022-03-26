@@ -272,32 +272,32 @@ class Roi(Freezable):
                 Available modes are 'grow', 'shrink', and 'closest'. Defaults to
                 'grow'.
         '''
-        if self.unbounded():
-            return self
-            
+        
+        begin_in_voxel_fractions = (
+            np.asarray(self.get_begin(), dtype=np.float32)/
+            np.asarray(voxel_size))
+        end_in_voxel_fractions = (
+            np.asarray(self.get_end(), dtype=np.float32)/
+            np.asarray(voxel_size))
+
+        if mode == 'closest':
+            begin_in_voxel = np.round(begin_in_voxel_fractions)
+            end_in_voxel = np.round(end_in_voxel_fractions)
+        elif mode == 'grow':
+            begin_in_voxel = np.floor(begin_in_voxel_fractions)
+            end_in_voxel = np.ceil(end_in_voxel_fractions)
+        elif mode == 'shrink':
+            begin_in_voxel = np.ceil(begin_in_voxel_fractions)
+            end_in_voxel = np.floor(end_in_voxel_fractions)
         else:
-            begin_in_voxel_fractions = (
-                np.asarray(self.get_begin(), dtype=np.float32)/
-                np.asarray(voxel_size))
-            end_in_voxel_fractions = (
-                np.asarray(self.get_end(), dtype=np.float32)/
-                np.asarray(voxel_size))
+            assert False, 'Unknown mode %s for snap_to_grid'%mode
 
-            if mode == 'closest':
-                begin_in_voxel = np.round(begin_in_voxel_fractions)
-                end_in_voxel = np.round(end_in_voxel_fractions)
-            elif mode == 'grow':
-                begin_in_voxel = np.floor(begin_in_voxel_fractions)
-                end_in_voxel = np.ceil(end_in_voxel_fractions)
-            elif mode == 'shrink':
-                begin_in_voxel = np.ceil(begin_in_voxel_fractions)
-                end_in_voxel = np.floor(end_in_voxel_fractions)
-            else:
-                assert False, 'Unknown mode %s for snap_to_grid'%mode
-
-            return Roi(
-                begin_in_voxel*voxel_size,
-                (end_in_voxel - begin_in_voxel)*voxel_size)
+        offset = begin_in_voxel*voxel_size
+        shape = (end_in_voxel - begin_in_voxel)*voxel_size
+        
+        return Roi(
+            [o if not np.isnan(o) else None for o in offset],
+            [s if not np.isnan(s) else None for s in shape])
 
     def grow(self, amount_neg, amount_pos):
         '''Grow a ROI by the given amounts in each direction:
