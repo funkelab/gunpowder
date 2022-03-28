@@ -159,24 +159,6 @@ class AddAffinities(BatchFilter):
 
     def prepare(self, request):
 
-        if self.labels_mask:
-            assert (
-                request[self.labels].roi ==
-                request[self.labels_mask].roi),(
-                "requested GT label roi %s and GT label mask roi %s are not "
-                "the same."%(
-                    request[self.labels].roi,
-                    request[self.labels_mask].roi))
-
-        if self.unlabelled:
-            assert (
-                request[self.labels].roi ==
-                request[self.unlabelled].roi),(
-                "requested GT label roi %s and GT unlabelled mask roi %s are not "
-                "the same."%(
-                    request[self.labels].roi,
-                    request[self.unlabelled].roi))
-
         deps = BatchRequest()
 
         # grow labels ROI to accomodate padding
