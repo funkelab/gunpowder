@@ -273,6 +273,17 @@ tensorflow.Predict
   .. autoclass:: Predict
 
 
+  .. automodule:: gunpowder.jax
+
+jax.Train
+^^^^^^^^^^^^^^^^
+  .. autoclass:: Train
+
+jax.Predict
+^^^^^^^^^^^^^^^^^^
+  .. autoclass:: Predict
+
+
 .. _sec_api_output_nodes:
 
 Output Nodes

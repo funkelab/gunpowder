@@ -68,3 +68,18 @@ try:
     import daisy
 except ImportError as e:
     daisy = NoSuchModule('daisy')
+
+try:
+    import jax
+except ImportError as e:
+    jax = NoSuchModule('jax')
+
+try:
+    import haiku
+except ImportError as e:
+    haiku = NoSuchModule('haiku')
+
+try:
+    import optax
+except ImportError as e:
+    optax = NoSuchModule('optax')
