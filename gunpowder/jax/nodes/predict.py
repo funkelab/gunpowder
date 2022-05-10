@@ -4,6 +4,7 @@ from gunpowder.ext import jax
 from gunpowder.nodes.generic_predict import GenericPredict
 from gunpowder.jax import GenericJaxModel
 
+import pickle
 import logging
 from typing import Dict, Union
 
