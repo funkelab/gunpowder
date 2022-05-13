@@ -75,6 +75,11 @@ except ImportError as e:
     jax = NoSuchModule('jax')
 
 try:
+    import jax.numpy as jnp
+except ImportError as e:
+    jnp = NoSuchModule('jnp')
+
+try:
     import haiku
 except ImportError as e:
     haiku = NoSuchModule('haiku')

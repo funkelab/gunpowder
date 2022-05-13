@@ -1,7 +1,7 @@
 import logging
 import numpy as np
-import jax
-import jax.numpy as jnp
+from gunpowder.ext import jax
+from gunpowder.ext import jnp
 import pickle
 import os
 
@@ -96,7 +96,9 @@ class Train(GenericTrain):
         log_dir: str = None,
         log_every: int = 1,
         spawn_subprocess: bool = False,
-        n_devices: Optional[int] = None
+        n_devices: Optional[int] = None,
+        validation_fn=None,
+        validation_every=None,
     ):
 
         # not yet implemented
@@ -128,6 +130,9 @@ class Train(GenericTrain):
                     "log_dir given, but tensorboardX is not installed")
 
         self.intermediate_layers = {}
+
+        self.validation_fn = validation_fn
+        self.validation_every = validation_every
 
     def replicate_params(self, params):
         return jax.tree_map(lambda x: jnp.array([x] * self.n_devices), params)
@@ -248,6 +253,12 @@ class Train(GenericTrain):
 
         if self.summary_writer and batch.iteration % self.log_every == 0:
             self.summary_writer.add_scalar("loss", batch.loss, batch.iteration)
+
+        # run validation
+        if (self.validation_fn is not None and
+                batch.iteration % self.validation_every == 0):
+            val_ret = self.validation_fn(self.model, self.model_params)
+            self.summary_writer.add_scalar("validation", val_ret, batch.iteration)
 
     def __collect_requested_outputs(self, request):
 
