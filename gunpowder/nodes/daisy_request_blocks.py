@@ -135,5 +135,3 @@ class DaisyRequestBlocks(BatchFilter):
                 end = time.time()
                 if self.block_done_callback:
                     self.block_done_callback(block, start, end - start)
-
-                daisy_client.release_block(block)
