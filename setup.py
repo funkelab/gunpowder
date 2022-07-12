@@ -31,7 +31,7 @@ version = version_info['_version']
 setup(
         name=name,
         version=str(version),
-        description='Data loading DAG for Greentea.',
+        description='A library to facilitate machine learning on large, multi-dimensional images.',
         url='https://github.com/funkey/gunpowder',
         author='Jan Funke',
         author_email='jfunke@iri.upc.edu',
