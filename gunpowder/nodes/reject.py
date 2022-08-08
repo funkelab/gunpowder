@@ -82,7 +82,7 @@ class Reject(BatchFilter):
 
             if self.ensure_nonempty:
                 num_points = len(
-                    list(batch.points[self.ensure_nonempty].nodes))
+                    list(batch.graphs[self.ensure_nonempty].nodes))
             else:
                 num_points = None
 
@@ -102,7 +102,7 @@ class Reject(BatchFilter):
                 if self.ensure_nonempty:
                     logger.debug(
                         "reject batch with empty points in %s",
-                        batch.points[self.ensure_nonempty].spec.roi)
+                        batch.graphs[self.ensure_nonempty].spec.roi)
                 num_rejected += 1
 
                 if timing.elapsed() > report_next_timeout:
