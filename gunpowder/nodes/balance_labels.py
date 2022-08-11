@@ -154,6 +154,8 @@ class BalanceLabels(BatchFilter):
 
     def __balance(self, labels, scale):
 
+        labels = labels.astype(np.int64)
+
         # in the masked-in area, compute the fraction of per-class samples
         masked_in = scale.sum()
         classes, counts = np.unique(labels[np.nonzero(scale)], return_counts=True)

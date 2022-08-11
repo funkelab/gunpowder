@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from .add_affinities import AddAffinities
+from .astype import AsType
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
 from .batch_provider import BatchProvider
@@ -31,6 +32,7 @@ from .random_provider import RandomProvider
 from .rasterize_graph import RasterizationSettings, RasterizeGraph
 from .reject import Reject
 from .renumber_connected_components import RenumberConnectedComponents
+from .resample import Resample
 from .scan import Scan
 from .shift_augment import ShiftAugment
 from .simple_augment import SimpleAugment

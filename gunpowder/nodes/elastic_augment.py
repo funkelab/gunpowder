@@ -34,6 +34,10 @@ class ElasticAugment(BatchFilter):
 
             Interval to randomly sample rotation angles from (0, 2PI).
 
+        scale_interval (``tuple`` of two ``floats``):
+
+            Interval to randomly sample scale factors from.
+
         prob_slip (``float``):
 
             Probability of a section to "slip", i.e., be independently moved in
@@ -89,6 +93,7 @@ class ElasticAugment(BatchFilter):
         control_point_spacing,
         jitter_sigma,
         rotation_interval,
+        scale_interval=(1.0, 1.0),
         prob_slip=0,
         prob_shift=0,
         max_misalign=0,
@@ -102,6 +107,8 @@ class ElasticAugment(BatchFilter):
         self.jitter_sigma = jitter_sigma
         self.rotation_start = rotation_interval[0]
         self.rotation_max_amount = rotation_interval[1] - rotation_interval[0]
+        self.scale_min = scale_interval[0]
+        self.scale_max = scale_interval[1]
         self.prob_slip = prob_slip
         self.prob_shift = prob_shift
         self.max_misalign = max_misalign
@@ -377,8 +384,12 @@ class ElasticAugment(BatchFilter):
 
     def __create_transformation(self, target_shape):
 
+        scale = self.scale_min + random.random()*(
+            self.scale_max - self.scale_min
+        )
+
         transformation = augment.create_identity_transformation(
-            target_shape, subsample=self.subsample
+            target_shape, subsample=self.subsample, scale=scale
         )
         if sum(self.jitter_sigma) > 0:
             transformation += augment.create_elastic_transformation(

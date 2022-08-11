@@ -10,32 +10,58 @@ from gunpowder.coordinate import Coordinate
 logger = logging.getLogger(__name__)
 
 
-def seg_to_affgraph(seg,nhood):
+def seg_to_affgraph(seg, nhood):
+
+    nhood = np.array(nhood)
+
     # constructs an affinity graph from a segmentation
     # assume affinity graph is represented as:
     # shape = (e, z, y, x)
     # nhood.shape = (edges, 3)
     shape = seg.shape
     nEdge = nhood.shape[0]
-    aff = np.zeros((nEdge,)+shape,dtype=np.int32)
+    dims = nhood.shape[1]
+    aff = np.zeros((nEdge,) + shape, dtype=np.int32)
 
-    for e in range(nEdge):
-        aff[e, \
-            max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
-            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
-            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] = \
-                        (seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
-                            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
-                            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] == \
-                         seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
-                            max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
-                            max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] ) \
-                        * ( seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
-                            max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
-                            max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] > 0 ) \
-                        * ( seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
-                            max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
-                            max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] > 0 )
+    if dims == 2:
+
+        for e in range(nEdge):
+            aff[e, \
+                max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1])] = \
+                            (seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1])] == \
+                             seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                                max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1])] ) \
+                            * ( seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1])] > 0 ) \
+                            * ( seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                                max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1])] > 0 )
+
+    elif dims == 3:
+
+        for e in range(nEdge):
+            aff[e, \
+                max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+                max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] = \
+                            (seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+                                max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] == \
+                             seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                                max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
+                                max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] ) \
+                            * ( seg[max(0,-nhood[e,0]):min(shape[0],shape[0]-nhood[e,0]), \
+                                max(0,-nhood[e,1]):min(shape[1],shape[1]-nhood[e,1]), \
+                                max(0,-nhood[e,2]):min(shape[2],shape[2]-nhood[e,2])] > 0 ) \
+                            * ( seg[max(0,nhood[e,0]):min(shape[0],shape[0]+nhood[e,0]), \
+                                max(0,nhood[e,1]):min(shape[1],shape[1]+nhood[e,1]), \
+                                max(0,nhood[e,2]):min(shape[2],shape[2]+nhood[e,2])] > 0 )
+
+    else:
+
+        raise RuntimeError(
+            f"AddAffinities works only in 2 or 3 dimensions, not {dims}")
 
     return aff
 
@@ -132,24 +158,6 @@ class AddAffinities(BatchFilter):
         self.enable_autoskip()
 
     def prepare(self, request):
-
-        if self.labels_mask:
-            assert (
-                request[self.labels].roi ==
-                request[self.labels_mask].roi),(
-                "requested GT label roi %s and GT label mask roi %s are not "
-                "the same."%(
-                    request[self.labels].roi,
-                    request[self.labels_mask].roi))
-
-        if self.unlabelled:
-            assert (
-                request[self.labels].roi ==
-                request[self.unlabelled].roi),(
-                "requested GT label roi %s and GT unlabelled mask roi %s are not "
-                "the same."%(
-                    request[self.labels].roi,
-                    request[self.unlabelled].roi))
 
         deps = BatchRequest()
 

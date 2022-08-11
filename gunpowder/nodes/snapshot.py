@@ -250,6 +250,6 @@ class Snapshot(BatchFilter):
                     )
 
                 if batch.loss is not None:
-                    f["/"].attrs["loss"] = batch.loss
+                    f["/"].attrs["loss"] = float(batch.loss)
 
         self.n += 1
