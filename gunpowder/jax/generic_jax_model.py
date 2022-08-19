@@ -92,8 +92,9 @@ class GenericJaxModel():
 
                     Dictionary of outputs.
 
-                loss (``float``):
+                loss (Union[``float``, (``dict``, ``string`` -> ``float``)]):
 
-                    Loss value of this iteration.
+                    Loss value of this iteration. Value can either be a single
+                    ``float`` or a dictionary of multiple losses.
         '''
         raise RuntimeError("Unimplemented")
