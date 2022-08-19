@@ -7,4 +7,4 @@ scikit-image
 scipy
 tqdm
 zarr
-git+https://github.com/funkelab/funlib.geometry@e2a1d652244be7f5a23818a45b217839f323a8ff
+git+https://github.com/funkelab/funlib.geometry

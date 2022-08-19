@@ -315,10 +315,11 @@ class RandomLocation(BatchFilter):
         num_masked_in = integrate(
             self.mask_integral,
             [request_mask_roi_in_array.begin],
-            [request_mask_roi_in_array.end - (1,) * self.mask_integral.ndim],
+            [request_mask_roi_in_array.end - 
+             Coordinate((1,)*self.mask_integral.ndim)]
         )[0]
 
-        mask_ratio = float(num_masked_in) / request_mask_roi_in_array.size()
+        mask_ratio = float(num_masked_in) / request_mask_roi_in_array.size
         logger.debug("mask ratio is %f", mask_ratio)
 
         return mask_ratio >= self.min_masked
