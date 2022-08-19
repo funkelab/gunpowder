@@ -81,6 +81,19 @@ class Train(GenericTrain):
             Number of GPU devices to train on concurrently using `jax.pmap`. If
             `None`, the number of available GPUs will be automatically detected
             and used.
+
+        validate_fn (function -> Union[``float``, (``dict``, ``string`` -> ``float``)] , optional):
+
+            Function to run validation on, which should has the form of
+                def validate_fn(model, params)
+            where `model` is the same provided `GenericJaxModel` model and
+            `params` is the parameter of this model, and returns either a
+            ``float`` (one loss) or a dictionary of losses to record in
+            tensorboard.
+
+        validate_every (``int``, optional):
+
+            After how many iterations to run `validate_fn`.
     """
 
     def __init__(
@@ -97,8 +110,8 @@ class Train(GenericTrain):
         log_every: int = 1,
         spawn_subprocess: bool = False,
         n_devices: Optional[int] = None,
-        validation_fn=None,
-        validation_every=None,
+        validate_fn=None,
+        validate_every=None,
     ):
 
         # not yet implemented
@@ -131,8 +144,8 @@ class Train(GenericTrain):
 
         self.intermediate_layers = {}
 
-        self.validation_fn = validation_fn
-        self.validation_every = validation_every
+        self.validate_fn = validate_fn
+        self.validate_every = validate_every
 
     def replicate_params(self, params):
         return jax.tree_map(lambda x: jnp.array([x] * self.n_devices), params)
@@ -223,7 +236,13 @@ class Train(GenericTrain):
                 outputs[array_name], spec
             )
 
-        batch.loss = loss
+        if isinstance(loss, dict):
+            total = 0.0
+            for k, v in loss.items():
+                total += v
+            batch.loss = total
+        else:
+            batch.loss = loss
         self.iteration += 1
         batch.iteration = self.iteration
 
@@ -252,13 +271,21 @@ class Train(GenericTrain):
                     pass
 
         if self.summary_writer and batch.iteration % self.log_every == 0:
-            self.summary_writer.add_scalar("loss", batch.loss, batch.iteration)
+            if isinstance(loss, dict):
+                for k, v in loss.items():
+                    self.summary_writer.add_scalar(k, v, batch.iteration)
+            else:
+                self.summary_writer.add_scalar("loss", loss, batch.iteration)
 
-        # run validation
-        if (self.validation_fn is not None and
-                batch.iteration % self.validation_every == 0):
-            val_ret = self.validation_fn(self.model, self.model_params)
-            self.summary_writer.add_scalar("validation", val_ret, batch.iteration)
+        # run validate
+        if (self.validate_fn is not None and
+                batch.iteration % self.validate_every == 0):
+            val_ret = self.validate_fn(self.model, self.model_params)
+            if isinstance(val_ret, dict):
+                for k, v in val_ret.items():
+                    self.summary_writer.add_scalar(k, v, batch.iteration)
+            else:
+                self.summary_writer.add_scalar("validate", val_ret, batch.iteration)
 
     def __collect_requested_outputs(self, request):
 
