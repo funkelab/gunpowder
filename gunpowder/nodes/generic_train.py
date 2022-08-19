@@ -71,6 +71,8 @@ class GenericTrain(BatchFilter):
 
             if not isinstance(key, ArrayKey):
                 continue
+            if self.spec[key].nonspatial:
+                continue
 
             voxel_size = self.spec[key].voxel_size
 
