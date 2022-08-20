@@ -35,7 +35,7 @@ def test_output():
     )
     random_provider = ArrayKey("RANDOM_PROVIDER")
 
-    pipeline = (source_a, source_b) + RandomProvider(randomness_store_key=random_provider)
+    pipeline = (source_a, source_b) + RandomProvider(random_provider_key=random_provider)
 
     with build(pipeline):
 
