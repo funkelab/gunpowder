@@ -1,6 +1,6 @@
 ![gunpowder](docs/_static/gunpowder.svg)
 
-[![Build Status](https://travis-ci.org/funkey/gunpowder.svg?branch=master)](https://travis-ci.org/funkey/gunpowder)
+[![Tests](https://github.com/funkey/gunpowder/actions/workflows/test.yml/badge.svg)](https://github.com/funkey/gunpowder/actions/workflows/test.yml)
 
 A library to facilitate machine learning on large, multi-dimensional images.
 
