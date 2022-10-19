@@ -70,10 +70,10 @@ def test_output():
 
         elif array_key == raw_upsampled:
 
-            assert array.data[0, 0, 0] == 120
-            assert array.data[1, 0, 0] == 120
-            assert array.data[2, 0, 0] == 124
-            assert array.data[3, 0, 0] == 124
+            assert array.data[0, 0, 0, 0] == 120
+            assert array.data[1, 1, 0, 0] == 120
+            assert array.data[0, 2, 0, 0] == 124
+            assert array.data[0, 3, 0, 0] == 124
 
         elif array_key == gt_upsampled:
 
