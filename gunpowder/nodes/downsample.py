@@ -8,8 +8,9 @@ from funlib.geometry import Coordinate
 
 logger = logging.getLogger(__name__)
 
+
 class DownSample(BatchFilter):
-    '''Downsample arrays in a batch by given factors.
+    """Downsample arrays in a batch by given factors.
 
     Args:
 
@@ -24,24 +25,26 @@ class DownSample(BatchFilter):
         target (:class:`ArrayKey`):
 
             The key of the array to store the downsampled ``source``.
-    '''
+    """
 
     def __init__(self, source, factor, target):
 
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
-        assert (
-            isinstance(factor, numbers.Number) or isinstance(factor, tuple)), (
-            "Scaling factor should be a number or a tuple of numbers.")
+        assert isinstance(factor, numbers.Number) or isinstance(
+            factor, tuple
+        ), "Scaling factor should be a number or a tuple of numbers."
 
         self.source = source
-        self.factor = factor
+        self.factor = (
+            factor if isinstance(factor, numbers.Number) else Coordinate(factor)
+        )
         self.target = target
 
     def setup(self):
 
         spec = self.spec[self.source].copy()
-        spec.voxel_size *= Coordinate(self.factor)
+        spec.voxel_size *= self.factor
         self.provides(self.target, spec)
         self.enable_autoskip()
 
@@ -56,13 +59,12 @@ class DownSample(BatchFilter):
 
         # downsample
         if isinstance(self.factor, tuple):
-            slices = tuple(
-                slice(None, None, k)
-                for k in self.factor)
+            slices = tuple(slice(None, None, k) for k in self.factor)
         else:
             slices = tuple(
                 slice(None, None, self.factor)
-                for i in range(batch[self.source].spec.roi.dims))
+                for i in range(batch[self.source].spec.roi.dims)
+            )
 
         logger.debug("downsampling %s with %s", self.source, slices)
 
@@ -72,5 +74,5 @@ class DownSample(BatchFilter):
         spec = self.spec[self.target].copy()
         spec.roi = request[self.target].roi
         outputs.arrays[self.target] = Array(data, spec)
-        
+
         return outputs

@@ -4,7 +4,7 @@ from gunpowder import *
 import numpy as np
 
 
-def test_output(self):
+def test_output():
 
     raw = ArrayKey("RAW")
     raw_downsampled = ArrayKey("RAW_DOWNSAMPLED")
