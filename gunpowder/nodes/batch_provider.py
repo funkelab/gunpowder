@@ -355,3 +355,31 @@ class BatchProvider(object):
     def __repr__(self):
 
         return self.name() + ", providing: " + str(self.spec)
+
+    def __add__(self, other):
+        '''Support ``self + other`` operator. Return a :class:`Pipeline`.'''
+        from gunpowder import Pipeline
+
+        if isinstance(other, BatchProvider):
+            other = Pipeline(other)
+
+        if not isinstance(other, Pipeline):
+            raise RuntimeError(
+                f"Don't know how to add {type(other)} to BatchProvider "
+                f"{self.name()}")
+
+        return Pipeline(self) + other
+
+    def __radd__(self, other):
+        '''Support ``other + self`` operator. Return a :class:`Pipeline`.'''
+        from gunpowder import Pipeline
+
+        if isinstance(other, BatchProvider):
+            return Pipeline(other) + Pipeline(self)
+
+        if isinstance(other, tuple):
+            return other + Pipeline(self)
+
+        raise RuntimeError(
+            f"Don't know how to radd {type(other)} to BatchProvider"
+            f"{self.name()}")

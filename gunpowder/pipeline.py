@@ -223,36 +223,3 @@ class Pipeline:
             res += " -> "
         res += reprs[-1]
         return res
-
-
-# monkey-patch BatchProvider, such that + operator returns Pipeline
-
-
-def batch_provider_add(self, other):
-
-    if isinstance(other, BatchProvider):
-        other = Pipeline(other)
-
-    if not isinstance(other, Pipeline):
-        raise RuntimeError(
-            f"Don't know how to add {type(other)} to BatchProvider "
-            f"{self.name()}")
-
-    return Pipeline(self) + other
-
-
-def batch_provider_radd(self, other):
-
-    if isinstance(other, BatchProvider):
-        return Pipeline(other) + Pipeline(self)
-
-    if isinstance(other, tuple):
-        return other + Pipeline(self)
-
-    raise RuntimeError(
-        f"Don't know how to radd {type(other)} to BatchProvider"
-        f"{self.name()}")
-
-
-BatchProvider.__add__ = batch_provider_add
-BatchProvider.__radd__ = batch_provider_radd

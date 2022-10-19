@@ -6,7 +6,12 @@ except ImportError:
     string_types = str
 
 extras_require = {
-    'tensorflow': ['tensorflow<2'],
+    'tensorflow': [
+        # TF doesn't provide <2.0 wheels for py>=3.8 on pypi
+        'tensorflow<2.0; python_version<"3.8"',
+        # https://stackoverflow.com/a/72493690
+        'protobuf==3.20.*; python_version=="3.7"',
+    ],
     'pytorch': ['torch'],
 }
 
@@ -31,7 +36,7 @@ version = version_info['_version']
 setup(
         name=name,
         version=str(version),
-        description='Data loading DAG for Greentea.',
+        description='A library to facilitate machine learning on large, multi-dimensional images.',
         url='https://github.com/funkey/gunpowder',
         author='Jan Funke',
         author_email='jfunke@iri.upc.edu',
