@@ -1,105 +1,79 @@
-from .provider_test import ProviderTest
+from .helper_sources import ArraySource
 from gunpowder import *
 import numpy as np
 
-class UpSampleTestSource(BatchProvider):
+def test_output():
 
-    def setup(self):
+    raw = ArrayKey("RAW")
+    raw_upsampled = ArrayKey("RAW_UPSAMPLED")
+    gt = ArrayKey("GT")
+    gt_upsampled = ArrayKey("GT_LABELS_UPSAMPLED")
 
-        self.provides(
-            ArrayKeys.RAW,
-            ArraySpec(
-                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
-                voxel_size=(4, 4, 4)))
+    request = BatchRequest()
+    request.add(raw, (200,200,200))
+    request.add(raw_upsampled, (120,120,120))
+    request.add(gt, (200,200,200))
+    request.add(gt_upsampled, (200,200,200))
 
-        self.provides(
-            ArrayKeys.GT_LABELS,
-            ArraySpec(
-                roi=Roi((0, 0, 0), (1000, 1000, 1000)),
-                voxel_size=(4, 4, 4)))
+    meshgrids = np.meshgrid(range(0, 250), range(0, 250), range(0, 250), indexing="ij")
+    data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-    def provide(self, request):
+    raw_source = ArraySource(
+        raw,
+        Array(
+            np.stack([data, data]),
+            ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
+        ),
+    )
+    gt_source = ArraySource(
+        gt,
+        Array(
+            data,
+            ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
+        ),
+    )
 
-        batch = Batch()
+    pipeline = (
+            (raw_source, gt_source) + MergeProvider() +
+            UpSample(raw, 2, raw_upsampled) +
+            UpSample(gt, 2, gt_upsampled)
+    )
 
-        # have the pixels encode their position
-        for (array_key, spec) in request.array_specs.items():
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
 
-            roi = spec.roi
+    for (array_key, array) in batch.arrays.items():
 
-            for d in range(3):
-                assert roi.begin[d]%4 == 0, "roi %s does not align with voxels"
-
-            data_roi = roi/4
+        # assert that pixels encode their position for supposedly unaltered 
+        # arrays
+        if array_key in [raw, gt]:
 
             # the z,y,x coordinates of the ROI
             meshgrids = np.meshgrid(
-                    range(data_roi.begin[0], data_roi.end[0]),
-                    range(data_roi.begin[1], data_roi.end[1]),
-                    range(data_roi.begin[2], data_roi.end[2]), indexing='ij')
+                    range(roi.begin[0], roi.end[0], 4),
+                    range(roi.begin[1], roi.end[1], 4),
+                    range(roi.begin[2], roi.end[2], 4), indexing='ij')
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            spec = self.spec[array_key].copy()
-            spec.roi = roi
-            batch.arrays[array_key] = Array(
-                    data,
-                    spec)
-        return batch
-
-class TestUpSample(ProviderTest):
-
-    def test_output(self):
-
-        source = UpSampleTestSource()
-
-        ArrayKey('RAW_UPSAMPLED')
-        ArrayKey('GT_LABELS_UPSAMPLED')
-
-        request = BatchRequest()
-        request.add(ArrayKeys.RAW, (200,200,200))
-        request.add(ArrayKeys.RAW_UPSAMPLED, (120,120,120))
-        request.add(ArrayKeys.GT_LABELS, (200,200,200))
-        request.add(ArrayKeys.GT_LABELS_UPSAMPLED, (200,200,200))
-
-        pipeline = (
-                UpSampleTestSource() +
-                UpSample(ArrayKeys.RAW, 2, ArrayKeys.RAW_UPSAMPLED) +
-                UpSample(ArrayKeys.GT_LABELS, 2, ArrayKeys.GT_LABELS_UPSAMPLED)
-        )
-
-        with build(pipeline):
-            batch = pipeline.request_batch(request)
-
-        for (array_key, array) in batch.arrays.items():
-
-            # assert that pixels encode their position for supposedly unaltered 
-            # arrays
-            if array_key in [ArrayKeys.RAW, ArrayKeys.GT_LABELS]:
-
-                # the z,y,x coordinates of the ROI
-                roi = array.spec.roi/4
-                meshgrids = np.meshgrid(
-                        range(roi.begin[0], roi.end[0]),
-                        range(roi.begin[1], roi.end[1]),
-                        range(roi.begin[2], roi.end[2]), indexing='ij')
-                data = meshgrids[0] + meshgrids[1] + meshgrids[2]
-
-                self.assertTrue(np.array_equal(array.data, data), str(array_key))
-
-            elif array_key == ArrayKeys.RAW_UPSAMPLED:
-
-                self.assertTrue(array.data[0,0,0] == 30)
-                self.assertTrue(array.data[1,0,0] == 30)
-                self.assertTrue(array.data[2,0,0] == 31)
-                self.assertTrue(array.data[3,0,0] == 31)
-
-            elif array_key == ArrayKeys.GT_LABELS_UPSAMPLED:
-
-                self.assertTrue(array.data[0,0,0] == 0)
-                self.assertTrue(array.data[1,0,0] == 0)
-                self.assertTrue(array.data[2,0,0] == 1)
-                self.assertTrue(array.data[3,0,0] == 1)
-
+            if array_key == raw:
+                assert np.array_equal(array.data[0], data) and np.array_equal(array.data[1], data)
             else:
+                assert np.array_equal(array.data, data), str(array_key)
 
-                self.assertTrue(False, "unexpected array type")
+        elif array_key == raw_upsampled:
+
+            assert array.data[0,0,0] == 30
+            assert array.data[1,0,0] == 30
+            assert array.data[2,0,0] == 31
+            assert array.data[3,0,0] == 31
+
+        elif array_key == gt_upsampled:
+
+            assert array.data[0,0,0] == 0
+            assert array.data[1,0,0] == 0
+            assert array.data[2,0,0] == 1
+            assert array.data[3,0,0] == 1
+
+        else:
+
+            assert False, "unexpected array type"
