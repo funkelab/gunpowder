@@ -106,7 +106,7 @@ class Resample(BatchFilter):
         target_spec = source.spec.copy()
         target_spec.roi = Roi(
             source.spec.roi.get_begin(),
-            self.target_voxel_size * resampled_data.shape
+            self.target_voxel_size * Coordinate(resampled_data.shape)
         )
         target_spec.voxel_size = self.target_voxel_size
         target_spec.dtype = resampled_data.dtype
