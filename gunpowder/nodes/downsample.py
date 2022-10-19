@@ -4,6 +4,7 @@ from gunpowder.batch_request import BatchRequest
 from gunpowder.batch import Batch
 import logging
 import numbers
+from funlib.geometry import Coordinate
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class DownSample(BatchFilter):
     def setup(self):
 
         spec = self.spec[self.source].copy()
-        spec.voxel_size *= self.factor
+        spec.voxel_size *= Coordinate(self.factor)
         self.provides(self.target, spec)
         self.enable_autoskip()
 
