@@ -58,7 +58,8 @@ setup(
             "scikit-image",
             "requests",
             "augment-nd",
-            "tqdm"
+            "tqdm",
+            "funlib.geometry"
         ],
         extras_require=extras_require,
 )
