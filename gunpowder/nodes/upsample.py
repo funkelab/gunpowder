@@ -66,7 +66,9 @@ class UpSample(BatchFilter):
 
         logger.debug("preparing upsampling of " + str(self.source))
 
-        request_roi = request[self.target].roi
+        upstream_voxel_size = self.spec[self.source].voxel_size
+
+        request_roi = request[self.target].roi.snap_to_grid(upstream_voxel_size, mode="grow")
         logger.debug("request ROI is %s" % request_roi)
 
         # add or merge to batch request
@@ -89,7 +91,7 @@ class UpSample(BatchFilter):
 
         logger.debug("upsampling %s with %s", self.source, self.factor)
 
-        crop = batch.arrays[self.source].crop(request_roi)
+        crop = batch.arrays[self.source]
         data = crop.data
 
         for d, f in enumerate(self.factor):
@@ -97,6 +99,6 @@ class UpSample(BatchFilter):
 
         # create output array
         spec = self.spec[self.target].copy()
-        spec.roi = request_roi
-        outputs.arrays[self.target] = Array(data, spec)
+        spec.roi = input_roi
+        outputs.arrays[self.target] = Array(data, spec).crop(request_roi)
         return outputs
