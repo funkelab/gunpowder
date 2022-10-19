@@ -24,7 +24,7 @@ def test_output():
     raw_source = ArraySource(
         raw,
         Array(
-            data,
+            np.stack([data, data]),
             ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
         ),
     )
@@ -62,8 +62,8 @@ def test_output():
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
             if array_key == raw:
-                assert np.array_equal(array.data, data) and np.array_equal(
-                    array.data, data
+                assert np.array_equal(array.data[0], data) and np.array_equal(
+                    array.data[1], data
                 ), f"{array.data, data}"
             else:
                 assert np.array_equal(array.data, data), str(array_key)
