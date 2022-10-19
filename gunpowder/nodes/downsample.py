@@ -56,19 +56,24 @@ class DownSample(BatchFilter):
 
     def process(self, batch, request):
         outputs = Batch()
+        data = batch.arrays[self.source].data
+
+        channel_dims = len(data.shape) - batch.arrays[self.source].spec.roi.dims
 
         # downsample
         if isinstance(self.factor, tuple):
-            slices = tuple(slice(None, None, k) for k in self.factor)
+            slices = tuple(slice(None, None) for _ in range(channel_dims)) + tuple(
+                slice(None, None, k) for k in self.factor
+            )
         else:
-            slices = tuple(
+            slices = tuple(slice(None, None) for _ in range(channel_dims)) + tuple(
                 slice(None, None, self.factor)
                 for i in range(batch[self.source].spec.roi.dims)
             )
 
         logger.debug("downsampling %s with %s", self.source, slices)
 
-        data = batch.arrays[self.source].data[slices]
+        data = data[slices]
 
         # create output array
         spec = self.spec[self.target].copy()
