@@ -23,7 +23,7 @@ def test_output():
     raw_source = ArraySource(
         raw,
         Array(
-            data,
+            np.stack([data, data]),
             ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
         ),
     )
@@ -61,12 +61,15 @@ def test_output():
             )
             data = meshgrids[0] + meshgrids[1] + meshgrids[2]
 
-            assert np.array_equal(array.data, data), str(array_key)
+            if array_key == raw:
+                assert np.array_equal(array.data[0], data), str(array_key)
+            else:
+                assert np.array_equal(array.data, data), str(array_key)
 
         elif array_key == raw_downsampled:
 
-            assert array.data[0, 0, 0] == 30
-            assert array.data[1, 0, 0] == 32
+            assert array.data[0, 0, 0, 0] == 30
+            assert array.data[1, 1, 0, 0] == 32
 
         elif array_key == gt_downsampled:
 
