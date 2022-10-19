@@ -21,7 +21,8 @@ import numpy as np
 import logging
 
 # use CPU for JAX tests and avoid GPU compatibility
-jax.config.update('jax_platform_name', 'cpu')
+if not isinstance(jax, NoSuchModule):
+    jax.config.update('jax_platform_name', 'cpu')
 
 
 class ExampleJaxTrain2DSource(BatchProvider):

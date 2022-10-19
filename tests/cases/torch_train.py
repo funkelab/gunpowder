@@ -226,18 +226,18 @@ class TestTorchPredict(ProviderTest):
             assert np.isclose(batch1[c_pred].data, 1 + 4 + 9)
             assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 + 9))
 
+if not isinstance(torch, NoSuchModule):
+    class ExampleModel(torch.nn.Module):
+        def __init__(self):
+            super(ExampleModel, self).__init__()
+            self.linear = torch.nn.Conv2d(1, 1, 3)
 
-class ExampleModel(torch.nn.Module):
-    def __init__(self):
-        super(ExampleModel, self).__init__()
-        self.linear = torch.nn.Conv2d(1, 1, 3)
-
-    def forward(self, a):
-        a = a.unsqueeze(0).unsqueeze(0)
-        pred = self.linear(a)
-        a = a.squeeze(0).squeeze(0)
-        pred = pred.squeeze(0).squeeze(0)
-        return pred
+        def forward(self, a):
+            a = a.unsqueeze(0).unsqueeze(0)
+            pred = self.linear(a)
+            a = a.squeeze(0).squeeze(0)
+            pred = pred.squeeze(0).squeeze(0)
+            return pred
 
 
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
