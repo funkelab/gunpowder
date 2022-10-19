@@ -12,7 +12,7 @@ def test_output():
 
     request = BatchRequest()
     request.add(raw, (200, 200, 200))
-    request.add(raw_upsampled, (120, 120, 120))
+    request.add(raw_upsampled, (124, 124, 124))
     request.add(gt, (200, 200, 200))
     request.add(gt_upsampled, (200, 200, 200))
 
@@ -70,9 +70,9 @@ def test_output():
 
         elif array_key == raw_upsampled:
 
-            assert array.data[0, 0, 0, 0] == 120
+            assert array.data[0, 0, 0, 0] == 116
             assert array.data[1, 1, 0, 0] == 120
-            assert array.data[0, 2, 0, 0] == 124
+            assert array.data[0, 2, 0, 0] == 120
             assert array.data[0, 3, 0, 0] == 124
 
         elif array_key == gt_upsampled:
