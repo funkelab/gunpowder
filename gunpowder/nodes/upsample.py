@@ -93,7 +93,7 @@ class UpSample(BatchFilter):
         data = crop.data
 
         for d, f in enumerate(self.factor):
-            data = np.repeat(data, f, axis=d)
+            data = np.repeat(data, f, axis=-self.factor.dims + d)
 
         # create output array
         spec = self.spec[self.target].copy()
