@@ -25,7 +25,7 @@ class WorkersDied(Exception):
 class ProducerPool(object):
 
     def __init__(self, callables, queue_size=10):
-        self.__watch_dog = multiprocessing.Process(target=self.__run_watch_dog, args=(callables,))
+        self.__watch_dog = multiprocessing.Process(target=self._run_watch_dog, args=(callables,))
         self.__stop = multiprocessing.Event()
         self.__result_queue = multiprocessing.Queue(queue_size)
 
@@ -79,17 +79,18 @@ class ProducerPool(object):
             return
 
         self.__stop.set()
-        self.__watch_dog.join()
+        if self.__watch_dog._popen is not None:
+            self.__watch_dog.join()
         self.__watch_dog = None
 
-    def __run_watch_dog(self, callables):
+    def _run_watch_dog(self, callables):
 
         parent_pid = os.getppid()
 
         logger.debug("watchdog started with PID " + str(os.getpid()))
         logger.debug("parent PID " + str(parent_pid))
 
-        workers = [ multiprocessing.Process(target=self.__run_worker, args=(c,)) for c in callables ]
+        workers = [ multiprocessing.Process(target=self._run_worker, args=(c,)) for c in callables ]
 
         try:
 
@@ -102,7 +103,7 @@ class ProducerPool(object):
                     logger.error("parent of producer pool died, shutting down")
                     self.__result_queue.put(ParentDied())
                     break
-                if not self.__all_workers_alive(workers):
+                if not self._all_workers_alive(workers):
                     logger.error("at least one of my workers died, shutting down")
                     self.__result_queue.put(WorkersDied())
                     break
@@ -121,7 +122,7 @@ class ProducerPool(object):
 
             logger.info("done")
 
-    def __run_worker(self, target):
+    def _run_worker(self, target):
 
         parent_pid = os.getppid()
 
@@ -160,5 +161,5 @@ class ProducerPool(object):
         logger.debug("worker with PID " + str(os.getpid()) + " exiting")
         os._exit(1)
 
-    def __all_workers_alive(self, workers):
+    def _all_workers_alive(self, workers):
         return all([ worker.is_alive() for worker in workers ])

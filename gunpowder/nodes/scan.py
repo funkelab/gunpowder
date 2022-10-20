@@ -55,7 +55,7 @@ class Scan(BatchFilter):
         if self.num_workers > 1:
             self.request_queue = multiprocessing.Queue(maxsize=0)
             self.workers = ProducerPool(
-                [self.__worker_get_chunk for _ in range(self.num_workers)],
+                [self._worker_get_chunk for _ in range(self.num_workers)],
                 queue_size=self.cache_size)
             self.workers.start()
 
@@ -72,10 +72,10 @@ class Scan(BatchFilter):
         else:
             scan_spec = request
 
-        stride = self.__get_stride()
-        shift_roi = self.__get_shift_roi(scan_spec)
+        stride = self._get_stride()
+        shift_roi = self._get_shift_roi(scan_spec)
 
-        shifts = self.__enumerate_shifts(shift_roi, stride)
+        shifts = self._enumerate_shifts(shift_roi, stride)
         num_chunks = len(shifts)
 
         logger.info("scanning over %d chunks", num_chunks)
@@ -86,7 +86,7 @@ class Scan(BatchFilter):
         if self.num_workers > 1:
 
             for shift in shifts:
-                shifted_reference = self.__shift_request(self.reference, shift)
+                shifted_reference = self._shift_request(self.reference, shift)
                 self.request_queue.put(shifted_reference)
 
             for i in tqdm.tqdm(range(num_chunks)):
@@ -94,7 +94,7 @@ class Scan(BatchFilter):
                 chunk = self.workers.get()
 
                 if not empty_request:
-                    self.__add_to_batch(request, chunk)
+                    self._add_to_batch(request, chunk)
 
                 logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
@@ -102,11 +102,11 @@ class Scan(BatchFilter):
 
             for i, shift in enumerate(tqdm.tqdm(shifts)):
 
-                shifted_reference = self.__shift_request(self.reference, shift)
-                chunk = self.__get_chunk(shifted_reference)
+                shifted_reference = self._shift_request(self.reference, shift)
+                chunk = self._get_chunk(shifted_reference)
 
                 if not empty_request:
-                    self.__add_to_batch(request, chunk)
+                    self._add_to_batch(request, chunk)
 
                 logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
@@ -117,7 +117,7 @@ class Scan(BatchFilter):
 
         return batch
 
-    def __get_stride(self):
+    def _get_stride(self):
         '''Get the maximal amount by which ``reference`` can be moved, such
         that it tiles the space.'''
 
@@ -152,7 +152,7 @@ class Scan(BatchFilter):
 
         return stride
 
-    def __get_shift_roi(self, spec):
+    def _get_shift_roi(self, spec):
         '''Get the minimal and maximal shift (as a ROI) to apply to
         ``self.reference``, such that it is still fully contained in ``spec``.
         '''
@@ -246,7 +246,7 @@ class Scan(BatchFilter):
 
         return total_shift_roi
 
-    def __enumerate_shifts(self, shift_roi, stride):
+    def _enumerate_shifts(self, shift_roi, stride):
         '''Produces a sequence of shift coordinates starting at the beginning
         of ``shift_roi``, progressing with ``stride``. The maximum shift
         coordinate in any dimension will be the last point inside the shift roi
@@ -288,7 +288,7 @@ class Scan(BatchFilter):
 
         return shifts
 
-    def __shift_request(self, request, shift):
+    def _shift_request(self, request, shift):
 
         shifted = request.copy()
         for _, spec in shifted.items():
@@ -296,35 +296,35 @@ class Scan(BatchFilter):
 
         return shifted
 
-    def __worker_get_chunk(self):
+    def _worker_get_chunk(self):
 
         request = self.request_queue.get()
-        return self.__get_chunk(request)
+        return self._get_chunk(request)
 
-    def __get_chunk(self, request):
+    def _get_chunk(self, request):
 
         return self.get_upstream_provider().request_batch(request)
 
-    def __add_to_batch(self, spec, chunk):
+    def _add_to_batch(self, spec, chunk):
 
         if self.batch.get_total_roi() is None:
-            self.batch = self.__setup_batch(spec, chunk)
+            self.batch = self._setup_batch(spec, chunk)
         self.batch.profiling_stats.merge_with(chunk.profiling_stats)
 
         for (array_key, array) in chunk.arrays.items():
             if array_key not in spec:
                 continue
-            self.__fill(self.batch.arrays[array_key].data, array.data,
+            self._fill(self.batch.arrays[array_key].data, array.data,
                         spec.array_specs[array_key].roi, array.spec.roi,
                         self.spec[array_key].voxel_size)
 
         for (graph_key, graphs) in chunk.graphs.items():
             if graph_key not in spec:
                 continue
-            self.__fill_points(self.batch.graphs[graph_key], graphs,
+            self._fill_points(self.batch.graphs[graph_key], graphs,
                                spec.graph_specs[graph_key].roi, graphs.spec.roi)
 
-    def __setup_batch(self, batch_spec, chunk):
+    def _setup_batch(self, batch_spec, chunk):
         '''Allocate a batch matching the sizes of ``batch_spec``, using
         ``chunk`` as template.'''
 
@@ -356,7 +356,7 @@ class Scan(BatchFilter):
 
         return batch
 
-    def __fill(self, a, b, roi_a, roi_b, voxel_size):
+    def _fill(self, a, b, roi_a, roi_b, voxel_size):
         logger.debug("filling " + str(roi_b) + " into " + str(roi_a))
 
         roi_a = roi_a // voxel_size
@@ -378,7 +378,7 @@ class Scan(BatchFilter):
 
         a[slices_a] = b[slices_b]
 
-    def __fill_points(self, a, b, roi_a, roi_b):
+    def _fill_points(self, a, b, roi_a, roi_b):
         """
         Take points from b and add them to a.
         Nodes marked temporary must be ignored. Temporary nodes are nodes

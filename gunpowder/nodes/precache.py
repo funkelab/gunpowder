@@ -94,7 +94,7 @@ class PreCache(BatchFilter):
                 logger.info("starting new set of workers (%s, cache size %s)...",
                             self.num_workers, self.cache_size)
                 self.workers = ProducerPool(
-                    [lambda i=i: self.__run_worker(i) for i in range(self.num_workers)],
+                    [self._run_worker for _ in range(self.num_workers)],
                     queue_size=self.cache_size,
                 )
                 self.workers.start()
@@ -121,7 +121,7 @@ class PreCache(BatchFilter):
 
         return batch
 
-    def __run_worker(self, i):
+    def _run_worker(self):
         request = copy.deepcopy(self.current_request)
         # Note that using a precache node breaks determinism in batches recieved since we do not
         # keep a mapping of the order in which random seeds were used, and the order in which
