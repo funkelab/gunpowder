@@ -1,47 +1,93 @@
-import time
+from .helper_sources import ArraySource
 from gunpowder import *
-from .provider_test import ProviderTest
+
+import numpy as np
+
+import time
+
 
 class Delay(BatchFilter):
+    def __init__(self, delay: float = 1):
+        self.delay = delay
 
     def prepare(self, request):
-        time.sleep(1)
+        time.sleep(self.delay)
         return request
 
     def process(self, batch, request):
         pass
 
-class TestPreCache(ProviderTest):
 
-    def test_output(self):
+def test_output():
 
-        pipeline = self.test_source + Delay() + PreCache(num_workers=100, cache_size=100)
+    delay = 0.1
+    n_requests = 8
+    a_workers = 2
+    b_workers = 8
+    perfect_speedup = a_workers / b_workers * delay
 
-        with build(pipeline):
+    raw_key = ArrayKey("RAW")
+    raw_array = Array(
+        np.zeros([100, 100, 100], dtype=np.uint8),
+        ArraySpec(
+            roi=Roi((0, 0, 0), (100, 100, 100)),
+            voxel_size=Coordinate((1, 1, 1)),
+            dtype=np.uint8,
+            interpolatable=True,
+        ),
+    )
+    test_source = ArraySource(raw_key, raw_array)
+    pipeline_a = test_source + Delay() + PreCache(num_workers=a_workers)
+    pipeline_b = test_source + Delay() + PreCache(num_workers=b_workers)
 
-            start = time.time()
+    test_request = BatchRequest()
+    test_request[raw_key] = ArraySpec(roi=Roi((20, 20, 20), (10, 10, 10)))
 
-            for _ in range(100):
-                batch = pipeline.request_batch(self.test_request)
-                self.assertTrue(
-                    batch.arrays[ArrayKeys.RAW].spec.roi ==
-                    self.test_request[ArrayKeys.RAW].roi)
+    with build(pipeline_a):
 
-            # should be done in a bit more than 1 seconds, certainly much less
-            # than 100
-            self.assertTrue(time.time() - start < 50)
+        start = time.time()
 
-            # change request
-            self.test_request[ArrayKeys.RAW].roi = \
-                self.test_request[ArrayKeys.RAW].roi.shift(1)
+        for _ in range(n_requests):
+            batch = pipeline_a.request_batch(test_request)
+            assert batch.arrays[raw_key].spec.roi == test_request[raw_key].roi
 
-            start = time.time()
+        # should be done in a bit more than 4 seconds, certainly less than 8
+        t_a_1 = time.time() - start
 
-            for _ in range(100):
-                batch = pipeline.request_batch(self.test_request)
-                self.assertTrue(
-                    batch.arrays[ArrayKeys.RAW].spec.roi ==
-                    self.test_request[ArrayKeys.RAW].roi)
+        # change request
+        test_request[raw_key].roi = test_request[raw_key].roi.shift(Coordinate(1, 1, 1))
 
-            # should be done in a bit more than 1 seconds
-            self.assertTrue(time.time() - start < 50)
+        start = time.time()
+
+        for _ in range(n_requests):
+            batch = pipeline_a.request_batch(test_request)
+            assert batch.arrays[raw_key].spec.roi == test_request[raw_key].roi
+
+        # should be done in a bit more than 4 seconds
+        t_a_2 = time.time() - start
+
+    with build(pipeline_b):
+
+        start = time.time()
+
+        for _ in range(n_requests):
+            batch = pipeline_b.request_batch(test_request)
+            assert batch.arrays[raw_key].spec.roi == test_request[raw_key].roi
+
+        # should be done in a bit more than 4 seconds, certainly less than 8
+        t_b_1 = time.time() - start
+
+        # change request
+        test_request[raw_key].roi = test_request[raw_key].roi.shift(Coordinate(1, 1, 1))
+
+        start = time.time()
+
+        for _ in range(n_requests):
+            batch = pipeline_b.request_batch(test_request)
+            assert batch.arrays[raw_key].spec.roi == test_request[raw_key].roi
+
+        # should be done in a bit more than 4 seconds
+        t_b_2 = time.time() - start
+
+    assert t_a_1 - t_b_1 > perfect_speedup / 2, (t_b_1 - t_a_1, perfect_speedup)
+    assert t_a_2 - t_b_2 > perfect_speedup / 2, (t_b_2 - t_a_2, perfect_speedup)
