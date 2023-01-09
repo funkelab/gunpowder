@@ -87,7 +87,7 @@ class CsvPointsSource(BatchProvider):
             "CSV points source got request for %s",
             request[self.points].roi)
 
-        point_filter = np.ones((self.data.shape[0],), dtype=np.bool)
+        point_filter = np.ones((self.data.shape[0],), dtype=bool)
         for d in range(self.ndims):
             point_filter = np.logical_and(point_filter, self.data[:,d] >= min_bb[d])
             point_filter = np.logical_and(point_filter, self.data[:,d] < max_bb[d])

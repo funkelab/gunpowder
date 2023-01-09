@@ -200,7 +200,6 @@ class DvidSource(BatchProvider):
         if spec.interpolatable is None:
 
             spec.interpolatable = spec.dtype in [
-                np.float,
                 np.float32,
                 np.float64,
                 np.float128,

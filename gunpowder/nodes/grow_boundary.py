@@ -72,7 +72,7 @@ class GrowBoundary(BatchFilter):
             return
 
         # get all foreground voxels by erosion of each component
-        foreground = np.zeros(shape=gt.shape, dtype=np.bool)
+        foreground = np.zeros(shape=gt.shape, dtype=bool)
         masked = None
         if gt_mask is not None:
             masked = np.equal(gt_mask, 0)
