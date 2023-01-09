@@ -100,7 +100,7 @@ def create_ball_kernel(radius, voxel_size):
     voxel_size = np.asarray(voxel_size)
 
     # Calculate shape for new kernel, make it sufficiently large (--> ceil)
-    radius_voxel = np.ceil(radius/voxel_size).astype(np.int)
+    radius_voxel = np.ceil(radius/voxel_size).astype(int)
     kernel_shape = np.array(radius_voxel)*2 + 1
 
     kernel = np.zeros(kernel_shape, dtype=np.uint8)

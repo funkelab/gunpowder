@@ -163,7 +163,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
         out_shape = tuple(2*s - 1 for s in in_shape)
         out_slices = tuple(slice(0, s) for s in out_shape)
 
-        boundaries = np.zeros(out_shape, dtype=np.bool)
+        boundaries = np.zeros(out_shape, dtype=bool)
 
         logger.debug("boundaries shape is %s", boundaries.shape)
 

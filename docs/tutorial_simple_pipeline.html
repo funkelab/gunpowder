@@ -677,7 +677,7 @@ deformations, which are provided by the <a class="reference internal" href="api.
 </div>
 <p>We introduced two new concepts in this snippet:</p>
 <p>First, we added a <a class="reference internal" href="api.html#gunpowder.Normalize" title="gunpowder.Normalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalize</span></code></a> node for <code class="docutils literal notranslate"><span class="pre">raw</span></code>. This node ensures that
-the data type of the given array is <code class="docutils literal notranslate"><span class="pre">np.float</span></code> from there on through the
+the data type of the given array is <code class="docutils literal notranslate"><span class="pre">np.float64</span></code> from there on through the
 pipeline. We have so far been agnostic about the exact datatype of <code class="docutils literal notranslate"><span class="pre">raw</span></code> (it
 was <code class="docutils literal notranslate"><span class="pre">uint8</span></code>, by the way). However, in order to shift intensities and to add
 random noise, it is helpful to ensure we are dealing with float values between

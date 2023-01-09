@@ -166,9 +166,9 @@ class RasterizeGraph(BatchFilter):
     def prepare(self, request):
 
         if self.settings.mode == 'ball':
-            context = np.ceil(self.settings.radius).astype(np.int)
+            context = np.ceil(self.settings.radius).astype(int)
         elif self.settings.mode == 'peak':
-            context = np.ceil(2*self.settings.radius).astype(np.int)
+            context = np.ceil(2*self.settings.radius).astype(int)
         else:
             raise RuntimeError('unknown raster mode %s'%self.settings.mode)
 
