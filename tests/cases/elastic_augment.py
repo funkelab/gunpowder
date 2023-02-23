@@ -17,9 +17,10 @@ from gunpowder import (
     build,
 )
 from gunpowder.graph import GraphKeys, Graph, Node
-from .provider_test import ProviderTest
 
+import pytest
 import numpy as np
+
 import math
 
 
@@ -88,70 +89,68 @@ class GraphTestSource3D(BatchProvider):
 
         return batch
 
+@pytest.mark.parametrize("uniform_3d_rotation", [True, False])
+def test_3d_basics(uniform_3d_rotation, tmp_path):
 
-class TestElasticAugment(ProviderTest):
-    def test_3d_basics(self):
+    test_labels = ArrayKey("TEST_LABELS")
+    test_graph = GraphKey("TEST_GRAPH")
+    test_raster = ArrayKey("TEST_RASTER")
 
-        test_labels = ArrayKey("TEST_LABELS")
-        test_graph = GraphKey("TEST_GRAPH")
-        test_raster = ArrayKey("TEST_RASTER")
-
-        pipeline = (
-            GraphTestSource3D()
-            + ElasticAugment(
-                [10, 10, 10],
-                [0.1, 0.1, 0.1],
-                # [0, 0, 0], # no jitter
-                [0, 2.0 * math.pi],
-            )
-            +  # rotate randomly
-            # [math.pi/4, math.pi/4]) + # rotate by 45 deg
-            # [0, 0]) + # no rotation
-            RasterizeGraph(
-                test_graph,
-                test_raster,
-                settings=RasterizationSettings(radius=2, mode="peak"),
-            )
-            + Snapshot(
-                {test_labels: "volumes/labels", test_raster: "volumes/raster"},
-                dataset_dtypes={test_raster: np.float32},
-                output_dir=self.path_to(),
-                output_filename="elastic_augment_test{id}-{iteration}.hdf",
-            )
+    pipeline = (
+        GraphTestSource3D()
+        + ElasticAugment(
+            [10, 10, 10],
+            [0.1, 0.1, 0.1],
+            # [0, 0, 0], # no jitter
+            [0, 2.0 * math.pi],
+            uniform_3d_rotation=uniform_3d_rotation
         )
+        +  # rotate randomly
+        # [math.pi/4, math.pi/4]) + # rotate by 45 deg
+        # [0, 0]) + # no rotation
+        RasterizeGraph(
+            test_graph,
+            test_raster,
+            settings=RasterizationSettings(radius=2, mode="peak"),
+        )
+        + Snapshot(
+            {test_labels: "volumes/labels", test_raster: "volumes/raster"},
+            dataset_dtypes={test_raster: np.float32},
+            output_dir=tmp_path,
+            output_filename="elastic_augment_test{id}-{iteration}.hdf",
+        )
+    )
 
-        for _ in range(5):
+    for _ in range(5):
 
-            with build(pipeline):
+        with build(pipeline):
 
-                request_roi = Roi((-20, -20, -20), (40, 40, 40))
+            request_roi = Roi((-20, -20, -20), (40, 40, 40))
 
-                request = BatchRequest()
-                request[test_labels] = ArraySpec(roi=request_roi)
-                request[test_graph] = GraphSpec(roi=request_roi)
-                request[test_raster] = ArraySpec(roi=request_roi)
+            request = BatchRequest()
+            request[test_labels] = ArraySpec(roi=request_roi)
+            request[test_graph] = GraphSpec(roi=request_roi)
+            request[test_raster] = ArraySpec(roi=request_roi)
 
-                batch = pipeline.request_batch(request)
-                labels = batch[test_labels]
-                graph = batch[test_graph]
+            batch = pipeline.request_batch(request)
+            labels = batch[test_labels]
+            graph = batch[test_graph]
 
-                # the node at (0, 0, 0) should not have moved
-                # The node at (0,0,0) seems to have moved
-                # self.assertIn(
-                #     Node(id=0, location=np.array([0, 0, 0])), list(graph.nodes)
-                # )
-                self.assertIn(
-                    0, [v.id for v in graph.nodes]
-                )
+            # the node at (0, 0, 0) should not have moved
+            # The node at (0,0,0) seems to have moved
+            # self.assertIn(
+            #     Node(id=0, location=np.array([0, 0, 0])), list(graph.nodes)
+            # )
+            assert 0 in [v.id for v in graph.nodes]
 
-                labels_data_roi = (
-                    labels.spec.roi - labels.spec.roi.begin
-                ) / labels.spec.voxel_size
+            labels_data_roi = (
+                labels.spec.roi - labels.spec.roi.begin
+            ) / labels.spec.voxel_size
 
-                # graph should have moved together with the voxels
-                for node in graph.nodes:
-                    loc = node.location - labels.spec.roi.begin
-                    loc = loc / labels.spec.voxel_size
-                    loc = Coordinate(int(round(x)) for x in loc)
-                    if labels_data_roi.contains(loc):
-                        self.assertEqual(labels.data[loc], node.id)
+            # graph should have moved together with the voxels
+            for node in graph.nodes:
+                loc = node.location - labels.spec.roi.begin
+                loc = loc / labels.spec.voxel_size
+                loc = Coordinate(int(round(x)) for x in loc)
+                if labels_data_roi.contains(loc):
+                    assert labels.data[loc] == node.id
