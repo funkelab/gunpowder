@@ -45,7 +45,7 @@ class GraphTestSource3D(BatchProvider):
             ArrayKeys.TEST_LABELS,
             ArraySpec(
                 roi=Roi((-100, -100, -100), (200, 200, 200)),
-                voxel_size=Coordinate((4, 1, 1)),
+                voxel_size=Coordinate((2, 1, 1)),
                 interpolatable=False,
             ),
         )
