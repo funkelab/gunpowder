@@ -3,6 +3,7 @@ import math
 import numpy as np
 import random
 from scipy import ndimage
+from scipy.spatial.transform import Rotation as R
 
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
@@ -10,6 +11,8 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.array import ArrayKey
+
+from augment.transform import create_3D_rotation_transformation
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,11 @@ class ElasticAugment(BatchFilter):
 
             Whether or not to compute the elastic transform node wise for nodes
             that were lossed during the fast elastic transform process.
+
+        uniform_3d_rotation (``bool``):
+        
+            Whether or not to use a random 3D rotation instead of the 2D rotation
+            interval.
     """
 
     def __init__(
@@ -101,6 +109,7 @@ class ElasticAugment(BatchFilter):
         spatial_dims=3,
         use_fast_points_transform=False,
         recompute_missing_points=True,
+        uniform_3d_rotation=False,
     ):
 
         self.control_point_spacing = control_point_spacing
@@ -116,6 +125,7 @@ class ElasticAugment(BatchFilter):
         self.spatial_dims = spatial_dims
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
+        self.uniform_3d_rotation = uniform_3d_rotation
 
     def prepare(self, request):
         seed = request.random_seed
@@ -398,11 +408,15 @@ class ElasticAugment(BatchFilter):
                 self.jitter_sigma,
                 subsample=self.subsample,
             )
-        rotation = random.random() * self.rotation_max_amount + self.rotation_start
-        if rotation != 0:
-            transformation += augment.create_rotation_transformation(
-                target_shape, rotation, subsample=self.subsample
-            )
+        if self.uniform_3d_rotation:
+            rotation = R.random()
+            transformation += create_3D_rotation_transformation(target_shape, rotation)
+        else:
+            rotation = random.random() * self.rotation_max_amount + self.rotation_start
+            if rotation != 0:
+                transformation += augment.create_rotation_transformation(
+                    target_shape, rotation, subsample=self.subsample
+                )
 
         if self.subsample > 1:
             transformation = augment.upscale_transformation(
