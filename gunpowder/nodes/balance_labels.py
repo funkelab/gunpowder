@@ -1,6 +1,7 @@
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 from collections.abc import Iterable
 import itertools
 import logging
@@ -150,7 +151,10 @@ class BalanceLabels(BatchFilter):
 
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
-        batch.arrays[self.scales] = Array(error_scale, spec)
+
+        outputs = Batch()
+        outputs[self.scales] = Array(error_scale, spec)
+        return outputs
 
     def __balance(self, labels, scale):
 
