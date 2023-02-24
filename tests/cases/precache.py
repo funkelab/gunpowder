@@ -18,9 +18,9 @@ class Delay(BatchFilter):
         pass
 
 
-def test_output():
+def test_speedup():
 
-    delay = 0.1
+    delay = 1.0
     n_requests = 8
     a_workers = 2
     b_workers = 8
@@ -89,5 +89,5 @@ def test_output():
         # should be done in a bit more than 4 seconds
         t_b_2 = time.time() - start
 
-    assert t_a_1 - t_b_1 > perfect_speedup / 2, (t_b_1 - t_a_1, perfect_speedup)
-    assert t_a_2 - t_b_2 > perfect_speedup / 2, (t_b_2 - t_a_2, perfect_speedup)
+    assert t_a_1 - t_b_1 > perfect_speedup / 2, (t_a_1 - t_b_1, perfect_speedup)
+    assert t_a_2 - t_b_2 > perfect_speedup / 2, (t_a_2 - t_b_2, perfect_speedup)
