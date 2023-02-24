@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          make install-dev
+          pip install .[dev]
 
       - name: Run tests
         run: pytest -v --color yes --cov gunpowder --cov-report xml
