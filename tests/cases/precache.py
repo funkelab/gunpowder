@@ -20,11 +20,11 @@ class Delay(BatchFilter):
 
 def test_speedup():
 
-    delay = 1.0
-    n_requests = 8
+    delay = 0.2
+    n_requests = 16
     a_workers = 2
     b_workers = 8
-    perfect_speedup = a_workers / b_workers * delay
+    perfect_speedup = a_workers / b_workers * delay * n_requests
 
     raw_key = ArrayKey("RAW")
     raw_array = Array(
