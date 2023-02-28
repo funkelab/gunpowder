@@ -80,9 +80,13 @@ class Resample(BatchFilter):
         source_request.voxel_size = source_voxel_size
         source_request.roi = source_request.roi.grow(self.pad, self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         source_request.roi = source_request.roi.snap_to_grid(
-            np.lcm(source_voxel_size, self.target_voxel_size),
-            mode='grow')
-        source_request.roi = source_request.roi.intersect(self.spec[self.source].roi) # Ensure request doesn't extend beyond available volume
+            np.lcm(source_voxel_size, self.target_voxel_size), mode="grow"
+        )
+        source_request.roi = source_request.roi.intersect(
+            self.spec[self.source].roi
+        ).snap_to_grid(
+            np.lcm(source_voxel_size, self.target_voxel_size), mode="shrink"
+        )
 
         deps = BatchRequest()
         deps[self.source] = source_request
@@ -95,6 +99,7 @@ class Resample(BatchFilter):
         source_voxel_size = self.spec[self.source].voxel_size
 
         scales = np.array(source_voxel_size) / np.array(self.target_voxel_size)
+        scales = (1,) * (source_data.ndim - source_voxel_size.dims) + tuple(scales)
 
         if self.interp_order != 0 and (self.spec[self.source].interpolatable or self.spec[self.source].interpolatable is None):
             resampled_data = rescale(source_data.astype(np.float32), scales, order=self.interp_order).astype(source_data.dtype)
@@ -106,7 +111,8 @@ class Resample(BatchFilter):
         target_spec = source.spec.copy()
         target_spec.roi = Roi(
             source.spec.roi.get_begin(),
-            self.target_voxel_size * Coordinate(resampled_data.shape)
+            self.target_voxel_size
+            * Coordinate(resampled_data.shape[-self.target_voxel_size.dims :]),
         )
         target_spec.voxel_size = self.target_voxel_size
         target_spec.dtype = resampled_data.dtype
