@@ -136,6 +136,17 @@ class ElasticAugment(BatchFilter):
         # get the voxel size
         self.voxel_size = self.__get_common_voxel_size(request)
 
+        if min(self.voxel_size[-self.spatial_dims]) > max(
+            self.voxel_size[-self.spatial_dims]
+        ):
+            logger.warning(
+                "Elastic Augment works in voxel space and may "
+                "not work as expected on non-isotropic data. "
+                "Rotations through non-isotropic axes can cause "
+                "drastic deformations. "
+                f"Your voxel_size: {self.voxel_size}"
+            )
+
         # get the total ROI of all requests
         total_roi = request.get_total_roi()
         logger.debug("total ROI is %s" % total_roi)
