@@ -56,5 +56,5 @@ version = {attr = "gunpowder.version_info.__version__"}
 [tool.black]
 target_version = ['py36', 'py37', 'py38', 'py39', 'py310']
 
-[tool.setuptools]
-packages = ["gunpowder"]
+[tool.setuptools.packages.find]
+include = ["gunpowder*"]
