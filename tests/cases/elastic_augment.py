@@ -154,3 +154,66 @@ def test_3d_basics(uniform_3d_rotation, tmp_path):
                 loc = Coordinate(int(round(x)) for x in loc)
                 if labels_data_roi.contains(loc):
                     assert labels.data[loc] == node.id
+
+
+class NonIsotropySource(BatchProvider):
+    def __init__(self, key: ArrayKey):
+
+        self.key = key
+
+    def setup(self):
+
+        self.provides(
+            self.key,
+            ArraySpec(
+                roi=Roi((0, 0, 0), (200, 200, 200)),
+                voxel_size=Coordinate((2, 1, 1)),
+                interpolatable=False,
+            ),
+        )
+
+    def provide(self, request):
+
+        batch = Batch()
+
+        roi_array = request[self.key].roi
+
+        assert min(roi_array.shape) > 0.5*max(roi_array.shape), roi_array
+
+        roi_voxel = roi_array // self.spec[self.key].voxel_size
+
+        data = np.zeros(roi_voxel.shape, dtype=np.uint32)
+        data[:, ::2] = 100
+
+        spec = self.spec[self.key].copy()
+        spec.roi = roi_array
+        batch.arrays[self.key] = Array(data, spec=spec)
+
+        return batch
+    
+@pytest.mark.xfail()
+def test_non_isotropy(tmp_path):
+
+    test_labels = ArrayKey("TEST_LABELS")
+
+    pipeline = (
+        NonIsotropySource(test_labels)
+        + ElasticAugment(
+            [10, 10, 10],
+            [0, 0, 0],
+            [0, 2.0 * math.pi],
+            uniform_3d_rotation=True
+        )
+    )
+
+    for _ in range(5):
+
+        with build(pipeline):
+
+            request_roi = Roi((80, 80, 80), (40, 40, 40))
+
+            request = BatchRequest()
+            request[test_labels] = ArraySpec(roi=request_roi)
+            
+            pipeline.request_batch(request)
+
