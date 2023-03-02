@@ -8,6 +8,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
+
 class ZarrWrite(Hdf5LikeWrite):
     '''Assemble arrays of passing batches in one zarr container. This is useful
     to store chunks produced by :class:`Scan` on disk without keeping the
@@ -44,6 +45,11 @@ class ZarrWrite(Hdf5LikeWrite):
             within the pipeline remain unchanged.
     '''
 
+    def __init__(self, dataset_names, output_dir='.', output_filename='output.hdf', compression_type=None,
+                 dataset_dtypes=None, store=None):
+        super().__init__(dataset_names, output_dir, output_filename, compression_type, dataset_dtypes)
+        self.store = store
+
     def _get_voxel_size(self, dataset):
 
         if 'resolution' not in dataset.attrs:
@@ -79,4 +85,7 @@ class ZarrWrite(Hdf5LikeWrite):
             dataset.attrs['offset'] = offset
 
     def _open_file(self, filename):
-        return ZarrFile(ensure_str(filename), mode='a')
+        if self.store is None:
+            return ZarrFile(ensure_str(filename), mode='a')
+        else:
+            return ZarrFile(filename, store=self.store, mode='a')
