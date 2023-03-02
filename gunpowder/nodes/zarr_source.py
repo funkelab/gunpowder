@@ -3,6 +3,7 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
 from .hdf5like_source_base import Hdf5LikeSource
 
+
 class ZarrSource(Hdf5LikeSource):
     '''A `zarr <https://github.com/zarr-developers/zarr>`_ data source.
 
@@ -38,6 +39,10 @@ class ZarrSource(Hdf5LikeSource):
             data is read in channels_last manner and converted to channels_first.
     '''
 
+    def __init__(self, filename, datasets, array_specs=None, channels_first=True, store=None):
+        super().__init__(filename, datasets, array_specs, channels_first)
+        self.store = store
+
     def _get_voxel_size(self, dataset):
 
         if 'resolution' not in dataset.attrs:
@@ -59,4 +64,7 @@ class ZarrSource(Hdf5LikeSource):
             return Coordinate(dataset.attrs['offset'])
 
     def _open_file(self, filename):
-        return ZarrFile(ensure_str(filename), mode='r')
+        if self.store is None:
+            return ZarrFile(ensure_str(filename), mode='r')
+        else:
+            return ZarrFile(filename, store=self.store, mode='r')
