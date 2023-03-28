@@ -1,11 +1,15 @@
-from gunpowder.compat import ensure_str
+from collections.abc import MutableMapping
+from typing import Union
+
+from zarr._storage.store import BaseStore
+
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
 from .hdf5like_source_base import Hdf5LikeSource
 
 
 class ZarrSource(Hdf5LikeSource):
-    '''A `zarr <https://github.com/zarr-developers/zarr>`_ data source.
+    """A `zarr <https://github.com/zarr-developers/zarr>`_ data source.
 
     Provides arrays from zarr datasets. If the attribute ``resolution`` is set
     in a zarr dataset, it will be used as the array's ``voxel_size``. If the
@@ -15,7 +19,7 @@ class ZarrSource(Hdf5LikeSource):
 
     Args:
 
-        filename (``string``):
+        store (``string or ZarrStore``):
 
             The zarr directory.
 
@@ -37,11 +41,10 @@ class ZarrSource(Hdf5LikeSource):
             to be (channels, spatial dimensions). This is recommended because of
             better performance. If channels_first is set to false, then the input
             data is read in channels_last manner and converted to channels_first.
-    '''
+    """
 
-    def __init__(self, filename, datasets, array_specs=None, channels_first=True, store=None):
-        super().__init__(filename, datasets, array_specs, channels_first)
-        self.store = store
+    def __init__(self, store: Union[BaseStore, MutableMapping, str], datasets, array_specs=None, channels_first=True):
+        super().__init__(store, datasets, array_specs, channels_first)
 
     def _get_voxel_size(self, dataset):
 
@@ -57,14 +60,11 @@ class ZarrSource(Hdf5LikeSource):
 
         if 'offset' not in dataset.attrs:
             return None
-
-        if self.filename.endswith('.n5'):
-            return Coordinate(dataset.attrs['offset'][::-1])
+        if isinstance(self.filename, str):
+            if self.filename.endswith('.n5'):
+                return Coordinate(dataset.attrs['offset'][::-1])
         else:
             return Coordinate(dataset.attrs['offset'])
 
-    def _open_file(self, filename):
-        if self.store is None:
-            return ZarrFile(ensure_str(filename), mode='r')
-        else:
-            return ZarrFile(filename, store=self.store, mode='r')
+    def _open_file(self, store):
+        return ZarrFile(store, mode='r')

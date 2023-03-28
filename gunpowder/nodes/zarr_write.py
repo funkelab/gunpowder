@@ -1,3 +1,8 @@
+from collections.abc import MutableMapping
+from typing import Union
+
+from zarr._storage.store import BaseStore
+
 from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
@@ -45,7 +50,8 @@ class ZarrWrite(Hdf5LikeWrite):
             within the pipeline remain unchanged.
     '''
 
-    def __init__(self, dataset_names, output_dir='.', output_filename='output.hdf', compression_type=None,
+    def __init__(self, dataset_names, output_dir='.',
+                 output_filename: Union[BaseStore, MutableMapping, str] = 'output.hdf', compression_type=None,
                  dataset_dtypes=None, store=None):
         super().__init__(dataset_names, output_dir, output_filename, compression_type, dataset_dtypes)
         self.store = store
@@ -54,9 +60,9 @@ class ZarrWrite(Hdf5LikeWrite):
 
         if 'resolution' not in dataset.attrs:
             return None
-
-        if self.output_filename.endswith('.n5'):
-            return Coordinate(dataset.attrs['resolution'][::-1])
+        if isinstance(self.output_filename, str):
+            if self.output_filename.endswith('.n5'):
+                return Coordinate(dataset.attrs['resolution'][::-1])
         else:
             return Coordinate(dataset.attrs['resolution'])
 
@@ -64,28 +70,25 @@ class ZarrWrite(Hdf5LikeWrite):
 
         if 'offset' not in dataset.attrs:
             return None
-
-        if self.output_filename.endswith('.n5'):
-            return Coordinate(dataset.attrs['offset'][::-1])
+        if isinstance(self.output_filename, str):
+            if self.output_filename.endswith('.n5'):
+                return Coordinate(dataset.attrs['offset'][::-1])
         else:
             return Coordinate(dataset.attrs['offset'])
 
     def _set_voxel_size(self, dataset, voxel_size):
-
-        if self.output_filename.endswith('.n5'):
-            dataset.attrs['resolution'] = voxel_size[::-1]
+        if isinstance(self.output_filename, str):
+            if self.output_filename.endswith('.n5'):
+                dataset.attrs['resolution'] = voxel_size[::-1]
         else:
             dataset.attrs['resolution'] = voxel_size
 
     def _set_offset(self, dataset, offset):
-
-        if self.output_filename.endswith('.n5'):
-            dataset.attrs['offset'] = offset[::-1]
+        if isinstance(self.output_filename, str):
+            if self.output_filename.endswith('.n5'):
+                dataset.attrs['offset'] = offset[::-1]
         else:
             dataset.attrs['offset'] = offset
 
-    def _open_file(self, filename):
-        if self.store is None:
-            return ZarrFile(ensure_str(filename), mode='a')
-        else:
-            return ZarrFile(filename, store=self.store, mode='a')
+    def _open_file(self, store):
+        return ZarrFile(store, mode='a')
