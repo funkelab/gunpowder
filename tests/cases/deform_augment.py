@@ -128,7 +128,6 @@ def test_3d_basics():
             raster = batch[test_raster]
 
             assert Node(id=1, location=np.array([0, 0, 0])) in list(graph.nodes)
-            assert 1 in [v.id for v in graph.nodes]
 
             labels_data_roi = (
                 labels.spec.roi - labels.spec.roi.begin
