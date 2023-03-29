@@ -1,5 +1,6 @@
 from collections.abc import MutableMapping
 from typing import Union
+from warnings
 
 from zarr._storage.store import BaseStore
 
@@ -43,7 +44,25 @@ class ZarrSource(Hdf5LikeSource):
             data is read in channels_last manner and converted to channels_first.
     """
 
-    def __init__(self, store: Union[BaseStore, MutableMapping, str], datasets, array_specs=None, channels_first=True):
+    def __init__(self, store: Union[BaseStore, MutableMapping, str]=None,
+                 datasets=None, array_specs=None, channels_first=True,
+                 filename=None):
+
+        # datasets is not really optional, this is for backwards compatibility
+        # only
+        assert datasets is not None, "Argument 'datasets' has to be provided"
+
+        if filename is None:
+            warnings.warn(
+                "Argument 'filename' will be replaced in v2.0, "
+                "use 'store' instead",
+                DeprecationWarning)
+
+            assert store is None, \
+                "If 'store' is given, 'filename' has to be None"
+
+            store = filename
+
         super().__init__(store, datasets, array_specs, channels_first)
 
     def _get_voxel_size(self, dataset):
