@@ -11,6 +11,7 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.array import ArrayKey, Array
+from gunpowder.array_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class DeformAugment(BatchFilter):
         spatial_dims=3,
         use_fast_points_transform=False,
         recompute_missing_points=True,
+        transform_key: ArrayKey = None,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
         self.jitter_sigma = jitter_sigma
@@ -89,6 +91,20 @@ class DeformAugment(BatchFilter):
         self.spatial_dims = spatial_dims
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
+        self.transform_key = transform_key
+
+    def setup(self):
+        if self.transform_key is not None:
+            upstream_roi = self.spec.get_total_roi().snap_to_grid(
+                self.control_point_spacing, mode="shrink"
+            )
+            spec = ArraySpec(
+                roi=upstream_roi,
+                voxel_size=self.control_point_spacing,
+                interpolatable=True,
+            )
+
+            self.provides(self.transform_key, spec)
 
     def prepare(self, request):
         seed = request.random_seed
@@ -128,6 +144,7 @@ class DeformAugment(BatchFilter):
         self.master_transformation = self.__create_transformation(
             master_roi_sampled.shape
         )
+        self.master_transformation_roi = master_roi_snapped
 
         # Third, sample the master transformation for each of the
         # smaller requested ROIs at their respective voxel resolution.
@@ -135,6 +152,8 @@ class DeformAugment(BatchFilter):
         self.transformations = {}
         deps = BatchRequest()
         for key, spec in request.items():
+            if key == self.transform_key:
+                continue
             spec = spec.copy()
 
             if spec.roi is None:
@@ -350,6 +369,15 @@ class DeformAugment(BatchFilter):
             # restore original ROIs
             graph.spec.roi = request[graph_key].roi
             out_batch[graph_key] = graph
+
+        if self.transform_key is not None:
+            transform_array = Array(
+                self.master_transformation,
+                spec=ArraySpec(
+                    self.master_transformation_roi, self.control_point_spacing
+                ),
+            )
+            out_batch[self.transform_key] = transform_array
 
         return out_batch
 
