@@ -11,6 +11,7 @@ from .daisy_request_blocks import DaisyRequestBlocks
 from .defect_augment import DefectAugment
 from .downsample import DownSample
 from .dvid_source import DvidSource
+from .deform_augment import DeformAugment
 from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
 from .graph_source import GraphSource
