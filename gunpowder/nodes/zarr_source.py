@@ -19,9 +19,9 @@ class ZarrSource(Hdf5LikeSource):
 
     Args:
 
-        store (``string or ZarrStore``):
+        store (``string``, ``zarr.BaseStore``):
 
-            The zarr directory.
+            A zarr store or path to a zarr directory or zip file.
 
         datasets (``dict``, :class:`ArrayKey` -> ``string``):
 
