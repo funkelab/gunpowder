@@ -15,6 +15,7 @@ from gunpowder.array_spec import ArraySpec
 
 logger = logging.getLogger(__name__)
 
+# TODO: Add half voxel to points
 
 class DeformAugment(BatchFilter):
     """Elasticly deform a batch. Requests larger batches upstream to avoid data
@@ -82,6 +83,7 @@ class DeformAugment(BatchFilter):
         use_fast_points_transform=False,
         recompute_missing_points=True,
         transform_key: ArrayKey = None,
+        graph_raster_voxel_size: Coordinate = None,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
         self.jitter_sigma = jitter_sigma
@@ -92,6 +94,7 @@ class DeformAugment(BatchFilter):
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
         self.transform_key = transform_key
+        self.graph_raster_voxel_size = graph_raster_voxel_size
 
     def setup(self):
         if self.transform_key is not None:
@@ -141,10 +144,12 @@ class DeformAugment(BatchFilter):
         # Second, create a master transformation. This is a transformation that
         # covers all voxels of the all requested ROIs. The master transformation
         # is zero-based, all transformations are relative to the origin of master_roi_snapped
-        self.master_transformation = self.__create_transformation(
-            master_roi_sampled.shape
+        self.master_transformation_spec = ArraySpec(
+            master_roi_snapped, self.control_point_spacing, interpolatable=True
         )
-        self.master_transformation_roi = master_roi_snapped
+        self.master_transformation = self.__create_transformation(
+            self.master_transformation_spec
+        )
 
         # Third, sample the master transformation for each of the
         # smaller requested ROIs at their respective voxel resolution.
@@ -172,7 +177,10 @@ class DeformAugment(BatchFilter):
                 # must select voxel size for the graph spec because otherwise we would
                 # interpolate the transformation onto a spacing of 1 which may be
                 # way too large
-                voxel_size = self.control_point_spacing
+                voxel_size = self.graph_raster_voxel_size
+                assert (
+                    voxel_size is not None
+                ), "Please provide a graph_raster_voxel_size when deforming graphs"
 
             # we save transformations that have been sampled for specific ROI's and voxel sizes,
             # no need to recompute. This can save time if you are requesting multiple arrays of
@@ -187,24 +195,11 @@ class DeformAugment(BatchFilter):
                 ]
             else:
                 # sample the master transformation at the voxel spacing of each array
-                if voxel_size != self.control_point_spacing:
-                    transformation = self.__sample_transform(
-                        self.master_transformation,
-                        self.control_point_spacing,
-                        master_roi_snapped,
-                        voxel_size,
-                        target_roi,
-                    )
-                else:
-                    # if voxel_size == control_point_spacing we can simply slice into the master roi
-                    target_roi_in_master_roi = (
-                        target_roi - master_roi_snapped.offset
-                    ).snap_to_grid(voxel_size) / voxel_size
-                    transformation = np.copy(
-                        self.master_transformation[
-                            (slice(None),) + target_roi_in_master_roi.get_bounding_box()
-                        ]
-                    )
+                transformation = self.__sample_transform(
+                    self.master_transformation,
+                    voxel_size,
+                    target_roi.snap_to_grid(voxel_size),
+                )
                 self.transformations[
                     (target_roi.offset, target_roi.shape, voxel_size)
                 ] = transformation
@@ -214,23 +209,7 @@ class DeformAugment(BatchFilter):
             # for that we follow the same transformations to get from the
             # request ROI to the target ROI in master ROI in control points, just in
             # reverse
-            source_roi_in_master_roi_sampled = self.__get_source_roi(
-                transformation, voxel_size
-            )
-            source_roi_sampled = (
-                source_roi_in_master_roi_sampled + master_roi_snapped.offset
-            )
-            source_roi = source_roi_sampled
-
-            # transformation is still defined on control points relative to master ROI
-            # in control points (i.e., lowest source coordinate could be 5, but data
-            # array we get later starts at 0).
-            #
-            # shift transformation to be indexed relative to beginning of
-            # source_roi_sampled
-            self.__shift_transformation(
-                -source_roi_in_master_roi_sampled.begin, transformation
-            )
+            source_roi = self.__get_source_roi(transformation)
 
             # update upstream request
             spec.roi = Roi(
@@ -238,7 +217,7 @@ class DeformAugment(BatchFilter):
                 + source_roi.begin[-self.spatial_dims :],
                 spec.roi.shape[: -self.spatial_dims]
                 + source_roi.shape[-self.spatial_dims :],
-            ).snap_to_grid(voxel_size)
+            )
 
             deps[key] = spec
 
@@ -261,37 +240,16 @@ class DeformAugment(BatchFilter):
             ) in self.transformations, f"{(request_roi.offset, request_roi.shape, voxel_size)} not in {list(self.transformations.keys())}"
 
             # reshape array data into (channels,) + spatial dims
-            shape = array.data.shape
-            channel_shape = shape[: -self.spatial_dims]
-            data = array.data.reshape((-1,) + shape[-self.spatial_dims :])
-
-            # apply transformation on each channel
-            data = np.array(
-                [
-                    augment.apply_transformation(
-                        data[c],
-                        self.transformations[
-                            (request_roi.offset, request_roi.shape, voxel_size)
-                        ],
-                        interpolate=self.spec[array_key].interpolatable,
-                    )
-                    for c in range(data.shape[0])
-                ]
-            )
-            spec = array.spec.copy()
-            spec.voxel_size = self.spec[array_key].voxel_size
-            spec.roi = request[array_key].roi
-
-            data_roi = request[array_key].roi / self.spec[array_key].voxel_size
-
-            out_array = Array(
-                data.reshape(channel_shape + data_roi.shape[-self.spatial_dims :]), spec
+            transformed_array = self.__apply_transform(
+                array,
+                self.transformations[
+                    (request_roi.offset, request_roi.shape, voxel_size)
+                ],
             )
 
-            out_batch[array_key] = out_array
+            out_batch[array_key] = transformed_array
 
         for graph_key, graph in batch.graphs.items():
-            voxel_size = self.control_point_spacing
             source_roi = Roi(
                 request[graph_key].roi.offset[-self.spatial_dims :],
                 request[graph_key].roi.shape[-self.spatial_dims :],
@@ -301,7 +259,9 @@ class DeformAugment(BatchFilter):
             if self.use_fast_points_transform:
                 missed_nodes = self.__fast_point_projection(
                     self.transformations[
-                        source_roi.offset, source_roi.shape, voxel_size
+                        source_roi.offset,
+                        source_roi.shape,
+                        self.graph_raster_voxel_size,
                     ],
                     nodes,
                     graph.spec.roi,
@@ -318,109 +278,141 @@ class DeformAugment(BatchFilter):
                 # logger.debug("projecting %s", node.location)
 
                 # get location relative to beginning of upstream ROI
-                location = node.location - graph.spec.roi.begin
-                logger.debug("relative to upstream ROI: %s", location)
+                location = node.location
 
-                # get spatial coordinates of node in voxels
+                # get spatial coordinates of node
                 location_spatial = location[-self.spatial_dims :]
 
                 # get projected location in transformation data space, this
                 # yields voxel coordinates relative to target ROI
-                projected_voxels = self.__project(
+                projected = self.__project(
                     self.transformations[
-                        source_roi.offset, source_roi.shape, voxel_size
+                        source_roi.offset, source_roi.shape, self.graph_raster_voxel_size
                     ],
                     location_spatial,
-                    self.control_point_spacing,
                 )
 
-                logger.debug(
-                    "projected in voxels, relative to target ROI: %s", projected_voxels
-                )
+                logger.debug("projected: %s", projected)
 
-                if projected_voxels is None:
+                if projected is None:
                     logger.debug("node outside of target, skipping")
                     graph.remove_node(node, retain_connectivity=True)
                     continue
-
-                # convert to world units (now in float again)
-                projected = projected_voxels * np.array(self.control_point_spacing)
-
-                logger.debug(
-                    "projected in world units, relative to target ROI: %s", projected
-                )
-
-                # get global coordinates
-                projected += np.array(graph.spec.roi.begin[-self.spatial_dims :])
 
                 # update spatial coordinates of node location
                 node.location[-self.spatial_dims :] = projected
 
                 logger.debug("final location: %s", node.location)
 
-                # finally, it can happen that a node no longer is contained in
-                # the requested ROI (because larger ROIs than necessary have
-                # been requested upstream)
-                if not request[graph_key].roi.contains(node.location):
-                    logger.debug("node outside of target, skipping")
-                    graph.remove_node(node, retain_connectivity=True)
-                    continue
-
-            # restore original ROIs
-            graph.spec.roi = request[graph_key].roi
             out_batch[graph_key] = graph
 
         if self.transform_key is not None:
-            transform_array = Array(
-                self.master_transformation,
-                spec=ArraySpec(
-                    self.master_transformation_roi, self.control_point_spacing
-                ),
-            )
-            out_batch[self.transform_key] = transform_array
+            out_batch[self.transform_key] = self.master_transformation
 
         return out_batch
 
+    def __apply_transform(self, array: Array, transformation: Array) -> Array:
+        input_shape = array.data.shape
+        output_shape = transformation.data.shape
+        channel_shape = input_shape[: -self.spatial_dims]
+        data = array.data.reshape((-1,) + input_shape[-self.spatial_dims :])
+
+        offset = array.spec.roi.offset[-self.spatial_dims :]
+        voxel_size = array.spec.voxel_size[-self.spatial_dims :]
+
+        # apply transformation on each channel
+        transformation.data -= np.array(offset).reshape(
+            (-1,) + (1,) * self.spatial_dims
+        )
+        transformation.data /= np.array(voxel_size).reshape(
+            (-1,) + (1,) * self.spatial_dims
+        )
+
+        data = np.array(
+            [
+                augment.apply_transformation(
+                    data[c],
+                    transformation.data,
+                    interpolate=array.spec.interpolatable,
+                )
+                for c in range(data.shape[0])
+            ]
+        )
+        spec = array.spec.copy()
+        spec.roi = transformation.spec.roi
+
+        return Array(
+            data.reshape(channel_shape + output_shape[-self.spatial_dims :]), spec
+        )
+
     def __sample_transform(
         self,
-        transformation,
-        input_voxel_size,
-        input_roi,
+        transformation: Array,
         output_voxel_size,
         output_roi,
         interpolate_order=1,
-    ):
+    ) -> Array:
+        if output_voxel_size == transformation.spec.voxel_size:
+            # if voxel_size == control_point_spacing we can simply slice into the master roi
+            relative_output_roi = (
+                output_roi - transformation.spec.roi.offset
+            ).snap_to_grid(output_voxel_size) / output_voxel_size
+            sampled = np.copy(
+                transformation.data[
+                    (slice(None),) + relative_output_roi.get_bounding_box()
+                ]
+            )
+            return Array(
+                sampled,
+                ArraySpec(
+                    output_roi.snap_to_grid(output_voxel_size),
+                    output_voxel_size,
+                    interpolatable=True,
+                ),
+            )
+
         dims = len(output_voxel_size)
-        output_voxel_shape = output_roi.shape / output_voxel_size
-        sampled = np.zeros((dims,) + output_voxel_shape, dtype=np.float32)
+        output_shape = output_roi.shape / output_voxel_size
         offset = np.array(
             [
                 o / s
-                for o, s in zip(output_roi.offset - input_roi.offset, input_voxel_size)
+                for o, s in zip(
+                    output_roi.offset - transformation.spec.roi.offset,
+                    transformation.spec.voxel_size,
+                )
             ]
         )
-        step = np.array([o / i for o, i in zip(output_voxel_size, input_voxel_size)])
-        coordinates = np.meshgrid(
-            *[range(s) for s in output_voxel_shape], indexing="ij"
+        step = np.array(
+            [o / i for o, i in zip(output_voxel_size, transformation.spec.voxel_size)]
         )
-        coordinates = [c * s + o for c, s, o in zip(coordinates, step, offset)]
+        coordinates = np.meshgrid(
+            range(dims),
+            *[
+                np.linspace(o, (shape - 1) * step + o, shape)
+                for o, shape, step in zip(offset, output_shape, step)
+            ],
+            indexing="ij",
+        )
         coordinates = np.stack(coordinates)
+        assert coordinates.shape[2:] == output_shape, (coordinates.shape, output_shape, offset, step)
 
-        for d in range(dims):
-            ndimage.map_coordinates(
-                transformation[d],
-                coordinates=coordinates,
-                output=sampled[d],
-                order=3,
-                mode="nearest",
-            )
-        return sampled
+        sampled = ndimage.map_coordinates(
+            transformation.data,
+            coordinates=coordinates,
+            order=3,
+            mode="nearest",
+        )
+        return Array(sampled, ArraySpec(output_roi, output_voxel_size))
 
-    def __create_transformation(self, target_shape):
+    def __create_transformation(self, target_spec: ArraySpec):
         scale = self.scale_min + random.random() * (self.scale_max - self.scale_min)
 
+        target_shape = target_spec.roi.shape / target_spec.voxel_size
+
         id_transformation = augment.create_identity_transformation(
-            target_shape, subsample=self.subsample, scale=scale
+            target_shape,
+            subsample=self.subsample,
+            scale=scale,
         )
 
         transformation = id_transformation
@@ -429,7 +421,7 @@ class DeformAugment(BatchFilter):
             el_transformation = augment.create_elastic_transformation(
                 target_shape,
                 1,
-                self.jitter_sigma,
+                np.array(self.jitter_sigma) / self.control_point_spacing,
                 subsample=self.subsample,
             )
 
@@ -440,11 +432,14 @@ class DeformAugment(BatchFilter):
                 transformation, target_shape
             )
 
-        transformation *= np.array(self.control_point_spacing).reshape(
-            (len(self.control_point_spacing),) + (1,) * self.spatial_dims
+        transformation *= np.array(target_spec.voxel_size).reshape(
+            (len(target_spec.voxel_size),) + (1,) * self.spatial_dims
+        )
+        transformation += np.array(target_spec.roi.offset).reshape(
+            (len(target_spec.roi.offset),) + (1,) * self.spatial_dims
         )
 
-        return transformation
+        return Array(transformation, target_spec)
 
     def __fast_point_projection(self, transformation, nodes, source_roi, target_roi):
         if len(nodes) < 1:
@@ -455,7 +450,7 @@ class DeformAugment(BatchFilter):
                 (
                     node.id,
                     (np.floor(node.location).astype(int) - source_roi.begin)
-                    // self.control_point_spacing,
+                    // self.graph_raster_voxel_size,
                 )
                 for node in nodes
                 if source_roi.contains(node.location)
@@ -463,7 +458,7 @@ class DeformAugment(BatchFilter):
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
         points_array = np.zeros(
-            source_roi.shape / self.control_point_spacing, dtype=np.int64
+            source_roi.shape / self.graph_raster_voxel_size, dtype=np.int64
         )
         points_array[locs] = ids
 
@@ -471,20 +466,23 @@ class DeformAugment(BatchFilter):
         shape = points_array.shape
         data = points_array.reshape((-1,) + shape[-self.spatial_dims :])
 
-        # apply transformation on each channel
-        data = np.array(
-            [
-                augment.apply_transformation(
-                    data[c], transformation, interpolate="nearest"
-                )
-                for c in range(data.shape[0])
-            ]
+        array = Array(
+            data,
+            ArraySpec(
+                Roi(
+                    source_roi.begin[-self.spatial_dims :],
+                    Coordinate(shape) * self.graph_raster_voxel_size,
+                ),
+                self.graph_raster_voxel_size,
+            ),
         )
+        transformed = self.__apply_transform(array, transformation)
 
+        data = transformed.data
         missing_points = []
         projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
         projected_locs = [
-            np.array(loc[-self.spatial_dims :]) * self.control_point_spacing
+            np.array(loc[-self.spatial_dims :]) * self.graph_raster_voxel_size
             + target_roi.begin
             for loc in projected_locs
         ]
@@ -510,14 +508,14 @@ class DeformAugment(BatchFilter):
 
         return missing_points
 
-    def __project(self, transformation, location, transform_spacing):
+    def __project(self, transformation: Array, location: np.ndarray) -> np.ndarray:
         """Find the projection of location given by transformation. Returns None
         if projection lies outside of transformation."""
 
         dims = len(location)
 
         # subtract location from transformation
-        diff = transformation.copy()
+        diff = transformation.data.copy()
         for d in range(dims):
             diff[d] -= location[d]
 
@@ -532,13 +530,13 @@ class DeformAugment(BatchFilter):
         center_source = self.__source_at(transformation, center_grid)
 
         logger.debug("projecting %s onto grid", location)
-        logger.debug("grid shape: %s", transformation.shape[1:])
+        logger.debug("grid shape: %s", transformation.data.shape[1:])
         logger.debug("grid projection: %s", center_grid)
         logger.debug("dist shape: %s", dist.shape)
         logger.debug("dist.argmin(): %s", dist.argmin())
         logger.debug("dist[argmin]: %s", dist[center_grid])
         logger.debug(
-            "transform[argmin]: %s", transformation[(slice(None),) + center_grid]
+            "transform[argmin]: %s", transformation.data[(slice(None),) + center_grid]
         )
         logger.debug("min dist: %s", dist.min())
         logger.debug("center source: %s", center_source)
@@ -546,7 +544,7 @@ class DeformAugment(BatchFilter):
         # inspect grid edges incident to center_grid
         for d in range(dims):
             # nothing to do for dimensions without spatial extent
-            if transformation.shape[1 + d] == 1:
+            if transformation.data.shape[1 + d] == 1:
                 continue
 
             dim_vector = Coordinate(1 if dd == d else 0 for dd in range(dims))
@@ -557,7 +555,7 @@ class DeformAugment(BatchFilter):
             pos_u = -1
             neg_u = -1
 
-            if pos_grid[d] < transformation.shape[1 + d]:
+            if pos_grid[d] < transformation.data.shape[1 + d]:
                 pos_source = self.__source_at(transformation, pos_grid)
                 logger.debug("pos source: %s", pos_source)
                 pos_dist = pos_source[d] - center_source[d]
@@ -583,29 +581,38 @@ class DeformAugment(BatchFilter):
             if pos_u < 0 and neg_u < 0:
                 return None
 
-        return np.array(center_grid, dtype=np.float32)
+        return (
+            np.array(center_grid, dtype=np.float32) * transformation.spec.voxel_size
+            + transformation.spec.roi.offset
+        )
 
     def __source_at(self, transformation, index):
         """Read the source point of a transformation at index."""
 
         slices = (slice(None),) + tuple(slice(i, i + 1) for i in index)
-        return transformation[slices].flatten()
+        return transformation.data[slices].flatten()
 
-    def __get_source_roi(self, transformation, voxel_size):
+    def __get_source_roi(self, transformation):
         # this gets you the source_roi in offset space. We need to add 1 voxel
         # to the shape to get the closed interval ROI
-        dims = transformation.shape[0]
 
         # get bounding box of needed data for transformation
         bb_min = Coordinate(
-            int(math.floor(transformation[d].min())) for d in range(dims)
+            int(math.floor(transformation.data[d].min()))
+            for d in range(transformation.spec.voxel_size.dims)
         )
         bb_max = Coordinate(
-            int(math.ceil(transformation[d].max())) + 1 for d in range(dims)
+            int(math.ceil(transformation.data[d].max())) + s
+            for d, s in zip(
+                range(transformation.spec.voxel_size.dims),
+                transformation.spec.voxel_size,
+            )
         )
 
         # create roi sufficiently large to feed transformation
-        source_roi = Roi(bb_min, bb_max - bb_min + voxel_size)
+        source_roi = Roi(bb_min, bb_max - bb_min).snap_to_grid(
+            transformation.spec.voxel_size
+        )
 
         return source_roi
 
