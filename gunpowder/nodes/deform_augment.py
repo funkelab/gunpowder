@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: Add half voxel to points
 
+
 class DeformAugment(BatchFilter):
     """Elasticly deform a batch. Requests larger batches upstream to avoid data
     loss due to rotation and jitter.
@@ -94,7 +95,7 @@ class DeformAugment(BatchFilter):
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
         self.transform_key = transform_key
-        self.graph_raster_voxel_size = graph_raster_voxel_size
+        self.graph_raster_voxel_size = Coordinate(graph_raster_voxel_size)
 
     def setup(self):
         if self.transform_key is not None:
@@ -147,9 +148,10 @@ class DeformAugment(BatchFilter):
         self.master_transformation_spec = ArraySpec(
             master_roi_snapped, self.control_point_spacing, interpolatable=True
         )
-        self.master_transformation = self.__create_transformation(
-            self.master_transformation_spec
-        )
+        (
+            self.master_transformation,
+            self.local_transformation,
+        ) = self.__create_transformation(self.master_transformation_spec)
 
         # Third, sample the master transformation for each of the
         # smaller requested ROIs at their respective voxel resolution.
@@ -287,7 +289,9 @@ class DeformAugment(BatchFilter):
                 # yields voxel coordinates relative to target ROI
                 projected = self.__project(
                     self.transformations[
-                        source_roi.offset, source_roi.shape, self.graph_raster_voxel_size
+                        source_roi.offset,
+                        source_roi.shape,
+                        self.graph_raster_voxel_size,
                     ],
                     location_spatial,
                 )
@@ -307,7 +311,7 @@ class DeformAugment(BatchFilter):
             out_batch[graph_key] = graph
 
         if self.transform_key is not None:
-            out_batch[self.transform_key] = self.master_transformation
+            out_batch[self.transform_key] = self.local_transformation
 
         return out_batch
 
@@ -409,13 +413,12 @@ class DeformAugment(BatchFilter):
 
         target_shape = target_spec.roi.shape / target_spec.voxel_size
 
-        id_transformation = augment.create_identity_transformation(
+        global_transformation = augment.create_identity_transformation(
             target_shape,
             subsample=self.subsample,
             scale=scale,
         )
-
-        transformation = id_transformation
+        local_transformation = np.zeros_like(global_transformation)
 
         if sum(self.jitter_sigma) > 0:
             el_transformation = augment.create_elastic_transformation(
@@ -425,21 +428,29 @@ class DeformAugment(BatchFilter):
                 subsample=self.subsample,
             )
 
-            transformation += el_transformation
+            local_transformation += el_transformation
 
         if self.subsample > 1:
-            transformation = augment.upscale_transformation(
-                transformation, target_shape
+            local_transformation = augment.upscale_transformation(
+                local_transformation, target_shape
             )
 
-        transformation *= np.array(target_spec.voxel_size).reshape(
+        # transform into world units
+        global_transformation *= np.array(target_spec.voxel_size).reshape(
             (len(target_spec.voxel_size),) + (1,) * self.spatial_dims
         )
-        transformation += np.array(target_spec.roi.offset).reshape(
+        global_transformation += np.array(target_spec.roi.offset).reshape(
             (len(target_spec.roi.offset),) + (1,) * self.spatial_dims
         )
 
-        return Array(transformation, target_spec)
+        local_transformation *= np.array(target_spec.voxel_size).reshape(
+            (len(target_spec.voxel_size),) + (1,) * self.spatial_dims
+        )
+
+        return (
+            Array(global_transformation + local_transformation, target_spec),
+            Array(local_transformation, target_spec),
+        )
 
     def __fast_point_projection(self, transformation, nodes, source_roi, target_roi):
         if len(nodes) < 1:
