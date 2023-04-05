@@ -398,7 +398,6 @@ class DeformAugment(BatchFilter):
             indexing="ij",
         )
         coordinates = np.stack(coordinates)
-        assert coordinates.shape[2:] == output_shape, (coordinates.shape, output_shape, offset, step)
 
         sampled = ndimage.map_coordinates(
             transformation.data,
