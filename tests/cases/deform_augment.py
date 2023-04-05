@@ -3,23 +3,20 @@ from gunpowder import (
     GraphSpec,
     Roi,
     Coordinate,
-    ArrayKeys,
     ArraySpec,
     Batch,
     Array,
     ArrayKey,
     GraphKey,
     BatchRequest,
-    RasterizationSettings,
-    RasterizeGraph,
     DeformAugment,
     build,
 )
-from gunpowder.graph import GraphKeys, Graph, Node
-from .provider_test import ProviderTest
+from gunpowder.graph import Graph, Node
 
+from scipy.ndimage import center_of_mass
+import pytest
 import numpy as np
-import math
 
 
 class GraphTestSource3D(BatchProvider):
@@ -30,12 +27,12 @@ class GraphTestSource3D(BatchProvider):
 
     def setup(self):
         self.nodes = [
-            Node(id=1, location=np.array([0, 0, 0])),
-            Node(id=2, location=np.array([0, 10, 0])),
-            Node(id=3, location=np.array([0, 20, 0])),
-            Node(id=4, location=np.array([0, 30, 0])),
-            Node(id=5, location=np.array([0, 40, 0])),
-            Node(id=6, location=np.array([0, 50, 0])),
+            Node(id=1, location=np.array([0, 0.5, 0])),
+            Node(id=2, location=np.array([0, 10.5, 0])),
+            Node(id=3, location=np.array([0, 20.5, 0])),
+            Node(id=4, location=np.array([0, 30.5, 0])),
+            Node(id=5, location=np.array([0, 40.5, 0])),
+            Node(id=6, location=np.array([0, 50.5, 0])),
         ]
 
         self.provides(
@@ -123,13 +120,19 @@ class GraphTestSource3D(BatchProvider):
         return batch
 
 
-def test_3d_basics():
+@pytest.mark.parametrize("rotate", [True, False])
+@pytest.mark.parametrize("spatial_dims", [2, 3])
+def test_3d_basics(rotate, spatial_dims):
     test_labels = ArrayKey("TEST_LABELS")
     test_labels2 = ArrayKey("TEST_LABELS2")
     test_graph = GraphKey("TEST_GRAPH")
 
     pipeline = GraphTestSource3D(test_graph, test_labels, test_labels2) + DeformAugment(
-        [10, 10, 10], [2, 2, 2], graph_raster_voxel_size=(2, 2, 2)
+        [10] * spatial_dims,
+        [1] * spatial_dims,
+        graph_raster_voxel_size=[1] * spatial_dims,
+        rotate=rotate,
+        spatial_dims=spatial_dims,
     )
 
     for _ in range(5):
@@ -150,15 +153,22 @@ def test_3d_basics():
 
             # graph should have moved together with the voxels
             for node in graph.nodes:
-
-                loc = node.location - labels.spec.roi.begin
+                loc = node.location
                 if labels.spec.roi.contains(loc):
-                    loc = loc / labels.spec.voxel_size
-                    loc = Coordinate(int(round(x)) for x in loc)
-                    assert labels.data[loc] == node.id
+                    loc = (loc - labels.spec.roi.begin) / labels.spec.voxel_size
+                    loc = np.array(loc)
+                    com = center_of_mass(labels.data == node.id)
+                    assert (
+                        np.linalg.norm(com - loc)
+                        < np.linalg.norm(labels.spec.voxel_size) * 2
+                    ), (com, loc)
 
-                loc2 = node.location - labels2.spec.roi.begin
+                loc2 = node.location
                 if labels2.spec.roi.contains(loc2):
-                    loc2 = loc2 / labels2.spec.voxel_size
-                    loc2 = Coordinate(int(round(x)) for x in loc2)
-                    assert labels2.data[loc2] == node.id
+                    loc2 = (loc2 - labels2.spec.roi.begin) / labels2.spec.voxel_size
+                    loc2 = np.array(loc2)
+                    com2 = center_of_mass(labels2.data == node.id)
+                    assert (
+                        np.linalg.norm(com2 - loc2)
+                        < np.linalg.norm(labels2.spec.voxel_size) * 2
+                    ), (com2, loc2)

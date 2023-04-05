@@ -1,17 +1,26 @@
-import logging
-import math
-import numpy as np
-import random
-from scipy import ndimage
-
 from .batch_filter import BatchFilter
 from gunpowder.batch import Batch
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
+
+from augment.transform import (
+    create_3D_rotation_transformation,
+    create_elastic_transformation,
+    create_identity_transformation,
+    create_rotation_transformation,
+)
+from augment.augment import apply_transformation, upscale_transformation
+
+import numpy as np
+from scipy import ndimage
+from scipy.spatial.transform import Rotation
+
+import logging
+import math
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +85,10 @@ class DeformAugment(BatchFilter):
 
     def __init__(
         self,
-        control_point_spacing,
-        jitter_sigma,
+        control_point_spacing: Coordinate,
+        jitter_sigma: Coordinate,
         scale_interval=(1.0, 1.0),
+        rotate: bool = True,
         subsample=1,
         spatial_dims=3,
         use_fast_points_transform=False,
@@ -87,21 +97,29 @@ class DeformAugment(BatchFilter):
         graph_raster_voxel_size: Coordinate = None,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
-        self.jitter_sigma = jitter_sigma
+        self.jitter_sigma = Coordinate(jitter_sigma)
         self.scale_min = scale_interval[0]
         self.scale_max = scale_interval[1]
+        self.rotate = rotate
         self.subsample = subsample
         self.spatial_dims = spatial_dims
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
         self.transform_key = transform_key
         self.graph_raster_voxel_size = Coordinate(graph_raster_voxel_size)
+        assert (
+            self.control_point_spacing.dims
+            == self.jitter_sigma.dims
+            == self.graph_raster_voxel_size.dims
+        )
 
     def setup(self):
         if self.transform_key is not None:
-            upstream_roi = self.spec.get_total_roi().snap_to_grid(
-                self.control_point_spacing, mode="shrink"
-            )
+            upstream_roi = self.spec.get_total_roi()
+            upstream_roi = Roi(
+                upstream_roi.offset[-self.spatial_dims :],
+                upstream_roi.shape[-self.spatial_dims :],
+            ).snap_to_grid(self.control_point_spacing, mode="shrink")
             spec = ArraySpec(
                 roi=upstream_roi,
                 voxel_size=self.control_point_spacing,
@@ -173,8 +191,9 @@ class DeformAugment(BatchFilter):
                 spec.roi.shape[-self.spatial_dims :],
             )
 
+            # get voxel size of arrays or use graph_raster_voxel_size for graphs
             if isinstance(key, ArrayKey):
-                voxel_size = Coordinate(self.spec[key].voxel_size[-self.spatial_dims :])
+                voxel_size = Coordinate(self.spec[key].voxel_size)
             else:
                 # must select voxel size for the graph spec because otherwise we would
                 # interpolate the transformation onto a spacing of 1 which may be
@@ -184,26 +203,34 @@ class DeformAugment(BatchFilter):
                     voxel_size is not None
                 ), "Please provide a graph_raster_voxel_size when deforming graphs"
 
+            # use only spatial dims for transformations
+            voxel_size = Coordinate(voxel_size[-self.spatial_dims :])
+            target_spatial_roi = Roi(
+                target_roi.offset[-self.spatial_dims :],
+                target_roi.shape[-self.spatial_dims :],
+            )
+            transform_spec = ArraySpec(
+                target_spatial_roi.snap_to_grid(voxel_size), voxel_size
+            )
+
             # we save transformations that have been sampled for specific ROI's and voxel sizes,
             # no need to recompute. This can save time if you are requesting multiple arrays of
             # the same voxel size and shape
             if (
-                target_roi.offset,
-                target_roi.shape,
+                target_spatial_roi.offset,
+                target_spatial_roi.shape,
                 voxel_size,
             ) in self.transformations:
                 transformation = self.transformations[
-                    (target_roi.offset, target_roi.shape, voxel_size)
+                    (target_spatial_roi.offset, target_spatial_roi.shape, voxel_size)
                 ]
             else:
                 # sample the master transformation at the voxel spacing of each array
                 transformation = self.__sample_transform(
-                    self.master_transformation,
-                    voxel_size,
-                    target_roi.snap_to_grid(voxel_size),
+                    self.master_transformation, transform_spec
                 )
                 self.transformations[
-                    (target_roi.offset, target_roi.shape, voxel_size)
+                    (target_spatial_roi.offset, target_spatial_roi.shape, voxel_size)
                 ] = transformation
 
             # get ROI of all control points necessary to perform transformation
@@ -325,25 +352,29 @@ class DeformAugment(BatchFilter):
         voxel_size = array.spec.voxel_size[-self.spatial_dims :]
 
         # apply transformation on each channel
-        transformation.data -= np.array(offset).reshape(
+        transform = transformation.data.copy()
+        transform -= np.array(offset).reshape(
             (-1,) + (1,) * self.spatial_dims
         )
-        transformation.data /= np.array(voxel_size).reshape(
+        transform /= np.array(voxel_size).reshape(
             (-1,) + (1,) * self.spatial_dims
         )
 
         data = np.array(
             [
-                augment.apply_transformation(
+                apply_transformation(
                     data[c],
-                    transformation.data,
+                    transform,
                     interpolate=array.spec.interpolatable,
                 )
                 for c in range(data.shape[0])
             ]
         )
         spec = array.spec.copy()
-        spec.roi = transformation.spec.roi
+        spec.roi = Roi(
+            spec.roi.offset[: -self.spatial_dims] + transformation.spec.roi.offset[:],
+            spec.roi.shape[: -self.spatial_dims] + transformation.spec.roi.shape[:],
+        )
 
         return Array(
             data.reshape(channel_shape + output_shape[-self.spatial_dims :]), spec
@@ -352,15 +383,14 @@ class DeformAugment(BatchFilter):
     def __sample_transform(
         self,
         transformation: Array,
-        output_voxel_size,
-        output_roi,
+        output_spec: ArraySpec,
         interpolate_order=1,
     ) -> Array:
-        if output_voxel_size == transformation.spec.voxel_size:
+        if output_spec.voxel_size == transformation.spec.voxel_size:
             # if voxel_size == control_point_spacing we can simply slice into the master roi
             relative_output_roi = (
-                output_roi - transformation.spec.roi.offset
-            ).snap_to_grid(output_voxel_size) / output_voxel_size
+                output_spec.roi - transformation.spec.roi.offset
+            ).snap_to_grid(output_spec.voxel_size) / output_spec.voxel_size
             sampled = np.copy(
                 transformation.data[
                     (slice(None),) + relative_output_roi.get_bounding_box()
@@ -369,25 +399,28 @@ class DeformAugment(BatchFilter):
             return Array(
                 sampled,
                 ArraySpec(
-                    output_roi.snap_to_grid(output_voxel_size),
-                    output_voxel_size,
+                    output_spec.roi.snap_to_grid(output_spec.voxel_size),
+                    output_spec.voxel_size,
                     interpolatable=True,
                 ),
             )
 
-        dims = len(output_voxel_size)
-        output_shape = output_roi.shape / output_voxel_size
+        dims = len(output_spec.voxel_size)
+        output_shape = output_spec.roi.shape / output_spec.voxel_size
         offset = np.array(
             [
                 o / s
                 for o, s in zip(
-                    output_roi.offset - transformation.spec.roi.offset,
+                    output_spec.roi.offset - transformation.spec.roi.offset,
                     transformation.spec.voxel_size,
                 )
             ]
         )
         step = np.array(
-            [o / i for o, i in zip(output_voxel_size, transformation.spec.voxel_size)]
+            [
+                o / i
+                for o, i in zip(output_spec.voxel_size, transformation.spec.voxel_size)
+            ]
         )
         coordinates = np.meshgrid(
             range(dims),
@@ -405,14 +438,14 @@ class DeformAugment(BatchFilter):
             order=3,
             mode="nearest",
         )
-        return Array(sampled, ArraySpec(output_roi, output_voxel_size))
+        return Array(sampled, ArraySpec(output_spec.roi, output_spec.voxel_size))
 
     def __create_transformation(self, target_spec: ArraySpec):
         scale = self.scale_min + random.random() * (self.scale_max - self.scale_min)
 
         target_shape = target_spec.roi.shape / target_spec.voxel_size
 
-        global_transformation = augment.create_identity_transformation(
+        global_transformation = create_identity_transformation(
             target_shape,
             subsample=self.subsample,
             scale=scale,
@@ -420,7 +453,7 @@ class DeformAugment(BatchFilter):
         local_transformation = np.zeros_like(global_transformation)
 
         if sum(self.jitter_sigma) > 0:
-            el_transformation = augment.create_elastic_transformation(
+            el_transformation = create_elastic_transformation(
                 target_shape,
                 1,
                 np.array(self.jitter_sigma) / self.control_point_spacing,
@@ -429,8 +462,25 @@ class DeformAugment(BatchFilter):
 
             local_transformation += el_transformation
 
+        if self.rotate:
+            assert min(target_spec.voxel_size) == max(
+                target_spec.voxel_size
+            ), "Only isotropic control point spacing supported when rotating"
+            if self.spatial_dims == 2:
+                rot_transformation = create_rotation_transformation(
+                    target_shape,
+                    random.random() * math.pi,
+                )
+            else:
+                angle = Rotation.random()
+                rot_transformation = create_3D_rotation_transformation(
+                    target_shape, angle
+                )
+
+            local_transformation += rot_transformation
+
         if self.subsample > 1:
-            local_transformation = augment.upscale_transformation(
+            local_transformation = upscale_transformation(
                 local_transformation, target_shape
             )
 
@@ -490,9 +540,9 @@ class DeformAugment(BatchFilter):
 
         data = transformed.data
         missing_points = []
-        projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
+        projected_locs = ndimage.center_of_mass(data > 0, data, ids)
         projected_locs = [
-            np.array(loc[-self.spatial_dims :]) * self.graph_raster_voxel_size
+            (np.array(loc[-self.spatial_dims :]) + 0.5) * self.graph_raster_voxel_size
             + target_roi.begin
             for loc in projected_locs
         ]
@@ -591,10 +641,11 @@ class DeformAugment(BatchFilter):
             if pos_u < 0 and neg_u < 0:
                 return None
 
+        # add a half voxel step to localize each transformed point to the center of the
+        # closest voxel
         return (
-            np.array(center_grid, dtype=np.float32) * transformation.spec.voxel_size
-            + transformation.spec.roi.offset
-        )
+            np.array(center_grid, dtype=np.float32) + 0.5
+        ) * transformation.spec.voxel_size + transformation.spec.roi.offset
 
     def __source_at(self, transformation, index):
         """Read the source point of a transformation at index."""
