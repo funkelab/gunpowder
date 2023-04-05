@@ -11,11 +11,13 @@ from gunpowder.ext import augment
 from gunpowder.roi import Roi
 from gunpowder.array import ArrayKey
 
+import warnings
+
 logger = logging.getLogger(__name__)
 
 
 class ElasticAugment(BatchFilter):
-    """Elasticly deform a batch. Requests larger batches upstream to avoid data 
+    """(DEPRICATED) Elasticly deform a batch. Requests larger batches upstream to avoid data 
     loss due to rotation and jitter.
 
     Args:
@@ -102,6 +104,7 @@ class ElasticAugment(BatchFilter):
         use_fast_points_transform=False,
         recompute_missing_points=True,
     ):
+        warnings.warn("ElasticAugment is deprecated, please use the DeformAugment", DeprecationWarning)
 
         self.control_point_spacing = control_point_spacing
         self.jitter_sigma = jitter_sigma
