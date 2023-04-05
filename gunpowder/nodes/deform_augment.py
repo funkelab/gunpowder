@@ -279,22 +279,26 @@ class DeformAugment(BatchFilter):
             out_batch[array_key] = transformed_array
 
         for graph_key, graph in batch.graphs.items():
-            source_roi = Roi(
+            target_roi = Roi(
                 request[graph_key].roi.offset[-self.spatial_dims :],
                 request[graph_key].roi.shape[-self.spatial_dims :],
+            )
+            source_roi = Roi(
+                graph.spec.roi.offset[-self.spatial_dims :],
+                graph.spec.roi.shape[-self.spatial_dims :],
             )
             nodes = list(graph.nodes)
 
             if self.use_fast_points_transform:
                 missed_nodes = self.__fast_point_projection(
                     self.transformations[
-                        source_roi.offset,
-                        source_roi.shape,
+                        target_roi.offset,
+                        target_roi.shape,
                         self.graph_raster_voxel_size,
                     ],
                     nodes,
-                    graph.spec.roi,
-                    target_roi=source_roi,
+                    source_roi,
+                    target_roi=target_roi,
                 )
                 if not self.recompute_missing_points:
                     for node in set(missed_nodes):
@@ -316,8 +320,8 @@ class DeformAugment(BatchFilter):
                 # yields voxel coordinates relative to target ROI
                 projected = self.__project(
                     self.transformations[
-                        source_roi.offset,
-                        source_roi.shape,
+                        target_roi.offset,
+                        target_roi.shape,
                         self.graph_raster_voxel_size,
                     ],
                     location_spatial,
@@ -509,7 +513,7 @@ class DeformAugment(BatchFilter):
             *[
                 (
                     node.id,
-                    (np.floor(node.location).astype(int) - source_roi.begin)
+                    (np.floor(node.location[-self.spatial_dims:]).astype(int) - source_roi.begin)
                     // self.graph_raster_voxel_size,
                 )
                 for node in nodes

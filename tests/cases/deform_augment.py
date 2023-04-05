@@ -122,7 +122,8 @@ class GraphTestSource3D(BatchProvider):
 
 @pytest.mark.parametrize("rotate", [True, False])
 @pytest.mark.parametrize("spatial_dims", [2, 3])
-def test_3d_basics(rotate, spatial_dims):
+@pytest.mark.parametrize("fast_points", [True, False])
+def test_3d_basics(rotate, spatial_dims, fast_points):
     test_labels = ArrayKey("TEST_LABELS")
     test_labels2 = ArrayKey("TEST_LABELS2")
     test_graph = GraphKey("TEST_GRAPH")
@@ -133,6 +134,7 @@ def test_3d_basics(rotate, spatial_dims):
         graph_raster_voxel_size=[1] * spatial_dims,
         rotate=rotate,
         spatial_dims=spatial_dims,
+        use_fast_points_transform=fast_points,
     )
 
     for _ in range(5):
