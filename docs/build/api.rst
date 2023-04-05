@@ -125,9 +125,9 @@ DefectAugment
 ^^^^^^^^^^^^^
   .. autoclass:: DefectAugment
 
-ElasticAugment
+DeformAugment
 ^^^^^^^^^^^^^^
-  .. autoclass:: ElasticAugment
+  .. autoclass:: DeformAugment
 
 IntensityAugment
 ^^^^^^^^^^^^^^^^
