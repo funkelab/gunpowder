@@ -4,6 +4,7 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 import logging
 import os
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,10 @@ class Hdf5LikeWrite(BatchFilter):
             compression_type=None,
             dataset_dtypes=None):
 
+        warnings.warn(
+            "HDF5LikeWrite is depricated and will soon be removed in v2.0",
+            DeprecationWarning)
+        
         self.dataset_names = dataset_names
         self.output_dir = output_dir
         self.output_filename = output_filename
