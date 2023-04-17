@@ -1,106 +1,98 @@
+from .helper_sources import ArraySource
+
 from gunpowder import *
 from gunpowder.ext import zarr, ZarrFile, NoSuchModule
-from unittest import skipIf
+
+import pytest
 import numpy as np
 
-class ZarrWriteTestSource(BatchProvider):
 
-    def setup(self):
-
-        self.provides(
-            raw_key,
-            ArraySpec(
-                roi=Roi((20000, 2000, 2000), (2000, 200, 200)),
-                voxel_size=(20, 2, 2)))
-        self.provides(
-            gt_key,
-            ArraySpec(
-                roi=Roi((20100, 2010, 2010), (1800, 180, 180)),
-                voxel_size=(20, 2, 2)))
-
-    def provide(self, request):
-
-        # print("ZarrWriteTestSource: Got request " + str(request))
-
-        batch = Batch()
-
-        # have the pixels encode their position
-        for (array_key, spec) in request.array_specs.items():
-
-            roi = spec.roi
-            roi_voxel = roi // self.spec[array_key].voxel_size
-            # print("ZarrWriteTestSource: Adding " + str(array_key))
-
-            # the z,y,x coordinates of the ROI
-            meshgrids = np.meshgrid(
-                    range(roi_voxel.begin[0], roi_voxel.end[0]),
-                    range(roi_voxel.begin[1], roi_voxel.end[1]),
-                    range(roi_voxel.begin[2], roi_voxel.end[2]), indexing='ij')
-            data = np.array(meshgrids)
-
-            # print("Roi is: " + str(roi))
-
-            spec = self.spec[array_key].copy()
-            spec.roi = roi
-            batch.arrays[array_key] = Array(
-                    data,
-                    spec)
-        return batch
-
-@skipIf(isinstance(zarr, NoSuchModule), 'zarr is not installed')
-def test_read_write(self):
-
+@pytest.mark.skipif(isinstance(zarr, NoSuchModule), reason="zarr is not installed")
+@pytest.mark.parametrize(
+    "zarr_store_func",
+    [
+        "tmp_path / 'zarr_write_test.zarr'",
+        "tmp_path / 'zarr_write_test.n5'",
+        "tmp_path / 'zarr_write_test.hdf'",
+        "zarr.DirectoryStore(f'{tmp_path}/array.zarr')",
+        "zarr.storage.TempStore(dir=tmp_path)",
+    ],
+)
+def test_read_write(tmp_path, zarr_store_func):
+    zarr_store = eval(zarr_store_func)
     raw_key = ArrayKey("RAW")
     gt_key = ArrayKey("GT")
 
-    raw_data = np.array(np.meshgrid(
-                    range(roi_voxel.begin[0], roi_voxel.end[0]),
-                    range(roi_voxel.begin[1], roi_voxel.end[1]),
-                    range(roi_voxel.begin[2], roi_voxel.end[2]), indexing='ij'))
-    gt_data = 
+    roi_raw = Roi((20000, 2000, 2000), (2000, 200, 200))
+    roi_gt = Roi((20100, 2010, 2010), (1800, 180, 180))
+    voxel_size = Coordinate(20, 2, 2)
 
-    path = self.path_to('zarr_write_test.zarr')
+    raw_data = np.array(
+        np.meshgrid(
+            range((roi_raw / voxel_size).begin[0], (roi_raw / voxel_size).end[0]),
+            range((roi_raw / voxel_size).begin[1], (roi_raw / voxel_size).end[1]),
+            range((roi_raw / voxel_size).begin[2], (roi_raw / voxel_size).end[2]),
+            indexing="ij",
+        )
+    )
+    gt_data = np.array(
+        np.meshgrid(
+            range((roi_gt / voxel_size).begin[0], (roi_gt / voxel_size).end[0]),
+            range((roi_gt / voxel_size).begin[1], (roi_gt / voxel_size).end[1]),
+            range((roi_gt / voxel_size).begin[2], (roi_gt / voxel_size).end[2]),
+            indexing="ij",
+        )
+    )
 
-    source = ZarrWriteTestSource()
+    raw_array = Array(raw_data, ArraySpec(roi_raw, voxel_size))
+    gt_array = Array(gt_data, ArraySpec(roi_gt, voxel_size))
+
+    source = (
+        ArraySource(raw_key, raw_array),
+        ArraySource(gt_key, gt_array),
+    ) + MergeProvider()
 
     chunk_request = BatchRequest()
-    chunk_request.add(raw_key, (400,30,34))
-    chunk_request.add(gt_key, (200,10,14))
+    chunk_request.add(raw_key, (800, 80, 38))
+    chunk_request.add(gt_key, (600, 60, 18))
 
     pipeline = (
-        source +
-        ZarrWrite({
-            raw_key: 'arrays/raw'
-        },
-        output_filename=path) +
-        Scan(chunk_request))
+        source
+        + ZarrWrite({raw_key: "arrays/raw"}, store=zarr_store)
+        + Scan(chunk_request)
+    )
 
     with build(pipeline):
-
-        raw_spec    = pipeline.spec[raw_key]
+        raw_spec = pipeline.spec[raw_key]
         labels_spec = pipeline.spec[gt_key]
 
-        full_request = BatchRequest({
-                raw_key: raw_spec,
-                gt_key: labels_spec
-            }
-        )
+        full_request = BatchRequest({raw_key: raw_spec, gt_key: labels_spec})
 
         batch = pipeline.request_batch(full_request)
 
     # assert that stored HDF dataset equals batch array
+    read_pipeline = ZarrSource(zarr_store, datasets={raw_key: "arrays/raw"})
+    full_request = BatchRequest({raw_key: full_request[raw_key]})
 
-    with ZarrFile(path, mode='r') as f:
+    with build(read_pipeline):
+        full_batch = read_pipeline.request_batch(full_request)
 
-        ds = f['arrays/raw']
+        assert (
+            raw_data.shape[-3:]
+            == full_batch[raw_key].spec.roi.shape // full_batch[raw_key].spec.voxel_size
+        )
+        assert roi_raw.offset == full_batch[raw_key].spec.roi.offset
+        assert voxel_size == full_batch[raw_key].spec.voxel_size
+        assert (raw_data == batch.arrays[raw_key].data).all()
 
-        batch_raw = batch.arrays[raw_key]
-        stored_raw = ds[:]
 
-        self.assertEqual(
-            stored_raw.shape[-3:],
-            batch_raw.spec.roi.shape//batch_raw.spec.voxel_size)
-        self.assertEqual(tuple(ds.attrs['offset']), batch_raw.spec.roi.offset)
-        self.assertEqual(tuple(ds.attrs['resolution']), batch_raw.spec.voxel_size)
-        self.assertTrue((stored_raw == batch.arrays[raw_key].data).all())
+def test_old_api(tmp_path):
+    
+    raw_key = ArrayKey("RAW")
+    
+    ZarrWrite({raw_key: "arrays/raw"}, tmp_path, "data.zarr")
+    ZarrWrite({raw_key: "arrays/raw"}, output_dir=tmp_path, output_filename="data.zarr")
 
+    ZarrSource(filename=f"{tmp_path}/data.zarr", datasets={raw_key: "arrays/raw"})
+    ZarrSource(datasets=f"{tmp_path}/data.zarr", filename={raw_key: "arrays/raw"})
+    ZarrSource(f"{tmp_path}/data.zarr", {raw_key: "arrays/raw"})
