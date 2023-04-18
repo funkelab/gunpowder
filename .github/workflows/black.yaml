@@ -1,0 +1,17 @@
+name: Python Black
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v1
+      - name: Setup checkout
+        uses: actions/checkout@master
+      - name: Lint with Black
+        run: |
+          pip install black
+          black -v --check gunpowder tests

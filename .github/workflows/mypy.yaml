@@ -1,0 +1,20 @@
+name: Python mypy
+
+on: [push, pull_request]
+
+jobs:
+  static-analysis:
+    name: Python mypy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: Setup checkout
+        uses: actions/checkout@v2
+      - name: mypy
+        run: |
+          pip install .
+          pip install --upgrade mypy
+          mypy gunpowder
