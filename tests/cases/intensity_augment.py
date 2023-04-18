@@ -6,7 +6,6 @@ import numpy as np
 
 class TestIntensityAugment(ProviderTest):
     def test_shift(self):
-
         pipeline = (
             self.test_source
             + Normalize(ArrayKeys.RAW)

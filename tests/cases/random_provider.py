@@ -35,10 +35,11 @@ def test_output():
     )
     random_provider = ArrayKey("RANDOM_PROVIDER")
 
-    pipeline = (source_a, source_b) + RandomProvider(random_provider_key=random_provider)
+    pipeline = (source_a, source_b) + RandomProvider(
+        random_provider_key=random_provider
+    )
 
     with build(pipeline):
-
         possibilities = set([0, 1])
         seen = set()
         for i in range(10):
@@ -46,7 +47,7 @@ def test_output():
                 BatchRequest(
                     {
                         a: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20))),
-                        random_provider: ArraySpec(nonspatial=True)
+                        random_provider: ArraySpec(nonspatial=True),
                     }
                 )
             )

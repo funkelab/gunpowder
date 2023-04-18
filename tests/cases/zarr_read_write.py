@@ -87,9 +87,8 @@ def test_read_write(tmp_path, zarr_store_func):
 
 
 def test_old_api(tmp_path):
-    
     raw_key = ArrayKey("RAW")
-    
+
     ZarrWrite({raw_key: "arrays/raw"}, tmp_path, "data.zarr")
     ZarrWrite({raw_key: "arrays/raw"}, output_dir=tmp_path, output_filename="data.zarr")
 

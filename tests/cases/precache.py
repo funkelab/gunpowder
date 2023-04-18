@@ -19,7 +19,6 @@ class Delay(BatchFilter):
 
 
 def test_speedup():
-
     delay = 0.2
     n_requests = 16
     a_workers = 2
@@ -44,7 +43,6 @@ def test_speedup():
     test_request[raw_key] = ArraySpec(roi=Roi((20, 20, 20), (10, 10, 10)))
 
     with build(pipeline_a):
-
         start = time.time()
 
         for _ in range(n_requests):
@@ -67,7 +65,6 @@ def test_speedup():
         t_a_2 = time.time() - start
 
     with build(pipeline_b):
-
         start = time.time()
 
         for _ in range(n_requests):

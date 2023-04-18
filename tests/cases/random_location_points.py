@@ -21,9 +21,7 @@ import unittest
 
 
 class ExampleSourceRandomLocation(BatchProvider):
-
     def __init__(self):
-
         self.graph = Graph(
             [
                 Node(1, np.array([1, 1, 1])),
@@ -31,17 +29,13 @@ class ExampleSourceRandomLocation(BatchProvider):
                 Node(3, np.array([550, 550, 550])),
             ],
             [],
-            GraphSpec(
-                roi=Roi((-500, -500, -500), (1500, 1500, 1500))))
+            GraphSpec(roi=Roi((-500, -500, -500), (1500, 1500, 1500))),
+        )
 
     def setup(self):
-
-        self.provides(
-            GraphKeys.TEST_POINTS,
-            self.graph.spec)
+        self.provides(GraphKeys.TEST_POINTS, self.graph.spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         roi = request[GraphKeys.TEST_POINTS].roi
@@ -50,7 +44,6 @@ class ExampleSourceRandomLocation(BatchProvider):
 
 
 class TestRandomLocationPoints(ProviderTest):
-
     @pytest.mark.xfail
     def test_output(self):
         """
@@ -59,25 +52,26 @@ class TestRandomLocationPoints(ProviderTest):
         each point, some of which may not contain its nearest neighbors.
         """
 
-        GraphKey('TEST_POINTS')
+        GraphKey("TEST_POINTS")
 
-        pipeline = (
-            ExampleSourceRandomLocation() +
-            RandomLocation(ensure_nonempty=GraphKeys.TEST_POINTS, point_balance_radius=100)
+        pipeline = ExampleSourceRandomLocation() + RandomLocation(
+            ensure_nonempty=GraphKeys.TEST_POINTS, point_balance_radius=100
         )
 
         # count the number of times we get each point
         histogram = {}
 
         with build(pipeline):
-
             for i in range(5000):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
                             GraphKeys.TEST_POINTS: GraphSpec(
-                                roi=Roi((0, 0, 0), (100, 100, 100)))
-                        }))
+                                roi=Roi((0, 0, 0), (100, 100, 100))
+                            )
+                        }
+                    )
+                )
 
                 points = {node.id: node for node in batch[GraphKeys.TEST_POINTS].nodes}
 
@@ -92,7 +86,7 @@ class TestRandomLocationPoints(ProviderTest):
 
         total = sum(histogram.values())
         for k, v in histogram.items():
-            histogram[k] = float(v)/total
+            histogram[k] = float(v) / total
 
         # we should get roughly the same count for each point
         for i in histogram.keys():
@@ -100,26 +94,26 @@ class TestRandomLocationPoints(ProviderTest):
                 self.assertAlmostEqual(histogram[i], histogram[j], 1)
 
     def test_equal_probability(self):
+        GraphKey("TEST_POINTS")
 
-        GraphKey('TEST_POINTS')
-
-        pipeline = (
-            ExampleSourceRandomLocation() +
-            RandomLocation(ensure_nonempty=GraphKeys.TEST_POINTS)
+        pipeline = ExampleSourceRandomLocation() + RandomLocation(
+            ensure_nonempty=GraphKeys.TEST_POINTS
         )
 
         # count the number of times we get each point
         histogram = {}
 
         with build(pipeline):
-
             for i in range(5000):
                 batch = pipeline.request_batch(
                     BatchRequest(
                         {
                             GraphKeys.TEST_POINTS: GraphSpec(
-                                roi=Roi((0, 0, 0), (10, 10, 10)))
-                        }))
+                                roi=Roi((0, 0, 0), (10, 10, 10))
+                            )
+                        }
+                    )
+                )
 
                 points = {node.id: node for node in batch[GraphKeys.TEST_POINTS].nodes}
 
@@ -134,7 +128,7 @@ class TestRandomLocationPoints(ProviderTest):
 
         total = sum(histogram.values())
         for k, v in histogram.items():
-            histogram[k] = float(v)/total
+            histogram[k] = float(v) / total
 
         # we should get roughly the same count for each point
         for i in histogram.keys():
@@ -167,7 +161,6 @@ class TestRandomLocationPoints(ProviderTest):
         histogram = {}
 
         with build(pipeline):
-
             for i in range(5000):
                 batch = pipeline.request_batch(
                     BatchRequest(
@@ -182,10 +175,12 @@ class TestRandomLocationPoints(ProviderTest):
                 points = batch[GraphKeys.TEST_POINTS].data
                 roi = batch[GraphKeys.TEST_POINTS].spec.roi
 
-                locations = tuple([Coordinate(point.location) for point in points.values()])
+                locations = tuple(
+                    [Coordinate(point.location) for point in points.values()]
+                )
                 self.assertTrue(
                     Coordinate([50, 50, 50]) in locations,
-                    f"locations: {tuple([point.location for point in points.values()])}"
+                    f"locations: {tuple([point.location for point in points.values()])}",
                 )
 
                 self.assertTrue(len(points) > 0)

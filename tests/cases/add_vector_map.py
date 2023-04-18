@@ -26,9 +26,7 @@ import numpy as np
 
 class AddVectorMapTestSource(BatchProvider):
     def setup(self):
-
         for identifier in [ArrayKeys.RAW, ArrayKeys.GT_LABELS]:
-
             self.provides(
                 identifier,
                 ArraySpec(
@@ -37,18 +35,15 @@ class AddVectorMapTestSource(BatchProvider):
             )
 
         for identifier in [GraphKeys.PRESYN, GraphKeys.POSTSYN]:
-
             self.provides(
                 identifier, GraphSpec(roi=Roi((1000, 1000, 1000), (400, 400, 400)))
             )
 
     def provide(self, request):
-
         batch = Batch()
 
         # have the pixels encode their position
         if ArrayKeys.RAW in request:
-
             # the z,y,x coordinates of the ROI
             roi = request[ArrayKeys.RAW].roi
             roi_voxel = roi // self.spec[ArrayKeys.RAW].voxel_size
@@ -66,9 +61,7 @@ class AddVectorMapTestSource(BatchProvider):
 
         if ArrayKeys.GT_LABELS in request:
             roi = request[ArrayKeys.GT_LABELS].roi
-            roi_voxel_shape = (
-                roi // self.spec[ArrayKeys.GT_LABELS].voxel_size
-            ).shape
+            roi_voxel_shape = (roi // self.spec[ArrayKeys.GT_LABELS].voxel_size).shape
             data = np.ones(roi_voxel_shape)
             data[roi_voxel_shape[0] // 2 :, roi_voxel_shape[1] // 2 :, :] = 2
             data[roi_voxel_shape[0] // 2 :, -(roi_voxel_shape[1] // 2) :, :] = 3
@@ -86,7 +79,7 @@ class AddVectorMapTestSource(BatchProvider):
             )
 
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
-        for (graph_key, spec) in request.graph_specs.items():
+        for graph_key, spec in request.graph_specs.items():
             if graph_key == GraphKeys.PRESYN:
                 data = data_presyn
             if graph_key == GraphKeys.POSTSYN:
@@ -98,7 +91,6 @@ class AddVectorMapTestSource(BatchProvider):
         return batch
 
     def __get_pre_and_postsyn_locations(self, roi):
-
         presyn_locs, postsyn_locs = {}, {}
         min_dist_between_presyn_locs = 250
         voxel_size_points = self.spec[ArrayKeys.RAW].voxel_size
@@ -120,15 +112,9 @@ class AddVectorMapTestSource(BatchProvider):
             while presyn_loc_too_close:
                 presyn_location = np.asarray(
                     [
-                        np.random.randint(
-                            low=roi.begin[0], high=roi.end[0]
-                        ),
-                        np.random.randint(
-                            low=roi.begin[1], high=roi.end[1]
-                        ),
-                        np.random.randint(
-                            low=roi.begin[2], high=roi.end[2]
-                        ),
+                        np.random.randint(low=roi.begin[0], high=roi.end[0]),
+                        np.random.randint(low=roi.begin[1], high=roi.end[1]),
+                        np.random.randint(low=roi.begin[2], high=roi.end[2]),
                     ]
                 )
                 # ensure that partner locations of diff presyn locations are not overlapping
@@ -186,7 +172,6 @@ class AddVectorMapTestSource(BatchProvider):
 
 class TestAddVectorMap(ProviderTest):
     def test_output_min_distance(self):
-
         voxel_size = Coordinate((20, 2, 2))
 
         ArrayKey("GT_VECTORS_MAP_PRESYN")
@@ -212,7 +197,6 @@ class TestAddVectorMap(ProviderTest):
         )
 
         with build(pipeline_min_distance):
-
             request = BatchRequest()
             raw_roi = pipeline_min_distance.spec[ArrayKeys.RAW].roi
             gt_labels_roi = pipeline_min_distance.spec[ArrayKeys.GT_LABELS].roi
@@ -231,15 +215,12 @@ class TestAddVectorMap(ProviderTest):
         presyn_locs = {n.id: n for n in batch.graphs[GraphKeys.PRESYN].nodes}
         postsyn_locs = {n.id: n for n in batch.graphs[GraphKeys.POSTSYN].nodes}
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request[
-            ArrayKeys.GT_VECTORS_MAP_PRESYN
-        ].roi.offset
+        offset_vector_map_presyn = request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.offset
 
         self.assertTrue(len(presyn_locs) > 0)
         self.assertTrue(len(postsyn_locs) > 0)
 
         for loc_id, point in presyn_locs.items():
-
             if request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.contains(
                 Coordinate(point.location)
             ):
@@ -314,15 +295,12 @@ class TestAddVectorMap(ProviderTest):
         presyn_locs = {n.id: n for n in batch.graphs[GraphKeys.PRESYN].nodes}
         postsyn_locs = {n.id: n for n in batch.graphs[GraphKeys.POSTSYN].nodes}
         vector_map_presyn = batch.arrays[ArrayKeys.GT_VECTORS_MAP_PRESYN].data
-        offset_vector_map_presyn = request[
-            ArrayKeys.GT_VECTORS_MAP_PRESYN
-        ].roi.offset
+        offset_vector_map_presyn = request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.offset
 
         self.assertTrue(len(presyn_locs) > 0)
         self.assertTrue(len(postsyn_locs) > 0)
 
         for loc_id, point in presyn_locs.items():
-
             if request[ArrayKeys.GT_VECTORS_MAP_PRESYN].roi.contains(
                 Coordinate(point.location)
             ):

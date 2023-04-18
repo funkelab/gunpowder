@@ -16,7 +16,6 @@ import numpy as np
 
 class NodeDependenciesTestSource(BatchProvider):
     def setup(self):
-
         self.provides(
             ArrayKeys.A,
             ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
@@ -28,12 +27,10 @@ class NodeDependenciesTestSource(BatchProvider):
         )
 
     def provide(self, request):
-
         batch = Batch()
 
         # have the pixels encode their position
-        for (array_key, spec) in request.array_specs.items():
-
+        for array_key, spec in request.array_specs.items():
             roi = spec.roi
 
             for d in range(3):
@@ -60,15 +57,12 @@ class NodeDependenciesTestNode(BatchFilter):
     """Creates C from B."""
 
     def __init__(self):
-
         self.context = (20, 20, 20)
 
     def setup(self):
-
         self.provides(ArrayKeys.C, self.spec[ArrayKeys.B])
 
     def prepare(self, request):
-
         assert ArrayKeys.C in request
 
         dependencies = BatchRequest()
@@ -93,7 +87,6 @@ class NodeDependenciesTestNode(BatchFilter):
 
 class TestNodeDependencies(ProviderTest):
     def test_dependecies(self):
-
         ArrayKey("A")
         ArrayKey("B")
         ArrayKey("C")

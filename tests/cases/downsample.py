@@ -5,7 +5,6 @@ import numpy as np
 
 
 def test_output():
-
     raw = ArrayKey("RAW")
     raw_downsampled = ArrayKey("RAW_DOWNSAMPLED")
     gt = ArrayKey("GT")
@@ -45,12 +44,10 @@ def test_output():
     with build(pipeline):
         batch = pipeline.request_batch(request)
 
-    for (array_key, array) in batch.arrays.items():
-
+    for array_key, array in batch.arrays.items():
         # assert that pixels encode their position for supposedly unaltered
         # arrays
         if array_key in [raw, gt]:
-
             # the z,y,x coordinates of the ROI
             roi = array.spec.roi / 4
             meshgrids = np.meshgrid(
@@ -67,15 +64,12 @@ def test_output():
                 assert np.array_equal(array.data, data), str(array_key)
 
         elif array_key == raw_downsampled:
-
             assert array.data[0, 0, 0, 0] == 30
             assert array.data[1, 1, 0, 0] == 32
 
         elif array_key == gt_downsampled:
-
             assert array.data[0, 0, 0] == 0
             assert array.data[1, 0, 0] == 2
 
         else:
-
             assert False, "unexpected array type"

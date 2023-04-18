@@ -23,7 +23,6 @@ from random import randint
 
 class GraphTestSource3D(BatchProvider):
     def __init__(self):
-
         self.voxel_size = Coordinate((40, 4, 4))
 
         self.nodes = [
@@ -43,13 +42,12 @@ class GraphTestSource3D(BatchProvider):
 
         self.graph_spec = GraphSpec(roi=Roi((-100, -100, -100), (300, 300, 300)))
         self.array_spec = ArraySpec(
-                roi=Roi((-200, -200, -200), (400, 400, 400)), voxel_size=self.voxel_size
-            )
+            roi=Roi((-200, -200, -200), (400, 400, 400)), voxel_size=self.voxel_size
+        )
 
         self.graph = Graph(self.nodes, [], self.graph_spec)
 
     def setup(self):
-
         self.provides(
             GraphKeys.TEST_GRAPH,
             self.graph_spec,
@@ -61,7 +59,6 @@ class GraphTestSource3D(BatchProvider):
         )
 
     def provide(self, request):
-
         batch = Batch()
 
         graph_roi = request[GraphKeys.TEST_GRAPH].roi
@@ -81,32 +78,28 @@ class GraphTestSource3D(BatchProvider):
 
         return batch
 
+
 class GraphTestSourceWithEdge(BatchProvider):
     def __init__(self):
-
         self.voxel_size = Coordinate((1, 1, 1))
 
         self.nodes = [
             # corners
             Node(id=1, location=np.array((0, 4, 4))),
-            Node(id=2, location=np.array((9, 4, 4)))
+            Node(id=2, location=np.array((9, 4, 4))),
         ]
-        self.edges = [
-            Edge(1, 2)
-        ]
+        self.edges = [Edge(1, 2)]
 
         self.graph_spec = GraphSpec(roi=Roi((0, 0, 0), (10, 10, 10)))
         self.graph = Graph(self.nodes, self.edges, self.graph_spec)
 
     def setup(self):
-
         self.provides(
             GraphKeys.TEST_GRAPH_WITH_EDGE,
             self.graph_spec,
         )
 
     def provide(self, request):
-
         batch = Batch()
 
         graph_roi = request[GraphKeys.TEST_GRAPH_WITH_EDGE].roi
@@ -120,7 +113,6 @@ class GraphTestSourceWithEdge(BatchProvider):
 
 class TestRasterizePoints(ProviderTest):
     def test_3d(self):
-
         GraphKey("TEST_GRAPH")
         ArrayKey("RASTERIZED")
 
@@ -131,7 +123,6 @@ class TestRasterizePoints(ProviderTest):
         )
 
         with build(pipeline):
-
             request = BatchRequest()
             roi = Roi((0, 0, 0), (200, 200, 200))
 
@@ -156,7 +147,6 @@ class TestRasterizePoints(ProviderTest):
         )
 
         with build(pipeline):
-
             request = BatchRequest()
             roi = Roi((0, 0, 0), (200, 200, 200))
 

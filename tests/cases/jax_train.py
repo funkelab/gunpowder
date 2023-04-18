@@ -22,7 +22,7 @@ import logging
 
 # use CPU for JAX tests and avoid GPU compatibility
 if not isinstance(jax, NoSuchModule):
-    jax.config.update('jax_platform_name', 'cpu')
+    jax.config.update("jax_platform_name", "cpu")
 
 
 class ExampleJaxTrain2DSource(BatchProvider):
@@ -39,7 +39,6 @@ class ExampleJaxTrain2DSource(BatchProvider):
         self.provides(ArrayKeys.A, spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         spec = self.spec[ArrayKeys.A]
@@ -54,7 +53,6 @@ class ExampleJaxTrain2DSource(BatchProvider):
 
 class ExampleJaxTrainSource(BatchProvider):
     def setup(self):
-
         spec = ArraySpec(
             roi=Roi((0, 0), (2, 2)),
             dtype=np.float32,
@@ -68,7 +66,6 @@ class ExampleJaxTrainSource(BatchProvider):
         self.provides(ArrayKeys.C, spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         spec = self.spec[ArrayKeys.A]
@@ -95,7 +92,6 @@ class ExampleJaxTrainSource(BatchProvider):
 @skipIf(isinstance(jax, NoSuchModule), "Jax is not installed")
 class TestJaxTrain(ProviderTest):
     def test_output(self):
-
         logging.getLogger("gunpowder.jax.nodes.train").setLevel(logging.INFO)
 
         checkpoint_basename = self.path_to("model")
@@ -117,20 +113,20 @@ class TestJaxTrain(ProviderTest):
                 self.opt = optax.sgd(learning_rate=1e-7, momentum=0.999)
 
             def initialize(self, rng_key, inputs):
-                a = inputs['a'].reshape(-1)
-                b = inputs['b'].reshape(-1)
+                a = inputs["a"].reshape(-1)
+                b = inputs["b"].reshape(-1)
                 weight = self.linear.init(rng_key, a * b)
                 opt_state = self.opt.init(weight)
                 return (weight, opt_state)
 
             def forward(self, params, inputs):
-                a = inputs['a'].reshape(-1)
-                b = inputs['b'].reshape(-1)
-                return {'c': self.linear.apply(params[0], a*b)}
+                a = inputs["a"].reshape(-1)
+                b = inputs["b"].reshape(-1)
+                return {"c": self.linear.apply(params[0], a * b)}
 
             def _loss_fn(self, weight, a, b, c):
-                c_pred = self.linear.apply(weight, a*b)
-                loss = optax.l2_loss(predictions=c_pred, targets=c)*2
+                c_pred = self.linear.apply(weight, a * b)
+                loss = optax.l2_loss(predictions=c_pred, targets=c) * 2
                 loss_mean = loss.mean()
                 return loss_mean, (c_pred, loss, loss_mean)
 
@@ -140,19 +136,20 @@ class TestJaxTrain(ProviderTest):
                 return new_weight, new_opt_state
 
             def train_step(self, params, inputs, pmapped=False):
-                a = inputs['a'].reshape(-1)
-                b = inputs['b'].reshape(-1)
-                c = inputs['c'].reshape(-1)
+                a = inputs["a"].reshape(-1)
+                b = inputs["b"].reshape(-1)
+                c = inputs["c"].reshape(-1)
 
                 grads, (c_pred, loss, loss_mean) = jax.grad(
-                    self._loss_fn, has_aux=True)(params[0], a, b, c)
+                    self._loss_fn, has_aux=True
+                )(params[0], a, b, c)
 
                 new_weight, new_opt_state = self._apply_optimizer(params, grads)
                 new_params = (new_weight, new_opt_state)
 
                 outputs = {
-                    'c_pred': c_pred,
-                    'grad': loss,
+                    "c_pred": c_pred,
+                    "grad": loss,
                 }
                 return new_params, outputs, loss_mean
 
@@ -161,11 +158,8 @@ class TestJaxTrain(ProviderTest):
         source = ExampleJaxTrainSource()
         train = Train(
             model=model,
-            inputs={"a": ArrayKeys.A,
-                    "b": ArrayKeys.B,
-                    "c": ArrayKeys.C},
-            outputs={"c_pred": ArrayKeys.C_PREDICTED,
-                     "grad": ArrayKeys.C_GRADIENT},
+            inputs={"a": ArrayKeys.A, "b": ArrayKeys.B, "c": ArrayKeys.C},
+            outputs={"c_pred": ArrayKeys.C_PREDICTED, "grad": ArrayKeys.C_GRADIENT},
             array_specs={
                 ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
                 ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
@@ -189,7 +183,6 @@ class TestJaxTrain(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch = pipeline.request_batch(request)
 
             for i in range(200 - 1):
@@ -200,7 +193,6 @@ class TestJaxTrain(ProviderTest):
 
         # resume training
         with build(pipeline):
-
             for i in range(100):
                 loss1 = batch.loss
                 batch = pipeline.request_batch(request)
@@ -222,24 +214,27 @@ class TestJaxPredict(ProviderTest):
         class ExampleModel(GenericJaxModel):
             def __init__(self, is_training):
                 super().__init__(is_training)
+
                 def _linear(x):
                     return haiku.Linear(1, False)(x)
+
                 self.linear = haiku.without_apply_rng(haiku.transform(_linear))
 
             def initialize(self, rng_key, inputs):
-                a = inputs['a'].reshape(-1)
-                b = inputs['b'].reshape(-1)
+                a = inputs["a"].reshape(-1)
+                b = inputs["b"].reshape(-1)
                 weight = self.linear.init(rng_key, a * b)
-                weight['linear']['w'] = weight['linear']['w'].at[:].set(
-                                                np.array([[1], [1], [1], [1]]))
+                weight["linear"]["w"] = (
+                    weight["linear"]["w"].at[:].set(np.array([[1], [1], [1], [1]]))
+                )
                 return weight
 
             def forward(self, params, inputs):
-                a = inputs['a'].reshape(-1)
-                b = inputs['b'].reshape(-1)
+                a = inputs["a"].reshape(-1)
+                b = inputs["b"].reshape(-1)
                 c_pred = self.linear.apply(params, a * b)
                 d_pred = c_pred * 2
-                return {'c': c_pred, 'd': d_pred}
+                return {"c": c_pred, "d": d_pred}
 
         model = ExampleModel(is_training=False)
 
@@ -269,7 +264,6 @@ class TestJaxPredict(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch1 = pipeline.request_batch(request)
             batch2 = pipeline.request_batch(request)
 

@@ -30,16 +30,17 @@ class ArrayTestSource(BatchProvider):
         spec = default_spec
         self.key = key
         self.array = Array(
-            np.zeros(spec.roi.shape / spec.voxel_size, dtype=spec.dtype,),
+            np.zeros(
+                spec.roi.shape / spec.voxel_size,
+                dtype=spec.dtype,
+            ),
             spec=spec,
         )
 
     def setup(self):
-
         self.provides(self.key, self.array.spec)
 
     def provide(self, request):
-
         batch = Batch()
         roi = request[self.key].roi
         batch[self.key] = self.array.crop(roi)
@@ -121,14 +122,16 @@ class GraphTestSource(BatchProvider):
         default_spec.update_with(spec)
         spec = default_spec
         self.key = key
-        self.graph = Graph([], [], spec=spec,)
+        self.graph = Graph(
+            [],
+            [],
+            spec=spec,
+        )
 
     def setup(self):
-
         self.provides(self.key, self.graph.spec)
 
     def provide(self, request):
-
         batch = Batch()
         roi = request[self.key].roi
         batch[self.key] = self.graph.crop(roi)

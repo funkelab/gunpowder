@@ -59,7 +59,6 @@ class TestShiftAugment2D(unittest.TestCase):
     ##################
 
     def test_prepare1(self):
-
         key = ArrayKey("TEST_ARRAY")
         spec = ArraySpec(voxel_size=Coordinate((1, 1)), interpolatable=True)
 
@@ -78,7 +77,6 @@ class TestShiftAugment2D(unittest.TestCase):
             self.assertTrue(shift_node.shift_sigmas == tuple([0.0, 1.0]))
 
     def test_prepare2(self):
-
         key = ArrayKey("TEST_ARRAY")
         spec = ArraySpec(voxel_size=Coordinate((1, 1)), interpolatable=True)
 
@@ -98,7 +96,6 @@ class TestShiftAugment2D(unittest.TestCase):
             self.assertTrue(shift_node.shift_sigmas == tuple([0.0, 1.0]))
 
     def test_pipeline1(self):
-
         key = ArrayKey("TEST_ARRAY")
         spec = ArraySpec(voxel_size=Coordinate((2, 1)), interpolatable=True)
 
@@ -116,7 +113,6 @@ class TestShiftAugment2D(unittest.TestCase):
                 b.request_batch(request)
 
     def test_pipeline2(self):
-
         key = ArrayKey("TEST_ARRAY")
         spec = ArraySpec(voxel_size=Coordinate((3, 1)), interpolatable=True)
 
@@ -281,7 +277,7 @@ class TestShiftAugment2D(unittest.TestCase):
     def points_equal(vertices1, vertices2):
         vs1 = sorted(list(vertices1), key=lambda v: tuple(v.location))
         vs2 = sorted(list(vertices2), key=lambda v: tuple(v.location))
-    
+
         for v1, v2 in zip(vs1, vs2):
             if not v1.id == v2.id:
                 print(f"{vs1}, {vs2}")
@@ -347,7 +343,9 @@ class TestShiftAugment2D(unittest.TestCase):
         shift_array = np.array([[0, 1], [0, -1], [0, 0], [0, 0], [0, 1]], dtype=int)
         lcm_voxel_size = Coordinate((1, 1))
 
-        shifted_points = Graph([Node(id=1, location=np.array([0, 2]))], [], GraphSpec(request_roi))
+        shifted_points = Graph(
+            [Node(id=1, location=np.array([0, 2]))], [], GraphSpec(request_roi)
+        )
         result = ShiftAugment.shift_points(
             points,
             request_roi,

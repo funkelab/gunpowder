@@ -20,11 +20,12 @@ import numpy as np
 import networkx as nx
 
 
-class DummyDaisyGraphProvider():
-    ''' Dummy graph provider mimicing daisy.SharedGraphProvider.
+class DummyDaisyGraphProvider:
+    """Dummy graph provider mimicing daisy.SharedGraphProvider.
     Must have directed attribute, __getitem__(roi) that returns networkx
     graph, and position_attribute.
-    '''
+    """
+
     def __init__(self, nodes, edges, directed=False):
         self.nodes = nodes
         self.edges = edges
@@ -48,12 +49,10 @@ class DummyDaisyGraphProvider():
 class TestIterateLocation(ProviderTest):
     @property
     def edges(self):
-
         return [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
 
     @property
     def nodes(self):
-
         return [
             Node(0, location=np.array([0, 0, 0], dtype=self.spec.dtype)),
             Node(1, location=np.array([1, 1, 1], dtype=self.spec.dtype)),
@@ -64,31 +63,26 @@ class TestIterateLocation(ProviderTest):
 
     @property
     def spec(self):
-
         return GraphSpec(
-            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])),
-            directed=True
+            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
         )
 
     def test_output(self):
-
         GraphKey("TEST_GRAPH")
         ArrayKey("NODE_ID")
 
-        dummy_provider = DummyDaisyGraphProvider(
-                self.nodes, self.edges, directed=True)
-        graph_source = GraphSource(dummy_provider,
-                                   GraphKeys.TEST_GRAPH,
-                                   self.spec)
+        dummy_provider = DummyDaisyGraphProvider(self.nodes, self.edges, directed=True)
+        graph_source = GraphSource(dummy_provider, GraphKeys.TEST_GRAPH, self.spec)
         iterate_locations = IterateLocations(
-                GraphKeys.TEST_GRAPH,
-                node_id=ArrayKeys.NODE_ID)
+            GraphKeys.TEST_GRAPH, node_id=ArrayKeys.NODE_ID
+        )
         pipeline = graph_source + iterate_locations
         request = BatchRequest(
-                    {GraphKeys.TEST_GRAPH: GraphSpec(roi=Roi((0, 0, 0),
-                                                             (1, 1, 1))),
-                     ArrayKeys.NODE_ID: ArraySpec(nonspatial=True)}
-                )
+            {
+                GraphKeys.TEST_GRAPH: GraphSpec(roi=Roi((0, 0, 0), (1, 1, 1))),
+                ArrayKeys.NODE_ID: ArraySpec(nonspatial=True),
+            }
+        )
         node_ids = []
         seen_vertices = []
         expected_vertices = self.nodes
@@ -106,4 +100,4 @@ class TestIterateLocation(ProviderTest):
             )
             for vertex in seen_vertices:
                 # locations are shifted to lie in roi (so, (0, 0, 0))
-                assert all(np.isclose(np.array([0., 0., 0.]), vertex.location))
+                assert all(np.isclose(np.array([0.0, 0.0, 0.0]), vertex.location))

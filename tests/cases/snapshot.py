@@ -47,9 +47,7 @@ class ExampleSource(BatchProvider):
                 outputs[key] = Graph([], [], spec)
             if isinstance(key, ArrayKey):
                 spec.voxel_size = self.spec[key].voxel_size
-                outputs[key] = Array(
-                    np.zeros(spec.roi.shape, dtype=spec.dtype), spec
-                )
+                outputs[key] = Array(np.zeros(spec.roi.shape, dtype=spec.dtype), spec)
         self.n += 1
         return outputs
 
@@ -62,7 +60,6 @@ class TestSnapshot(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_3d(self):
-
         test_graph = GraphKey("TEST_GRAPH")
         graph_spec = GraphSpec(roi=Roi((0, 0, 0), (5, 5, 5)))
         test_array = ArrayKey("TEST_ARRAY")
@@ -94,7 +91,6 @@ class TestSnapshot(unittest.TestCase):
         snapshot_file_path = Path(self.test_dir, "snapshot.hdf")
 
         with build(pipeline):
-
             request = BatchRequest()
             roi = Roi((0, 0, 0), (5, 5, 5))
 
@@ -104,7 +100,7 @@ class TestSnapshot(unittest.TestCase):
             pipeline.request_batch(request)
 
             assert snapshot_file_path.exists()
-            f = h5py.File(snapshot_file_path, 'r+')
+            f = h5py.File(snapshot_file_path, "r+")
             assert f["volumes/array"] is not None
             assert f["graphs/graph-ids"] is not None
 
@@ -113,4 +109,3 @@ class TestSnapshot(unittest.TestCase):
             pipeline.request_batch(request)
 
             assert not snapshot_file_path.exists()
-

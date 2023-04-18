@@ -35,7 +35,6 @@ class ExampleTorchTrain2DSource(BatchProvider):
         self.provides(ArrayKeys.A, spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         spec = self.spec[ArrayKeys.A]
@@ -50,7 +49,6 @@ class ExampleTorchTrain2DSource(BatchProvider):
 
 class ExampleTorchTrainSource(BatchProvider):
     def setup(self):
-
         spec = ArraySpec(
             roi=Roi((0, 0), (2, 2)),
             dtype=np.float32,
@@ -64,7 +62,6 @@ class ExampleTorchTrainSource(BatchProvider):
         self.provides(ArrayKeys.C, spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         spec = self.spec[ArrayKeys.A]
@@ -91,7 +88,6 @@ class ExampleTorchTrainSource(BatchProvider):
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 class TestTorchTrain(ProviderTest):
     def test_output(self):
-
         logging.getLogger("gunpowder.torch.nodes.train").setLevel(logging.INFO)
 
         checkpoint_basename = self.path_to("model")
@@ -147,7 +143,6 @@ class TestTorchTrain(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch = pipeline.request_batch(request)
 
             for i in range(200 - 1):
@@ -158,7 +153,6 @@ class TestTorchTrain(ProviderTest):
 
         # resume training
         with build(pipeline):
-
             for i in range(100):
                 loss1 = batch.loss
                 batch = pipeline.request_batch(request)
@@ -218,7 +212,6 @@ class TestTorchPredict(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch1 = pipeline.request_batch(request)
             batch2 = pipeline.request_batch(request)
 
@@ -226,7 +219,9 @@ class TestTorchPredict(ProviderTest):
             assert np.isclose(batch1[c_pred].data, 1 + 4 + 9)
             assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 + 9))
 
+
 if not isinstance(torch, NoSuchModule):
+
     class ExampleModel(torch.nn.Module):
         def __init__(self):
             super(ExampleModel, self).__init__()
@@ -243,7 +238,6 @@ if not isinstance(torch, NoSuchModule):
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 class TestTorchPredictMultiprocessing(ProviderTest):
     def test_scan(self):
-
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
         a = ArrayKey("A")
@@ -273,12 +267,10 @@ class TestTorchPredictMultiprocessing(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch = pipeline.request_batch(request)
             assert pred in batch
 
     def test_precache(self):
-
         logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
         a = ArrayKey("A")
@@ -308,6 +300,5 @@ class TestTorchPredictMultiprocessing(ProviderTest):
 
         # train for a couple of iterations
         with build(pipeline):
-
             batch = pipeline.request_batch(request)
             assert pred in batch

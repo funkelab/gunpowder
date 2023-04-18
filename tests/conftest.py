@@ -2,6 +2,7 @@ import pytest
 
 import multiprocessing as mp
 
+
 # cannot parametrize unittest.TestCase. We should test both
 # fork and spawn but I'm not sure how to.
 # @pytest.fixture(params=["fork", "spawn"], autouse=True)

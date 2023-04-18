@@ -1,4 +1,3 @@
-
 from gunpowder import *
 import shutil
 import os
@@ -9,23 +8,24 @@ from datetime import datetime
 from tempfile import mkdtemp
 import numpy as np
 
+
 class ExampleSource(BatchProvider):
-
     def setup(self):
-
         self.provides(
             ArrayKeys.RAW,
             ArraySpec(
                 roi=Roi((0, 0, 0), (100, 100, 100)),
                 voxel_size=Coordinate((1, 1, 1)),
                 dtype=np.uint8,
-                interpolatable=True))
+                interpolatable=True,
+            ),
+        )
 
     def provide(self, request):
-
         data = np.zeros(
-            request[ArrayKeys.RAW].roi.shape/self.spec[ArrayKeys.RAW].voxel_size,
-            dtype=np.uint8)
+            request[ArrayKeys.RAW].roi.shape / self.spec[ArrayKeys.RAW].voxel_size,
+            dtype=np.uint8,
+        )
         spec = copy.deepcopy(self.spec[ArrayKeys.RAW])
         spec.roi = request[ArrayKeys.RAW].roi
 
@@ -57,7 +57,8 @@ class TestWithTempFiles(unittest.TestCase):
     Subclasses implementing their own setUp, setUpClass, tearDown and tearDownClass should explicitly call the
     ``super`` method in the method definition.
     """
-    _output_root = ''
+
+    _output_root = ""
     _cleanup = True
 
     def path_to(self, *args):
@@ -70,7 +71,9 @@ class TestWithTempFiles(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         timestamp = datetime.now().isoformat()
-        cls._output_root = mkdtemp(prefix='gunpowder_{}_{}_'.format(cls.__name__, timestamp))
+        cls._output_root = mkdtemp(
+            prefix="gunpowder_{}_{}_".format(cls.__name__, timestamp)
+        )
 
     def setUp(self):
         os.mkdir(self.path_to())
@@ -81,9 +84,9 @@ class TestWithTempFiles(unittest.TestCase):
             if self._cleanup:
                 shutil.rmtree(path)
             else:
-                warn('Directory {} was not deleted'.format(path))
+                warn("Directory {} was not deleted".format(path))
         except OSError as e:
-            if '[Errno 2]' in str(e):
+            if "[Errno 2]" in str(e):
                 pass
             else:
                 raise
@@ -94,31 +97,35 @@ class TestWithTempFiles(unittest.TestCase):
             if cls._cleanup:
                 os.rmdir(cls.path_to_cls())
             else:
-                warn('Directory {} was not deleted'.format(cls.path_to_cls()))
+                warn("Directory {} was not deleted".format(cls.path_to_cls()))
         except OSError as e:
-            if '[Errno 39]' in str(e):
-                warn('Directory {} could not be deleted as it still had data in it'.format(cls.path_to_cls()))
-            elif '[Errno 2]' in str(e):
+            if "[Errno 39]" in str(e):
+                warn(
+                    "Directory {} could not be deleted as it still had data in it".format(
+                        cls.path_to_cls()
+                    )
+                )
+            elif "[Errno 2]" in str(e):
                 pass
             else:
                 raise
 
 
 class ProviderTest(TestWithTempFiles):
-
     def setUp(self):
         super(ProviderTest, self).setUp()
         # create some common array keys to be used by concrete tests
-        ArrayKey('RAW')
-        ArrayKey('GT_LABELS')
-        ArrayKey('GT_AFFINITIES')
-        ArrayKey('GT_AFFINITIES_MASK')
-        ArrayKey('GT_MASK')
-        ArrayKey('GT_IGNORE')
-        ArrayKey('LOSS_SCALE')
-        GraphKey('GT_GRAPH')
+        ArrayKey("RAW")
+        ArrayKey("GT_LABELS")
+        ArrayKey("GT_AFFINITIES")
+        ArrayKey("GT_AFFINITIES_MASK")
+        ArrayKey("GT_MASK")
+        ArrayKey("GT_IGNORE")
+        ArrayKey("LOSS_SCALE")
+        GraphKey("GT_GRAPH")
 
         self.test_source = ExampleSource()
         self.test_request = BatchRequest()
         self.test_request[ArrayKeys.RAW] = ArraySpec(
-            roi=Roi((20, 20, 20),(10, 10, 10)))
+            roi=Roi((20, 20, 20), (10, 10, 10))
+        )

@@ -26,7 +26,6 @@ class GraphTestSource(BatchProvider):
         self.voxel_size = voxel_size
 
     def setup(self):
-
         self.provides(GraphKeys.PRESYN, GraphSpec(roi=Roi((0, 0, 0), (100, 100, 100))))
 
     def provide(self, request):
@@ -42,7 +41,6 @@ class ArrayTestSoure(BatchProvider):
         self.voxel_size = voxel_size
 
     def setup(self):
-
         self.provides(
             ArrayKeys.GT_LABELS,
             ArraySpec(roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=self.voxel_size),
@@ -50,9 +48,7 @@ class ArrayTestSoure(BatchProvider):
 
     def provide(self, request):
         roi_array = request[ArrayKeys.GT_LABELS].roi
-        data = np.zeros(
-            roi_array.shape / self.spec[ArrayKeys.GT_LABELS].voxel_size
-        )
+        data = np.zeros(roi_array.shape / self.spec[ArrayKeys.GT_LABELS].voxel_size)
         batch = Batch()
         spec = self.spec[ArrayKeys.GT_LABELS].copy()
         spec.roi = roi_array
@@ -91,4 +87,3 @@ class TestMergeProvider(unittest.TestCase):
         with self.assertRaises(PipelineSetupError):
             with build(pipeline_fail):
                 pass
-

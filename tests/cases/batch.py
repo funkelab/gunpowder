@@ -14,9 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 def test_get_total_roi_nonspatial_array():
-
-    raw = ArrayKey('RAW')
-    nonspatial = ArrayKey('NONSPATIAL')
+    raw = ArrayKey("RAW")
+    nonspatial = ArrayKey("NONSPATIAL")
 
     voxel_size = Coordinate((1, 2))
     roi = Roi((100, 200), (20, 20))
@@ -25,13 +24,7 @@ def test_get_total_roi_nonspatial_array():
     nonspatial_spec = ArraySpec(nonspatial=True)
 
     batch = Batch()
-    batch[raw] = Array(
-        data=np.zeros((20, 10)),
-        spec=raw_spec
-    )
-    batch[nonspatial] = Array(
-        data=np.zeros((2, 3)),
-        spec=nonspatial_spec
-    )
+    batch[raw] = Array(data=np.zeros((20, 10)), spec=raw_spec)
+    batch[nonspatial] = Array(data=np.zeros((2, 3)), spec=nonspatial_spec)
 
     assert batch.get_total_roi() == roi

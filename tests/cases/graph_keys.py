@@ -5,7 +5,6 @@ import unittest
 
 class TestGraphKeys(unittest.TestCase):
     def test_register(self):
-
         GraphKey("TEST_GRAPH")
 
         self.assertTrue(GraphKeys.TEST_GRAPH)

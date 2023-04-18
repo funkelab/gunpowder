@@ -20,7 +20,6 @@ import numpy as np
 
 class ExampleGraphSource(BatchProvider):
     def __init__(self):
-
         self.dtype = float
         self.__vertices = [
             Node(id=1, location=np.array([1, 1, 1], dtype=self.dtype)),
@@ -34,11 +33,9 @@ class ExampleGraphSource(BatchProvider):
         self.graph = Graph(self.__vertices, self.__edges, self.__spec)
 
     def setup(self):
-
         self.provides(GraphKeys.TEST_GRAPH, self.__spec)
 
     def provide(self, request):
-
         batch = Batch()
 
         roi = request[GraphKeys.TEST_GRAPH].roi
@@ -67,12 +64,10 @@ class GrowFilter(BatchFilter):
 class TestGraphs(ProviderTest):
     @property
     def edges(self):
-
         return [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
 
     @property
     def nodes(self):
-
         return [
             Node(0, location=np.array([0, 0, 0], dtype=self.spec.dtype)),
             Node(1, location=np.array([1, 1, 1], dtype=self.spec.dtype)),
@@ -83,19 +78,16 @@ class TestGraphs(ProviderTest):
 
     @property
     def spec(self):
-
         return GraphSpec(
             roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
         )
 
     def test_output(self):
-
         GraphKey("TEST_GRAPH")
 
         pipeline = ExampleGraphSource() + GrowFilter()
 
         with build(pipeline):
-
             batch = pipeline.request_batch(
                 BatchRequest(
                     {GraphKeys.TEST_GRAPH: GraphSpec(roi=Roi((0, 0, 0), (50, 50, 50)))}
@@ -186,7 +178,6 @@ class TestGraphs(ProviderTest):
 
 
 def test_nodes():
-
     initial_locations = {
         1: np.array([1, 1, 1], dtype=np.float32),
         2: np.array([500, 500, 500], dtype=np.float32),

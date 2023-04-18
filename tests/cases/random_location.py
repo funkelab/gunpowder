@@ -35,7 +35,6 @@ class ExampleSourceRandomLocation(BatchProvider):
         self.provides(self.array, ArraySpec(roi=self.roi, voxel_size=self.voxel_size))
 
     def provide(self, request):
-
         batch = Batch()
 
         spec = request[self.array].copy()
@@ -77,7 +76,6 @@ def test_output():
     pipeline_no_random = (source_a, source_b) + MergeProvider()
 
     with build(pipeline), build(pipeline_no_random):
-
         sums = set()
         for i in range(10):
             batch = pipeline.request_batch(
@@ -132,7 +130,6 @@ def test_output():
     pipeline = (source_a, source_b) + MergeProvider() + CustomRandomLocation(a)
 
     with build(pipeline):
-
         for i in range(10):
             batch = pipeline.request_batch(
                 BatchRequest(

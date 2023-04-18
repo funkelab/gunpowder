@@ -9,7 +9,6 @@ import logging
 
 class ExampleSource(BatchProvider):
     def setup(self):
-
         self.provides(
             ArrayKeys.GT_LABELS,
             ArraySpec(
@@ -28,7 +27,6 @@ class ExampleSource(BatchProvider):
         )
 
     def provide(self, request):
-
         batch = Batch()
 
         roi = request[ArrayKeys.GT_LABELS].roi
@@ -70,9 +68,7 @@ def test_output():
     )
 
     with build(pipeline):
-
         for i in range(10):
-
             request = BatchRequest()
             request.add(labels_key, (100, 16, 64))
             request.add(mask_key, (100, 16, 64))
@@ -94,12 +90,10 @@ def test_output():
             assert (len(neighborhood),) + labels.data.shape == affs.data.shape
 
             voxel_roi = Roi((0, 0, 0), labels.data.shape)
-            for (z, y, x) in product(*[range(d) for d in labels.data.shape]):
-
+            for z, y, x in product(*[range(d) for d in labels.data.shape]):
                 p = Coordinate((z, y, x))
 
                 for n in range(len(neighborhood)):
-
                     pn = p + neighborhood[n]
                     if not voxel_roi.contains(pn):
                         continue

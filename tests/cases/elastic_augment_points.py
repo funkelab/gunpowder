@@ -1,4 +1,3 @@
-
 import unittest
 from gunpowder import (
     BatchProvider,
@@ -31,7 +30,6 @@ import unittest
 
 class PointTestSource3D(BatchProvider):
     def setup(self):
-
         self.points = [
             Node(0, np.array([0, 0, 0])),
             Node(1, np.array([0, 10, 0])),
@@ -43,9 +41,8 @@ class PointTestSource3D(BatchProvider):
 
         self.provides(
             GraphKeys.TEST_POINTS,
-            GraphSpec(
-                roi=Roi((-100, -100, -100), (200, 200, 200))
-            ))
+            GraphSpec(roi=Roi((-100, -100, -100), (200, 200, 200))),
+        )
 
         self.provides(
             ArrayKeys.TEST_LABELS,
@@ -57,7 +54,6 @@ class PointTestSource3D(BatchProvider):
         )
 
     def point_to_voxel(self, array_roi, location):
-
         # location is in world units, get it into voxels
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
@@ -67,7 +63,6 @@ class PointTestSource3D(BatchProvider):
         return tuple(slice(int(l - 2), int(l + 3)) for l in location)
 
     def provide(self, request):
-
         batch = Batch()
 
         roi_points = request[GraphKeys.TEST_POINTS].roi
@@ -90,16 +85,14 @@ class PointTestSource3D(BatchProvider):
             if roi_points.contains(node.location):
                 points.append(node)
         batch.graphs[GraphKeys.TEST_POINTS] = Graph(
-            points,
-            [],
-            GraphSpec(roi=roi_points))
+            points, [], GraphSpec(roi=roi_points)
+        )
 
         return batch
 
 
 class DensePointTestSource3D(BatchProvider):
     def setup(self):
-
         self.points = [
             Node(i, np.array([(i // 100) % 10 * 4, (i // 10) % 10 * 4, i % 10 * 4]))
             for i in range(1000)
@@ -120,7 +113,6 @@ class DensePointTestSource3D(BatchProvider):
         )
 
     def point_to_voxel(self, array_roi, location):
-
         # location is in world units, get it into voxels
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
@@ -130,7 +122,6 @@ class DensePointTestSource3D(BatchProvider):
         return tuple(slice(int(l - 2), int(l + 3)) for l in location)
 
     def provide(self, request):
-
         batch = Batch()
 
         roi_points = request[GraphKeys.TEST_POINTS].roi
@@ -152,16 +143,13 @@ class DensePointTestSource3D(BatchProvider):
         for point in self.points:
             if roi_points.contains(point.location):
                 points.append(point)
-        batch[GraphKeys.TEST_POINTS] = Graph(
-            points, [], GraphSpec(roi=roi_points)
-        )
+        batch[GraphKeys.TEST_POINTS] = Graph(points, [], GraphSpec(roi=roi_points))
 
         return batch
 
 
 class TestElasticAugment(ProviderTest):
     def test_3d_basics(self):
-
         test_labels = ArrayKey("TEST_LABELS")
         test_points = GraphKey("TEST_POINTS")
         test_raster = ArrayKey("TEST_RASTER")
@@ -188,9 +176,7 @@ class TestElasticAugment(ProviderTest):
         )
 
         for _ in range(5):
-
             with build(pipeline):
-
                 request_roi = Roi((-20, -20, -20), (40, 40, 40))
 
                 request = BatchRequest()
@@ -218,46 +204,38 @@ class TestElasticAugment(ProviderTest):
                         self.assertEqual(labels.data[loc], point.id)
 
     def test_random_seed(self):
-
-        test_labels = ArrayKey('TEST_LABELS')
-        test_points = GraphKey('TEST_POINTS')
-        test_raster = ArrayKey('TEST_RASTER')
+        test_labels = ArrayKey("TEST_LABELS")
+        test_points = GraphKey("TEST_POINTS")
+        test_raster = ArrayKey("TEST_RASTER")
 
         pipeline = (
-
-            PointTestSource3D() +
-            ElasticAugment(
+            PointTestSource3D()
+            + ElasticAugment(
                 [10, 10, 10],
                 [0.1, 0.1, 0.1],
                 # [0, 0, 0], # no jitter
-                [0, 2.0*math.pi]) + # rotate randomly
-                # [math.pi/4, math.pi/4]) + # rotate by 45 deg
-                # [0, 0]) + # no rotation
+                [0, 2.0 * math.pi],
+            )
+            +  # rotate randomly
+            # [math.pi/4, math.pi/4]) + # rotate by 45 deg
+            # [0, 0]) + # no rotation
             RasterizeGraph(
                 test_points,
                 test_raster,
-                settings=RasterizationSettings(
-                    radius=2,
-                    mode='peak')) +
-            Snapshot(
-                {
-                    test_labels: 'volumes/labels',
-                    test_raster: 'volumes/raster'
-                },
+                settings=RasterizationSettings(radius=2, mode="peak"),
+            )
+            + Snapshot(
+                {test_labels: "volumes/labels", test_raster: "volumes/raster"},
                 dataset_dtypes={test_raster: np.float32},
                 output_dir=self.path_to(),
-                output_filename='elastic_augment_test{id}-{iteration}.hdf'
+                output_filename="elastic_augment_test{id}-{iteration}.hdf",
             )
         )
 
         batch_points = []
         for _ in range(5):
-
             with build(pipeline):
-
-                request_roi = Roi(
-                    (-20, -20, -20),
-                    (40, 40, 40))
+                request_roi = Roi((-20, -20, -20), (40, 40, 40))
 
                 request = BatchRequest(random_seed=10)
                 request[test_labels] = ArraySpec(roi=request_roi)
@@ -267,10 +245,7 @@ class TestElasticAugment(ProviderTest):
                 labels = batch[test_labels]
                 points = batch[test_points]
                 batch_points.append(
-                    tuple(
-                        (node.id, tuple(node.location))
-                        for node in points.nodes
-                    )
+                    tuple((node.id, tuple(node.location)) for node in points.nodes)
                 )
 
                 # the point at (0, 0, 0) should not have moved
@@ -278,13 +253,13 @@ class TestElasticAugment(ProviderTest):
                 self.assertTrue(0 in data)
 
                 labels_data_roi = (
-                    labels.spec.roi -
-                    labels.spec.roi.begin)/labels.spec.voxel_size
+                    labels.spec.roi - labels.spec.roi.begin
+                ) / labels.spec.voxel_size
 
                 # points should have moved together with the voxels
                 for node in points.nodes:
                     loc = node.location - labels.spec.roi.begin
-                    loc = loc/labels.spec.voxel_size
+                    loc = loc / labels.spec.voxel_size
                     loc = Coordinate(int(round(x)) for x in loc)
                     if labels_data_roi.contains(loc):
                         self.assertEqual(labels.data[loc], node.id)
@@ -328,7 +303,6 @@ class TestElasticAugment(ProviderTest):
             # seed chosen specifically to make this test fail
             seed = i + 15
             with build(fast_pipeline):
-
                 request_roi = Roi((0, 0, 0), (40, 40, 40))
 
                 request = BatchRequest(random_seed=seed)
@@ -342,7 +316,6 @@ class TestElasticAugment(ProviderTest):
                 points_fast = {node.id: node for node in batch[test_points].nodes}
 
             with build(reference_pipeline):
-
                 request_roi = Roi((0, 0, 0), (40, 40, 40))
 
                 request = BatchRequest(random_seed=seed)
@@ -376,7 +349,6 @@ class TestElasticAugment(ProviderTest):
             t_fast, t_ref = [np.mean(x) for x in zip(*timings)]
             self.assertLess(t_fast, t_ref)
             self.assertEqual(missing, 0)
-
 
     def test_fast_transform_no_recompute(self):
         test_labels = ArrayKey("TEST_LABELS")
@@ -415,7 +387,6 @@ class TestElasticAugment(ProviderTest):
             # seed chosen specifically to make this test fail
             seed = i + 15
             with build(fast_pipeline):
-
                 request_roi = Roi((0, 0, 0), (40, 40, 40))
 
                 request = BatchRequest(random_seed=seed)
@@ -429,7 +400,6 @@ class TestElasticAugment(ProviderTest):
                 points_fast = {node.id: node for node in batch[test_points].nodes}
 
             with build(reference_pipeline):
-
                 request_roi = Roi((0, 0, 0), (40, 40, 40))
 
                 request = BatchRequest(random_seed=seed)

@@ -25,7 +25,6 @@ import math
 
 class GraphTestSource3D(BatchProvider):
     def setup(self):
-
         self.nodes = [
             Node(id=0, location=np.array([0, 0, 0])),
             Node(id=1, location=np.array([0, 10, 0])),
@@ -50,7 +49,6 @@ class GraphTestSource3D(BatchProvider):
         )
 
     def node_to_voxel(self, array_roi, location):
-
         # location is in world units, get it into voxels
         location = location / self.spec[ArrayKeys.TEST_LABELS].voxel_size
 
@@ -60,7 +58,6 @@ class GraphTestSource3D(BatchProvider):
         return tuple(slice(int(l - 2), int(l + 3)) for l in location)
 
     def provide(self, request):
-
         batch = Batch()
 
         roi_graph = request[GraphKeys.TEST_GRAPH].roi
@@ -91,7 +88,6 @@ class GraphTestSource3D(BatchProvider):
 
 class TestElasticAugment(ProviderTest):
     def test_3d_basics(self):
-
         test_labels = ArrayKey("TEST_LABELS")
         test_graph = GraphKey("TEST_GRAPH")
         test_raster = ArrayKey("TEST_RASTER")
@@ -121,9 +117,7 @@ class TestElasticAugment(ProviderTest):
         )
 
         for _ in range(5):
-
             with build(pipeline):
-
                 request_roi = Roi((-20, -20, -20), (40, 40, 40))
 
                 request = BatchRequest()
@@ -140,9 +134,7 @@ class TestElasticAugment(ProviderTest):
                 # self.assertIn(
                 #     Node(id=0, location=np.array([0, 0, 0])), list(graph.nodes)
                 # )
-                self.assertIn(
-                    0, [v.id for v in graph.nodes]
-                )
+                self.assertIn(0, [v.id for v in graph.nodes])
 
                 labels_data_roi = (
                     labels.spec.roi - labels.spec.roi.begin

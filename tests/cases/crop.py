@@ -8,7 +8,7 @@ from gunpowder import (
     GraphKeys,
     GraphSpec,
     Crop,
-    build
+    build,
 )
 import logging
 
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 class ExampleSourceCrop(BatchProvider):
     def setup(self):
-
         self.provides(
             ArrayKeys.RAW,
             ArraySpec(roi=Roi((200, 20, 20), (1800, 180, 180)), voxel_size=(20, 2, 2)),
@@ -33,7 +32,6 @@ class ExampleSourceCrop(BatchProvider):
 
 class TestCrop(ProviderTest):
     def test_output(self):
-
         cropped_roi_raw = Roi((400, 40, 40), (1000, 100, 100))
         cropped_roi_presyn = Roi((800, 80, 80), (800, 80, 80))
 
@@ -46,7 +44,6 @@ class TestCrop(ProviderTest):
         )
 
         with build(pipeline):
-
             self.assertTrue(pipeline.spec[ArrayKeys.RAW].roi == cropped_roi_raw)
             self.assertTrue(pipeline.spec[GraphKeys.PRESYN].roi == cropped_roi_presyn)
 
@@ -58,7 +55,6 @@ class TestCrop(ProviderTest):
         expected_roi_raw = Roi((650, 20, 20), (900, 180, 180))
 
         with build(pipeline):
-
             logger.info(pipeline.spec[ArrayKeys.RAW].roi)
             logger.info(expected_roi_raw)
             self.assertTrue(pipeline.spec[ArrayKeys.RAW].roi == expected_roi_raw)

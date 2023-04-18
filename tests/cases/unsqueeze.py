@@ -14,21 +14,17 @@ class ExampleSourceUnsqueeze(gp.BatchProvider):
         self.labels = gp.ArrayKey("LABELS")
 
         self.array_spec_raw = gp.ArraySpec(
-            roi=self.roi,
-            voxel_size=self.voxel_size,
-            dtype='uint8',
-            interpolatable=True
+            roi=self.roi, voxel_size=self.voxel_size, dtype="uint8", interpolatable=True
         )
 
         self.array_spec_labels = gp.ArraySpec(
             roi=self.roi,
             voxel_size=self.voxel_size,
-            dtype='uint64',
-            interpolatable=False
+            dtype="uint64",
+            interpolatable=False,
         )
 
     def setup(self):
-
         self.provides(self.raw, self.array_spec_raw)
         self.provides(self.labels, self.array_spec_labels)
 
@@ -42,13 +38,7 @@ class ExampleSourceUnsqueeze(gp.BatchProvider):
         raw_shape = request[self.raw].roi.shape / self.voxel_size
 
         outputs[self.raw] = gp.Array(
-            np.random.randint(
-                0,
-                256,
-                raw_shape,
-                dtype=raw_spec.dtype
-            ),
-            raw_spec
+            np.random.randint(0, 256, raw_shape, dtype=raw_spec.dtype), raw_spec
         )
 
         # LABELS
@@ -57,10 +47,7 @@ class ExampleSourceUnsqueeze(gp.BatchProvider):
 
         labels_shape = request[self.labels].roi.shape / self.voxel_size
 
-        labels = np.ones(
-            labels_shape,
-            dtype=labels_spec.dtype
-        )
+        labels = np.ones(labels_shape, dtype=labels_spec.dtype)
         outputs[self.labels] = gp.Array(labels, labels_spec)
 
         return outputs
@@ -102,10 +89,7 @@ class TestUnsqueeze(ProviderTest):
         request.add(raw, input_size)
         request.add(labels, input_size)
 
-        pipeline = (
-            ExampleSourceUnsqueeze(voxel_size)
-            + gp.Unsqueeze([raw], axis=1)
-        )
+        pipeline = ExampleSourceUnsqueeze(voxel_size) + gp.Unsqueeze([raw], axis=1)
 
         with self.assertRaises(gp.PipelineRequestError):
             with gp.build(pipeline) as p:
