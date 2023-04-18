@@ -116,6 +116,11 @@ CsvPointsSource
 ^^^^^^^^^^^^^^^
   .. autoclass:: CsvPointsSource
 
+GraphSource
+^^^^^^^^^^^
+
+  .. autoclass:: GraphSource
+
 .. _sec_api_augmentation_nodes:
 
 Augmentation Nodes
@@ -165,6 +170,11 @@ Reject
 SpecifiedLocation
 ^^^^^^^^^^^^^^^^^
   .. autoclass:: SpecifiedLocation
+
+IterateLocations
+^^^^^^^^^^^^^^^^
+
+  .. autoclass:: IterateLocations
 
 .. _sec_api_array_manipulation_nodes:
 
