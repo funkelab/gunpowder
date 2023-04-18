@@ -79,7 +79,7 @@ class BatchRequest(ProviderSpec):
 
     @property
     def random_seed(self):
-        return self._random_seed % (2 ** 32)
+        return self._random_seed % (2**32)
 
     def _update_random_seed(self):
         self._random_seed = hash((self._random_seed + 1) ** 2)

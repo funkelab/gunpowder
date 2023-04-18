@@ -68,7 +68,7 @@ class Snapshot(BatchFilter):
         store_value_range (``bool``):
 
             If set to ``True``, store range of values in data set attributes.
-        """
+    """
 
     def __init__(
         self,
@@ -119,10 +119,10 @@ class Snapshot(BatchFilter):
         return True
 
     def setup(self):
-
         for key, _ in self.additional_request.items():
             assert key in self.dataset_names, (
-                "%s requested but not in dataset_names"% key)
+                "%s requested but not in dataset_names" % key
+            )
 
         for array_key in self.additional_request.array_specs.keys():
             spec = self.spec[array_key]
@@ -132,7 +132,6 @@ class Snapshot(BatchFilter):
             self.updates(graph_key, spec)
 
     def prepare(self, request):
-
         deps = BatchRequest()
         for key, spec in request.items():
             if key in self.dataset_names:
@@ -150,16 +149,15 @@ class Snapshot(BatchFilter):
                     deps[graph_key] = spec
 
             for key in self.dataset_names.keys():
-                assert key in deps, (
-                    "%s wanted for %s, but not in request." %
-                    (key, self.name()))
+                assert key in deps, "%s wanted for %s, but not in request." % (
+                    key,
+                    self.name(),
+                )
 
         return deps
 
     def process(self, batch, request):
-
         if self.record_snapshot and self.write_if(batch):
-
             try:
                 os.makedirs(self.output_dir)
             except:
@@ -181,8 +179,7 @@ class Snapshot(BatchFilter):
                 open_func = h5py.File
 
             with open_func(snapshot_name, self.mode) as f:
-                for (array_key, array) in batch.arrays.items():
-
+                for array_key, array in batch.arrays.items():
                     if array_key not in self.dataset_names:
                         continue
 
@@ -218,7 +215,7 @@ class Snapshot(BatchFilter):
                     for attribute_name, attribute in array.attrs.items():
                         dataset.attrs[attribute_name] = attribute
 
-                for (graph_key, graph) in batch.graphs.items():
+                for graph_key, graph in batch.graphs.items():
                     if graph_key not in self.dataset_names:
                         continue
 

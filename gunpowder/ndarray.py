@@ -1,8 +1,9 @@
 import numpy as np
 
+
 def replace(array, old_values, new_values):
-    '''Replace all occurences of ``old_values[i]`` with ``new_values[i]`` in the
-    given array.'''
+    """Replace all occurences of ``old_values[i]`` with ``new_values[i]`` in the
+    given array."""
 
     old_values = np.array(old_values)
     new_values = np.array(new_values)

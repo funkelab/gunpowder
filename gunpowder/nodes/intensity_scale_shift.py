@@ -1,7 +1,8 @@
 from .batch_filter import BatchFilter
 
+
 class IntensityScaleShift(BatchFilter):
-    '''Scales the intensities of a batch by ``scale``, then adds ``shift``.
+    """Scales the intensities of a batch by ``scale``, then adds ``shift``.
 
     Args:
 
@@ -13,7 +14,7 @@ class IntensityScaleShift(BatchFilter):
         shift (``float``):
 
             The shift and scale to apply to ``array``.
-    '''
+    """
 
     def __init__(self, array, scale, shift):
         self.array = array
@@ -21,9 +22,8 @@ class IntensityScaleShift(BatchFilter):
         self.shift = shift
 
     def process(self, batch, request):
-
         if self.array not in batch.arrays:
             return
 
         raw = batch.arrays[self.array]
-        raw.data = raw.data*self.scale + self.shift
+        raw.data = raw.data * self.scale + self.shift

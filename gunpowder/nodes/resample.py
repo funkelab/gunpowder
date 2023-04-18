@@ -10,8 +10,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Resample(BatchFilter):
-    '''Up- or downsample arrays in a batch to match a given voxel size. Note: Behavior is not a pixel-perfect copy of down/upsample nodes, because this node relies on skimage.transform.rescale to perform non-integer scaling factors.
+    """Up- or downsample arrays in a batch to match a given voxel size. Note: Behavior is not a pixel-perfect copy of down/upsample nodes, because this node relies on skimage.transform.rescale to perform non-integer scaling factors.
 
     Args:
 
@@ -45,7 +46,7 @@ class Resample(BatchFilter):
 
                 Default is 0 if image.dtype is bool or interpolatable is False, and 1 otherwise.
 
-    '''
+    """
 
     def __init__(self, source, target_voxel_size, target, ndim=None, interp_order=None):
         assert isinstance(source, ArrayKey)
@@ -64,12 +65,17 @@ class Resample(BatchFilter):
         spec = self.spec[self.source].copy()
         source_voxel_size = self.spec[self.source].voxel_size
         spec.voxel_size = self.target_voxel_size
-        self.pad = Coordinate((0,)*(len(source_voxel_size) - self.ndim) + source_voxel_size[-self.ndim:])
+        self.pad = Coordinate(
+            (0,) * (len(source_voxel_size) - self.ndim)
+            + source_voxel_size[-self.ndim :]
+        )
 
-        spec.roi = spec.roi.grow(-self.pad, -self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+        spec.roi = spec.roi.grow(
+            -self.pad, -self.pad
+        )  # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         spec.roi = spec.roi.snap_to_grid(
-            np.lcm(source_voxel_size, self.target_voxel_size),
-            mode='shrink')
+            np.lcm(source_voxel_size, self.target_voxel_size), mode="shrink"
+        )
 
         self.provides(self.target, spec)
         self.enable_autoskip()
@@ -78,15 +84,15 @@ class Resample(BatchFilter):
         source_voxel_size = self.spec[self.source].voxel_size
         source_request = request[self.target].copy()
         source_request.voxel_size = source_voxel_size
-        source_request.roi = source_request.roi.grow(self.pad, self.pad) # Pad w/ 1 voxel per side for interpolation to avoid edge effects
+        source_request.roi = source_request.roi.grow(
+            self.pad, self.pad
+        )  # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         source_request.roi = source_request.roi.snap_to_grid(
             np.lcm(source_voxel_size, self.target_voxel_size), mode="grow"
         )
         source_request.roi = source_request.roi.intersect(
             self.spec[self.source].roi
-        ).snap_to_grid(
-            np.lcm(source_voxel_size, self.target_voxel_size), mode="shrink"
-        )
+        ).snap_to_grid(np.lcm(source_voxel_size, self.target_voxel_size), mode="shrink")
 
         deps = BatchRequest()
         deps[self.source] = source_request
@@ -101,12 +107,21 @@ class Resample(BatchFilter):
         scales = np.array(source_voxel_size) / np.array(self.target_voxel_size)
         scales = (1,) * (source_data.ndim - source_voxel_size.dims) + tuple(scales)
 
-        if self.interp_order != 0 and (self.spec[self.source].interpolatable or self.spec[self.source].interpolatable is None):
-            resampled_data = rescale(source_data.astype(np.float32), scales, order=self.interp_order).astype(source_data.dtype)
-        else: # Force nearest-neighbor interpolation for non-interpolatable arrays
+        if self.interp_order != 0 and (
+            self.spec[self.source].interpolatable
+            or self.spec[self.source].interpolatable is None
+        ):
+            resampled_data = rescale(
+                source_data.astype(np.float32), scales, order=self.interp_order
+            ).astype(source_data.dtype)
+        else:  # Force nearest-neighbor interpolation for non-interpolatable arrays
             if self.interp_order is not None and self.interp_order != 0:
-                logger.warning('Interpolation other than nearest-neighbor requested for non-interpolatable array. Using nearest-neighbor instead.')
-            resampled_data = rescale(source_data.astype(np.float32), scales, order=0, anti_aliasing=False).astype(source_data.dtype)
+                logger.warning(
+                    "Interpolation other than nearest-neighbor requested for non-interpolatable array. Using nearest-neighbor instead."
+                )
+            resampled_data = rescale(
+                source_data.astype(np.float32), scales, order=0, anti_aliasing=False
+            ).astype(source_data.dtype)
 
         target_spec = source.spec.copy()
         target_spec.roi = Roi(

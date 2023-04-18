@@ -4,8 +4,9 @@ from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 
+
 class IntensityAugment(BatchFilter):
-    '''Randomly scale and shift the values of an intensity array.
+    """Randomly scale and shift the values of an intensity array.
 
     Args:
 
@@ -33,9 +34,18 @@ class IntensityAugment(BatchFilter):
 
             Set to False if modified values should not be clipped to [0, 1]
             Disables range check!
-    '''
+    """
 
-    def __init__(self, array, scale_min, scale_max, shift_min, shift_max, z_section_wise=False, clip=True):
+    def __init__(
+        self,
+        array,
+        scale_min,
+        scale_max,
+        shift_min,
+        shift_max,
+        z_section_wise=False,
+        clip=True,
+    ):
         self.array = array
         self.scale_min = scale_min
         self.scale_max = scale_max
@@ -57,31 +67,39 @@ class IntensityAugment(BatchFilter):
         return deps
 
     def process(self, batch, request):
-
         raw = batch.arrays[self.array]
 
-        assert not self.z_section_wise or raw.spec.roi.dims == 3, "If you specify 'z_section_wise', I expect 3D data."
-        assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw array (not " + str(raw.data.dtype) + "). Consider using Normalize before."
+        assert (
+            not self.z_section_wise or raw.spec.roi.dims == 3
+        ), "If you specify 'z_section_wise', I expect 3D data."
+        assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, (
+            "Intensity augmentation requires float types for the raw array (not "
+            + str(raw.data.dtype)
+            + "). Consider using Normalize before."
+        )
         if self.clip:
-            assert raw.data.min() >= 0 and raw.data.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
+            assert (
+                raw.data.min() >= 0 and raw.data.max() <= 1
+            ), "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
 
         if self.z_section_wise:
-            for z in range((raw.spec.roi/self.spec[self.array].voxel_size).shape[0]):
+            for z in range((raw.spec.roi / self.spec[self.array].voxel_size).shape[0]):
                 raw.data[z] = self.__augment(
-                        raw.data[z],
-                        np.random.uniform(low=self.scale_min, high=self.scale_max),
-                        np.random.uniform(low=self.shift_min, high=self.shift_max))
+                    raw.data[z],
+                    np.random.uniform(low=self.scale_min, high=self.scale_max),
+                    np.random.uniform(low=self.shift_min, high=self.shift_max),
+                )
         else:
             raw.data = self.__augment(
-                    raw.data,
-                    np.random.uniform(low=self.scale_min, high=self.scale_max),
-                    np.random.uniform(low=self.shift_min, high=self.shift_max))
+                raw.data,
+                np.random.uniform(low=self.scale_min, high=self.scale_max),
+                np.random.uniform(low=self.shift_min, high=self.shift_max),
+            )
 
         # clip values, we might have pushed them out of [0,1]
         if self.clip:
-            raw.data[raw.data>1] = 1
-            raw.data[raw.data<0] = 0
+            raw.data[raw.data > 1] = 1
+            raw.data[raw.data < 0] = 0
 
     def __augment(self, a, scale, shift):
-
-        return a.mean() + (a-a.mean())*scale + shift
+        return a.mean() + (a - a.mean()) * scale + shift

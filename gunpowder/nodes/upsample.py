@@ -30,7 +30,6 @@ class UpSample(BatchFilter):
     """
 
     def __init__(self, source, factor, target):
-
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
         assert isinstance(factor, numbers.Number) or isinstance(
@@ -42,7 +41,6 @@ class UpSample(BatchFilter):
         self.target = target
 
     def setup(self):
-
         spec = self.spec[self.source].copy()
 
         if not isinstance(self.factor, Coordinate):
@@ -68,7 +66,9 @@ class UpSample(BatchFilter):
 
         upstream_voxel_size = self.spec[self.source].voxel_size
 
-        request_roi = request[self.target].roi.snap_to_grid(upstream_voxel_size, mode="grow")
+        request_roi = request[self.target].roi.snap_to_grid(
+            upstream_voxel_size, mode="grow"
+        )
         logger.debug("request ROI is %s" % request_roi)
 
         # add or merge to batch request

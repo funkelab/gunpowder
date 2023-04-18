@@ -76,7 +76,7 @@ class Train(GenericTrain):
             After how many iterations to write out tensorboard summaries.
 
         spawn_subprocess (``bool``, optional):
-        
+
             Whether to run the ``train_step`` in a separate process. Default is false.
     """
 
@@ -96,7 +96,6 @@ class Train(GenericTrain):
         log_every: int = 1,
         spawn_subprocess: bool = False,
     ):
-
         if not model.training:
             logger.warning(
                 "Model is in evaluation mode during training. "
@@ -160,7 +159,6 @@ class Train(GenericTrain):
             tensor.retain_grad()
 
     def start(self):
-
         self.use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
 
@@ -180,7 +178,6 @@ class Train(GenericTrain):
         )
 
         if checkpoint is not None:
-
             logger.info("Resuming training from iteration %d", self.iteration)
             logger.info("Loading %s", checkpoint)
 
@@ -189,13 +186,11 @@ class Train(GenericTrain):
             self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
         else:
-
             logger.info("Starting training from scratch")
 
         logger.info("Using device %s", self.device)
 
     def train_step(self, batch, request):
-
         inputs = self.__collect_provided_inputs(batch)
         requested_outputs = self.__collect_requested_outputs(request)
 
@@ -250,13 +245,12 @@ class Train(GenericTrain):
 
         self.retain_gradients(request, outputs)
 
-        logger.debug(
-            "model outputs: %s",
-            {k: v.shape for k, v in outputs.items()})
+        logger.debug("model outputs: %s", {k: v.shape for k, v in outputs.items()})
         logger.debug(
             "loss inputs: %s %s",
             [v.shape for v in device_loss_args],
-            {k: v.shape for k, v in device_loss_kwargs.items()})
+            {k: v.shape for k, v in device_loss_kwargs.items()},
+        )
         loss = self.loss(*device_loss_args, **device_loss_kwargs)
         loss.backward()
         self.optimizer.step()
@@ -282,9 +276,7 @@ class Train(GenericTrain):
                 )
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                tensor.grad.cpu().detach().numpy(), spec
-            )
+            batch.arrays[array_key] = Array(tensor.grad.cpu().detach().numpy(), spec)
 
         for array_key, array_name in requested_outputs.items():
             spec = self.spec[array_key].copy()
@@ -298,7 +290,6 @@ class Train(GenericTrain):
         batch.iteration = self.iteration
 
         if batch.iteration % self.save_every == 0:
-
             checkpoint_name = self._checkpoint_name(
                 self.checkpoint_basename, batch.iteration
             )
@@ -317,7 +308,6 @@ class Train(GenericTrain):
             self.summary_writer.add_scalar("loss", batch.loss, batch.iteration)
 
     def __collect_requested_outputs(self, request):
-
         array_outputs = {}
 
         for output_name, array_key in self.outputs.items():
@@ -327,19 +317,16 @@ class Train(GenericTrain):
         return array_outputs
 
     def __collect_provided_inputs(self, batch):
-
         return self.__collect_provided_arrays(
             {k: v for k, v in self.inputs.items() if k not in self.loss_inputs}, batch
         )
 
     def __collect_provided_loss_inputs(self, batch):
-
         return self.__collect_provided_arrays(
             self.loss_inputs, batch, expect_missing_arrays=True
         )
 
     def __collect_provided_arrays(self, reference, batch, expect_missing_arrays=False):
-
         arrays = {}
 
         for array_name, array_key in reference.items():

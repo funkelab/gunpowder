@@ -63,9 +63,8 @@ class Predict(GenericPredict):
         array_specs: Dict[ArrayKey, ArraySpec] = None,
         checkpoint: str = None,
         device="cuda",
-        spawn_subprocess=False
+        spawn_subprocess=False,
     ):
-
         self.array_specs = array_specs if array_specs is not None else {}
 
         if model.training:
@@ -75,10 +74,8 @@ class Predict(GenericPredict):
             )
 
         super(Predict, self).__init__(
-            inputs,
-            outputs,
-            array_specs,
-            spawn_subprocess=spawn_subprocess)
+            inputs, outputs, array_specs, spawn_subprocess=spawn_subprocess
+        )
 
         self.device_string = device
         self.device = None  # to be set in start()
@@ -89,10 +86,7 @@ class Predict(GenericPredict):
         self.register_hooks()
 
     def start(self):
-
-        self.use_cuda = (
-            torch.cuda.is_available() and
-            self.device_string == "cuda")
+        self.use_cuda = torch.cuda.is_available() and self.device_string == "cuda"
         logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
         self.device = torch.device("cuda" if self.use_cuda else "cpu")
 

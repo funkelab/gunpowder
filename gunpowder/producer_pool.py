@@ -13,19 +13,24 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+
 class NoResult(Exception):
     pass
+
 
 class ParentDied(Exception):
     pass
 
+
 class WorkersDied(Exception):
     pass
 
-class ProducerPool(object):
 
+class ProducerPool(object):
     def __init__(self, callables, queue_size=10):
-        self.__watch_dog = multiprocessing.Process(target=self._run_watch_dog, args=(callables,))
+        self.__watch_dog = multiprocessing.Process(
+            target=self._run_watch_dog, args=(callables,)
+        )
         self.__stop = multiprocessing.Event()
         self.__result_queue = multiprocessing.Queue(queue_size)
 
@@ -33,7 +38,7 @@ class ProducerPool(object):
         self.stop()
 
     def start(self):
-        '''Start the pool of producers.'''
+        """Start the pool of producers."""
 
         if self.__watch_dog is None:
             raise RuntimeError("can't start a ProducerPool a second time")
@@ -46,11 +51,11 @@ class ProducerPool(object):
         self.__watch_dog.start()
 
     def get(self, timeout=0):
-        '''Return the next result from the producer pool.
+        """Return the next result from the producer pool.
 
-        If timeout is set and there is not result after the given number of 
+        If timeout is set and there is not result after the given number of
         seconds, exception NoResult is raised.
-        '''
+        """
 
         block = False
         if timeout == 0:
@@ -59,7 +64,6 @@ class ProducerPool(object):
 
         item = None
         while item == None:
-
             try:
                 item = self.__result_queue.get(timeout=timeout)
             except Queue.Empty:
@@ -71,9 +75,9 @@ class ProducerPool(object):
         return item
 
     def stop(self):
-        '''Stop the pool of producers.
+        """Stop the pool of producers.
 
-        Items currently being produced will not be waited for and be discarded.'''
+        Items currently being produced will not be waited for and be discarded."""
 
         if self.__watch_dog is None:
             return
@@ -84,17 +88,18 @@ class ProducerPool(object):
         self.__watch_dog = None
 
     def _run_watch_dog(self, callables):
-
         parent_pid = os.getppid()
 
         logger.debug("watchdog started with PID " + str(os.getpid()))
         logger.debug("parent PID " + str(parent_pid))
 
-        workers = [ multiprocessing.Process(target=self._run_worker, args=(c,)) for c in callables ]
+        workers = [
+            multiprocessing.Process(target=self._run_worker, args=(c,))
+            for c in callables
+        ]
 
         try:
-
-            logger.debug("starting %d workers"%len(workers))
+            logger.debug("starting %d workers" % len(workers))
             for worker in workers:
                 worker.start()
 
@@ -111,7 +116,6 @@ class ProducerPool(object):
             pass
 
         finally:
-
             logger.info("terminating workers...")
             for worker in workers:
                 worker.terminate()
@@ -123,7 +127,6 @@ class ProducerPool(object):
             logger.info("done")
 
     def _run_worker(self, target):
-
         parent_pid = os.getppid()
 
         logger.debug("worker started with PID " + str(os.getpid()))
@@ -132,20 +135,18 @@ class ProducerPool(object):
         result = None
         np.random.seed(None)
         while True:
-
             if os.getppid() != parent_pid:
-                logger.debug("worker %d: watch-dog died, stopping"%os.getpid())
+                logger.debug("worker %d: watch-dog died, stopping" % os.getpid())
                 break
 
             if result is None:
-
                 try:
                     result = target()
                 except Exception as e:
                     logger.error(e, exc_info=True)
                     result = e
                     traceback.print_exc()
-                    # don't stop on normal exceptions -- place them in result queue 
+                    # don't stop on normal exceptions -- place them in result queue
                     # and let them be handled by caller
                 except:
                     logger.error("received error: " + str(sys.exc_info()[0]))
@@ -156,10 +157,13 @@ class ProducerPool(object):
                 self.__result_queue.put(result, timeout=1)
                 result = None
             except Queue.Full:
-                logger.debug("worker %d: result queue is full, waiting to place my result"%os.getpid())
+                logger.debug(
+                    "worker %d: result queue is full, waiting to place my result"
+                    % os.getpid()
+                )
 
         logger.debug("worker with PID " + str(os.getpid()) + " exiting")
         os._exit(1)
 
     def _all_workers_alive(self, workers):
-        return all([ worker.is_alive() for worker in workers ])
+        return all([worker.is_alive() for worker in workers])

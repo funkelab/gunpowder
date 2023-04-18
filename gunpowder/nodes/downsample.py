@@ -28,7 +28,6 @@ class DownSample(BatchFilter):
     """
 
     def __init__(self, source, factor, target):
-
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
         assert isinstance(factor, numbers.Number) or isinstance(
@@ -42,14 +41,12 @@ class DownSample(BatchFilter):
         self.target = target
 
     def setup(self):
-
         spec = self.spec[self.source].copy()
         spec.voxel_size *= self.factor
         self.provides(self.target, spec)
         self.enable_autoskip()
 
     def prepare(self, request):
-
         deps = BatchRequest()
         deps[self.source] = request[self.target]
         return deps

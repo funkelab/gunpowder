@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class ElasticAugment(BatchFilter):
-    """(DEPRICATED) Elasticly deform a batch. Requests larger batches upstream to avoid data 
+    """(DEPRICATED) Elasticly deform a batch. Requests larger batches upstream to avoid data
     loss due to rotation and jitter.
 
     Args:
@@ -104,7 +104,10 @@ class ElasticAugment(BatchFilter):
         use_fast_points_transform=False,
         recompute_missing_points=True,
     ):
-        warnings.warn("ElasticAugment is deprecated, please use the DeformAugment", DeprecationWarning)
+        warnings.warn(
+            "ElasticAugment is deprecated, please use the DeformAugment",
+            DeprecationWarning,
+        )
 
         self.control_point_spacing = control_point_spacing
         self.jitter_sigma = jitter_sigma
@@ -171,7 +174,6 @@ class ElasticAugment(BatchFilter):
         self.target_rois = {}
         deps = BatchRequest()
         for key, spec in request.items():
-
             spec = spec.copy()
 
             if spec.roi is None:
@@ -249,9 +251,7 @@ class ElasticAugment(BatchFilter):
         return deps
 
     def process(self, batch, request):
-
-        for (array_key, array) in batch.arrays.items():
-
+        for array_key, array in batch.arrays.items():
             if array_key not in self.target_rois:
                 continue
 
@@ -290,14 +290,15 @@ class ElasticAugment(BatchFilter):
                 ]
             )
 
-            data_roi = request[array_key].roi/self.spec[array_key].voxel_size
-            array.data = data.reshape(channel_shape + data_roi.shape[-self.spatial_dims:])
+            data_roi = request[array_key].roi / self.spec[array_key].voxel_size
+            array.data = data.reshape(
+                channel_shape + data_roi.shape[-self.spatial_dims :]
+            )
 
             # restore original ROIs
             array.spec.roi = request[array_key].roi
 
-        for (graph_key, graph) in batch.graphs.items():
-
+        for graph_key, graph in batch.graphs.items():
             nodes = list(graph.nodes)
 
             if self.use_fast_points_transform:
@@ -343,14 +344,14 @@ class ElasticAugment(BatchFilter):
                 projected = projected_voxels * np.array(self.voxel_size)
 
                 logger.debug(
-                    "projected in world units, relative to target ROI: %s",
-                    projected)
+                    "projected in world units, relative to target ROI: %s", projected
+                )
 
                 # get global coordinates
                 projected += np.array(self.target_rois[graph_key].begin)
 
                 # update spatial coordinates of node location
-                node.location[-self.spatial_dims:] = projected
+                node.location[-self.spatial_dims :] = projected
 
                 logger.debug("final location: %s", node.location)
 
@@ -366,18 +367,24 @@ class ElasticAugment(BatchFilter):
             graph.spec.roi = request[graph_key].roi
 
     def __get_common_voxel_size(self, request):
-
         voxel_size = None
         prev = None
         for array_key in request.array_specs.keys():
             if voxel_size is None:
-                voxel_size = self.spec[array_key].voxel_size[-self.spatial_dims:]
+                voxel_size = self.spec[array_key].voxel_size[-self.spatial_dims :]
             elif self.spec[array_key].voxel_size is not None:
-                assert voxel_size == self.spec[array_key].voxel_size[-self.spatial_dims:], \
-                        "ElasticAugment can only be used with arrays of same voxel sizes, " \
-                        "but %s has %s, and %s has %s."%(
-                                array_key, self.spec[array_key].voxel_size,
-                                prev, self.spec[prev].voxel_size)
+                assert (
+                    voxel_size == self.spec[array_key].voxel_size[-self.spatial_dims :]
+                ), (
+                    "ElasticAugment can only be used with arrays of same voxel sizes, "
+                    "but %s has %s, and %s has %s."
+                    % (
+                        array_key,
+                        self.spec[array_key].voxel_size,
+                        prev,
+                        self.spec[prev].voxel_size,
+                    )
+                )
             prev = array_key
 
         if voxel_size is None:
@@ -386,10 +393,7 @@ class ElasticAugment(BatchFilter):
         return Coordinate(voxel_size)
 
     def __create_transformation(self, target_shape):
-
-        scale = self.scale_min + random.random()*(
-            self.scale_max - self.scale_min
-        )
+        scale = self.scale_min + random.random() * (self.scale_max - self.scale_min)
 
         transformation = augment.create_identity_transformation(
             target_shape, subsample=self.subsample, scale=scale
@@ -417,9 +421,7 @@ class ElasticAugment(BatchFilter):
 
         return transformation
 
-    def __fast_point_projection(
-        self, transformation, nodes, source_roi, target_roi
-    ):
+    def __fast_point_projection(self, transformation, nodes, source_roi, target_roi):
         if len(nodes) < 1:
             return []
         # rasterize the points into an array
@@ -435,9 +437,7 @@ class ElasticAugment(BatchFilter):
             ]
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
-        points_array = np.zeros(
-            source_roi.shape / self.voxel_size, dtype=np.int64
-        )
+        points_array = np.zeros(source_roi.shape / self.voxel_size, dtype=np.int64)
         points_array[locs] = ids
 
         # reshape array data into (channels,) + spatial dims
@@ -457,11 +457,10 @@ class ElasticAugment(BatchFilter):
         missing_points = []
         projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
         projected_locs = [
-            np.array(loc[-self.spatial_dims :]) * self.voxel_size
-            + target_roi.begin
+            np.array(loc[-self.spatial_dims :]) * self.voxel_size + target_roi.begin
             for loc in projected_locs
         ]
-        node_dict = {node.id:node for node in nodes}
+        node_dict = {node.id: node for node in nodes}
         for point_id, proj_loc in zip(ids, projected_locs):
             point = node_dict.pop(point_id)
             if not any([np.isnan(x) for x in proj_loc]):
@@ -510,14 +509,14 @@ class ElasticAugment(BatchFilter):
         logger.debug("dist shape: %s", dist.shape)
         logger.debug("dist.argmin(): %s", dist.argmin())
         logger.debug("dist[argmin]: %s", dist[center_grid])
-        logger.debug("transform[argmin]: %s",
-                     transformation[(slice(None),) + center_grid])
+        logger.debug(
+            "transform[argmin]: %s", transformation[(slice(None),) + center_grid]
+        )
         logger.debug("min dist: %s", dist.min())
         logger.debug("center source: %s", center_source)
 
         # inspect grid edges incident to center_grid
         for d in range(dims):
-
             # nothing to do for dimensions without spatial extent
             if transformation.shape[1 + d] == 1:
                 continue
@@ -565,7 +564,6 @@ class ElasticAugment(BatchFilter):
         return transformation[slices].flatten()
 
     def __get_source_roi(self, transformation):
-
         dims = transformation.shape[0]
 
         # get bounding box of needed data for transformation
@@ -582,12 +580,10 @@ class ElasticAugment(BatchFilter):
         return source_roi
 
     def __shift_transformation(self, shift, transformation):
-
         for d in range(transformation.shape[0]):
             transformation[d] += shift[d]
 
     def __misalign(self, transformation):
-
         assert (
             transformation.shape[0] == 3
         ), "misalign can only be applied to 3D volumes"
@@ -596,15 +592,12 @@ class ElasticAugment(BatchFilter):
 
         shifts = [Coordinate((0, 0, 0))] * num_sections
         for z in range(num_sections):
-
             r = random.random()
 
             if r <= self.prob_slip:
-
                 shifts[z] = self.__random_offset()
 
             elif r <= self.prob_slip + self.prob_shift:
-
                 offset = self.__random_offset()
                 for zp in range(z, num_sections):
                     shifts[zp] += offset
@@ -630,7 +623,6 @@ class ElasticAugment(BatchFilter):
         )
 
     def __random_offset(self):
-
         return Coordinate(
             (0,)
             + tuple(

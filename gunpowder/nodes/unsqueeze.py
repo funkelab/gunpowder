@@ -44,13 +44,14 @@ class Unsqueeze(BatchFilter):
                 if not batch[array].spec.nonspatial:
                     spatial_dims = request[array].roi.dims
                     if self.axis > batch[array].data.ndim - spatial_dims:
-                        raise ValueError((
-                            f"Unsqueeze.axis={self.axis} not permitted. "
-                            "Unsqueeze only supported for "
-                            "non-spatial dimensions of Array."
-                        ))
+                        raise ValueError(
+                            (
+                                f"Unsqueeze.axis={self.axis} not permitted. "
+                                "Unsqueeze only supported for "
+                                "non-spatial dimensions of Array."
+                            )
+                        )
 
                 outputs[array] = batch[array]
-                outputs[array].data = np.expand_dims(
-                    batch[array].data, self.axis)
+                outputs[array].data = np.expand_dims(batch[array].data, self.axis)
         return outputs

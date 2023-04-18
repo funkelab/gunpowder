@@ -12,11 +12,13 @@ from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
+
 class TrainProcessDied(Exception):
     pass
 
+
 class GenericTrain(BatchFilter):
-    '''Generic train node to perform one training iteration for each batch that
+    """Generic train node to perform one training iteration for each batch that
     passes through. This node alone does nothing and should be subclassed for
     concrete implementations.
 
@@ -43,16 +45,11 @@ class GenericTrain(BatchFilter):
 
         spawn_subprocess (bool, optional): Whether to run the ``train_step`` in
             a separate process. Default is false.
-    '''
+    """
 
     def __init__(
-            self,
-            inputs,
-            outputs,
-            gradients,
-            array_specs=None,
-            spawn_subprocess=False):
-
+        self, inputs, outputs, gradients, array_specs=None, spawn_subprocess=False
+    ):
         self.initialized = False
 
         self.inputs = inputs
@@ -61,14 +58,14 @@ class GenericTrain(BatchFilter):
         self.array_specs = {} if array_specs is None else array_specs
         self.spawn_subprocess = spawn_subprocess
 
-        self.provided_arrays = list(self.outputs.values()) + list(self.gradients.values())
+        self.provided_arrays = list(self.outputs.values()) + list(
+            self.gradients.values()
+        )
 
     def setup(self):
-
         # get common voxel size of inputs, or None if they differ
         common_voxel_size = None
         for key in self.inputs.values():
-
             if not isinstance(key, ArrayKey):
                 continue
             if self.spec[key].nonspatial:
@@ -84,23 +81,21 @@ class GenericTrain(BatchFilter):
 
         # announce provided outputs
         for key in self.provided_arrays:
-
             if key in self.array_specs:
                 spec = self.array_specs[key].copy()
             else:
                 spec = ArraySpec()
 
             if spec.voxel_size is None and not spec.nonspatial:
-
                 assert common_voxel_size is not None, (
                     "There is no common voxel size of the inputs, and no "
                     "ArraySpec has been given for %s that defines "
-                    "voxel_size."%key)
+                    "voxel_size." % key
+                )
 
                 spec.voxel_size = common_voxel_size
 
             if spec.interpolatable is None:
-
                 # default for predictions
                 spec.interpolatable = False
 
@@ -135,11 +130,9 @@ class GenericTrain(BatchFilter):
             self.stop()
 
     def process(self, batch, request):
-
         start = time.time()
 
         if self.spawn_subprocess:
-
             self.batch_in.put((batch, request))
 
             try:
@@ -155,69 +148,70 @@ class GenericTrain(BatchFilter):
             batch.iteration = out.iteration
 
         else:
-
             self.train_step(batch, request)
 
         time_of_iteration = time.time() - start
 
         logger.info(
             "Train process: iteration=%d loss=%f time=%f",
-            batch.iteration, batch.loss, time_of_iteration)
+            batch.iteration,
+            batch.loss,
+            time_of_iteration,
+        )
 
     def start(self):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         This method will be called before the first call to :fun:`train_step`,
         from the same process that :fun:`train_step` will be called from. Use
         this to initialize you solver and training hardware.
-        '''
+        """
         pass
 
     def train_step(self, batch, request):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         In this method, an implementation should perform one training iteration
         on the given batch. ``batch.loss`` and ``batch.iteration`` should be
         set. Output arrays should be created according to the given request
-        and added to ``batch``.'''
-        raise NotImplementedError("Class %s does not implement 'train_step'"%self.name())
+        and added to ``batch``."""
+        raise NotImplementedError(
+            "Class %s does not implement 'train_step'" % self.name()
+        )
 
     def stop(self):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         This method will be called after the last call to :fun:`train_step`,
         from the same process that :fun:`train_step` will be called from. Use
         this to tear down you solver and free training hardware.
-        '''
+        """
         pass
 
     def _checkpoint_name(self, basename, iteration):
-        return basename + '_checkpoint_' + '%i' % iteration
+        return basename + "_checkpoint_" + "%i" % iteration
 
     def _get_latest_checkpoint(self, basename):
-
         def atoi(text):
             return int(text) if text.isdigit() else text
 
         def natural_keys(text):
-            return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+            return [atoi(c) for c in re.split(r"(\d+)", text)]
 
-        checkpoints = glob.glob(basename + '_checkpoint_*')
+        checkpoints = glob.glob(basename + "_checkpoint_*")
         checkpoints.sort(key=natural_keys)
 
         if len(checkpoints) > 0:
-
             checkpoint = checkpoints[-1]
-            iteration = int(checkpoint.split('_')[-1])
+            iteration = int(checkpoint.split("_")[-1])
             return checkpoint, iteration
 
         return None, 0
 
     def __produce_train_batch(self):
-        '''Process one train batch.'''
+        """Process one train batch."""
 
         if not self.initialized:
-
             self.start()
             self.initialized = True
 

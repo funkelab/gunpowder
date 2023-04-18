@@ -9,13 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class BatchFilterError(Exception):
-
     def __init__(self, batch_filter, msg):
         self.batch_filter = batch_filter
         self.msg = msg
 
     def __str__(self):
-
         return f"Error in {self.batch_filter.name()}: {self.msg}"
 
 
@@ -32,7 +30,7 @@ class BatchFilter(BatchProvider):
 
         :func:`setup`
 
-            Initialize this filter. Called after setup of the DAG. All upstream 
+            Initialize this filter. Called after setup of the DAG. All upstream
             providers will be set up already.
 
         :func:`teardown`
@@ -41,13 +39,13 @@ class BatchFilter(BatchProvider):
 
         :func:`prepare`
 
-            Prepare for a batch request. Always called before each 
+            Prepare for a batch request. Always called before each
             :func:`process`. Used to communicate dependencies.
     """
 
     @property
     def remove_placeholders(self):
-        if not hasattr(self, '_remove_placeholders'):
+        if not hasattr(self, "_remove_placeholders"):
             return False
         return self._remove_placeholders
 
@@ -57,7 +55,8 @@ class BatchFilter(BatchProvider):
                 self,
                 "BatchFilters need to have exactly one upstream provider, "
                 f"this one has {len(self.get_upstream_providers())}: "
-                f"({[b.name() for b in self.get_upstream_providers()]}")
+                f"({[b.name() for b in self.get_upstream_providers()]}",
+            )
         return self.get_upstream_providers()[0]
 
     def updates(self, key, spec):
@@ -82,7 +81,8 @@ class BatchFilter(BatchProvider):
                 self,
                 f"BatchFilter {self} is trying to change the spec for {key}, "
                 f"but {key} is not provided upstream. Upstream offers: "
-                f"{self.get_upstream_provider().spec}")
+                f"{self.get_upstream_provider().spec}",
+            )
         self.spec[key] = copy.deepcopy(spec)
         self.updated_items.append(key)
 
@@ -111,7 +111,6 @@ class BatchFilter(BatchProvider):
                 self._spec = None
 
     def internal_teardown(self):
-
         logger.debug("Resetting spec of %s", self.name())
         self._spec = None
         self._updated_items = []
@@ -133,14 +132,12 @@ class BatchFilter(BatchProvider):
 
     @property
     def autoskip_enabled(self):
-
         if not hasattr(self, "_autoskip_enabled"):
             self._autoskip_enabled = False
 
         return self._autoskip_enabled
 
     def provide(self, request):
-
         skip = self.__can_skip(request)
 
         timing_prepare = Timing(self, "prepare")
@@ -159,7 +156,8 @@ class BatchFilter(BatchProvider):
                     self,
                     f"This BatchFilter returned a {type(dependencies)}! "
                     "Supported return types are: `BatchRequest` containing your exact "
-                    "dependencies or `None`, indicating a dependency on the full request.")
+                    "dependencies or `None`, indicating a dependency on the full request.",
+                )
             self.remove_provided(upstream_request)
         else:
             upstream_request = request.copy()
@@ -249,6 +247,4 @@ class BatchFilter(BatchProvider):
                 The request this node received. The updated batch should meet
                 this request.
         """
-        raise BatchFilterError(
-            self,
-            "does not implement 'process'")
+        raise BatchFilterError(self, "does not implement 'process'")

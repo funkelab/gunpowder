@@ -2,8 +2,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class build(object):
 
+class build(object):
     def __init__(self, pipeline):
         self.pipeline = pipeline
 
@@ -11,7 +11,9 @@ class build(object):
         try:
             self.pipeline.setup()
         except:
-            logger.error("something went wrong during the setup of the pipeline, calling tear down")
+            logger.error(
+                "something went wrong during the setup of the pipeline, calling tear down"
+            )
             self.pipeline.internal_teardown()
             logger.debug("tear down completed")
             raise

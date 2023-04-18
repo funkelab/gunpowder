@@ -39,19 +39,20 @@ class Squeeze(BatchFilter):
     def process(self, batch, request):
         outputs = Batch()
         for array in self.arrays:
-
             if array in batch:
                 if not batch[array].spec.nonspatial:
                     spatial_dims = request[array].roi.dims
                     if self.axis >= batch[array].data.ndim - spatial_dims:
-                        raise ValueError((
-                            f"Squeeze.axis={self.axis} not permitted. "
-                            "Squeeze only supported for "
-                            "non-spatial dimensions of Array."
-                        ))
+                        raise ValueError(
+                            (
+                                f"Squeeze.axis={self.axis} not permitted. "
+                                "Squeeze only supported for "
+                                "non-spatial dimensions of Array."
+                            )
+                        )
 
                 outputs[array] = batch[array]
                 outputs[array].data = np.squeeze(batch[array].data, self.axis)
-                logger.debug(f'{array} shape: {outputs[array].data.shape}')
+                logger.debug(f"{array} shape: {outputs[array].data.shape}")
 
         return outputs

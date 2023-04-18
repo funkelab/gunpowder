@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class GraphSource(BatchProvider):
-    ''' Creates a gunpowder graph source from a daisy graph provider.
+    """Creates a gunpowder graph source from a daisy graph provider.
     Queries for graphs from a given Roi will only return edges completely
     contained within the Roi - edges that cross the boundary will not be
     included.
@@ -30,12 +30,9 @@ class GraphSource(BatchProvider):
             An optional :class:`GraphSpec` containing a roi and optionally
             whether the graph is directed. The default is to have an unbounded
             roi and detect directedness from the graph_provider.
-    '''
-    def __init__(
-            self,
-            graph_provider,
-            graph,
-            graph_spec=None):
+    """
+
+    def __init__(self, graph_provider, graph, graph_spec=None):
         self.graph_provider = graph_provider
         self.graph = graph
         self.graph_spec = graph_spec
@@ -44,12 +41,10 @@ class GraphSource(BatchProvider):
         if self.graph_spec is not None:
             roi = self.graph_spec.roi
             if self.graph_spec.directed is not None:
-                assert (self.graph_spec.directed ==
-                        self.graph_provider.directed)
+                assert self.graph_spec.directed == self.graph_provider.directed
         else:
             roi = None
-        spec = GraphSpec(roi=roi,
-                         directed=self.graph_provider.directed)
+        spec = GraphSpec(roi=roi, directed=self.graph_provider.directed)
         self.provides(self.graph, spec)
 
     def provide(self, request):
@@ -57,8 +52,7 @@ class GraphSource(BatchProvider):
         timing.start()
         batch = Batch()
         roi = request[self.graph].roi.copy()
-        graph = GraphSource.create_gp_graph_from_daisy(
-                self.graph_provider, roi)
+        graph = GraphSource.create_gp_graph_from_daisy(self.graph_provider, roi)
         batch.graphs[self.graph] = graph
 
         timing.stop()
@@ -68,7 +62,7 @@ class GraphSource(BatchProvider):
 
     @staticmethod
     def create_gp_graph_from_daisy(graph_provider, roi):
-        ''' A static method to convert a daisy graph into a gunpowder graph.
+        """A static method to convert a daisy graph into a gunpowder graph.
         Only includes edges if both endpoints are within the roi.
 
         Arguments:
@@ -82,7 +76,7 @@ class GraphSource(BatchProvider):
             An instance of :class:`Graph` containing the nodes and edges read
             from the daisy graph provider in the given roi.
 
-        '''
+        """
         logger.debug("Creating gunpowder graph from daisy graph provider")
         daisy_graph = graph_provider[roi]
         logger.debug("%d nodes found in roi %s", len(daisy_graph), roi)
@@ -95,8 +89,8 @@ class GraphSource(BatchProvider):
                     dangling_nodes.append(node)
                     continue
                 location = np.array(
-                        [data[attr] for attr in position_attribute],
-                        dtype=np.float32)
+                    [data[attr] for attr in position_attribute], dtype=np.float32
+                )
             else:
                 if position_attribute not in data:
                     dangling_nodes.append(node)

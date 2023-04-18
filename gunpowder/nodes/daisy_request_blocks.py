@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class DaisyRequestBlocks(BatchFilter):
-    '''Iteratively requests batches similar to ``reference`` from upstream
+    """Iteratively requests batches similar to ``reference`` from upstream
     providers, with their ROIs set to blocks distributed by ``daisy``.
 
     The ROIs of the array or point specs in the reference can be set to either
@@ -50,15 +50,9 @@ class DaisyRequestBlocks(BatchFilter):
             finished processing, which can be used in ``check_function`` of
             ``daisy.run_blockwise`` to skip already processed blocks in
             repeated runs.
-    '''
+    """
 
-    def __init__(
-            self,
-            reference,
-            roi_map,
-            num_workers=1,
-            block_done_callback=None):
-
+    def __init__(self, reference, roi_map, num_workers=1, block_done_callback=None):
         self.reference = reference
         self.roi_map = roi_map
         self.num_workers = num_workers
@@ -68,14 +62,11 @@ class DaisyRequestBlocks(BatchFilter):
             self.request_queue = multiprocessing.Queue(maxsize=0)
 
     def provide(self, request):
-
-        empty_request = (len(request) == 0)
+        empty_request = len(request) == 0
         if not empty_request:
-            raise RuntimeError(
-                "requests made to DaisyRequestBlocks have to be empty")
+            raise RuntimeError("requests made to DaisyRequestBlocks have to be empty")
 
         if self.num_workers > 1:
-
             self.workers = [
                 multiprocessing.Process(target=self.__get_chunks)
                 for _ in range(self.num_workers)
@@ -88,19 +79,15 @@ class DaisyRequestBlocks(BatchFilter):
                 worker.join()
 
         else:
-
             self.__get_chunks()
 
         return Batch()
 
     def __get_chunks(self):
-
         daisy_client = daisy.Client()
 
         while True:
-
             with daisy_client.acquire_block() as block:
-
                 if block is None:
                     return
 
@@ -110,25 +97,26 @@ class DaisyRequestBlocks(BatchFilter):
                 chunk_request = self.reference.copy()
 
                 for key, reference_spec in self.reference.items():
-
                     roi_type = self.roi_map.get(key, None)
 
                     if roi_type is None:
                         raise RuntimeError(
                             "roi_map does not map item %s to either 'read_roi' "
-                            "or 'write_roi'" % key)
+                            "or 'write_roi'" % key
+                        )
 
-                    if roi_type == 'read_roi':
+                    if roi_type == "read_roi":
                         chunk_request[key].roi = Roi(
-                            block.read_roi.offset,
-                            block.read_roi.shape)
-                    elif roi_type == 'write_roi':
+                            block.read_roi.offset, block.read_roi.shape
+                        )
+                    elif roi_type == "write_roi":
                         chunk_request[key].roi = Roi(
-                            block.write_roi.offset,
-                            block.write_roi.shape)
+                            block.write_roi.offset, block.write_roi.shape
+                        )
                     else:
                         raise RuntimeError(
-                            "%s is not a vaid ROI type (read_roi or write_roi)")
+                            "%s is not a vaid ROI type (read_roi or write_roi)"
+                        )
 
                 self.get_upstream_provider().request_batch(chunk_request)
 

@@ -27,7 +27,6 @@ class GraphSpec(Freezable):
     """
 
     def __init__(self, roi=None, directed=None, dtype=np.float32, placeholder=False):
-
         self.roi = roi
         self.directed = directed
         self.dtype = dtype
@@ -36,8 +35,7 @@ class GraphSpec(Freezable):
         self.freeze()
 
     def update_with(self, spec):
-        if self.roi is not None and \
-           spec.roi is not None:
+        if self.roi is not None and spec.roi is not None:
             self.roi = self.roi.union(spec.roi)
         elif spec.roi is not None:
             self.roi = spec.roi
@@ -56,13 +54,11 @@ class GraphSpec(Freezable):
         return copy.deepcopy(self)
 
     def __eq__(self, other):
-
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         return NotImplemented
 
     def __ne__(self, other):
-
         if isinstance(other, self.__class__):
             return not self.__eq__(other)
         return NotImplemented

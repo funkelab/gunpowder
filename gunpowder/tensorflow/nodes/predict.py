@@ -12,8 +12,9 @@ from operator import mul
 
 logger = logging.getLogger(__name__)
 
+
 class Predict(GenericPredict):
-    '''Tensorflow implementation of :class:`gunpowder.nodes.Predict`.
+    """Tensorflow implementation of :class:`gunpowder.nodes.Predict`.
 
     Args:
 
@@ -58,22 +59,19 @@ class Predict(GenericPredict):
 
             The maximal amount of shared memory in bytes to allocate to send
             batches to the GPU processes. Defaults to 1GB.
-    '''
+    """
 
     def __init__(
-            self,
-            checkpoint,
-            inputs,
-            outputs,
-            array_specs=None,
-            graph=None,
-            skip_empty=False,
-            max_shared_memory=1024*1024*1024):
-
-        super(Predict, self).__init__(
-            inputs,
-            outputs,
-            array_specs)
+        self,
+        checkpoint,
+        inputs,
+        outputs,
+        array_specs=None,
+        graph=None,
+        skip_empty=False,
+        max_shared_memory=1024 * 1024 * 1024,
+    ):
+        super(Predict, self).__init__(inputs, outputs, array_specs)
 
         self.checkpoint = checkpoint
         self.meta_graph = graph
@@ -87,12 +85,8 @@ class Predict(GenericPredict):
         self.shared_output_array_config = self.manager.dict()
         self.shared_input_arrays = {}
         self.shared_output_arrays = {}
-        self.shared_input_memory = mp.RawArray(
-            ctypes.c_float,
-            self.max_shared_memory)
-        self.shared_output_memory = mp.RawArray(
-            ctypes.c_float,
-            self.max_shared_memory)
+        self.shared_input_memory = mp.RawArray(ctypes.c_float, self.max_shared_memory)
+        self.shared_output_memory = mp.RawArray(ctypes.c_float, self.max_shared_memory)
 
         self.send_lock = mp.Lock()
         self.receive_lock = mp.Lock()
@@ -102,17 +96,15 @@ class Predict(GenericPredict):
         self.predict_sent_outputs = mp.Event()
 
         self.predict_process = mp.Process(target=self.__predict)
-        self.predict_process_crashed = mp.Value('i', False)
+        self.predict_process_crashed = mp.Value("i", False)
         self.predict_process.start()
         self.predict_process_initialized.wait()
 
     def predict(self, batch, request):
-
         if not self.shared_output_arrays:
             self.__init_shared_output_arrays()
 
         if self.skip_empty:
-
             can_skip = True
             for array_key in self.inputs.values():
                 if batch[array_key].data.any():
@@ -120,19 +112,15 @@ class Predict(GenericPredict):
                     break
 
             if can_skip:
-
-                logger.info("Skipping batch %i (all inputs are 0)"%batch.id)
+                logger.info("Skipping batch %i (all inputs are 0)" % batch.id)
 
                 for name, array_key in self.outputs.items():
-
                     shape = self.shared_output_arrays[name].shape
                     dtype = self.shared_output_arrays[name].dtype
 
                     spec = self.spec[array_key].copy()
                     spec.roi = request[array_key].roi.copy()
-                    batch.arrays[array_key] = Array(
-                        np.zeros(shape, dtype=dtype),
-                        spec)
+                    batch.arrays[array_key] = Array(np.zeros(shape, dtype=dtype), spec)
 
                 return
 
@@ -170,14 +158,12 @@ class Predict(GenericPredict):
         for array_key in output_tensors:
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                output_data[array_key],
-                spec)
+            batch.arrays[array_key] = Array(output_data[array_key], spec)
 
         logger.debug("predicted in batch %i", batch.id)
 
     def __predict(self):
-        '''The background predict process.'''
+        """The background predict process."""
 
         try:
             # TODO: is the server still needed?
@@ -185,9 +171,7 @@ class Predict(GenericPredict):
             logger.info("Initializing tf session, connecting to %s...", target)
 
             self.graph = tf.Graph()
-            self.session = tf.Session(
-                target=target,
-                graph=self.graph)
+            self.session = tf.Session(target=target, graph=self.graph)
 
             with self.graph.as_default():
                 self.__read_checkpoint()
@@ -202,7 +186,6 @@ class Predict(GenericPredict):
 
             # loop predict
             while True:
-
                 # wait for inputs
                 self.worker_sent_inputs.wait()
                 self.worker_sent_inputs.clear()
@@ -216,15 +199,14 @@ class Predict(GenericPredict):
 
                 # compute outputs
                 output_data = self.session.run(
-                    {t: t for t in self.outputs.keys()},
-                    feed_dict=input_data)
+                    {t: t for t in self.outputs.keys()}, feed_dict=input_data
+                )
 
                 # write outputs
                 self.__write_outputs_to_shared(output_data)
                 self.predict_sent_outputs.set()
 
         except Exception as e:
-
             self.predict_process_crashed.value = True
 
             # release locks and events
@@ -235,12 +217,10 @@ class Predict(GenericPredict):
             raise e
 
     def teardown(self):
-
         self.predict_process.terminate()
         self.predict_process.join()
 
     def __check_background_process(self, locks=[]):
-
         if self.predict_process_crashed.value:
             # release all locks before raising exception
             for l in locks:
@@ -248,32 +228,31 @@ class Predict(GenericPredict):
             raise RuntimeError("Background process died.")
 
     def __read_checkpoint(self):
-
         # read the graph associated to the checkpoint
         if self.meta_graph is None:
-            meta_graph_file = self.checkpoint + '.meta'
+            meta_graph_file = self.checkpoint + ".meta"
         # read alternative, custom graph
         else:
             meta_graph_file = self.meta_graph
 
         logger.info(
             "Reading graph from %s and weights from %s...",
-            meta_graph_file, self.checkpoint)
+            meta_graph_file,
+            self.checkpoint,
+        )
 
-        saver = tf.train.import_meta_graph(
-                meta_graph_file,
-                clear_devices=True)
+        saver = tf.train.import_meta_graph(meta_graph_file, clear_devices=True)
 
         # restore variables from checkpoint
         saver.restore(self.session, self.checkpoint)
 
     def __collect_outputs(self, request=None):
-        '''Get a dict:
+        """Get a dict:
 
             array key: tensor name
 
         If request is not None, return only outputs that are in request.
-        '''
+        """
 
         array_outputs = {}
 
@@ -284,10 +263,10 @@ class Predict(GenericPredict):
         return array_outputs
 
     def __collect_provided_inputs(self, batch):
-        '''Get a dict:
+        """Get a dict:
 
-            tensor name: ndarray
-        '''
+        tensor name: ndarray
+        """
 
         inputs = {}
 
@@ -296,8 +275,11 @@ class Predict(GenericPredict):
                 if input_key in batch.arrays:
                     inputs[input_name] = batch.arrays[input_key].data
                 else:
-                    logger.warn("batch does not contain %s, input %s will not "
-                                "be set", input_key, input_name)
+                    logger.warn(
+                        "batch does not contain %s, input %s will not " "be set",
+                        input_key,
+                        input_name,
+                    )
             elif isinstance(input_key, np.ndarray):
                 inputs[input_name] = input_key
             elif isinstance(input_key, str):
@@ -305,94 +287,82 @@ class Predict(GenericPredict):
             else:
                 raise Exception(
                     "Unknown network input key {}, can't be given to "
-                    "network".format(input_key))
+                    "network".format(input_key)
+                )
 
         return inputs
 
     def __create_shared_input_array_config(self, batch, request):
-        '''Store the shared array config in a shared dictionary. Should be run
-        once by the first worker to submit a batch.'''
+        """Store the shared array config in a shared dictionary. Should be run
+        once by the first worker to submit a batch."""
 
         begin = 0
         for name, array_key in self.inputs.items():
-
             shape = batch[array_key].data.shape
             size = reduce(mul, shape, 1)
             dtype = batch[array_key].data.dtype
 
-            self.shared_input_array_config[name] = (
-                begin,
-                size,
-                shape,
-                dtype)
+            self.shared_input_array_config[name] = (begin, size, shape, dtype)
 
-            begin += size*np.dtype(dtype).itemsize
-            assert begin <= self.max_shared_memory, (
-                "The input arrays exceed the max_shared_memory")
+            begin += size * np.dtype(dtype).itemsize
+            assert (
+                begin <= self.max_shared_memory
+            ), "The input arrays exceed the max_shared_memory"
 
     def __create_shared_output_array_config(self):
-        '''To be called by predict process.'''
+        """To be called by predict process."""
 
         begin = 0
         for name, array_key in self.outputs.items():
-
             tensor = self.graph.get_tensor_by_name(name)
             shape = tensor.get_shape().as_list()
             size = reduce(mul, shape, 1)
             dtype = tensor.dtype.as_numpy_dtype
 
-            self.shared_output_array_config[name] = (
-                begin,
-                size,
-                tuple(shape),
-                dtype)
+            self.shared_output_array_config[name] = (begin, size, tuple(shape), dtype)
 
-            begin += size*np.dtype(dtype).itemsize
-            assert begin <= self.max_shared_memory, (
-                "The output arrays exceed the max_shared_memory")
+            begin += size * np.dtype(dtype).itemsize
+            assert (
+                begin <= self.max_shared_memory
+            ), "The output arrays exceed the max_shared_memory"
 
     def __init_shared_input_arrays(self):
-        '''Assign the shared memory to numpy arrays.'''
+        """Assign the shared memory to numpy arrays."""
 
         for name, (begin, size, shape, dtype) in self.shared_input_array_config.items():
-
             self.shared_input_arrays[name] = np.frombuffer(
-                self.shared_input_memory,
-                dtype=dtype,
-                offset=begin,
-                count=size).reshape(shape)
+                self.shared_input_memory, dtype=dtype, offset=begin, count=size
+            ).reshape(shape)
 
     def __init_shared_output_arrays(self):
-        '''Assign the shared memory to numpy arrays.'''
+        """Assign the shared memory to numpy arrays."""
 
-        for name, (begin, size, shape, dtype) in self.shared_output_array_config.items():
-
+        for name, (
+            begin,
+            size,
+            shape,
+            dtype,
+        ) in self.shared_output_array_config.items():
             self.shared_output_arrays[name] = np.frombuffer(
-                self.shared_output_memory,
-                dtype=dtype,
-                offset=begin,
-                count=size).reshape(shape)
+                self.shared_output_memory, dtype=dtype, offset=begin, count=size
+            ).reshape(shape)
 
     def __write_inputs_to_shared(self, input_data):
-
         for tensor_name, data in input_data.items():
             self.shared_input_arrays[tensor_name][:] = data
 
     def __read_inputs_from_shared(self):
-
         return {
             tensor_name: self.shared_input_arrays[tensor_name].copy()
             for tensor_name in self.inputs.keys()
         }
 
     def __write_outputs_to_shared(self, output_data):
-
         for tensor_name, data in output_data.items():
             self.shared_output_arrays[tensor_name][:] = data
 
     def __read_outputs_from_shared(self, output_tensors):
-
         return {
-                array_key: self.shared_output_arrays[tensor_name].copy()
-                for array_key, tensor_name in output_tensors.items()
+            array_key: self.shared_output_arrays[tensor_name].copy()
+            for array_key, tensor_name in output_tensors.items()
         }

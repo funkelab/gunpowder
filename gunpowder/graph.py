@@ -107,9 +107,7 @@ class Node(Freezable):
         node_id = attrs["id"]
         location = attrs["location"]
         temporary = attrs.get("temporary", False)
-        return cls(
-            id=node_id, location=location, temporary=temporary, attrs=attrs
-        )
+        return cls(id=node_id, location=location, temporary=temporary, attrs=attrs)
 
     def __str__(self):
         return f"Node({self.temporary}) ({self.id}) at ({self.location})"

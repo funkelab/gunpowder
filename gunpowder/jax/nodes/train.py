@@ -113,13 +113,11 @@ class Train(GenericTrain):
         validate_fn=None,
         validate_every=None,
     ):
-
         # not yet implemented
         gradients = gradients
 
         super(Train, self).__init__(
-            inputs, outputs, gradients, array_specs,
-            spawn_subprocess=spawn_subprocess
+            inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
         )
 
         self.model = model
@@ -139,8 +137,7 @@ class Train(GenericTrain):
         else:
             self.summary_writer = None
             if log_dir is not None:
-                logger.warning(
-                    "log_dir given, but tensorboardX is not installed")
+                logger.warning("log_dir given, but tensorboardX is not installed")
 
         self.intermediate_layers = {}
 
@@ -152,18 +149,17 @@ class Train(GenericTrain):
 
     def start(self):
         checkpoint, self.iteration = self._get_latest_checkpoint(
-            self.checkpoint_basename)
+            self.checkpoint_basename
+        )
 
         if checkpoint is not None:
-
             logger.info("Resuming training from iteration %d", self.iteration)
 
-            with open(checkpoint, 'rb') as f:
+            with open(checkpoint, "rb") as f:
                 self.model_params = pickle.load(f)
                 if self.n_devices > 1:
                     self.model_params = self.replicate_params(self.model_params)
         else:
-
             logger.info("Starting training from scratch")
             self.model_params = None
 
@@ -172,15 +168,17 @@ class Train(GenericTrain):
             assert arr.shape[0] % self.n_devices == 0, (
                 f"Batch size should be evenly divisible by the number of "
                 f"devices. Input array shape is {arr.shape} but n_device is"
-                f" {self.n_devices}")
+                f" {self.n_devices}"
+            )
             inputs[k] = arr.reshape(
-                self.n_devices, arr.shape[0] // self.n_devices, *arr.shape[1:])
+                self.n_devices, arr.shape[0] // self.n_devices, *arr.shape[1:]
+            )
             inputs[k] = [x for x in inputs[k]]  # make a sequence for put_sharded
         return inputs
 
     def unstack_device_outputs(self, outputs):
         for k, arr in outputs.items():
-            outputs[k] = arr.reshape(arr.shape[0]*arr.shape[1], *arr.shape[2:])
+            outputs[k] = arr.reshape(arr.shape[0] * arr.shape[1], *arr.shape[2:])
         return outputs
 
     def train_step(self, batch, request):
@@ -210,31 +208,25 @@ class Train(GenericTrain):
 
         if self.n_devices > 1:
             self.model_params, outputs, loss = jax.pmap(
-                                            self.model.train_step,
-                                            axis_name='num_devices',
-                                            donate_argnums=(0,),
-                                            static_broadcasted_argnums=(2,))(
-                                    self.model_params, inputs, True)
+                self.model.train_step,
+                axis_name="num_devices",
+                donate_argnums=(0,),
+                static_broadcasted_argnums=(2,),
+            )(self.model_params, inputs, True)
             loss = loss.mean()
             outputs = self.unstack_device_outputs(outputs)  # stack by batch
         else:
             self.model_params, outputs, loss = jax.jit(
-                                            self.model.train_step,
-                                            donate_argnums=(0,),
-                                            static_argnums=(2,))(
-                                    self.model_params, inputs, False)
+                self.model.train_step, donate_argnums=(0,), static_argnums=(2,)
+            )(self.model_params, inputs, False)
 
-        logger.debug(
-            "model outputs: %s",
-            {k: v.shape for k, v in outputs.items()})
+        logger.debug("model outputs: %s", {k: v.shape for k, v in outputs.items()})
 
         # add requested model outputs to batch
         for array_key, array_name in requested_outputs.items():
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                outputs[array_name], spec
-            )
+            batch.arrays[array_key] = Array(outputs[array_name], spec)
 
         if isinstance(loss, dict):
             total = 0.0
@@ -247,9 +239,9 @@ class Train(GenericTrain):
         batch.iteration = self.iteration
 
         if batch.iteration % self.save_every == 0:
-
             checkpoint_name = self._checkpoint_name(
-                self.checkpoint_basename, batch.iteration)
+                self.checkpoint_basename, batch.iteration
+            )
 
             logger.info("Creating checkpoint %s", checkpoint_name)
 
@@ -257,13 +249,14 @@ class Train(GenericTrain):
             if self.n_devices > 1:
                 # get only a single copy of param for saving
                 model_state = jax.tree_map(lambda x: x[0], model_state)
-            with open(checkpoint_name, 'wb') as f:
+            with open(checkpoint_name, "wb") as f:
                 pickle.dump(model_state, f)
 
             if self.keep_n_checkpoints:
                 checkpoint_name = self._checkpoint_name(
                     self.checkpoint_basename,
-                    batch.iteration - self.keep_n_checkpoints*self.save_every)
+                    batch.iteration - self.keep_n_checkpoints * self.save_every,
+                )
                 try:
                     os.remove(checkpoint_name)
                     logger.info("Removed checkpoint %s", checkpoint_name)
@@ -278,8 +271,7 @@ class Train(GenericTrain):
                 self.summary_writer.add_scalar("loss", loss, batch.iteration)
 
         # run validate
-        if (self.validate_fn is not None and
-                batch.iteration % self.validate_every == 0):
+        if self.validate_fn is not None and batch.iteration % self.validate_every == 0:
             val_ret = self.validate_fn(self.model, self.model_params)
             if isinstance(val_ret, dict):
                 for k, v in val_ret.items():
@@ -288,7 +280,6 @@ class Train(GenericTrain):
                 self.summary_writer.add_scalar("validate", val_ret, batch.iteration)
 
     def __collect_requested_outputs(self, request):
-
         array_outputs = {}
 
         for output_name, array_key in self.outputs.items():
@@ -298,11 +289,9 @@ class Train(GenericTrain):
         return array_outputs
 
     def __collect_provided_inputs(self, batch):
-
         return self.__collect_provided_arrays(self.inputs, batch)
 
     def __collect_provided_arrays(self, reference, batch):
-
         arrays = {}
 
         for array_name, array_key in reference.items():

@@ -9,8 +9,9 @@ from gunpowder.tensorflow.local_server import LocalServer
 
 logger = logging.getLogger(__name__)
 
+
 class Train(GenericTrain):
-    '''Tensorflow implementation of :class:`gunpowder.nodes.Train`.
+    """Tensorflow implementation of :class:`gunpowder.nodes.Train`.
 
     Args:
 
@@ -103,28 +104,25 @@ class Train(GenericTrain):
         log_every (``int``, optional):
 
             After how many iterations to write out tensorboard summaries.
-    '''
+    """
 
     def __init__(
-            self,
-            graph,
-            optimizer,
-            loss,
-            inputs,
-            outputs,
-            gradients,
-            summary=None,
-            array_specs=None,
-            save_every=2000,
-            log_dir='./',
-            log_every=1):
-
+        self,
+        graph,
+        optimizer,
+        loss,
+        inputs,
+        outputs,
+        gradients,
+        summary=None,
+        array_specs=None,
+        save_every=2000,
+        log_dir="./",
+        log_every=1,
+    ):
         super(Train, self).__init__(
-            inputs,
-            outputs,
-            gradients,
-            array_specs,
-            spawn_subprocess=False)
+            inputs, outputs, gradients, array_specs, spawn_subprocess=False
+        )
         self.meta_graph_filename = graph
         self.optimizer_func = None
         self.optimizer_loss_names = None
@@ -143,7 +141,7 @@ class Train(GenericTrain):
         self.log_dir = log_dir
         self.log_every = log_every
         # Check if optimizer is a str in python 2/3 compatible way.
-        if isinstance(optimizer, ("".__class__, u"".__class__)):
+        if isinstance(optimizer, ("".__class__, "".__class__)):
             self.optimizer_loss_names = (optimizer, loss)
         else:
             self.optimizer_func = optimizer
@@ -151,17 +149,14 @@ class Train(GenericTrain):
         # at least for some versions of tensorflow, the checkpoint name has to
         # start with a . if it is a relative path
         if not os.path.isabs(self.meta_graph_filename):
-            self.meta_graph_filename = os.path.join('.', self.meta_graph_filename)
+            self.meta_graph_filename = os.path.join(".", self.meta_graph_filename)
 
     def start(self):
-
         target = LocalServer.get_target()
         logger.info("Initializing tf session, connecting to %s...", target)
 
         self.graph = tf.Graph()
-        self.session = tf.Session(
-            target=target,
-            graph=self.graph)
+        self.session = tf.Session(target=target, graph=self.graph)
 
         with self.graph.as_default():
             self.__read_meta_graph()
@@ -170,27 +165,26 @@ class Train(GenericTrain):
             self.summary_saver = tf.summary.FileWriter(self.log_dir, self.graph)
 
         if self.optimizer_func is None:
-
             # get actual operations/tensors from names
-            self.optimizer = self.graph.get_operation_by_name(self.optimizer_loss_names[0])
+            self.optimizer = self.graph.get_operation_by_name(
+                self.optimizer_loss_names[0]
+            )
             self.loss = self.graph.get_tensor_by_name(self.optimizer_loss_names[1])
 
         # add symbolic gradients
         for tensor_name in self.gradients:
             tensor = self.graph.get_tensor_by_name(tensor_name)
-            self.tf_gradient[tensor_name] = tf.gradients(
-                self.loss,
-                [tensor])[0]
+            self.tf_gradient[tensor_name] = tf.gradients(self.loss, [tensor])[0]
 
     def train_step(self, batch, request):
-
         array_outputs = self.__collect_requested_outputs(request)
         inputs = self.__collect_provided_inputs(batch)
 
         to_compute = {
-            'optimizer': self.optimizer,
-            'loss': self.loss,
-            'iteration': self.iteration_increment}
+            "optimizer": self.optimizer,
+            "loss": self.loss,
+            "iteration": self.iteration_increment,
+        }
         to_compute.update(array_outputs)
 
         # compute outputs, gradients, and update variables
@@ -198,49 +192,39 @@ class Train(GenericTrain):
             to_compute["summaries"] = self.summary
         elif isinstance(self.summary, dict):
             for k, (v, f) in self.summary.items():
-                if int(self.current_step+1) % f == 0:
+                if int(self.current_step + 1) % f == 0:
                     to_compute[k] = v
         outputs = self.session.run(to_compute, feed_dict=inputs)
 
         for array_key in array_outputs:
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                outputs[array_key],
-                spec)
+            batch.arrays[array_key] = Array(outputs[array_key], spec)
 
-        batch.loss = outputs['loss']
-        batch.iteration = outputs['iteration'][0]
+        batch.loss = outputs["loss"]
+        batch.iteration = outputs["iteration"][0]
         self.current_step = batch.iteration
         if self.summary is not None:
-            if isinstance(self.summary, str) and \
-               (batch.iteration % self.log_every == 0 or batch.iteration == 1):
-                self.summary_saver.add_summary(
-                            outputs['summaries'], batch.iteration)
+            if isinstance(self.summary, str) and (
+                batch.iteration % self.log_every == 0 or batch.iteration == 1
+            ):
+                self.summary_saver.add_summary(outputs["summaries"], batch.iteration)
             else:
                 for k, (_, f) in self.summary.items():
                     if int(self.current_step) % f == 0:
-                        self.summary_saver.add_summary(
-                            outputs[k], batch.iteration)
+                        self.summary_saver.add_summary(outputs[k], batch.iteration)
 
-        if batch.iteration%self.save_every == 0:
-
+        if batch.iteration % self.save_every == 0:
             checkpoint_name = (
-                self.meta_graph_filename +
-                '_checkpoint_%i'%batch.iteration)
+                self.meta_graph_filename + "_checkpoint_%i" % batch.iteration
+            )
 
-            logger.info(
-                "Creating checkpoint %s",
-                checkpoint_name)
+            logger.info("Creating checkpoint %s", checkpoint_name)
 
-            self.full_saver.save(
-                self.session,
-                checkpoint_name)
+            self.full_saver.save(self.session, checkpoint_name)
 
     def stop(self):
-
         if self.session is not None:
-
             self.optimizer = None
             self.loss = None
             if self.summary is not None:
@@ -250,24 +234,19 @@ class Train(GenericTrain):
             self.session = None
 
     def __read_meta_graph(self):
-
         logger.info("Reading meta-graph...")
 
         # read the original meta-graph
         tf.train.import_meta_graph(
-            self.meta_graph_filename + '.meta',
-            clear_devices=True)
+            self.meta_graph_filename + ".meta", clear_devices=True
+        )
 
         # add custom gunpowder variables
-        with tf.variable_scope('gunpowder'):
+        with tf.variable_scope("gunpowder"):
             self.iteration = tf.get_variable(
-                'iteration',
-                shape=1,
-                initializer=tf.zeros_initializer,
-                trainable=False)
-            self.iteration_increment = tf.assign(
-                self.iteration,
-                self.iteration + 1)
+                "iteration", shape=1, initializer=tf.zeros_initializer, trainable=False
+            )
+            self.iteration_increment = tf.assign(self.iteration, self.iteration + 1)
 
         # Until now, only variables have been added to the graph that are part
         # of every checkpoint. We create a 'basic_saver' for only those
@@ -289,40 +268,33 @@ class Train(GenericTrain):
         checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
 
         if checkpoint:
-
             try:
                 # Try to restore the graph, including the custom optimizer
                 # state (if a custom optimizer was used).
                 self.__restore_graph(checkpoint, restore_full=True)
 
             except tf.errors.NotFoundError:
-
                 # If that failed, we just transitioned from an earlier training
                 # without the custom optimizer. In this case, restore only the
                 # variables of the original meta-graph and 'gunpowder'
                 # variables. Custom optimizer variables will be default
                 # initialized.
-                logger.info("Checkpoint did not contain custom optimizer "
-                            "variables")
+                logger.info("Checkpoint did not contain custom optimizer " "variables")
                 self.__restore_graph(checkpoint, restore_full=False)
         else:
-
             logger.info("No checkpoint found")
 
             # initialize all variables
             self.session.run(tf.global_variables_initializer())
 
     def __restore_graph(self, checkpoint, restore_full):
-
         logger.info("Restoring model from %s", checkpoint)
 
         if restore_full:
-
             logger.info("...using a saver for all variables")
             self.full_saver.restore(self.session, checkpoint)
 
         else:
-
             # initialize all variables, such that non-basic variables are
             # initialized
             self.session.run(tf.global_variables_initializer())
@@ -333,7 +305,6 @@ class Train(GenericTrain):
         self.current_step = self.session.run(self.iteration)
 
     def __collect_requested_outputs(self, request):
-
         array_outputs = {}
 
         for output_name, array_key in self.outputs.items():
@@ -347,7 +318,6 @@ class Train(GenericTrain):
         return array_outputs
 
     def __collect_provided_inputs(self, batch):
-
         inputs = {}
 
         for input_name, input_key in self.inputs.items():
@@ -355,8 +325,11 @@ class Train(GenericTrain):
                 if input_key in batch.arrays:
                     inputs[input_name] = batch.arrays[input_key].data
                 else:
-                    logger.warn("batch does not contain %s, input %s will not "
-                                "be set", input_key, input_name)
+                    logger.warn(
+                        "batch does not contain %s, input %s will not " "be set",
+                        input_key,
+                        input_name,
+                    )
             elif isinstance(input_key, np.ndarray):
                 inputs[input_name] = input_key
             elif isinstance(input_key, str):
@@ -364,6 +337,7 @@ class Train(GenericTrain):
             else:
                 raise Exception(
                     "Unknown network input key {}, can't be given to "
-                    "network".format(input_key))
+                    "network".format(input_key)
+                )
 
         return inputs

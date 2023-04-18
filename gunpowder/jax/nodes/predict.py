@@ -54,16 +54,13 @@ class Predict(GenericPredict):
         outputs: Dict[Union[str, int], ArrayKey],
         array_specs: Dict[ArrayKey, ArraySpec] = None,
         checkpoint: str = None,
-        spawn_subprocess=False
+        spawn_subprocess=False,
     ):
-
         self.array_specs = array_specs if array_specs is not None else {}
 
         super(Predict, self).__init__(
-            inputs,
-            outputs,
-            array_specs,
-            spawn_subprocess=spawn_subprocess)
+            inputs, outputs, array_specs, spawn_subprocess=spawn_subprocess
+        )
 
         self.model = model
         self.checkpoint = checkpoint
@@ -71,7 +68,7 @@ class Predict(GenericPredict):
 
     def start(self):
         if self.checkpoint is not None:
-            with open(self.checkpoint, 'rb') as f:
+            with open(self.checkpoint, "rb") as f:
                 self.model_params = pickle.load(f)
 
     def predict(self, batch, request):
@@ -88,8 +85,7 @@ class Predict(GenericPredict):
 
     def get_inputs(self, batch):
         model_inputs = {
-            key: jax.device_put(batch[value].data)
-            for key, value in self.inputs.items()
+            key: jax.device_put(batch[value].data) for key, value in self.inputs.items()
         }
         return model_inputs
 

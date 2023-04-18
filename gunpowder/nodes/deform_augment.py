@@ -357,12 +357,8 @@ class DeformAugment(BatchFilter):
 
         # apply transformation on each channel
         transform = transformation.data.copy()
-        transform -= np.array(offset).reshape(
-            (-1,) + (1,) * self.spatial_dims
-        )
-        transform /= np.array(voxel_size).reshape(
-            (-1,) + (1,) * self.spatial_dims
-        )
+        transform -= np.array(offset).reshape((-1,) + (1,) * self.spatial_dims)
+        transform /= np.array(voxel_size).reshape((-1,) + (1,) * self.spatial_dims)
 
         data = np.array(
             [
@@ -513,7 +509,10 @@ class DeformAugment(BatchFilter):
             *[
                 (
                     node.id,
-                    (np.floor(node.location[-self.spatial_dims:]).astype(int) - source_roi.begin)
+                    (
+                        np.floor(node.location[-self.spatial_dims :]).astype(int)
+                        - source_roi.begin
+                    )
                     // self.graph_raster_voxel_size,
                 )
                 for node in nodes

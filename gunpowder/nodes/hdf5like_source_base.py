@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Hdf5LikeSource(BatchProvider):
-    '''An HDF5-like data source.
+    """An HDF5-like data source.
 
     Provides arrays from datasets accessed with an h5py-like API for each array
     key given. If the attribute ``resolution`` is set in a dataset, it will be
@@ -46,17 +46,13 @@ class Hdf5LikeSource(BatchProvider):
             to be (channels, spatial dimensions). This is recommended due to
             better performance. If channels_first is set to false, then the input
             data is read in channels_last manner and converted to channels_first.
-    '''
-    def __init__(
-            self,
-            filename,
-            datasets,
-            array_specs=None,
-            channels_first=True):
-        
+    """
+
+    def __init__(self, filename, datasets, array_specs=None, channels_first=True):
         warnings.warn(
             "HDF5LikeSource is depricated and will soon be removed in v2.0",
-            DeprecationWarning)
+            DeprecationWarning,
+        )
 
         self.filename = filename
         self.datasets = datasets
@@ -72,12 +68,11 @@ class Hdf5LikeSource(BatchProvider):
         self.ndims = None
 
     def _open_file(self, filename):
-        raise NotImplementedError('Only implemented in subclasses')
+        raise NotImplementedError("Only implemented in subclasses")
 
     def setup(self):
         with self._open_file(self.filename) as data_file:
-            for (array_key, ds_name) in self.datasets.items():
-
+            for array_key, ds_name in self.datasets.items():
                 if ds_name not in data_file:
                     raise RuntimeError("%s not in %s" % (ds_name, self.filename))
 
@@ -86,14 +81,13 @@ class Hdf5LikeSource(BatchProvider):
                 self.provides(array_key, spec)
 
     def provide(self, request):
-
         timing = Timing(self)
         timing.start()
 
         batch = Batch()
 
         with self._open_file(self.filename) as data_file:
-            for (array_key, request_spec) in request.array_specs.items():
+            for array_key, request_spec in request.array_specs.items():
                 logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
                 voxel_size = self.spec[array_key].voxel_size
@@ -111,7 +105,8 @@ class Hdf5LikeSource(BatchProvider):
                 # add array to batch
                 batch.arrays[array_key] = Array(
                     self.__read(data_file, self.datasets[array_key], dataset_roi),
-                    array_spec)
+                    array_spec,
+                )
 
         logger.debug("done")
 
@@ -122,18 +117,17 @@ class Hdf5LikeSource(BatchProvider):
 
     def _get_voxel_size(self, dataset):
         try:
-            return Coordinate(dataset.attrs['resolution'])
+            return Coordinate(dataset.attrs["resolution"])
         except Exception:  # todo: make specific when z5py supports it
             return None
 
     def _get_offset(self, dataset):
         try:
-            return Coordinate(dataset.attrs['offset'])
+            return Coordinate(dataset.attrs["offset"])
         except Exception:  # todo: make specific when z5py supports it
             return None
 
     def __read_spec(self, array_key, data_file, ds_name):
-
         dataset = data_file[ds_name]
 
         if array_key in self.array_specs:
@@ -144,11 +138,16 @@ class Hdf5LikeSource(BatchProvider):
         if spec.voxel_size is None:
             voxel_size = self._get_voxel_size(dataset)
             if voxel_size is None:
-                voxel_size = Coordinate((1,)*len(dataset.shape))
-                logger.warning("WARNING: File %s does not contain resolution information "
-                               "for %s (dataset %s), voxel size has been set to %s. This "
-                               "might not be what you want.",
-                               self.filename, array_key, ds_name, spec.voxel_size)
+                voxel_size = Coordinate((1,) * len(dataset.shape))
+                logger.warning(
+                    "WARNING: File %s does not contain resolution information "
+                    "for %s (dataset %s), voxel size has been set to %s. This "
+                    "might not be what you want.",
+                    self.filename,
+                    array_key,
+                    ds_name,
+                    spec.voxel_size,
+                )
             spec.voxel_size = voxel_size
 
         self.ndims = len(spec.voxel_size)
@@ -156,20 +155,21 @@ class Hdf5LikeSource(BatchProvider):
         if spec.roi is None:
             offset = self._get_offset(dataset)
             if offset is None:
-                offset = Coordinate((0,)*self.ndims)
+                offset = Coordinate((0,) * self.ndims)
 
             if self.channels_first:
-                shape = Coordinate(dataset.shape[-self.ndims:])
+                shape = Coordinate(dataset.shape[-self.ndims :])
             else:
-                shape = Coordinate(dataset.shape[:self.ndims])
+                shape = Coordinate(dataset.shape[: self.ndims])
 
-            spec.roi = Roi(offset, shape*spec.voxel_size)
+            spec.roi = Roi(offset, shape * spec.voxel_size)
 
         if spec.dtype is not None:
-            assert spec.dtype == dataset.dtype, ("dtype %s provided in array_specs for %s, "
-                                                 "but differs from dataset %s dtype %s" %
-                                                 (self.array_specs[array_key].dtype,
-                                                  array_key, ds_name, dataset.dtype))
+            assert spec.dtype == dataset.dtype, (
+                "dtype %s provided in array_specs for %s, "
+                "but differs from dataset %s dtype %s"
+                % (self.array_specs[array_key].dtype, array_key, ds_name, dataset.dtype)
+            )
         else:
             spec.dtype = dataset.dtype
 
@@ -178,29 +178,32 @@ class Hdf5LikeSource(BatchProvider):
                 np.float32,
                 np.float64,
                 np.float128,
-                np.uint8  # assuming this is not used for labels
+                np.uint8,  # assuming this is not used for labels
             ]
-            logger.warning("WARNING: You didn't set 'interpolatable' for %s "
-                           "(dataset %s). Based on the dtype %s, it has been "
-                           "set to %s. This might not be what you want.",
-                           array_key, ds_name, spec.dtype,
-                           spec.interpolatable)
+            logger.warning(
+                "WARNING: You didn't set 'interpolatable' for %s "
+                "(dataset %s). Based on the dtype %s, it has been "
+                "set to %s. This might not be what you want.",
+                array_key,
+                ds_name,
+                spec.dtype,
+                spec.interpolatable,
+            )
 
         return spec
 
     def __read(self, data_file, ds_name, roi):
-
         c = len(data_file[ds_name].shape) - self.ndims
 
         if self.channels_first:
             array = np.asarray(data_file[ds_name][(slice(None),) * c + roi.to_slices()])
         else:
             array = np.asarray(data_file[ds_name][roi.to_slices() + (slice(None),) * c])
-            array = np.transpose(array,
-                                 axes=[i + self.ndims for i in range(c)] + list(range(self.ndims)))
+            array = np.transpose(
+                array, axes=[i + self.ndims for i in range(c)] + list(range(self.ndims))
+            )
 
         return array
 
     def name(self):
-
         return super().name() + f"[{self.filename}]"

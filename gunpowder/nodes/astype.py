@@ -5,8 +5,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class AsType(BatchFilter):
-    '''Cast arrays to a different datatype (ex: np.float32 --> np.uint8).
+    """Cast arrays to a different datatype (ex: np.float32 --> np.uint8).
 
     Args:
 
@@ -22,7 +23,7 @@ class AsType(BatchFilter):
 
             The key of the array to store the cast ``source``.
 
-    '''
+    """
 
     def __init__(self, source, target_dtype, target=None):
         assert isinstance(source, ArrayKey)
@@ -59,4 +60,3 @@ class AsType(BatchFilter):
         outputs.arrays[self.target] = target_array
 
         return outputs
-        

@@ -11,11 +11,13 @@ from queue import Full
 
 logger = logging.getLogger(__name__)
 
+
 class PredictProcessDied(Exception):
     pass
 
+
 class GenericPredict(BatchFilter):
-    '''Generic predict node to add predictions of a trained network to each each
+    """Generic predict node to add predictions of a trained network to each each
     batch that passes through. This node alone does nothing and should be
     subclassed for concrete implementations.
 
@@ -37,15 +39,9 @@ class GenericPredict(BatchFilter):
 
         spawn_subprocess (bool, optional): Whether to run ``predict`` in a
             separate process. Default is false.
-    '''
+    """
 
-    def __init__(
-            self,
-            inputs,
-            outputs,
-            array_specs=None,
-            spawn_subprocess=False):
-
+    def __init__(self, inputs, outputs, array_specs=None, spawn_subprocess=False):
         self.initialized = False
         self.inputs = inputs
         self.outputs = outputs
@@ -54,11 +50,9 @@ class GenericPredict(BatchFilter):
         self.timer_start = None
 
     def setup(self):
-
         # get common voxel size of inputs, or None if they differ
         common_voxel_size = None
         for key in self.inputs.values():
-
             if not isinstance(key, ArrayKey):
                 continue
 
@@ -72,23 +66,21 @@ class GenericPredict(BatchFilter):
 
         # announce provided outputs
         for key in self.outputs.values():
-
             if key in self.array_specs:
                 spec = self.array_specs[key].copy()
             else:
                 spec = ArraySpec()
 
             if spec.voxel_size is None and not spec.nonspatial:
-
                 assert common_voxel_size is not None, (
                     "There is no common voxel size of the inputs, and no "
                     "ArraySpec has been given for %s that defines "
-                    "voxel_size."%key)
+                    "voxel_size." % key
+                )
 
                 spec.voxel_size = common_voxel_size
 
             if spec.interpolatable is None:
-
                 # default for predictions
                 spec.interpolatable = False
 
@@ -120,7 +112,6 @@ class GenericPredict(BatchFilter):
             self.stop()
 
     def prepare(self, request):
-
         if not self.initialized and not self.spawn_subprocess:
             self.start()
             self.initialized = True
@@ -130,34 +121,26 @@ class GenericPredict(BatchFilter):
             deps[key] = request[key]
         return deps
 
-
     def process(self, batch, request):
-
         if self.spawn_subprocess:
-
             start = time.time()
             self.batch_in_lock.acquire()
-            logger.debug(
-                "waited for batch in lock for %.3fs", time.time() - start)
+            logger.debug("waited for batch in lock for %.3fs", time.time() - start)
             start = time.time()
             self.batch_in.put((batch, request))
-            logger.debug(
-                "queued batch for %.3fs", time.time() - start)
+            logger.debug("queued batch for %.3fs", time.time() - start)
 
             start = time.time()
             with self.batch_out_lock:
-                logger.debug(
-                    "waited for batch out lock for %.3fs", time.time() - start)
+                logger.debug("waited for batch out lock for %.3fs", time.time() - start)
 
                 start = time.time()
                 self.batch_in_lock.release()
-                logger.debug(
-                    "released batch in lock for %.3fs", time.time() - start)
+                logger.debug("released batch in lock for %.3fs", time.time() - start)
                 try:
                     start = time.time()
                     out = self.worker.get()
-                    logger.debug(
-                        "retreived batch for %.3fs", time.time() - start)
+                    logger.debug("retreived batch for %.3fs", time.time() - start)
                 except WorkersDied:
                     raise PredictProcessDied()
 
@@ -166,40 +149,38 @@ class GenericPredict(BatchFilter):
                     batch.arrays[array_key] = out.arrays[array_key]
 
         else:
-
             self.predict(batch, request)
 
     def start(self):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         This method will be called before the first call to :fun:`predict`,
         from the same process that :fun:`predict` will be called from. Use
         this to initialize your model and hardware.
-        '''
+        """
         pass
 
     def predict(self, batch, request):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         In this method, an implementation should predict arrays on the given
         batch. Output arrays should be created according to the given request
-        and added to ``batch``.'''
-        raise NotImplementedError("Class %s does not implement 'predict'"%self.name())
+        and added to ``batch``."""
+        raise NotImplementedError("Class %s does not implement 'predict'" % self.name())
 
     def stop(self):
-        '''To be implemented in subclasses.
+        """To be implemented in subclasses.
 
         This method will be called after the last call to :fun:`predict`,
         from the same process that :fun:`predict` will be called from. Use
         this to tear down your model and free training hardware.
-        '''
+        """
         pass
 
     def __produce_predict_batch(self):
-        '''Process one batch.'''
+        """Process one batch."""
 
         if not self.initialized:
-
             self.start()
             self.initialized = True
 
@@ -223,7 +204,9 @@ class GenericPredict(BatchFilter):
 
         logger.debug(
             "batch in: %.3fs, predict: %.3fs, batch out: %.3fs",
-            self.time_in, self.time_predict, self.time_out)
+            self.time_in,
+            self.time_predict,
+            self.time_out,
+        )
 
         return batch
-

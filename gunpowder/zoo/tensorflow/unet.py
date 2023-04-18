@@ -1,13 +1,15 @@
 import tensorflow as tf
 
+
 def conv_pass(
-        fmaps_in,
-        kernel_size,
-        num_fmaps,
-        num_repetitions,
-        activation='relu',
-        name='conv_pass'):
-    '''Create a convolution pass::
+    fmaps_in,
+    kernel_size,
+    num_fmaps,
+    num_repetitions,
+    activation="relu",
+    name="conv_pass",
+):
+    """Create a convolution pass::
 
         f_in --> f_1 --> ... --> f_n
 
@@ -39,67 +41,73 @@ def conv_pass(
             Which activation to use after a convolution. Accepts the name of any
             tensorflow activation function (e.g., ``relu`` for ``tf.nn.relu``).
 
-    '''
+    """
 
     fmaps = fmaps_in
     if activation is not None:
         activation = getattr(tf.nn, activation)
 
     conv_layer = getattr(
-        tf.layers,
-        {2: 'conv2d', 3: 'conv3d'}[fmaps_in.get_shape().ndims - 2])
+        tf.layers, {2: "conv2d", 3: "conv3d"}[fmaps_in.get_shape().ndims - 2]
+    )
 
     for i in range(num_repetitions):
         fmaps = conv_layer(
             inputs=fmaps,
             filters=num_fmaps,
             kernel_size=kernel_size,
-            padding='valid',
-            data_format='channels_first',
+            padding="valid",
+            data_format="channels_first",
             activation=activation,
-            name=name + '_%i'%i)
+            name=name + "_%i" % i,
+        )
 
     return fmaps
 
-def downsample(fmaps_in, factors, name='down'):
 
+def downsample(fmaps_in, factors, name="down"):
     pooling_layer = getattr(
         tf.layers,
-        {2: 'max_pooling2d', 3: 'max_pooling3d'}[fmaps_in.get_shape().ndims - 2])
+        {2: "max_pooling2d", 3: "max_pooling3d"}[fmaps_in.get_shape().ndims - 2],
+    )
 
     fmaps = pooling_layer(
         fmaps_in,
         pool_size=factors,
         strides=factors,
-        padding='valid',
-        data_format='channels_first',
-        name=name)
+        padding="valid",
+        data_format="channels_first",
+        name=name,
+    )
 
     return fmaps
 
-def upsample(fmaps_in, factors, num_fmaps, activation='relu', name='up'):
 
+def upsample(fmaps_in, factors, num_fmaps, activation="relu", name="up"):
     if activation is not None:
         activation = getattr(tf.nn, activation)
 
     conv_trans_layer = getattr(
         tf.layers,
-        {2: 'conv2d_transpose', 3: 'conv3d_transpose'}[fmaps_in.get_shape().ndims - 2])
+        {2: "conv2d_transpose", 3: "conv3d_transpose"}[fmaps_in.get_shape().ndims - 2],
+    )
 
     fmaps = conv_trans_layer(
         fmaps_in,
         filters=num_fmaps,
         kernel_size=factors,
         strides=factors,
-        padding='valid',
-        data_format='channels_first',
+        padding="valid",
+        data_format="channels_first",
         activation=activation,
-        name=name)
+        name=name,
+    )
 
     return fmaps
 
+
 def crop_spatial(fmaps_in, shape):
-    '''Crop only the spacial dimensions to match shape.
+    """Crop only the spacial dimensions to match shape.
 
     Args:
 
@@ -111,7 +119,7 @@ def crop_spatial(fmaps_in, shape):
 
             A list (not a tensor) with the requested shape [_, _, z, y, x] or
             [_, _, y, x].
-    '''
+    """
 
     in_shape = fmaps_in.get_shape().as_list()
 
@@ -122,14 +130,11 @@ def crop_spatial(fmaps_in, shape):
 
     return fmaps
 
+
 def unet(
-        fmaps_in,
-        num_fmaps,
-        fmap_inc_factor,
-        downsample_factors,
-        activation='relu',
-        layer=0):
-    '''Create a 2D or 3D U-Net::
+    fmaps_in, num_fmaps, fmap_inc_factor, downsample_factors, activation="relu", layer=0
+):
+    """Create a 2D or 3D U-Net::
 
         f_in --> f_left --------------------------->> f_right--> f_out
                     |                                   ^
@@ -179,10 +184,10 @@ def unet(
         layer:
 
             Used internally to build the U-Net recursively.
-    '''
+    """
 
-    prefix = "    "*layer
-    print(prefix + "Creating U-Net layer %i"%layer)
+    prefix = "    " * layer
+    print(prefix + "Creating U-Net layer %i" % layer)
     print(prefix + "f_in: " + str(fmaps_in.shape))
 
     # convolve
@@ -192,10 +197,11 @@ def unet(
         num_fmaps=num_fmaps,
         num_repetitions=2,
         activation=activation,
-        name='unet_layer_%i_left'%layer)
+        name="unet_layer_%i_left" % layer,
+    )
 
     # last layer does not recurse
-    bottom_layer = (layer == len(downsample_factors))
+    bottom_layer = layer == len(downsample_factors)
     if bottom_layer:
         print(prefix + "bottom layer")
         print(prefix + "f_out: " + str(f_left.shape))
@@ -203,18 +209,18 @@ def unet(
 
     # downsample
     g_in = downsample(
-        f_left,
-        downsample_factors[layer],
-        'unet_down_%i_to_%i'%(layer, layer + 1))
+        f_left, downsample_factors[layer], "unet_down_%i_to_%i" % (layer, layer + 1)
+    )
 
     # recursive U-net
     g_out = unet(
         g_in,
-        num_fmaps=num_fmaps*fmap_inc_factor,
+        num_fmaps=num_fmaps * fmap_inc_factor,
         fmap_inc_factor=fmap_inc_factor,
         downsample_factors=downsample_factors,
         activation=activation,
-        layer=layer+1)
+        layer=layer + 1,
+    )
 
     print(prefix + "g_out: " + str(g_out.shape))
 
@@ -224,7 +230,8 @@ def unet(
         downsample_factors[layer],
         num_fmaps,
         activation=activation,
-        name='unet_up_%i_to_%i'%(layer + 1, layer))
+        name="unet_up_%i_to_%i" % (layer + 1, layer),
+    )
 
     print(prefix + "g_out_upsampled: " + str(g_out_upsampled.shape))
 
@@ -244,7 +251,8 @@ def unet(
         kernel_size=3,
         num_fmaps=num_fmaps,
         num_repetitions=2,
-        name='unet_layer_%i_right'%layer)
+        name="unet_layer_%i_right" % layer,
+    )
 
     print(prefix + "f_out: " + str(f_out.shape))
 

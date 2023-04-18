@@ -2,8 +2,9 @@ import copy
 from .coordinate import Coordinate
 from .freezable import Freezable
 
+
 class ArraySpec(Freezable):
-    '''Contains meta-information about an array. This is used by
+    """Contains meta-information about an array. This is used by
     :class:`BatchProviders<BatchProvider>` to communicate the arrays they
     offer, as well as by :class:`Arrays<Array>` to describe the data they
     contain.
@@ -34,17 +35,17 @@ class ArraySpec(Freezable):
         dtype (``np.dtype``):
 
             The data type of the array.
-    '''
+    """
 
     def __init__(
-            self,
-            roi=None,
-            voxel_size=None,
-            interpolatable=None,
-            nonspatial=False,
-            dtype=None,
-            placeholder=False):
-
+        self,
+        roi=None,
+        voxel_size=None,
+        interpolatable=None,
+        nonspatial=False,
+        dtype=None,
+        placeholder=False,
+    ):
         self.roi = roi
         self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)
         self.interpolatable = interpolatable
@@ -54,14 +55,12 @@ class ArraySpec(Freezable):
 
         if nonspatial:
             assert roi is None, "Non-spatial arrays can not have a ROI"
-            assert voxel_size is None, "Non-spatial arrays can not " \
-                "have a voxel size"
+            assert voxel_size is None, "Non-spatial arrays can not " "have a voxel size"
 
         self.freeze()
 
     def update_with(self, spec):
-        if self.roi is not None and \
-           spec.roi is not None:
+        if self.roi is not None and spec.roi is not None:
             self.roi = self.roi.union(spec.roi)
         elif spec.roi is not None:
             self.roi = spec.roi
@@ -82,17 +81,15 @@ class ArraySpec(Freezable):
             self.placeholder = spec.placeholder
 
     def copy(self):
-        '''Create a copy of this spec.'''
+        """Create a copy of this spec."""
         return copy.deepcopy(self)
 
     def __eq__(self, other):
-
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         return NotImplemented
 
     def __ne__(self, other):
-
         if isinstance(other, self.__class__):
             return not self.__eq__(other)
         return NotImplemented

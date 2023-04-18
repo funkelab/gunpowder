@@ -56,7 +56,6 @@ class SimpleAugment(BatchFilter):
         mirror_probs=None,
         transpose_probs=None,
     ):
-
         self.mirror_only = mirror_only
         self.mirror_probs = mirror_probs
         self.transpose_only = transpose_only
@@ -66,7 +65,6 @@ class SimpleAugment(BatchFilter):
         self.transpose_dims = None
 
     def setup(self):
-
         self.dims = self.spec.get_total_roi().dims
 
         # mirror_mask and transpose_dims refer to the indices of the spatial
@@ -145,14 +143,13 @@ class SimpleAugment(BatchFilter):
         return request
 
     def process(self, batch, request):
-
         # mirror and transpose ROIs of arrays & points in batch
         total_roi = batch.get_total_roi().copy()
         requested_keys = request.array_specs.keys()
         lcm_voxel_size = self.spec.get_lcm_voxel_size(requested_keys)
 
         for collection_type in [batch.arrays, batch.graphs]:
-            for (key, collector) in collection_type.items():
+            for key, collector in collection_type.items():
                 if key not in request:
                     continue
                 if collector.spec.roi is None:
@@ -168,8 +165,7 @@ class SimpleAugment(BatchFilter):
 
         mirror = tuple(slice(None, None, -1 if m else 1) for m in self.mirror)
         # arrays
-        for (array_key, array) in batch.arrays.items():
-
+        for array_key, array in batch.arrays.items():
             if array_key not in request:
                 continue
 
@@ -197,14 +193,12 @@ class SimpleAugment(BatchFilter):
         total_roi_end = total_roi.end
         logger.debug("augmenting in %s and center %s", total_roi, total_roi_center)
 
-        for (graph_key, graph) in batch.graphs.items():
-
+        for graph_key, graph in batch.graphs.items():
             if graph_key not in request:
                 continue
 
             logger.debug("converting nodes in graph %s", graph_key)
             for node in list(graph.nodes):
-
                 logger.debug("old location: %s, %s", node.id, node.location)
 
                 # mirror
@@ -239,7 +233,6 @@ class SimpleAugment(BatchFilter):
                     graph.remove_node(node)
 
     def __mirror_request(self, request, mirror):
-
         total_roi = request.get_total_roi().copy()
         for key, spec in request.items():
             if spec.roi is not None:
@@ -254,7 +247,6 @@ class SimpleAugment(BatchFilter):
                 self.__transpose_roi(spec.roi, total_roi, transpose, lcm_voxel_size)
 
     def __mirror_roi(self, roi, total_roi, mirror):
-
         total_roi_offset = total_roi.offset
         total_roi_shape = total_roi.shape
 
@@ -274,7 +266,6 @@ class SimpleAugment(BatchFilter):
         roi.offset = roi_offset
 
     def __transpose_roi(self, roi, total_roi, transpose, lcm_voxel_size):
-
         logger.debug("original roi = %s", roi)
 
         center = total_roi.center

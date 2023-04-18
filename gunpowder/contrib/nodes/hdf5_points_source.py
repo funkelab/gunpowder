@@ -13,8 +13,9 @@ from gunpowder.nodes.batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 
+
 class Hdf5PointsSource(BatchProvider):
-    '''An HDF5 data source for :class:``Graph``. Currently only supports a
+    """An HDF5 data source for :class:``Graph``. Currently only supports a
     specific case where graphs represent pre- and post-synaptic markers.
 
     Args:
@@ -27,14 +28,9 @@ class Hdf5PointsSource(BatchProvider):
         rois (dict): Dictionary of :class:``GraphKey`` -> :class:``Roi`` to
             set the ROI for each point set provided by this source.
 
-    '''
+    """
 
-    def __init__(
-            self,
-            filename,
-            datasets,
-            rois):
-
+    def __init__(self, filename, datasets, rois):
         self.filename = filename
         self.datasets = datasets
         self.rois = rois
@@ -42,13 +38,11 @@ class Hdf5PointsSource(BatchProvider):
         self.ndims = None
 
     def setup(self):
+        hdf_file = h5py.File(self.filename, "r")
 
-        hdf_file = h5py.File(self.filename, 'r')
-
-        for (points_key, ds_name) in self.datasets.items():
-
+        for points_key, ds_name in self.datasets.items():
             if ds_name not in hdf_file:
-                raise RuntimeError("%s not in %s"%(ds_name, self.filename))
+                raise RuntimeError("%s not in %s" % (ds_name, self.filename))
 
             spec = PointsSpec()
             spec.roi = self.rois[points_key]
@@ -58,33 +52,38 @@ class Hdf5PointsSource(BatchProvider):
         hdf_file.close()
 
     def provide(self, request):
-
         timing = Timing(self)
         timing.start()
 
         batch = Batch()
 
-        with h5py.File(self.filename, 'r') as hdf_file:
-
+        with h5py.File(self.filename, "r") as hdf_file:
             # if pre and postsynaptic locations required, their id
             # SynapseLocation dictionaries should be created together s.t. ids
             # are unique and allow to find partner locations
-            if PointsKeys.PRESYN in request.points_specs or PointsKeys.POSTSYN in request.points_specs:
-                assert request.points_specs[PointsKeys.PRESYN].roi == request.points_specs[PointsKeys.POSTSYN].roi
+            if (
+                PointsKeys.PRESYN in request.points_specs
+                or PointsKeys.POSTSYN in request.points_specs
+            ):
+                assert (
+                    request.points_specs[PointsKeys.PRESYN].roi
+                    == request.points_specs[PointsKeys.POSTSYN].roi
+                )
                 # Cremi specific, ROI offset corresponds to offset present in the
                 # synapse location relative to the raw data.
                 dataset_offset = self.spec[PointsKeys.PRESYN].roi.offset
                 presyn_points, postsyn_points = self.__get_syn_points(
                     roi=request.points_specs[PointsKeys.PRESYN].roi,
                     syn_file=hdf_file,
-                    dataset_offset=dataset_offset)
+                    dataset_offset=dataset_offset,
+                )
 
-            for (points_key, request_spec) in request.points_specs.items():
-
+            for points_key, request_spec in request.points_specs.items():
                 logger.debug("Reading %s in %s...", points_key, request_spec.roi)
                 id_to_point = {
                     PointsKeys.PRESYN: presyn_points,
-                    PointsKeys.POSTSYN: postsyn_points}[points_key]
+                    PointsKeys.POSTSYN: postsyn_points,
+                }[points_key]
 
                 points_spec = self.spec[points_key].copy()
                 points_spec.roi = request_spec.roi
@@ -99,52 +98,65 @@ class Hdf5PointsSource(BatchProvider):
 
     def __get_syn_points(self, roi, syn_file, dataset_offset=None):
         presyn_points_dict, postsyn_points_dict = {}, {}
-        presyn_node_ids  = syn_file['annotations/presynaptic_site/partners'][:, 0].tolist()
-        postsyn_node_ids = syn_file['annotations/presynaptic_site/partners'][:, 1].tolist()
+        presyn_node_ids = syn_file["annotations/presynaptic_site/partners"][
+            :, 0
+        ].tolist()
+        postsyn_node_ids = syn_file["annotations/presynaptic_site/partners"][
+            :, 1
+        ].tolist()
 
-        for node_nr, node_id in enumerate(syn_file['annotations/ids']):
-            location = syn_file['annotations/locations'][node_nr]
+        for node_nr, node_id in enumerate(syn_file["annotations/ids"]):
+            location = syn_file["annotations/locations"][node_nr]
             if dataset_offset is not None:
-                logging.debug('adding global offset to points %i %i %i' %(dataset_offset[0],
-                                                                          dataset_offset[1], dataset_offset[2]))
+                logging.debug(
+                    "adding global offset to points %i %i %i"
+                    % (dataset_offset[0], dataset_offset[1], dataset_offset[2])
+                )
                 location += dataset_offset
-
 
             # cremi synapse locations are in physical space
             if roi.contains(Coordinate(location)):
                 if node_id in presyn_node_ids:
-                    kind = 'PreSyn'
-                    assert syn_file['annotations/types'][node_nr] == 'presynaptic_site'
+                    kind = "PreSyn"
+                    assert syn_file["annotations/types"][node_nr] == "presynaptic_site"
                     syn_id = int(np.where(presyn_node_ids == node_id)[0])
                     partner_node_id = postsyn_node_ids[syn_id]
                 elif node_id in postsyn_node_ids:
-                    kind = 'PostSyn'
-                    assert syn_file['annotations/types'][node_nr] == 'postsynaptic_site'
+                    kind = "PostSyn"
+                    assert syn_file["annotations/types"][node_nr] == "postsynaptic_site"
                     syn_id = int(np.where(postsyn_node_ids == node_id)[0])
                     partner_node_id = presyn_node_ids[syn_id]
                 else:
-                    raise Exception('Node id neither pre- no post-synaptic')
+                    raise Exception("Node id neither pre- no post-synaptic")
 
                 partners_ids = [int(partner_node_id)]
-                location_id  = int(node_id)
+                location_id = int(node_id)
 
                 props = {}
-                if node_id in syn_file['annotations/comments/target_ids']:
-                    props = {'unsure': True}
+                if node_id in syn_file["annotations/comments/target_ids"]:
+                    props = {"unsure": True}
 
                 # create synpaseLocation & add to dict
-                if kind == 'PreSyn':
-                    syn_point = PreSynPoint(location=location, location_id=location_id,
-                                         synapse_id=syn_id, partner_ids=partners_ids, props=props)
+                if kind == "PreSyn":
+                    syn_point = PreSynPoint(
+                        location=location,
+                        location_id=location_id,
+                        synapse_id=syn_id,
+                        partner_ids=partners_ids,
+                        props=props,
+                    )
                     presyn_points_dict[int(node_id)] = copy.deepcopy(syn_point)
-                elif kind == 'PostSyn':
-                    syn_point = PostSynPoint(location=location, location_id=location_id,
-                                         synapse_id=syn_id, partner_ids=partners_ids, props=props)
+                elif kind == "PostSyn":
+                    syn_point = PostSynPoint(
+                        location=location,
+                        location_id=location_id,
+                        synapse_id=syn_id,
+                        partner_ids=partners_ids,
+                        props=props,
+                    )
                     postsyn_points_dict[int(node_id)] = copy.deepcopy(syn_point)
 
         return presyn_points_dict, postsyn_points_dict
 
-
     def __repr__(self):
-
         return self.filename

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class BalanceLabels(BatchFilter):
-    '''Creates a scale array to balance the loss between class labels.
+    """Creates a scale array to balance the loss between class labels.
 
     Note that this only balances loss weights per-batch and does not accumulate
     statistics about class balance across batches.
@@ -61,11 +61,18 @@ class BalanceLabels(BatchFilter):
             Defaults to 0.95. Set to None, if you do not want to clip max
             values.
 
-    '''
+    """
 
-    def __init__(self, labels, scales, mask=None, slab=None, num_classes=2,
-                 clipmin=0.05, clipmax=0.95):
-
+    def __init__(
+        self,
+        labels,
+        scales,
+        mask=None,
+        slab=None,
+        num_classes=2,
+        clipmin=0.05,
+        clipmax=0.95,
+    ):
         self.labels = labels
         self.scales = scales
         if mask is None:
@@ -80,16 +87,16 @@ class BalanceLabels(BatchFilter):
         self.clipmin = clipmin
         self.clipmax = clipmax
 
-
     def setup(self):
-
         assert self.labels in self.spec, (
-            "Asked to balance labels %s, which are not provided."%self.labels)
+            "Asked to balance labels %s, which are not provided." % self.labels
+        )
 
         for mask in self.masks:
             assert mask in self.spec, (
                 "Asked to apply mask %s to balance labels, but mask is not "
-                "provided."%mask)
+                "provided." % mask
+            )
 
         spec = self.spec[self.labels].copy()
         spec.dtype = np.float32
@@ -97,7 +104,6 @@ class BalanceLabels(BatchFilter):
         self.enable_autoskip()
 
     def prepare(self, request):
-
         deps = BatchRequest()
         deps[self.labels] = request[self.scales]
         for mask in self.masks:
@@ -105,15 +111,17 @@ class BalanceLabels(BatchFilter):
         return deps
 
     def process(self, batch, request):
-
         labels = batch.arrays[self.labels]
 
         assert len(np.unique(labels.data)) <= self.num_classes, (
-            "Found more unique labels than classes in %s."%self.labels)
+            "Found more unique labels than classes in %s." % self.labels
+        )
         assert 0 <= np.min(labels.data) < self.num_classes, (
-            "Labels %s are not in [0, num_classes)."%self.labels)
+            "Labels %s are not in [0, num_classes)." % self.labels
+        )
         assert 0 <= np.max(labels.data) < self.num_classes, (
-            "Labels %s are not in [0, num_classes)."%self.labels)
+            "Labels %s are not in [0, num_classes)." % self.labels
+        )
 
         # initialize error scale with 1s
         error_scale = np.ones(labels.data.shape, dtype=np.float32)
@@ -121,12 +129,14 @@ class BalanceLabels(BatchFilter):
         # set error_scale to 0 in masked-out areas
         for key in self.masks:
             mask = batch.arrays[key]
-            assert labels.data.shape == mask.data.shape, (
-                "Shape of mask %s %s does not match %s %s"%(
-                    mask,
-                    mask.data.shape,
-                    self.labels,
-                    labels.data.shape))
+            assert (
+                labels.data.shape == mask.data.shape
+            ), "Shape of mask %s %s does not match %s %s" % (
+                mask,
+                mask.data.shape,
+                self.labels,
+                labels.data.shape,
+            )
             error_scale *= mask.data
 
         if not self.slab:
@@ -134,20 +144,16 @@ class BalanceLabels(BatchFilter):
         else:
             # slab with -1 replaced by shape
             slab = tuple(
-                m if s == -1 else s
-                for m, s in zip(error_scale.shape, self.slab))
+                m if s == -1 else s for m, s in zip(error_scale.shape, self.slab)
+            )
 
-        slab_ranges = (
-            range(0, m, s)
-            for m, s in zip(error_scale.shape, slab))
+        slab_ranges = (range(0, m, s) for m, s in zip(error_scale.shape, slab))
 
         for start in itertools.product(*slab_ranges):
             slices = tuple(
-                slice(start[d], start[d] + slab[d])
-                for d in range(len(slab)))
-            self.__balance(
-                labels.data[slices],
-                error_scale[slices])
+                slice(start[d], start[d] + slab[d]) for d in range(len(slab))
+            )
+            self.__balance(labels.data[slices], error_scale[slices])
 
         spec = self.spec[self.scales].copy()
         spec.roi = labels.spec.roi
@@ -157,13 +163,14 @@ class BalanceLabels(BatchFilter):
         return outputs
 
     def __balance(self, labels, scale):
-
         labels = labels.astype(np.int64)
 
         # in the masked-in area, compute the fraction of per-class samples
         masked_in = scale.sum()
         classes, counts = np.unique(labels[np.nonzero(scale)], return_counts=True)
-        fracs = counts.astype(float) / masked_in if masked_in > 0 else np.zeros(counts.size)
+        fracs = (
+            counts.astype(float) / masked_in if masked_in > 0 else np.zeros(counts.size)
+        )
         if self.clipmin is not None or self.clipmax is not None:
             np.clip(fracs, self.clipmin, self.clipmax, fracs)
 

@@ -24,16 +24,16 @@ class AddVectorMap(BatchFilter):
         stayinside_array_keys=None,
         pad_for_partners=(0, 0, 0),
     ):
-        """ Creates a vector map of shape [dim_vector, [shape_of_array]] (e.g. [3, 50,50,50] for an array of
+        """Creates a vector map of shape [dim_vector, [shape_of_array]] (e.g. [3, 50,50,50] for an array of
             shape (50,50,50)) where every voxel which is close to a any source point location has a vector which points to
             one of the source point location's target location.
-            Close to a point location in src_point includes all voxels which 
+            Close to a point location in src_point includes all voxels which
                 1) lie within distance radius_phys of the considered src point location
                 2) (if stayinside_array_keys is not None), lie within the same segment as the src location in the
                     mask provided in stayinside_array_keys.
             The partner_criterion decides to which target location of the source point location that the vector of a
             voxel points (the different criterions are described below).
-        
+
         Args:
             src_and_trg_points (dict):      Dictionary from :class:``ArrayKey`` of the vector map to be created
                                             to a tuple (:class:``GraphKey`` of the source points, :class:``GraphKey``
@@ -43,23 +43,23 @@ class AddVectorMap(BatchFilter):
                                             map to be created to a
                                             :class:`Coordinate` for the voxel
                                             size of the array.
-            stayinside_array_keys (dict):  Dictionary from :class:``ArrayKey`` of the vector map to be created to 
-                                            :class:``ArrayKey`` of the stayinside_array. 
+            stayinside_array_keys (dict):  Dictionary from :class:``ArrayKey`` of the vector map to be created to
+                                            :class:``ArrayKey`` of the stayinside_array.
                                             The stayinside_array is assumed to contain discrete objects labeled with
                                             different object ids. The object id at the specific source location is used
-                                            to restrict the region where vectors are created around a source location. 
+                                            to restrict the region where vectors are created around a source location.
                                             Voxels that are located outside of this object are set to zero.
-                                            If stayinside_array_keys is None, all the voxels within distance 
+                                            If stayinside_array_keys is None, all the voxels within distance
                                             radius_phys to the source location receive a vector.
             pad_for_partners (tuple):       n-dim tuple which defines padding of trg_points request in all dimensions
                                             (in world units).
-                                            This might be used s.t. also partner locations which lie within the padded 
+                                            This might be used s.t. also partner locations which lie within the padded
                                             region, hence slightly outside of the vector map's roi, are considered.
             radius_phys (int):              Radius (in world units) to restrict region where vectors are created around
                                             a source location.
             partner_criterion(str):         'min_distance' or 'all'
                                             'min_distance': the vectors of all the voxels around a source location
-                                            point to the same target location, namely the location which has the 
+                                            point to the same target location, namely the location which has the
                                             minimal distance to the considered source location.
                                             'all': all partner locations of a given source location are considered.
                                             The region around a source location is split up into (num_partners)-subregions
@@ -75,7 +75,6 @@ class AddVectorMap(BatchFilter):
         self.partner_criterion = partner_criterion
 
     def setup(self):
-
         for (
             array_key,
             (src_points_key, trg_points_key),
@@ -104,7 +103,6 @@ class AddVectorMap(BatchFilter):
         self.enable_autoskip()
 
     def prepare(self, request):
-
         deps = BatchRequest()
 
         for (
@@ -129,7 +127,6 @@ class AddVectorMap(BatchFilter):
         return deps
 
     def process(self, batch, request):
-
         # create vector map and add it to batch
         for (
             array_key,
@@ -144,7 +141,6 @@ class AddVectorMap(BatchFilter):
                 batch.arrays[array_key] = Array(data=vector_map, spec=spec)
 
     def __get_vector_map(self, batch, request, vector_map_array_key):
-
         src_points_key, trg_points_key = self.array_to_src_trg_points[
             vector_map_array_key
         ]
@@ -152,8 +148,7 @@ class AddVectorMap(BatchFilter):
         voxel_size_vm = self.voxel_sizes[vector_map_array_key]
         offset_vector_map_phys = request[vector_map_array_key].roi.offset
         vector_map_total = np.zeros(
-            (dim_vectors,)
-            + (request[vector_map_array_key].roi.shape // voxel_size_vm),
+            (dim_vectors,) + (request[vector_map_array_key].roi.shape // voxel_size_vm),
             dtype=np.float32,
         )
 
@@ -161,15 +156,12 @@ class AddVectorMap(BatchFilter):
             return vector_map_total
 
         for node in batch.graphs[src_points_key].nodes:
-
             if request[vector_map_array_key].roi.contains(Coordinate(node.location)):
-
                 # get all partner locations which should be considered
                 relevant_partner_loc = self.__get_relevant_partner_locations(
                     batch, node, trg_points_key
                 )
                 if len(relevant_partner_loc) > 0:
-
                     # get locations where to set vectors around source location
                     # (look only at region close to src location (to avoid np.nonzero() over entire array))
                     mask = self.__get_mask(
@@ -294,7 +286,7 @@ class AddVectorMap(BatchFilter):
             return [stored_pos]
 
     def __get_mask(self, batch, request, vector_map_array_key, src_location):
-        """ create binary mask encoding where to place vectors for in region around considered src_location """
+        """create binary mask encoding where to place vectors for in region around considered src_location"""
 
         voxel_size = self.voxel_sizes[vector_map_array_key]
 

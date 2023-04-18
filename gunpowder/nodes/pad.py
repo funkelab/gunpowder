@@ -9,9 +9,10 @@ from gunpowder.batch_request import BatchRequest
 
 logger = logging.getLogger(__name__)
 
+
 class Pad(BatchFilter):
-    '''Add a constant intensity padding around arrays of another batch 
-    provider. This is useful if your requested batches can be larger than what 
+    """Add a constant intensity padding around arrays of another batch
+    provider. This is useful if your requested batches can be larger than what
     your source provides.
 
     Args:
@@ -30,10 +31,9 @@ class Pad(BatchFilter):
 
             The value to report inside the padding. If not given, 0 is used.
             Only used for :class:`Array<Arrays>`.
-    '''
+    """
 
     def __init__(self, key, size, value=None):
-
         self.key = key
         self.size = size
         self.value = value
@@ -42,10 +42,12 @@ class Pad(BatchFilter):
         self.enable_autoskip()
 
         assert self.key in self.spec, (
-            "Asked to pad %s, but is not provided upstream."%self.key)
+            "Asked to pad %s, but is not provided upstream." % self.key
+        )
         assert self.spec[self.key].roi is not None, (
             "Asked to pad %s, but upstream provider doesn't have a ROI for "
-            "it."%self.key)
+            "it." % self.key
+        )
 
         spec = self.spec[self.key].copy()
         if self.size is not None:
@@ -55,11 +57,10 @@ class Pad(BatchFilter):
         self.updates(self.key, spec)
 
     def prepare(self, request):
-
         upstream_spec = self.get_upstream_provider().spec
 
-        logger.debug("request: %s"%request)
-        logger.debug("upstream spec: %s"%upstream_spec)
+        logger.debug("request: %s" % request)
+        logger.debug("upstream spec: %s" % upstream_spec)
 
         # TODO: remove this?
         if self.key not in request:
@@ -71,51 +72,50 @@ class Pad(BatchFilter):
         request[self.key].roi = roi.intersect(upstream_spec[self.key].roi)
 
         if request[self.key].roi.empty:
-
             logger.warning(
-                "Requested %s ROI %s lies entirely outside of upstream "
-                "ROI %s.", self.key, roi, upstream_spec[self.key].roi)
+                "Requested %s ROI %s lies entirely outside of upstream " "ROI %s.",
+                self.key,
+                roi,
+                upstream_spec[self.key].roi,
+            )
 
             # ensure a valid request by asking for empty ROI
             request[self.key].roi = Roi(
-                    upstream_spec[self.key].roi.offset,
-                    (0,)*upstream_spec[self.key].roi.dims
+                upstream_spec[self.key].roi.offset,
+                (0,) * upstream_spec[self.key].roi.dims,
             )
 
-        logger.debug("new request: %s"%request)
+        logger.debug("new request: %s" % request)
 
         deps = BatchRequest()
         deps[self.key] = request[self.key]
         return deps
 
     def process(self, batch, request):
-
         if self.key not in request:
             return
 
         # restore requested batch size and ROI
         if isinstance(self.key, ArrayKey):
-
             array = batch.arrays[self.key]
             array.data = self.__expand(
-                    array.data,
-                    array.spec.roi/array.spec.voxel_size,
-                    request[self.key].roi/array.spec.voxel_size,
-                    self.value if self.value else 0
+                array.data,
+                array.spec.roi / array.spec.voxel_size,
+                request[self.key].roi / array.spec.voxel_size,
+                self.value if self.value else 0,
             )
             array.spec.roi = request[self.key].roi
 
         else:
-
             points = batch.graphs[self.key]
             points.spec.roi = request[self.key].roi
 
     def __expand(self, a, from_roi, to_roi, value):
-        '''from_roi and to_roi should be in voxels.'''
+        """from_roi and to_roi should be in voxels."""
 
         logger.debug(
-            "expanding array of shape %s from %s to %s",
-            str(a.shape), from_roi, to_roi)
+            "expanding array of shape %s from %s to %s", str(a.shape), from_roi, to_roi
+        )
 
         num_channels = len(a.shape) - from_roi.dims
         channel_shapes = a.shape[:num_channels]
@@ -131,6 +131,6 @@ class Pad(BatchFilter):
         logger.debug("target shape is " + str(b.shape))
         logger.debug("target slice is " + str(a_in_b))
 
-        b[(slice(None),)*num_channels + a_in_b] = a
+        b[(slice(None),) * num_channels + a_in_b] = a
 
         return b

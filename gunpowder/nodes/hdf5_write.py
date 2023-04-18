@@ -2,8 +2,9 @@ from .hdf5like_write_base import Hdf5LikeWrite
 from gunpowder.ext import h5py
 import os
 
+
 class Hdf5Write(Hdf5LikeWrite):
-    '''Assemble arrays of passing batches in one HDF5 file. This is useful to
+    """Assemble arrays of passing batches in one HDF5 file. This is useful to
     store chunks produced by :class:`Scan` on disk without keeping the larger
     array in memory. The ROIs of the passing arrays will be used to determine
     the position where to store the data in the dataset.
@@ -36,10 +37,10 @@ class Hdf5Write(Hdf5LikeWrite):
             A dictionary from array keys to datatype (eg. ``np.int8``). If
             given, arrays are stored using this type. The original arrays
             within the pipeline remain unchanged.
-        '''
+    """
 
     def _open_file(self, filename):
         if os.path.exists(filename):
-            return h5py.File(filename, 'r+')
+            return h5py.File(filename, "r+")
         else:
-            return h5py.File(filename, 'w')
+            return h5py.File(filename, "w")

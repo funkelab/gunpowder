@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 class WorkersDiedException(Exception):
     pass
 
+
 class PreCache(BatchFilter):
-    '''Pre-cache repeated equal batch requests. For the first of a series of
+    """Pre-cache repeated equal batch requests. For the first of a series of
     equal batch request, a set of workers is spawned to pre-cache the batches
     in parallel processes. This way, subsequent requests can be served quickly.
 
@@ -46,25 +47,28 @@ class PreCache(BatchFilter):
         num_workers (``int``):
 
             How many processes to spawn to fill the cache.
-    '''
+    """
 
     def __init__(self, cache_size=50, num_workers=20):
-
         self.current_request = None
         self.workers = None
         self.cache_size = cache_size
         self.num_workers = num_workers
 
         # keep track of recent requests
-        self.last_5 = deque([None,] * 5, maxlen=5)
+        self.last_5 = deque(
+            [
+                None,
+            ]
+            * 5,
+            maxlen=5,
+        )
 
     def teardown(self):
-
         if self.workers is not None:
             self.workers.stop()
 
     def provide(self, request):
-
         timing = Timing(self)
         timing.start()
 
@@ -73,7 +77,6 @@ class PreCache(BatchFilter):
         self.last_5.append(request)
 
         if request != self.current_request:
-
             current_count = sum(
                 [
                     recent_request == self.current_request
@@ -84,15 +87,17 @@ class PreCache(BatchFilter):
                 [recent_request == request for recent_request in self.last_5]
             )
             if new_count > current_count or self.current_request is None:
-
                 if self.workers is not None:
                     logger.info("new request received, stopping current workers...")
                     self.workers.stop()
 
                 self.current_request = copy.deepcopy(request)
 
-                logger.info("starting new set of workers (%s, cache size %s)...",
-                            self.num_workers, self.cache_size)
+                logger.info(
+                    "starting new set of workers (%s, cache size %s)...",
+                    self.num_workers,
+                    self.cache_size,
+                )
                 self.workers = ProducerPool(
                     [self._run_worker for _ in range(self.num_workers)],
                     queue_size=self.cache_size,

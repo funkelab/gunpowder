@@ -17,74 +17,75 @@ class NoSuchModule(object):
     def __getattr__(self, item):
         raise self.__exception
 
+
 try:
     import dvision
 except ImportError as e:
-    dvision = NoSuchModule('dvision')
+    dvision = NoSuchModule("dvision")
 
 try:
     import h5py
 except ImportError as e:
-    h5py = NoSuchModule('h5py')
+    h5py = NoSuchModule("h5py")
 
 try:
     import pyklb
 except ImportError as e:
-    pyklb = NoSuchModule('pyklb')
+    pyklb = NoSuchModule("pyklb")
 
 try:
     import tensorflow
 except ImportError as e:
-    tensorflow = NoSuchModule('tensorflow')
+    tensorflow = NoSuchModule("tensorflow")
 
 try:
     import torch
 except ImportError as e:
-    torch = NoSuchModule('torch')
+    torch = NoSuchModule("torch")
 
 try:
     import tensorboardX
 except ImportError as e:
-    tensorboardX = NoSuchModule('tensorboardX')
+    tensorboardX = NoSuchModule("tensorboardX")
 
 try:
     import malis
 except ImportError as e:
-    malis = NoSuchModule('malis')
+    malis = NoSuchModule("malis")
 
 try:
     import augment
 except ImportError as e:
-    augment = NoSuchModule('augment')
+    augment = NoSuchModule("augment")
 
 try:
     import zarr
     from .zarr_file import ZarrFile
 except ImportError as e:
-    zarr = NoSuchModule('zarr')
+    zarr = NoSuchModule("zarr")
     ZarrFile = None
 
 try:
     import daisy
 except ImportError as e:
-    daisy = NoSuchModule('daisy')
+    daisy = NoSuchModule("daisy")
 
 try:
     import jax
 except ImportError as e:
-    jax = NoSuchModule('jax')
+    jax = NoSuchModule("jax")
 
 try:
     import jax.numpy as jnp
 except ImportError as e:
-    jnp = NoSuchModule('jnp')
+    jnp = NoSuchModule("jnp")
 
 try:
     import haiku
 except ImportError as e:
-    haiku = NoSuchModule('haiku')
+    haiku = NoSuchModule("haiku")
 
 try:
     import optax
 except ImportError as e:
-    optax = NoSuchModule('optax')
+    optax = NoSuchModule("optax")

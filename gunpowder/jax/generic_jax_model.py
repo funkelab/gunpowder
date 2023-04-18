@@ -1,6 +1,5 @@
-
-class GenericJaxModel():
-    '''An interface for models to follow in order to train or predict. A model
+class GenericJaxModel:
+    """An interface for models to follow in order to train or predict. A model
     implementing this interface will need to contain not only the forward
     model but also loss and update fn. Some examples can be found in
     https://github.com/funkelab/funlib.learn.jax
@@ -11,13 +10,13 @@ class GenericJaxModel():
 
             Indicating whether the model will be used for training
             or inferencing.
-    '''
+    """
 
     def __init__(self, is_training):
         pass
 
     def initialize(self, rng_key, inputs):
-        '''Initialize parameters for training.
+        """Initialize parameters for training.
 
         Args:
 
@@ -36,11 +35,11 @@ class GenericJaxModel():
 
                 Function should return an object encapsulating different
                 parameters of the model.
-        '''
+        """
         raise RuntimeError("Unimplemented")
 
     def forward(self, params, inputs):
-        '''Run the forward model.
+        """Run the forward model.
 
         Args:
 
@@ -57,11 +56,11 @@ class GenericJaxModel():
             outputs (``dict``, ``string`` -> jnp.ndarray):
 
                 Dictionary of outputs.
-        '''
+        """
         raise RuntimeError("Unimplemented")
 
     def train_step(self, params, inputs, pmapped):
-        '''Run one iteration of training on the model.
+        """Run one iteration of training on the model.
 
         Args:
 
@@ -96,5 +95,5 @@ class GenericJaxModel():
 
                     Loss value of this iteration. Value can either be a single
                     ``float`` or a dictionary of multiple losses.
-        '''
+        """
         raise RuntimeError("Unimplemented")

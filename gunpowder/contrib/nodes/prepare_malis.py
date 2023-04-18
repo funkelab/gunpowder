@@ -8,8 +8,9 @@ from gunpowder.nodes.batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
+
 class PrepareMalis(BatchFilter):
-    ''' Creates a component label array needed for two-phase malis training.
+    """Creates a component label array needed for two-phase malis training.
 
     Args:
 
@@ -20,20 +21,14 @@ class PrepareMalis(BatchFilter):
 
         ignore_array_key(:class:`ArrayKey`, optional): An ignore mask to
             use.
-    '''
+    """
 
-    def __init__(
-            self,
-            labels_array_key,
-            malis_comp_array_key,
-            ignore_array_key=None):
-
+    def __init__(self, labels_array_key, malis_comp_array_key, ignore_array_key=None):
         self.labels_array_key = labels_array_key
         self.malis_comp_array_key = malis_comp_array_key
         self.ignore_array_key = ignore_array_key
 
     def setup(self):
-
         spec = self.spec[self.labels_array_key].copy()
         self.provides(self.malis_comp_array_key, spec)
         self.enable_autoskip()
@@ -46,27 +41,23 @@ class PrepareMalis(BatchFilter):
         return deps
 
     def process(self, batch, request):
-
         gt_labels = batch.arrays[self.labels_array_key]
         next_id = gt_labels.data.max() + 1
 
         gt_pos_pass = gt_labels.data
 
         if self.ignore_array_key is not None:
-
             gt_neg_pass = np.array(gt_labels.data)
-            gt_neg_pass[
-                batch.arrays[self.ignore_array_key].data == 0] = next_id
+            gt_neg_pass[batch.arrays[self.ignore_array_key].data == 0] = next_id
 
         else:
-
             gt_neg_pass = gt_pos_pass
 
         spec = self.spec[self.malis_comp_array_key].copy()
         spec.roi = request[self.labels_array_key].roi
         batch.arrays[self.malis_comp_array_key] = Array(
-            np.array([gt_neg_pass, gt_pos_pass]),
-            spec)
+            np.array([gt_neg_pass, gt_pos_pass]), spec
+        )
 
         # Why don't we update gt_affinities in the same way?
         # -> not needed

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Scan(BatchFilter):
-    '''Iteratively requests batches of size ``reference`` from upstream
+    """Iteratively requests batches of size ``reference`` from upstream
     providers in a scanning fashion, until all requested ROIs are covered. If
     the batch request to this node is empty, it will scan the complete upstream
     ROIs (and return nothing). Otherwise, it scans only the requested ROIs and
@@ -40,10 +40,9 @@ class Scan(BatchFilter):
         cache_size (``int``, optional):
 
             If multiple workers are used, how many batches to hold at most.
-    '''
+    """
 
     def __init__(self, reference, num_workers=1, cache_size=50):
-
         self.reference = reference.copy()
         self.num_workers = num_workers
         self.cache_size = cache_size
@@ -51,22 +50,20 @@ class Scan(BatchFilter):
         self.batch = None
 
     def setup(self):
-
         if self.num_workers > 1:
             self.request_queue = multiprocessing.Queue(maxsize=0)
             self.workers = ProducerPool(
                 [self._worker_get_chunk for _ in range(self.num_workers)],
-                queue_size=self.cache_size)
+                queue_size=self.cache_size,
+            )
             self.workers.start()
 
     def teardown(self):
-
         if self.num_workers > 1:
             self.workers.stop()
 
     def provide(self, request):
-
-        empty_request = (len(request) == 0)
+        empty_request = len(request) == 0
         if empty_request:
             scan_spec = self.spec
         else:
@@ -84,13 +81,11 @@ class Scan(BatchFilter):
         self.batch = Batch()
 
         if self.num_workers > 1:
-
             for shift in shifts:
                 shifted_reference = self._shift_request(self.reference, shift)
                 self.request_queue.put(shifted_reference)
 
             for i in tqdm.tqdm(range(num_chunks)):
-
                 chunk = self.workers.get()
 
                 if not empty_request:
@@ -99,9 +94,7 @@ class Scan(BatchFilter):
                 logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
         else:
-
             for i, shift in enumerate(tqdm.tqdm(shifts)):
-
                 shifted_reference = self._shift_request(self.reference, shift)
                 chunk = self._get_chunk(shifted_reference)
 
@@ -118,54 +111,46 @@ class Scan(BatchFilter):
         return batch
 
     def _get_stride(self):
-        '''Get the maximal amount by which ``reference`` can be moved, such
-        that it tiles the space.'''
+        """Get the maximal amount by which ``reference`` can be moved, such
+        that it tiles the space."""
 
         stride = None
 
         # get the least common multiple of all voxel sizes, we have to stride
         # at least that far
-        lcm_voxel_size = self.spec.get_lcm_voxel_size(
-            self.reference.array_specs.keys())
+        lcm_voxel_size = self.spec.get_lcm_voxel_size(self.reference.array_specs.keys())
 
         # that's just the minimal size in each dimension
         for key, reference_spec in self.reference.items():
-
             shape = reference_spec.roi.shape
 
             for d in range(len(lcm_voxel_size)):
-                assert shape[d] >= lcm_voxel_size[d], ("Shape of reference "
-                                                       "ROI %s for %s is "
-                                                       "smaller than least "
-                                                       "common multiple of "
-                                                       "voxel size "
-                                                       "%s"%(reference_spec.roi,
-                                                             key,
-                                                             lcm_voxel_size))
+                assert shape[d] >= lcm_voxel_size[d], (
+                    "Shape of reference "
+                    "ROI %s for %s is "
+                    "smaller than least "
+                    "common multiple of "
+                    "voxel size "
+                    "%s" % (reference_spec.roi, key, lcm_voxel_size)
+                )
 
             if stride is None:
                 stride = shape
             else:
-                stride = Coordinate((
-                    min(a, b)
-                    for a, b in zip(stride, shape)))
+                stride = Coordinate((min(a, b) for a, b in zip(stride, shape)))
 
         return stride
 
     def _get_shift_roi(self, spec):
-        '''Get the minimal and maximal shift (as a ROI) to apply to
+        """Get the minimal and maximal shift (as a ROI) to apply to
         ``self.reference``, such that it is still fully contained in ``spec``.
-        '''
+        """
 
         total_shift_roi = None
 
         # get individual shift ROIs and intersect them
         for key, reference_spec in self.reference.items():
-
-            logger.debug(
-                "getting shift roi for %s with spec %s",
-                key,
-                reference_spec)
+            logger.debug("getting shift roi for %s with spec %s", key, reference_spec)
 
             if key not in spec:
                 logger.debug("skipping, %s not in upstream spec", key)
@@ -210,15 +195,10 @@ class Scan(BatchFilter):
             # 2. the length is length of spec - length of reference + 1
 
             # 1. get the starting point of the shift ROI
-            shift_begin = (
-                spec[key].roi.begin -
-                reference_spec.roi.begin)
+            shift_begin = spec[key].roi.begin - reference_spec.roi.begin
 
             # 2. get the shape of the shift ROI
-            shift_shape = (
-                spec[key].roi.shape -
-                reference_spec.roi.shape +
-                1)
+            shift_shape = spec[key].roi.shape - reference_spec.roi.shape + 1
 
             # create a ROI...
             shift_roi = Roi(shift_begin, shift_shape)
@@ -231,41 +211,43 @@ class Scan(BatchFilter):
             else:
                 total_shift_roi = total_shift_roi.intersect(shift_roi)
                 if total_shift_roi.empty:
-                    raise RuntimeError("There is no location where the ROIs "
-                                       "the reference %s are contained in the "
-                                       "request/upstream ROIs "
-                                       "%s."%(self.reference, spec))
+                    raise RuntimeError(
+                        "There is no location where the ROIs "
+                        "the reference %s are contained in the "
+                        "request/upstream ROIs "
+                        "%s." % (self.reference, spec)
+                    )
 
-            logger.debug("intersected with total shift ROI this yields %s",
-                    total_shift_roi)
+            logger.debug(
+                "intersected with total shift ROI this yields %s", total_shift_roi
+            )
 
         if total_shift_roi is None:
-            raise RuntimeError("None of the upstream ROIs are bounded (all "
-                               "ROIs are None). Scan needs at least one "
-                               "bounded upstream ROI.")
+            raise RuntimeError(
+                "None of the upstream ROIs are bounded (all "
+                "ROIs are None). Scan needs at least one "
+                "bounded upstream ROI."
+            )
 
         return total_shift_roi
 
     def _enumerate_shifts(self, shift_roi, stride):
-        '''Produces a sequence of shift coordinates starting at the beginning
+        """Produces a sequence of shift coordinates starting at the beginning
         of ``shift_roi``, progressing with ``stride``. The maximum shift
         coordinate in any dimension will be the last point inside the shift roi
-        in this dimension.'''
+        in this dimension."""
 
         min_shift = shift_roi.offset
-        max_shift = max(min_shift,
-                        Coordinate(m - 1 for m in shift_roi.end))
+        max_shift = max(min_shift, Coordinate(m - 1 for m in shift_roi.end))
 
         shift = np.array(min_shift)
         shifts = []
 
         dims = len(min_shift)
 
-        logger.debug(
-            "enumerating possible shifts of %s in %s", stride, shift_roi)
+        logger.debug("enumerating possible shifts of %s in %s", stride, shift_roi)
 
         while True:
-
             logger.debug("adding %s", shift)
             shifts.append(Coordinate(shift))
 
@@ -274,7 +256,6 @@ class Scan(BatchFilter):
 
             # count up dimensions
             for d in range(dims):
-
                 if shift[d] >= max_shift[d]:
                     if d == dims - 1:
                         break
@@ -289,7 +270,6 @@ class Scan(BatchFilter):
         return shifts
 
     def _shift_request(self, request, shift):
-
         shifted = request.copy()
         for _, spec in shifted.items():
             spec.roi = spec.roi.shift(shift)
@@ -297,56 +277,62 @@ class Scan(BatchFilter):
         return shifted
 
     def _worker_get_chunk(self):
-
         request = self.request_queue.get()
         return self._get_chunk(request)
 
     def _get_chunk(self, request):
-
         return self.get_upstream_provider().request_batch(request)
 
     def _add_to_batch(self, spec, chunk):
-
         if self.batch.get_total_roi() is None:
             self.batch = self._setup_batch(spec, chunk)
         self.batch.profiling_stats.merge_with(chunk.profiling_stats)
 
-        for (array_key, array) in chunk.arrays.items():
+        for array_key, array in chunk.arrays.items():
             if array_key not in spec:
                 continue
-            self._fill(self.batch.arrays[array_key].data, array.data,
-                        spec.array_specs[array_key].roi, array.spec.roi,
-                        self.spec[array_key].voxel_size)
+            self._fill(
+                self.batch.arrays[array_key].data,
+                array.data,
+                spec.array_specs[array_key].roi,
+                array.spec.roi,
+                self.spec[array_key].voxel_size,
+            )
 
-        for (graph_key, graphs) in chunk.graphs.items():
+        for graph_key, graphs in chunk.graphs.items():
             if graph_key not in spec:
                 continue
-            self._fill_points(self.batch.graphs[graph_key], graphs,
-                               spec.graph_specs[graph_key].roi, graphs.spec.roi)
+            self._fill_points(
+                self.batch.graphs[graph_key],
+                graphs,
+                spec.graph_specs[graph_key].roi,
+                graphs.spec.roi,
+            )
 
     def _setup_batch(self, batch_spec, chunk):
-        '''Allocate a batch matching the sizes of ``batch_spec``, using
-        ``chunk`` as template.'''
+        """Allocate a batch matching the sizes of ``batch_spec``, using
+        ``chunk`` as template."""
 
         batch = Batch()
 
-        for (array_key, spec) in batch_spec.array_specs.items():
+        for array_key, spec in batch_spec.array_specs.items():
             roi = spec.roi
             voxel_size = self.spec[array_key].voxel_size
 
             # get the 'non-spatial' shape of the chunk-batch
             # and append the shape of the request to it
             array = chunk.arrays[array_key]
-            shape = array.data.shape[:-roi.dims]
-            shape += (roi.shape // voxel_size)
+            shape = array.data.shape[: -roi.dims]
+            shape += roi.shape // voxel_size
 
             spec = self.spec[array_key].copy()
             spec.roi = roi
             logger.info("allocating array of shape %s for %s", shape, array_key)
-            batch.arrays[array_key] = Array(data=np.zeros(shape, dtype=spec.dtype),
-                                                spec=spec)
+            batch.arrays[array_key] = Array(
+                data=np.zeros(shape, dtype=spec.dtype), spec=spec
+            )
 
-        for (graph_key, spec) in batch_spec.graph_specs.items():
+        for graph_key, spec in batch_spec.graph_specs.items():
             roi = spec.roi
             spec = self.spec[graph_key].copy()
             spec.roi = roi
@@ -373,8 +359,8 @@ class Scan(BatchFilter):
         slices_b = common_in_b_roi.get_bounding_box()
 
         if len(a.shape) > len(slices_a):
-            slices_a = (slice(None),)*(len(a.shape) - len(slices_a)) + slices_a
-            slices_b = (slice(None),)*(len(b.shape) - len(slices_b)) + slices_b
+            slices_a = (slice(None),) * (len(a.shape) - len(slices_a)) + slices_a
+            slices_b = (slice(None),) * (len(b.shape) - len(slices_b)) + slices_b
 
         a[slices_a] = b[slices_b]
 
@@ -386,7 +372,7 @@ class Scan(BatchFilter):
         in general, that a node created during processing of a subgraph was
         not assigned an id that is already used by the full graph, we cannot
         include temporary nodes and assume there will not be ambiguous node
-        id's that correspond to multiple distinct nodes. 
+        id's that correspond to multiple distinct nodes.
         """
         logger.debug("filling points of " + str(roi_b) + " into points of" + str(roi_a))
 

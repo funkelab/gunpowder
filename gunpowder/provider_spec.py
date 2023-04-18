@@ -18,8 +18,9 @@ import warnings
 
 logger = logging.getLogger(__file__)
 
+
 class ProviderSpec(Freezable):
-    '''A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
+    """A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
     :class:`GraphSpecs<GraphSpec>` describing a
     :class:`BatchProvider's<BatchProvider>` offered arrays and graphs.
 
@@ -61,10 +62,9 @@ class ProviderSpec(Freezable):
         graph_specs (``dict``, :class:`GraphKey` -> :class:`GraphSpec`):
 
             Contains all graph specs contained in this provider spec.
-    '''
+    """
 
     def __init__(self, array_specs=None, graph_specs=None, points_specs=None):
-
         self.array_specs = {}
         self.graph_specs = {}
         self.freeze()
@@ -90,35 +90,32 @@ class ProviderSpec(Freezable):
         return self.graph_specs
 
     def __setitem__(self, key, spec):
-
-        assert isinstance(key, ArrayKey) or isinstance(key, GraphKey), \
-            f"Only ArrayKey or GraphKey (not {type(key).__name__} are " \
+        assert isinstance(key, ArrayKey) or isinstance(key, GraphKey), (
+            f"Only ArrayKey or GraphKey (not {type(key).__name__} are "
             "allowed as key for ProviderSpec, "
+        )
 
         if isinstance(key, ArrayKey):
-
             if isinstance(spec, Roi):
                 spec = ArraySpec(roi=spec)
 
-            assert isinstance(spec, ArraySpec), \
-                f"Only ArraySpec (not {type(spec).__name__}) can be set for " \
-                "ArrayKey"
+            assert isinstance(spec, ArraySpec), (
+                f"Only ArraySpec (not {type(spec).__name__}) can be set for " "ArrayKey"
+            )
 
             self.array_specs[key] = spec.copy()
 
         else:
-
             if isinstance(spec, Roi):
                 spec = GraphSpec(roi=spec)
 
-            assert isinstance(spec, GraphSpec), \
-                f"Only GraphSpec (not {type(spec).__name__}) can be set for " \
-                "GraphKey"
+            assert isinstance(spec, GraphSpec), (
+                f"Only GraphSpec (not {type(spec).__name__}) can be set for " "GraphKey"
+            )
 
             self.graph_specs[key] = spec.copy()
 
     def __getitem__(self, key):
-
         if isinstance(key, ArrayKey):
             return self.array_specs[key]
 
@@ -127,14 +124,13 @@ class ProviderSpec(Freezable):
         else:
             raise RuntimeError(
                 "Only ArrayKey or GraphKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "%s." % type(self).__name__
+            )
 
     def __len__(self):
-
         return len(self.array_specs) + len(self.graph_specs)
 
     def __contains__(self, key):
-
         if isinstance(key, ArrayKey):
             return key in self.array_specs
 
@@ -144,10 +140,10 @@ class ProviderSpec(Freezable):
         else:
             raise RuntimeError(
                 "Only ArrayKey or GraphKey, can be used as keys in a "
-                "%s. Key %s is a %s"%(type(self).__name__, key, type(key).__name__))
+                "%s. Key %s is a %s" % (type(self).__name__, key, type(key).__name__)
+            )
 
     def __delitem__(self, key):
-
         if isinstance(key, ArrayKey):
             del self.array_specs[key]
 
@@ -157,26 +153,31 @@ class ProviderSpec(Freezable):
         else:
             raise RuntimeError(
                 "Only ArrayKey or GraphKey can be used as keys in a "
-                "%s."%type(self).__name__)
+                "%s." % type(self).__name__
+            )
 
     def remove_placeholders(self):
-        self.array_specs = {k: v for k, v in self.array_specs.items() if not v.placeholder}
-        self.graph_specs = {k: v for k, v in self.graph_specs.items() if not v.placeholder}
+        self.array_specs = {
+            k: v for k, v in self.array_specs.items() if not v.placeholder
+        }
+        self.graph_specs = {
+            k: v for k, v in self.graph_specs.items() if not v.placeholder
+        }
 
     def items(self):
-        '''Provides a generator iterating over key/value pairs.'''
+        """Provides a generator iterating over key/value pairs."""
 
-        for (k, v) in self.array_specs.items():
+        for k, v in self.array_specs.items():
             yield k, v
-        for (k, v) in self.graph_specs.items():
+        for k, v in self.graph_specs.items():
             yield k, v
 
     def get_total_roi(self):
-        '''Get the union of all the ROIs.'''
+        """Get the union of all the ROIs."""
 
         total_roi = None
         for specs_type in [self.array_specs, self.graph_specs]:
-            for (_, spec) in specs_type.items():
+            for _, spec in specs_type.items():
                 if total_roi is None:
                     total_roi = spec.roi
                 elif spec.roi is not None:
@@ -184,11 +185,11 @@ class ProviderSpec(Freezable):
         return total_roi
 
     def get_common_roi(self):
-        '''Get the intersection of all the requested ROIs.'''
+        """Get the intersection of all the requested ROIs."""
 
         common_roi = None
         for specs_type in [self.array_specs, self.graph_specs]:
-            for (_, spec) in specs_type.items():
+            for _, spec in specs_type.items():
                 if common_roi is None:
                     common_roi = spec.roi
                 else:
@@ -197,13 +198,13 @@ class ProviderSpec(Freezable):
         return common_roi
 
     def get_lcm_voxel_size(self, array_keys=None):
-        '''Get the least common multiple of the voxel sizes in this spec.
+        """Get the least common multiple of the voxel sizes in this spec.
 
         Args:
 
             array_keys (list of :class:`ArrayKey`, optional): If given,
                 consider only the given array types.
-        '''
+        """
 
         if array_keys is None:
             array_keys = self.array_specs.keys()
@@ -220,13 +221,15 @@ class ProviderSpec(Freezable):
                 lcm_voxel_size = voxel_size
             else:
                 lcm_voxel_size = Coordinate(
-                    (a * b // math.gcd(a, b)
-                     for a, b in zip(lcm_voxel_size, voxel_size)))
+                    (
+                        a * b // math.gcd(a, b)
+                        for a, b in zip(lcm_voxel_size, voxel_size)
+                    )
+                )
 
         return lcm_voxel_size
 
     def __eq__(self, other):
-
         if isinstance(other, self.__class__):
             other_dict = copy.deepcopy(other.__dict__)
             self_dict = copy.deepcopy(self.__dict__)
@@ -234,14 +237,12 @@ class ProviderSpec(Freezable):
         return NotImplemented
 
     def __ne__(self, other):
-
         if isinstance(other, self.__class__):
             return not self.__eq__(other)
         return NotImplemented
 
     def __repr__(self):
-
         r = "\n"
-        for (key, spec) in self.items():
-            r += "\t%s: %s\n"%(key, spec)
+        for key, spec in self.items():
+            r += "\t%s: %s\n" % (key, spec)
         return r

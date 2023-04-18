@@ -3,12 +3,9 @@ from scipy.ndimage.morphology import distance_transform_edt
 
 
 def enlarge_binary_map(
-    binary_map,
-    radius,
-    voxel_size,
-    ring_fraction=None,
-    in_place=False):
-    '''Enlarge existing regions in a binary map.
+    binary_map, radius, voxel_size, ring_fraction=None, in_place=False
+):
+    """Enlarge existing regions in a binary map.
 
     Args:
 
@@ -40,7 +37,7 @@ def enlarge_binary_map(
 
         A matrix with 0s and 1s of same dimension as input binary_map with
         enlarged regions (indicated with 1), unless ``in_place`` is set.
-    '''
+    """
 
     if len(np.unique(binary_map)) == 1:
         # Check whether there are regions at all. If there is no region (or
@@ -48,12 +45,12 @@ def enlarge_binary_map(
         return binary_map
 
     if voxel_size is None:
-        voxel_size = (1,)*binary_map.shape[0]
+        voxel_size = (1,) * binary_map.shape[0]
 
     voxel_size = np.asarray(voxel_size).astype(np.float32)
 
     # normalize, such that radius == 1 in all dimensions
-    voxel_size = voxel_size/radius
+    voxel_size = voxel_size / radius
 
     if in_place:
         np.logical_not(binary_map, out=binary_map)
@@ -78,7 +75,7 @@ def enlarge_binary_map(
 
 
 def create_ball_kernel(radius, voxel_size):
-    '''Generates a ball-shaped structuring element.
+    """Generates a ball-shaped structuring element.
 
     Args:
 
@@ -96,15 +93,15 @@ def create_ball_kernel(radius, voxel_size):
         otherwise. The shape of the returned array depends on radius and
         voxel_size. For instance voxel_size = [2, 1, 1], radius = 5 produces an
         array of shape (7, 11, 11)
-    '''
+    """
     voxel_size = np.asarray(voxel_size)
 
     # Calculate shape for new kernel, make it sufficiently large (--> ceil)
-    radius_voxel = np.ceil(radius/voxel_size).astype(int)
-    kernel_shape = np.array(radius_voxel)*2 + 1
+    radius_voxel = np.ceil(radius / voxel_size).astype(int)
+    kernel_shape = np.array(radius_voxel) * 2 + 1
 
     kernel = np.zeros(kernel_shape, dtype=np.uint8)
-    middle_point = kernel_shape//2
+    middle_point = kernel_shape // 2
     kernel[tuple(middle_point)] = 1
 
     enlarge_binary_map(kernel, radius, voxel_size, in_place=True)

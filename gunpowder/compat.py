@@ -7,6 +7,7 @@ if PY2:
 else:
     binary_type = bytes
 
+
 def ensure_str(s):
     if PY2:
         if isinstance(s, buffer):
@@ -15,5 +16,5 @@ def ensure_str(s):
         if isinstance(s, memoryview):
             s = s.tobytes()
         if isinstance(s, binary_type):
-            s = s.decode('ascii')
+            s = s.decode("ascii")
     return s

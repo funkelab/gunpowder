@@ -56,7 +56,6 @@ class RandomProvider(BatchProvider):
 
         # advertise outputs only if all upstream providers have them
         for provider in self.get_upstream_providers():
-
             if common_spec is None:
                 common_spec = copy.deepcopy(provider.spec)
             else:

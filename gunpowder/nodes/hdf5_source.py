@@ -1,8 +1,9 @@
 from gunpowder.ext import h5py
 from .hdf5like_source_base import Hdf5LikeSource
 
+
 class Hdf5Source(Hdf5LikeSource):
-    '''An HDF5 data source.
+    """An HDF5 data source.
 
     Provides arrays from HDF5 datasets. If the attribute ``resolution`` is set
     in a HDF5 dataset, it will be used as the array's ``voxel_size``. If the
@@ -34,6 +35,7 @@ class Hdf5Source(Hdf5LikeSource):
             to be (channels, spatial dimensions). This is recommended because of
             better performance. If channels_first is set to false, then the input
             data is read in channels_last manner and converted to channels_first.
-    '''
+    """
+
     def _open_file(self, filename):
-        return h5py.File(filename, 'r')
+        return h5py.File(filename, "r")
