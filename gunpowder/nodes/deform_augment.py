@@ -156,6 +156,11 @@ class DeformAugment(BatchFilter):
             "master ROI aligned with control points is %s" % master_roi_snapped
         )
 
+        # grow by 1 control point spacing
+        master_roi_snapped = master_roi_snapped.grow(
+            self.control_point_spacing, self.control_point_spacing
+        )
+
         # get master roi in control point spacing
         master_roi_sampled = master_roi_snapped / self.control_point_spacing
         logger.debug("master ROI in control point spacing is %s" % master_roi_sampled)
@@ -199,6 +204,10 @@ class DeformAugment(BatchFilter):
                 # interpolate the transformation onto a spacing of 1 which may be
                 # way too large
                 voxel_size = self.graph_raster_voxel_size
+
+                # grow target_roi by 1 voxel, this allows us catch nodes that project
+                # outside our bounds
+                target_roi = target_roi.grow(voxel_size, voxel_size)
                 assert (
                     voxel_size is not None
                 ), "Please provide a graph_raster_voxel_size when deforming graphs"
@@ -283,6 +292,9 @@ class DeformAugment(BatchFilter):
                 request[graph_key].roi.offset[-self.spatial_dims :],
                 request[graph_key].roi.shape[-self.spatial_dims :],
             )
+            transform_roi = target_roi.grow(
+                self.graph_raster_voxel_size, self.graph_raster_voxel_size
+            )
             source_roi = Roi(
                 graph.spec.roi.offset[-self.spatial_dims :],
                 graph.spec.roi.shape[-self.spatial_dims :],
@@ -292,13 +304,13 @@ class DeformAugment(BatchFilter):
             if self.use_fast_points_transform:
                 missed_nodes = self.__fast_point_projection(
                     self.transformations[
-                        target_roi.offset,
-                        target_roi.shape,
+                        transform_roi.offset,
+                        transform_roi.shape,
                         self.graph_raster_voxel_size,
                     ],
                     nodes,
                     source_roi,
-                    target_roi=target_roi,
+                    target_roi=transform_roi,
                 )
                 if not self.recompute_missing_points:
                     for node in set(missed_nodes):
@@ -320,8 +332,8 @@ class DeformAugment(BatchFilter):
                 # yields voxel coordinates relative to target ROI
                 projected = self.__project(
                     self.transformations[
-                        target_roi.offset,
-                        target_roi.shape,
+                        transform_roi.offset,
+                        transform_roi.shape,
                         self.graph_raster_voxel_size,
                     ],
                     location_spatial,
@@ -329,17 +341,12 @@ class DeformAugment(BatchFilter):
 
                 logger.debug("projected: %s", projected)
 
-                if projected is None:
-                    logger.debug("node outside of target, skipping")
-                    graph.remove_node(node, retain_connectivity=True)
-                    continue
-
                 # update spatial coordinates of node location
                 node.location[-self.spatial_dims :] = projected
 
                 logger.debug("final location: %s", node.location)
 
-            out_batch[graph_key] = graph
+            out_batch[graph_key] = graph.crop(target_roi)
 
         if self.transform_key is not None:
             out_batch[self.transform_key] = self.local_transformation
@@ -546,7 +553,7 @@ class DeformAugment(BatchFilter):
         projected_locs = ndimage.center_of_mass(data > 0, data, ids)
         projected_locs = [
             (np.array(loc[-self.spatial_dims :]) + 0.5) * self.graph_raster_voxel_size
-            + target_roi.begin
+            + transformation.spec.roi.begin
             for loc in projected_locs
         ]
         node_dict = {node.id: node for node in nodes}
@@ -562,7 +569,7 @@ class DeformAugment(BatchFilter):
             else:
                 missing_points.append(point)
         for node in node_dict.values():
-            missing_points.append(point)
+            missing_points.append(node)
         logger.debug(
             "{} of {} points lost in fast points projection".format(
                 len(missing_points), len(ids)
@@ -603,46 +610,6 @@ class DeformAugment(BatchFilter):
         )
         logger.debug("min dist: %s", dist.min())
         logger.debug("center source: %s", center_source)
-
-        # inspect grid edges incident to center_grid
-        for d in range(dims):
-            # nothing to do for dimensions without spatial extent
-            if transformation.data.shape[1 + d] == 1:
-                continue
-
-            dim_vector = Coordinate(1 if dd == d else 0 for dd in range(dims))
-            pos_grid = center_grid + dim_vector
-            neg_grid = center_grid - dim_vector
-            logger.debug("interpolating along %s", dim_vector)
-
-            pos_u = -1
-            neg_u = -1
-
-            if pos_grid[d] < transformation.data.shape[1 + d]:
-                pos_source = self.__source_at(transformation, pos_grid)
-                logger.debug("pos source: %s", pos_source)
-                pos_dist = pos_source[d] - center_source[d]
-                loc_dist = location[d] - center_source[d]
-                if pos_dist != 0:
-                    pos_u = loc_dist / pos_dist
-                else:
-                    pos_u = 0
-
-            if neg_grid[d] >= 0:
-                neg_source = self.__source_at(transformation, neg_grid)
-                logger.debug("neg source: %s", neg_source)
-                neg_dist = neg_source[d] - center_source[d]
-                loc_dist = location[d] - center_source[d]
-                if neg_dist != 0:
-                    neg_u = loc_dist / neg_dist
-                else:
-                    neg_u = 0
-
-            logger.debug("pos u/neg u: %s/%s", pos_u, neg_u)
-
-            # if a point only falls behind edges, it lies outside of the grid
-            if pos_u < 0 and neg_u < 0:
-                return None
 
         # add a half voxel step to localize each transformed point to the center of the
         # closest voxel
