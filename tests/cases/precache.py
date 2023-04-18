@@ -1,6 +1,7 @@
 from .helper_sources import ArraySource
 from gunpowder import *
 
+import pytest
 import numpy as np
 
 import time
@@ -18,6 +19,7 @@ class Delay(BatchFilter):
         pass
 
 
+@pytest.mark.xfail(reason="Speedup is often dependent on hardware")
 def test_speedup():
     delay = 0.2
     n_requests = 16
