@@ -122,9 +122,7 @@ class TestShiftAugment2D(unittest.TestCase):
 
         request = BatchRequest()
         shape = Coordinate((3, 3))
-        request[key] = ArraySpec(
-            roi=Roi((9, 9), shape), voxel_size=Coordinate((3, 1))
-        )
+        request[key] = ArraySpec(roi=Roi((9, 9), shape), voxel_size=Coordinate((3, 1)))
 
         shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=1, shift_axis=0)
         with build((hdf5_source + shift_node)) as b:
