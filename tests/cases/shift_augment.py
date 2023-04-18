@@ -122,7 +122,9 @@ class TestShiftAugment2D(unittest.TestCase):
 
         request = BatchRequest()
         shape = Coordinate((3, 3))
-        request.add(key, shape, voxel_size=Coordinate((3, 1)))
+        request[key] = ArraySpec(
+            roi=Roi((9, 9), shape), voxel_size=Coordinate((3, 1))
+        )
 
         shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=1, shift_axis=0)
         with build((hdf5_source + shift_node)) as b:
@@ -148,7 +150,7 @@ class TestShiftAugment2D(unittest.TestCase):
         request.add(array_key, shape, voxel_size=Coordinate((1, 1)))
         request.add(points_key, shape)
 
-        shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=5, shift_axis=0)
+        shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=4, shift_axis=0)
         pipeline = (
             (hdf5_source, csv_source)
             + MergeProvider()
