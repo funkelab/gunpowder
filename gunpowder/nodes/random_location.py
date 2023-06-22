@@ -383,30 +383,32 @@ class RandomLocation(BatchFilter):
             lcm_location = Coordinate(point / lcm_voxel_size)
             logger.debug("belongs to lcm voxel %s", lcm_location)
 
-            # get the request ROI's shape in lcm
-            lcm_roi_begin = request_points_roi.begin / lcm_voxel_size
-            lcm_roi_shape = request_points_roi.shape / lcm_voxel_size
+            # align the point request ROI with lcm voxel grid
+            lcm_roi = request_points_roi.snap_to_grid(
+                lcm_voxel_size,
+                mode="shrink")
+            lcm_roi = lcm_roi / lcm_voxel_size
             logger.debug("Point request ROI: %s", request_points_roi)
-            logger.debug("Point request lcm ROI shape: %s", lcm_roi_shape)
+            logger.debug("Point request lcm ROI shape: %s", lcm_roi.shape)
 
-            # get all possible starting points of lcm_roi_shape that contain
+            # get all possible starting points of lcm_roi.shape that contain
             # lcm_location
             if self.ensure_centered:
                 lcm_shift_roi_begin = (
                     lcm_location
-                    - lcm_roi_begin
-                    - lcm_roi_shape / 2
+                    - lcm_roi.begin
+                    - lcm_roi.shape / 2
                     + Coordinate((1,) * len(lcm_location))
                 )
                 lcm_shift_roi_shape = Coordinate((1,) * len(lcm_location))
             else:
                 lcm_shift_roi_begin = (
                     lcm_location
-                    - lcm_roi_begin
-                    - lcm_roi_shape
+                    - lcm_roi.begin
+                    - lcm_roi.shape
                     + Coordinate((1,) * len(lcm_location))
                 )
-                lcm_shift_roi_shape = lcm_roi_shape
+                lcm_shift_roi_shape = lcm_roi.shape
             lcm_point_shift_roi = Roi(lcm_shift_roi_begin, lcm_shift_roi_shape)
 
             logger.debug("lcm point shift roi: %s", lcm_point_shift_roi)
