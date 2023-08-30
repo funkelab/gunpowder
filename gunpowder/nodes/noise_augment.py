@@ -59,5 +59,5 @@ class NoiseAugment(BatchFilter):
                 raw.data.min() >= -1 and raw.data.max() <= 1
             ), "Noise augmentation expects raw values in [-1,1] or [0,1]. Consider using Normalize before."
         raw.data = skimage.util.random_noise(
-            raw.data, mode=self.mode, seed=self.seed, clip=self.clip, **self.kwargs
+            raw.data, mode=self.mode, rng=self.seed, clip=self.clip, **self.kwargs
         ).astype(raw.data.dtype)

@@ -64,7 +64,7 @@ class ProviderSpec(Freezable):
             Contains all graph specs contained in this provider spec.
     """
 
-    def __init__(self, array_specs=None, graph_specs=None, points_specs=None):
+    def __init__(self, array_specs=None, graph_specs=None):
         self.array_specs = {}
         self.graph_specs = {}
         self.freeze()
@@ -77,17 +77,6 @@ class ProviderSpec(Freezable):
         if graph_specs is not None:
             for key, spec in graph_specs.items():
                 self[key] = spec
-        if points_specs is not None:
-            for key, spec in points_specs.items():
-                self[key] = spec
-
-    @property
-    def points_specs(self):
-        # Alias to graphs
-        warnings.warn(
-            "points_specs are depricated. Please use graph_specs", DeprecationWarning
-        )
-        return self.graph_specs
 
     def __setitem__(self, key, spec):
         assert isinstance(key, ArrayKey) or isinstance(key, GraphKey), (

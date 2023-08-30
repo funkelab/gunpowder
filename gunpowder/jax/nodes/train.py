@@ -85,7 +85,9 @@ class Train(GenericTrain):
         validate_fn (function -> Union[``float``, (``dict``, ``string`` -> ``float``)] , optional):
 
             Function to run validation on, which should has the form of
+
                 def validate_fn(model, params)
+
             where `model` is the same provided `GenericJaxModel` model and
             `params` is the parameter of this model, and returns either a
             ``float`` (one loss) or a dictionary of losses to record in

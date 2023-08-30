@@ -1,0 +1,59 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow this job to clone the repo and create a page deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: "3.11"
+          mamba-version: "*"
+          channels: conda-forge
+          channel-priority: true
+
+      - name: Install package and dependencies
+        run: |
+          pip install git+https://github.com/funkelab/funlib.learn.torch
+          python -m pip install -e .[docs]
+
+      - name: Build documentation
+        run: sphinx-build docs/source docs/build/html -W -b html
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/build/html
+          retention-days: 90
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

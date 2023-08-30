@@ -41,7 +41,7 @@ class Stack(BatchFilter):
             batch[key] = Array(data, batches[0][key].spec.copy())
 
         # copy points of first batch requested
-        for key, spec in request.points_specs.items():
+        for key, spec in request.graph_specs.items():
             batch[key] = batches[0][key]
 
         timing.stop()

@@ -16,9 +16,6 @@ class BatchRequest(ProviderSpec):
 
     Inherits from :class:`ProviderSpec`.
 
-    See :ref:`sec_requests_batches` for how to use a batch request to obtain a
-    batch.
-
     Additional Kwargs:
 
         random_seed (``int``):

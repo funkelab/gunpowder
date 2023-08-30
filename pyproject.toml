@@ -8,6 +8,18 @@ description = "A library to facilitate machine learning on large, multi-dimensio
 authors = [
   {name = "Jan Funke", email = "funkej@hhmi.org"},
   {name = "William Patton", email = "pattonw@hhmi.org"},
+  {name = "Renate Krause"},
+  {name = "Julia Buhmann"},
+  {name = "Rodrigo Ceballos Lentini"},
+  {name = "William Grisaitis"},
+  {name = "Chris Barnes"},
+  {name = "Caroline Malin-Mayor"},
+  {name = "Larissa Heinrich"},
+  {name = "Philipp Hanslovsky"},
+  {name = "Sherry Ding"},
+  {name = "Andrew Champion"},
+  {name = "Arlo Sheridan"},
+  {name = "Constantin Pape"},
 ]
 license = {text = "MIT"}
 readme = "README.md"
@@ -37,6 +49,16 @@ dev = [
   "pytest",
   "pytest-cov",
   "flake8",
+]
+docs = [
+  "sphinx",
+  "sphinx_rtd_theme",
+  "sphinx_togglebutton",
+  "tomli",
+  "jupyter_sphinx",
+  "ipykernel",
+  "matplotlib",
+  "torch",
 ]
 pytorch = ['torch']
 tensorflow = [
