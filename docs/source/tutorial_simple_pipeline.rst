@@ -35,12 +35,14 @@ following preliminaries (or simply head over to this tutorial's
     import numpy as np
     import random
     import zarr
+    import torch
     from skimage import data
     from skimage import filters
 
     # make sure we all see the same
-    np.random.seed(19623)
-    random.seed(19623)
+    torch.manual_seed(1961923)
+    np.random.seed(1961923)
+    random.seed(1961923)
 
     # open a sample image (channels first)
     raw_data = data.astronaut().transpose(2, 0, 1)
