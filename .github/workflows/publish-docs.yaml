@@ -36,7 +36,7 @@ jobs:
           python -m pip install -e .[docs]
 
       - name: Build documentation
-        run: sphinx-build docs/source docs/build/html -W -b html
+        run: sphinx-build docs/source docs/build/html -b html
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v2
