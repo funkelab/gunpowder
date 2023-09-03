@@ -70,9 +70,6 @@ class RandomProvider(BatchProvider):
             self.provides(self.random_provider_key, ArraySpec(nonspatial=True))
 
     def provide(self, request):
-        # Random seed is set in provide rather than prepare since this node
-        # is not a batch filter
-        np.random.seed(request.random_seed)
 
         if self.random_provider_key is not None:
             del request[self.random_provider_key]

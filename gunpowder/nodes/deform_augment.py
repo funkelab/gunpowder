@@ -129,9 +129,6 @@ class DeformAugment(BatchFilter):
             self.provides(self.transform_key, spec)
 
     def prepare(self, request):
-        seed = request.random_seed
-        random.seed(seed)
-        np.random.seed(seed)
 
         # get the total ROI of all requests
         total_roi = request.get_total_roi()

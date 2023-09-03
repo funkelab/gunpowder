@@ -59,9 +59,6 @@ class IntensityAugment(BatchFilter):
         self.updates(self.array, self.spec[self.array])
 
     def prepare(self, request):
-        # TODO: move all randomness into the prepare method
-        # TODO: write a test for this node
-        np.random.seed(request.random_seed)
         deps = BatchRequest()
         deps[self.array] = request[self.array].copy()
         return deps

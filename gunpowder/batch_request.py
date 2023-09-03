@@ -26,9 +26,7 @@ class BatchRequest(ProviderSpec):
     """
 
     def __init__(self, *args, random_seed=None, **kwargs):
-        self._random_seed = (
-            random_seed if random_seed is not None else int(time.time() * 1e6)
-        )
+        self._random_seed = random_seed
         super().__init__(*args, **kwargs)
 
     def add(self, key, shape, voxel_size=None, directed=None, placeholder=False):
@@ -74,12 +72,21 @@ class BatchRequest(ProviderSpec):
         """Create a copy of this request."""
         return copy.deepcopy(self)
 
+    def is_deterministic(self):
+        """Return true if a random seed has been set for this request."""
+        return self._random_seed is not None
+
     @property
     def random_seed(self):
-        return self._random_seed % (2**32)
+        if not self.is_deterministic():
+            return int(time.time() * 1e6) % (2**32)
+        else:
+            return self._random_seed
 
     def _update_random_seed(self):
-        self._random_seed = hash((self._random_seed + 1) ** 2)
+        if not self.is_deterministic():
+            return
+        self._random_seed = hash((self._random_seed + 1) ** 2) % (2**32)
 
     def __center_rois(self):
         """Ensure that all ROIs are centered around the same location."""

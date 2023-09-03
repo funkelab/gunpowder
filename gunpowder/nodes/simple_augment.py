@@ -106,7 +106,6 @@ class SimpleAugment(BatchFilter):
                     self.permutation_dict[k] = v
 
     def prepare(self, request):
-        random.seed(request.random_seed)
 
         self.mirror = [
             random.random() < self.mirror_probs[d] if self.mirror_mask[d] else 0

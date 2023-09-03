@@ -74,8 +74,6 @@ class SpecifiedLocation(BatchFilter):
             self.updates(key, spec)
 
     def prepare(self, request):
-        seed(request.random_seed)
-        np.random.seed(request.random_seed)
         lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
 
         # shift to center

@@ -128,8 +128,4 @@ class PreCache(BatchFilter):
 
     def _run_worker(self):
         request = copy.deepcopy(self.current_request)
-        # Note that using a precache node breaks determinism in batches recieved since we do not
-        # keep a mapping of the order in which random seeds were used, and the order in which
-        # the corresponding batch gets returned.
-        request._random_seed = random.randint(0, 2**32)
         return self.get_upstream_provider().request_batch(request)

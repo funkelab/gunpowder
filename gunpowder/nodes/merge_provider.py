@@ -45,11 +45,11 @@ class MergeProvider(BatchProvider):
         for key, spec in request.items():
             provider = self.key_to_provider[key]
             if provider not in upstream_requests:
-                # use new random seeds per upstream request.
-                # seeds picked by random should be deterministic since
-                # the provided request already has a random seed.
-                seed = random.randint(0, 2**32)
-                upstream_requests[provider] = BatchRequest(random_seed=seed)
+                if request.is_deterministic():
+                    random_seed = random.randint(0, 2**32)
+                else:
+                    random_seed = None
+                upstream_requests[provider] = BatchRequest(random_seed=random_seed)
 
             upstream_requests[provider][key] = spec
 

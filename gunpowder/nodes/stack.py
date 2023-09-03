@@ -3,6 +3,7 @@ from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.profiling import Timing
 import numpy as np
+import random
 
 
 class Stack(BatchFilter):
@@ -24,10 +25,19 @@ class Stack(BatchFilter):
         self.num_repetitions = num_repetitions
 
     def provide(self, request):
-        batches = [
-            self.get_upstream_provider().request_batch(request)
-            for _ in range(self.num_repetitions)
-        ]
+
+        batches = []
+        for _ in range(self.num_repetitions):
+            upstream_request = request.copy()
+            if upstream_request.is_deterministic():
+                # if the request is deterministic, create new seeds for each
+                # upstream request (otherwise we would get the same batch over
+                # and over). Using randint here is still deterministic, since
+                # the RNG was already seeded with the requests original seed.
+                seed = random.randint(0, 2**32)
+                upstream_request._random_seed = seed
+            batch = self.get_upstream_provider().request_batch(upstream_request)
+            batches.append(batch)
 
         timing = Timing(self)
         timing.start()

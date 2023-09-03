@@ -1,6 +1,6 @@
 import math
 import logging
-from random import random, randint, choices, seed
+from random import random, randint, choices
 import itertools
 
 import numpy as np
@@ -172,7 +172,6 @@ class RandomLocation(BatchFilter):
             self.provides(self.random_shift_key, ArraySpec(nonspatial=True))
 
     def prepare(self, request):
-        seed(request.random_seed)
 
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)
