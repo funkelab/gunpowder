@@ -174,7 +174,6 @@ class BatchProvider(object):
         batch = None
 
         try:
-            request._update_random_seed()
 
             self.set_seeds(request)
 

@@ -70,7 +70,9 @@ class BatchRequest(ProviderSpec):
 
     def copy(self):
         """Create a copy of this request."""
-        return copy.deepcopy(self)
+        request_copy = copy.deepcopy(self)
+        request_copy._update_random_seed()
+        return request_copy
 
     def is_deterministic(self):
         """Return true if a random seed has been set for this request."""
