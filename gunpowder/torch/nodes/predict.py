@@ -104,7 +104,7 @@ class Predict(GenericPredict):
             if "model_state_dict" in checkpoint:
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
-                self.model.load_state_dict()
+                self.model.load_state_dict(checkpoint)
 
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)
