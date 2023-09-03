@@ -1,4 +1,3 @@
-import copy
 import logging
 import multiprocessing
 import time
@@ -91,7 +90,7 @@ class PreCache(BatchFilter):
                     logger.info("new request received, stopping current workers...")
                     self.workers.stop()
 
-                self.current_request = copy.deepcopy(request)
+                self.current_request = request.copy()
 
                 logger.info(
                     "starting new set of workers (%s, cache size %s)...",
@@ -127,5 +126,5 @@ class PreCache(BatchFilter):
         return batch
 
     def _run_worker(self):
-        request = copy.deepcopy(self.current_request)
+        request = self.current_request.copy()
         return self.get_upstream_provider().request_batch(request)

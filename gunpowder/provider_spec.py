@@ -218,6 +218,10 @@ class ProviderSpec(Freezable):
 
         return lcm_voxel_size
 
+    def copy(self):
+        """Create a copy of this instance."""
+        return copy.deepcopy(self)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             other_dict = copy.deepcopy(other.__dict__)

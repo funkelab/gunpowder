@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 
 from gunpowder.array import Array
@@ -57,7 +56,7 @@ class RandomProvider(BatchProvider):
         # advertise outputs only if all upstream providers have them
         for provider in self.get_upstream_providers():
             if common_spec is None:
-                common_spec = copy.deepcopy(provider.spec)
+                common_spec = provider.spec.copy()
             else:
                 for key, spec in list(common_spec.items()):
                     if key not in provider.spec:

@@ -1,4 +1,3 @@
-import copy
 import logging
 
 from .batch_provider import BatchProvider
@@ -83,7 +82,7 @@ class BatchFilter(BatchProvider):
                 f"but {key} is not provided upstream. Upstream offers: "
                 f"{self.get_upstream_provider().spec}",
             )
-        self.spec[key] = copy.deepcopy(spec)
+        self.spec[key] = spec.copy()
         self.updated_items.append(key)
 
         logger.debug("%s updates %s with %s" % (self.name(), key, spec))
@@ -106,7 +105,7 @@ class BatchFilter(BatchProvider):
         # default for BatchFilters is to provide the same as upstream
         if not hasattr(self, "_spec") or self._spec is None:
             if len(self.get_upstream_providers()) != 0:
-                self._spec = copy.deepcopy(self.get_upstream_provider().spec)
+                self._spec = self.get_upstream_provider().spec.copy()
             else:
                 self._spec = None
 

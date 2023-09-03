@@ -545,7 +545,7 @@ class Graph(Freezable):
         addition = self if copy_from_self else other
 
         if copy:
-            merged = deepcopy(base)
+            merged = base.copy()
         else:
             merged = base
 

@@ -1,5 +1,4 @@
 import logging
-import copy
 import numpy as np
 
 from gunpowder.batch_request import BatchRequest
@@ -37,7 +36,7 @@ class Normalize(BatchFilter):
 
     def setup(self):
         self.enable_autoskip()
-        array_spec = copy.deepcopy(self.spec[self.array])
+        array_spec = self.spec[self.array].copy()
         array_spec.dtype = self.dtype
         self.updates(self.array, array_spec)
 

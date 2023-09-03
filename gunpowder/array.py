@@ -29,7 +29,7 @@ class Array(Freezable):
     """
 
     def __init__(self, data, spec=None, attrs=None):
-        self.spec = deepcopy(spec)
+        self.spec = spec.copy()
         self.data = np.asarray(data)
         self.attrs = attrs
 
@@ -93,9 +93,9 @@ class Array(Freezable):
         if copy:
             data = np.array(data)
 
-        spec = deepcopy(self.spec)
+        spec = self.spec.copy()
         attrs = deepcopy(self.attrs)
-        spec.roi = deepcopy(roi)
+        spec.roi = roi.copy()
         return Array(data, spec, attrs)
 
     def merge(self, array, copy_from_self=False, copy=False):
@@ -132,16 +132,16 @@ class Array(Freezable):
 
         # simple case, self overwrites all of array
         if copy_from_self:
-            return self if not copy else deepcopy(self)
+            return self if not copy else self.copy()
 
         # -> here we know that copy_from_self == False
 
         # simple case, ROIs are the same
         if self_roi == array_roi:
-            return array if not copy else deepcopy(array)
+            return array if not copy else array.copy()
 
         # part of self have to be replaced, a copy is needed
-        merged = deepcopy(self)
+        merged = self.copy()
 
         voxel_size = self.spec.voxel_size
         data_roi = (array_roi - self_roi.offset) / voxel_size
