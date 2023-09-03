@@ -9,7 +9,7 @@ from .batch_provider import BatchProvider
 class RandomProvider(BatchProvider):
     """Randomly selects one of the upstream providers::
 
-        (a + b + c) + RandomProvider()
+        (a, b, c) + RandomProvider()
 
     will create a provider that randomly relays requests to providers ``a``,
     ``b``, or ``c``. Array and point keys of ``a``, ``b``, and ``c`` should be
