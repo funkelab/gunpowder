@@ -20,20 +20,15 @@ class NoiseAugment(BatchFilter):
 
             Type of noise to add, see scikit-image documentation.
 
-        seed (``int``):
-
-            Optionally set a random seed, see scikit-image documentation.
-
         clip (``bool``):
 
             Whether to preserve the image range (either [-1, 1] or [0, 1]) by clipping values in the end, see
             scikit-image documentation
     """
 
-    def __init__(self, array, mode="gaussian", seed=None, clip=True, **kwargs):
+    def __init__(self, array, mode="gaussian", clip=True, **kwargs):
         self.array = array
         self.mode = mode
-        self.seed = seed
         self.clip = clip
         self.kwargs = kwargs
 
@@ -58,6 +53,18 @@ class NoiseAugment(BatchFilter):
             assert (
                 raw.data.min() >= -1 and raw.data.max() <= 1
             ), "Noise augmentation expects raw values in [-1,1] or [0,1]. Consider using Normalize before."
-        raw.data = skimage.util.random_noise(
-            raw.data, mode=self.mode, rng=self.seed, clip=self.clip, **self.kwargs
-        ).astype(raw.data.dtype)
+
+        seed = request.random_seed
+
+        try:
+
+            raw.data = skimage.util.random_noise(
+                raw.data, mode=self.mode, rng=seed, clip=self.clip, **self.kwargs
+            ).astype(raw.data.dtype)
+
+        except ValueError:
+
+            # legacy version of skimage random_noise
+            raw.data = skimage.util.random_noise(
+                raw.data, mode=self.mode, seed=seed, clip=self.clip, **self.kwargs
+            ).astype(raw.data.dtype)
