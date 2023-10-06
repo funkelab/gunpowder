@@ -278,13 +278,6 @@ class Train(GenericTrain):
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(tensor.grad.cpu().detach().numpy(), spec)
 
-        for array_key, array_name in requested_outputs.items():
-            spec = self.spec[array_key].copy()
-            spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                outputs[array_name].cpu().detach().numpy(), spec
-            )
-
         batch.loss = loss.cpu().detach().numpy()
         self.iteration += 1
         batch.iteration = self.iteration
