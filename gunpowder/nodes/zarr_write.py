@@ -103,7 +103,9 @@ class ZarrWrite(BatchFilter):
 
     def _rev_metadata(self):
         with ZarrFile(self.store, mode="a") as store:
-            return isinstance(store, N5Store) or isinstance(store, N5FSStore)
+            return isinstance(store.chunk_store, N5Store) or isinstance(
+                store.chunk_store, N5FSStore
+            )
 
     def _open_file(self, store):
         return ZarrFile(store, mode="a")
