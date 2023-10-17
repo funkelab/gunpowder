@@ -137,7 +137,7 @@ class BatchFilter(BatchProvider):
         return self._autoskip_enabled
 
     def provide(self, request):
-        skip = self.__can_skip(request)
+        skip = self._can_skip(request) or self.skip_node(request)
 
         timing_prepare = Timing(self, "prepare")
         timing_prepare.start()
@@ -190,7 +190,7 @@ class BatchFilter(BatchProvider):
 
         return batch
 
-    def __can_skip(self, request):
+    def _can_skip(self, request):
         """Check if this filter needs to be run for the given request."""
 
         if not self.autoskip_enabled:
@@ -205,6 +205,14 @@ class BatchFilter(BatchProvider):
                 return False
 
         return True
+
+    def skip_node(self, request):
+        """To be implemented in subclasses.
+
+        Skip a node if a condition is met. Can be useful if using a probability
+        to determine whether to use an augmentation, for example.
+        """
+        pass
 
     def setup(self):
         """To be implemented in subclasses.

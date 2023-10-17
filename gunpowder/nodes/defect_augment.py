@@ -67,6 +67,13 @@ class DefectAugment(BatchFilter):
         axis (``int``, optional):
 
             Along which axis sections are cut.
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
     def __init__(
@@ -82,6 +89,7 @@ class DefectAugment(BatchFilter):
         artifacts_mask=None,
         deformation_strength=20,
         axis=0,
+        p=1.0,
     ):
         self.intensities = intensities
         self.prob_missing = prob_missing
@@ -94,6 +102,7 @@ class DefectAugment(BatchFilter):
         self.artifacts_mask = artifacts_mask
         self.deformation_strength = deformation_strength
         self.axis = axis
+        self.p = p
 
     def setup(self):
         if self.artifact_source is not None:
@@ -102,6 +111,9 @@ class DefectAugment(BatchFilter):
     def teardown(self):
         if self.artifact_source is not None:
             self.artifact_source.teardown()
+
+    def skip_node(self, request):
+        return random.random() > self.p
 
     # send roi request to data-source upstream
     def prepare(self, request):
