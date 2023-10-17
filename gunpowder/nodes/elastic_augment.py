@@ -88,6 +88,13 @@ class ElasticAugment(BatchFilter):
 
             Whether or not to compute the elastic transform node wise for nodes
             that were lossed during the fast elastic transform process.
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
     def __init__(
@@ -103,6 +110,7 @@ class ElasticAugment(BatchFilter):
         spatial_dims=3,
         use_fast_points_transform=False,
         recompute_missing_points=True,
+        p=1.0,
     ):
         warnings.warn(
             "ElasticAugment is deprecated, please use the DeformAugment",
@@ -122,9 +130,12 @@ class ElasticAugment(BatchFilter):
         self.spatial_dims = spatial_dims
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
+        self.p = p
+
+    def skip_node(self, request):
+        return random.random() > self.p
 
     def prepare(self, request):
-
         # get the voxel size
         self.voxel_size = self.__get_common_voxel_size(request)
 

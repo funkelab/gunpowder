@@ -12,19 +12,22 @@ logger = logging.getLogger(__name__)
 
 
 class ShiftAugment(BatchFilter):
-    def __init__(self, prob_slip=0, prob_shift=0, sigma=0, shift_axis=0):
+    def __init__(self, prob_slip=0, prob_shift=0, sigma=0, shift_axis=0, p=1.0):
         self.prob_slip = prob_slip
         self.prob_shift = prob_shift
         self.sigma = sigma
         self.shift_axis = shift_axis
+        self.p = p
 
         self.ndim = None
         self.shift_sigmas = None
         self.shift_array = None
         self.lcm_voxel_size = None
 
-    def prepare(self, request):
+    def skip_node(self, request):
+        return random.random() > self.p
 
+    def prepare(self, request):
         self.ndim = request.get_total_roi().dims
         assert self.shift_axis in range(self.ndim)
 

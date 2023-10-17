@@ -47,6 +47,13 @@ class SimpleAugment(BatchFilter):
             and attempt to weight them appropriately. A weight of 0 means
             this axis will never be transposed, a weight of 1 means this axis
             will always be transposed.
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
     def __init__(
@@ -55,6 +62,7 @@ class SimpleAugment(BatchFilter):
         transpose_only=None,
         mirror_probs=None,
         transpose_probs=None,
+        p=1.0,
     ):
         self.mirror_only = mirror_only
         self.mirror_probs = mirror_probs
@@ -63,6 +71,7 @@ class SimpleAugment(BatchFilter):
         self.mirror_mask = None
         self.dims = None
         self.transpose_dims = None
+        self.p = p
 
     def setup(self):
         self.dims = self.spec.get_total_roi().dims
@@ -105,8 +114,10 @@ class SimpleAugment(BatchFilter):
                 if valid:
                     self.permutation_dict[k] = v
 
-    def prepare(self, request):
+    def skip_node(self, request):
+        return random.random() > self.p
 
+    def prepare(self, request):
         self.mirror = [
             random.random() < self.mirror_probs[d] if self.mirror_mask[d] else 0
             for d in range(self.dims)

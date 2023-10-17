@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from gunpowder.batch_request import BatchRequest
 
@@ -34,6 +35,13 @@ class IntensityAugment(BatchFilter):
 
             Set to False if modified values should not be clipped to [0, 1]
             Disables range check!
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
     def __init__(
@@ -45,6 +53,7 @@ class IntensityAugment(BatchFilter):
         shift_max,
         z_section_wise=False,
         clip=True,
+        p=1.0,
     ):
         self.array = array
         self.scale_min = scale_min
@@ -53,10 +62,14 @@ class IntensityAugment(BatchFilter):
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
         self.clip = clip
+        self.p = p
 
     def setup(self):
         self.enable_autoskip()
         self.updates(self.array, self.spec[self.array])
+
+    def skip_node(self, request):
+        return random.random() > self.p
 
     def prepare(self, request):
         deps = BatchRequest()
