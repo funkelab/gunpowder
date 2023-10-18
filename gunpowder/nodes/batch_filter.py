@@ -137,7 +137,7 @@ class BatchFilter(BatchProvider):
         return self._autoskip_enabled
 
     def provide(self, request):
-        skip = self._can_skip(request) or self.skip_node(request)
+        skip = self.__can_skip(request) or self.skip_node(request)
 
         timing_prepare = Timing(self, "prepare")
         timing_prepare.start()
@@ -190,7 +190,7 @@ class BatchFilter(BatchProvider):
 
         return batch
 
-    def _can_skip(self, request):
+    def __can_skip(self, request):
         """Check if this filter needs to be run for the given request."""
 
         if not self.autoskip_enabled:
