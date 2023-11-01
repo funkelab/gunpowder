@@ -160,6 +160,9 @@ def test_3d_basics(rotate, spatial_dims, fast_points):
                     loc = (loc - labels.spec.roi.begin) / labels.spec.voxel_size
                     loc = np.array(loc)
                     com = center_of_mass(labels.data == node.id)
+                    if any(np.isnan(com)):
+                        # cannot assume that the rasterized data will exist after defomation
+                        continue
                     assert (
                         np.linalg.norm(com - loc)
                         < np.linalg.norm(labels.spec.voxel_size) * 2
