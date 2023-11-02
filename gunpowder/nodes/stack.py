@@ -25,6 +25,7 @@ class Stack(BatchFilter):
         self.num_repetitions = num_repetitions
 
     def provide(self, request):
+
         batches = []
         for _ in range(self.num_repetitions):
             upstream_request = request.copy()
