@@ -106,11 +106,9 @@ class Train(GenericTrain):
         # not yet implemented
         gradients = gradients
         all_inputs = {
-            {
-                k: v
-                for k, v in itertools.chain(inputs.items(), loss_inputs.items())
-                if v not in outputs.values()
-            }
+            k: v
+            for k, v in itertools.chain(inputs.items(), loss_inputs.items())
+            if v not in outputs.values()
         }
 
         super(Train, self).__init__(
