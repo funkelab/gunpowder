@@ -81,21 +81,21 @@ class RasterizationSettings(Freezable):
     """
 
     def __init__(
-            self,
-            radius,
-            mode="ball",
-            mask=None,
-            inner_radius_fraction=None,
-            fg_value=1,
-            bg_value=0,
-            edges=True,
-            color_attr=None,
+        self,
+        radius,
+        mode="ball",
+        mask=None,
+        inner_radius_fraction=None,
+        fg_value=1,
+        bg_value=0,
+        edges=True,
+        color_attr=None,
     ):
         radius = np.array([radius]).flatten().astype(np.float64)
 
         if inner_radius_fraction is not None:
             assert (
-                    inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0
+                inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0
             ), "Inner radius fraction has to be between (excluding) 0 and 1"
             inner_radius_fraction = 1.0 - inner_radius_fraction
 
@@ -186,7 +186,7 @@ class RasterizeGraph(BatchFilter):
         if self.settings.mask is not None:
             mask_voxel_size = self.spec[self.settings.mask].voxel_size
             assert (
-                    self.spec[self.array].voxel_size == mask_voxel_size
+                self.spec[self.array].voxel_size == mask_voxel_size
             ), "Voxel size of mask and rasterized volume need to be equal"
 
             new_mask_roi = graph_roi.snap_to_grid(mask_voxel_size)
@@ -253,12 +253,18 @@ class RasterizeGraph(BatchFilter):
                             self.spec[self.array].dtype,
                             self.settings,
                             # Fix for Git Issue: #193 Mohinta2892
-                            Array(data=(mask_array.data == label).astype(mask_array.spec.dtype), spec=mask_array.spec),
+                            Array(
+                                data=(mask_array.data == label).astype(
+                                    mask_array.spec.dtype
+                                ),
+                                spec=mask_array.spec,
+                            ),
                             # Array(data=mask_array.data == label, spec=mask_array.spec),
                         )
                         for label in labels
                     ],
-                    axis=0, dtype=self.spec[self.array].dtype
+                    axis=0,
+                    dtype=self.spec[self.array].dtype,
                 )
                 print(np.max(rasterized_graph_data))
 
@@ -284,7 +290,7 @@ class RasterizeGraph(BatchFilter):
         batch[self.array] = rasterized_points.crop(request[self.array].roi)
 
     def __rasterize(
-            self, graph, data_roi, voxel_size, dtype, settings, mask_array=None
+        self, graph, data_roi, voxel_size, dtype, settings, mask_array=None
     ):
         """Rasterize 'graph' into an array with the given 'voxel_size"""
 
@@ -298,9 +304,9 @@ class RasterizeGraph(BatchFilter):
         # Fast rasterization currently only implemented for mode ball without
         # inner radius set
         use_fast_rasterization = (
-                settings.mode == "ball"
-                and settings.inner_radius_fraction is None
-                and len(list(graph.edges)) == 0
+            settings.mode == "ball"
+            and settings.inner_radius_fraction is None
+            and len(list(graph.edges)) == 0
         )
 
         if use_fast_rasterization:
@@ -332,7 +338,7 @@ class RasterizeGraph(BatchFilter):
                 "Rasterizing node %s at %s",
                 node.location,
                 node.location / voxel_size - data_roi.begin,
-                )
+            )
 
             if use_fast_rasterization:
                 # Calculate where to crop the kernel mask and the rasterized array
