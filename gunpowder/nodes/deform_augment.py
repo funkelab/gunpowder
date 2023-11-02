@@ -130,7 +130,6 @@ class DeformAugment(BatchFilter):
             self.provides(self.transform_key, spec)
 
     def prepare(self, request):
-
         # get the total ROI of all requests
         total_roi = request.get_total_roi()
         logger.debug("total ROI is %s" % total_roi)

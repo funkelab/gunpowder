@@ -172,7 +172,6 @@ class RandomLocation(BatchFilter):
             self.provides(self.random_shift_key, ArraySpec(nonspatial=True))
 
     def prepare(self, request):
-
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)
 

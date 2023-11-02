@@ -55,7 +55,6 @@ class Reject(BatchFilter):
         self.upstream_provider = self.get_upstream_provider()
 
     def provide(self, request):
-
         report_next_timeout = 10
         num_rejected = 0
 
