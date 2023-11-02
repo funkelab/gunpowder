@@ -24,6 +24,7 @@ class ShiftAugment(BatchFilter):
         self.lcm_voxel_size = None
 
     def prepare(self, request):
+
         self.ndim = request.get_total_roi().dims
         assert self.shift_axis in range(self.ndim)
 

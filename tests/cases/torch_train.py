@@ -203,7 +203,7 @@ class TestTorchTrainCudaDevice(ProviderTest):
             checkpoint_basename=checkpoint_basename,
             save_every=100,
             spawn_subprocess=True,
-            device="cuda:0",
+            device='cuda:0'
         )
         pipeline = source + train
 
@@ -348,7 +348,7 @@ class TestTorchPredictCudaDevice(ProviderTest):
                 d_pred: ArraySpec(nonspatial=True),
             },
             spawn_subprocess=True,
-            device="cuda:0",
+            device="cuda:0"
         )
         pipeline = source + predict
 
@@ -373,7 +373,6 @@ class TestTorchPredictCudaDevice(ProviderTest):
 
 
 if not isinstance(torch, NoSuchModule):
-
     class ExampleModel(torch.nn.Module):
         def __init__(self):
             super(ExampleModel, self).__init__()
