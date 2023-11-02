@@ -56,14 +56,14 @@ class Predict(GenericPredict):
     """
 
     def __init__(
-        self,
-        model,
-        inputs: Dict[str, ArrayKey],
-        outputs: Dict[Union[str, int], ArrayKey],
-        array_specs: Dict[ArrayKey, ArraySpec] = None,
-        checkpoint: str = None,
-        device="cuda",
-        spawn_subprocess=False,
+            self,
+            model,
+            inputs: Dict[str, ArrayKey],
+            outputs: Dict[Union[str, int], ArrayKey],
+            array_specs: Dict[ArrayKey, ArraySpec] = None,
+            checkpoint: str = None,
+            device="cuda",
+            spawn_subprocess=False,
     ):
         self.array_specs = array_specs if array_specs is not None else {}
 
@@ -87,9 +87,7 @@ class Predict(GenericPredict):
 
     def start(self):
         # Issue #188
-        self.use_cuda = torch.cuda.is_available() and self.device_string.__contains__(
-            "cuda"
-        )
+        self.use_cuda = torch.cuda.is_available() and self.device_string.__contains__("cuda")
 
         logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
         self.device = torch.device(self.device_string if self.use_cuda else "cpu")
