@@ -53,6 +53,7 @@ def example_train_source(a_key, b_key, c_key):
 
 
 if not isinstance(torch, NoSuchModule):
+
     class ExampleLinearModel(torch.nn.Module):
         def __init__(self):
             super(ExampleLinearModel, self).__init__()
