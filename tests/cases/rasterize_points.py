@@ -195,6 +195,32 @@ class TestRasterizePoints(ProviderTest):
             self.assertEqual(rasterized[2, 20, 20], 0)
             self.assertEqual(rasterized[4, 49, 49], 0)
 
+
+        # same with different foreground/background labels
+        # and GT_LABELS as mask of type np.uint64. Issue #193
+
+        pipeline = GraphTestSource3D() + RasterizeGraph(
+            GraphKeys.TEST_GRAPH,
+            ArrayKeys.RASTERIZED,
+            ArraySpec(voxel_size=(40, 4, 4)),
+            RasterizationSettings(radius=1, fg_value=0, bg_value=1, mask=ArrayKeys.GT_LABELS),
+        )
+
+        with build(pipeline):
+            request = BatchRequest()
+            roi = Roi((0, 0, 0), (200, 200, 200))
+
+            request[GraphKeys.TEST_GRAPH] = GraphSpec(roi=roi)
+            request[ArrayKeys.GT_LABELS] = ArraySpec(roi=roi)
+            request[ArrayKeys.RASTERIZED] = ArraySpec(roi=roi)
+
+            batch = pipeline.request_batch(request)
+
+            rasterized = batch.arrays[ArrayKeys.RASTERIZED].data
+            self.assertEqual(rasterized[0, 0, 0], 0)
+            self.assertEqual(rasterized[2, 20, 20], 1)
+            self.assertEqual(rasterized[4, 49, 49], 0)
+        
         # same with anisotropic radius
 
         pipeline = GraphTestSource3D() + RasterizeGraph(
