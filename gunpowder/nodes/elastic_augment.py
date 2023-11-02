@@ -124,7 +124,6 @@ class ElasticAugment(BatchFilter):
         self.recompute_missing_points = recompute_missing_points
 
     def prepare(self, request):
-
         # get the voxel size
         self.voxel_size = self.__get_common_voxel_size(request)
 

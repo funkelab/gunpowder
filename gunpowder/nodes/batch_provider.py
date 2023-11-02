@@ -174,7 +174,6 @@ class BatchProvider(object):
         batch = None
 
         try:
-
             self.set_seeds(request)
 
             logger.debug("%s got request %s", self.name(), request)
