@@ -78,23 +78,30 @@ class Train(GenericTrain):
         spawn_subprocess (``bool``, optional):
 
             Whether to run the ``train_step`` in a separate process. Default is false.
+
+        device (``str``, optional):
+
+            Accepts a cuda gpu specifically to train on (e.g. `cuda:1`, `cuda:2`), helps in multi-card systems.
+            defaults to ``cuda``
+
     """
 
     def __init__(
-        self,
-        model,
-        loss,
-        optimizer,
-        inputs: Dict[str, ArrayKey],
-        outputs: Dict[Union[int, str], ArrayKey],
-        loss_inputs: Dict[Union[int, str], ArrayKey],
-        gradients: Dict[Union[int, str], ArrayKey] = {},
-        array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
-        checkpoint_basename: str = "model",
-        save_every: int = 2000,
-        log_dir: str = None,
-        log_every: int = 1,
-        spawn_subprocess: bool = False,
+            self,
+            model,
+            loss,
+            optimizer,
+            inputs: Dict[str, ArrayKey],
+            outputs: Dict[Union[int, str], ArrayKey],
+            loss_inputs: Dict[Union[int, str], ArrayKey],
+            gradients: Dict[Union[int, str], ArrayKey] = {},
+            array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
+            checkpoint_basename: str = "model",
+            save_every: int = 2000,
+            log_dir: str = None,
+            log_every: int = 1,
+            spawn_subprocess: bool = False,
+            device: str = "cuda",
     ):
         if not model.training:
             logger.warning(
@@ -118,6 +125,7 @@ class Train(GenericTrain):
         self.loss_inputs = loss_inputs
         self.checkpoint_basename = checkpoint_basename
         self.save_every = save_every
+        self.dev = device # Issue #188
 
         self.iteration = 0
 
@@ -160,7 +168,8 @@ class Train(GenericTrain):
 
     def start(self):
         self.use_cuda = torch.cuda.is_available()
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+        # Issue: #188
+        self.device = torch.device(self.dev if self.use_cuda else "cpu")
 
         try:
             self.model = self.model.to(self.device)
@@ -240,7 +249,7 @@ class Train(GenericTrain):
             if isinstance(k, str):
                 device_loss_kwargs[k] = device_loss_inputs.pop(k)
         assert (
-            len(device_loss_inputs) == 0
+                len(device_loss_inputs) == 0
         ), f"Not all loss inputs could be interpreted. Failed keys: {device_loss_inputs.keys()}"
 
         self.retain_gradients(request, outputs)
