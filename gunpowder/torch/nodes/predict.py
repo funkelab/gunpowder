@@ -83,7 +83,6 @@ class Predict(GenericPredict):
         self.checkpoint = checkpoint
 
         self.intermediate_layers: dict[ArrayKey, Any] = {}
-        self.register_hooks()
 
     def start(self):
         self.use_cuda = torch.cuda.is_available() and self.device_string == "cuda"
@@ -105,6 +104,8 @@ class Predict(GenericPredict):
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict(checkpoint)
+
+        self.register_hooks()
 
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)
