@@ -57,13 +57,11 @@ class NoiseAugment(BatchFilter):
         seed = request.random_seed
 
         try:
-
             raw.data = skimage.util.random_noise(
                 raw.data, mode=self.mode, rng=seed, clip=self.clip, **self.kwargs
             ).astype(raw.data.dtype)
 
         except ValueError:
-
             # legacy version of skimage random_noise
             raw.data = skimage.util.random_noise(
                 raw.data, mode=self.mode, seed=seed, clip=self.clip, **self.kwargs
