@@ -114,7 +114,11 @@ class Train(GenericTrain):
         }
 
         super(Train, self).__init__(
-            all_inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
+            all_inputs,
+            outputs,
+            gradients,
+            array_specs,
+            spawn_subprocess=spawn_subprocess,
         )
 
         self.model = model

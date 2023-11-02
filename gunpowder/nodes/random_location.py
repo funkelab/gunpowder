@@ -383,9 +383,7 @@ class RandomLocation(BatchFilter):
             logger.debug("belongs to lcm voxel %s", lcm_location)
 
             # align the point request ROI with lcm voxel grid
-            lcm_roi = request_points_roi.snap_to_grid(
-                lcm_voxel_size,
-                mode="shrink")
+            lcm_roi = request_points_roi.snap_to_grid(lcm_voxel_size, mode="shrink")
             lcm_roi = lcm_roi / lcm_voxel_size
             logger.debug("Point request ROI: %s", request_points_roi)
             logger.debug("Point request lcm ROI shape: %s", lcm_roi.shape)
