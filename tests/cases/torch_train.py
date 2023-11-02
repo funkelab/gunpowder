@@ -1,14 +1,10 @@
 from .helper_sources import ArraySource
 from gunpowder import (
-    BatchProvider,
     BatchRequest,
     ArraySpec,
     Roi,
-    Coordinate,
-    ArrayKeys,
     ArrayKey,
     Array,
-    Batch,
     Scan,
     PreCache,
     MergeProvider,
@@ -16,8 +12,9 @@ from gunpowder import (
 )
 from gunpowder.ext import torch, NoSuchModule
 from gunpowder.torch import Train, Predict
-from unittest import skipIf, expectedFailure
+from unittest import skipIf
 import numpy as np
+import pytest
 
 import logging
 
@@ -55,8 +52,7 @@ def example_train_source(a_key, b_key, c_key):
     return (source_a, source_b, source_c) + MergeProvider()
 
 
-if torch is not NoSuchModule:
-
+if not isinstance(torch, NoSuchModule):
     class ExampleLinearModel(torch.nn.Module):
         def __init__(self):
             super(ExampleLinearModel, self).__init__()
@@ -179,7 +175,7 @@ def test_output():
         assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 * 2 + 9 * 3))
 
 
-if torch is not NoSuchModule:
+if not isinstance(torch, NoSuchModule):
 
     class Example2DModel(torch.nn.Module):
         def __init__(self):
@@ -229,6 +225,7 @@ def test_scan():
         assert pred in batch
 
 
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 def test_precache():
     logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
