@@ -3,6 +3,7 @@ import logging
 import traceback
 
 import sys
+from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ try:
 except ImportError as e:
     augment = NoSuchModule("augment")
 
+ZarrFile: Optional[Any] = None
 try:
     import zarr
     from .zarr_file import ZarrFile

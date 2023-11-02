@@ -5,10 +5,10 @@ from zarr._storage.store import BaseStore
 from zarr import N5FSStore, N5Store
 
 from .batch_filter import BatchFilter
+from gunpowder.array import ArrayKey
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
-from gunpowder.coordinate import Coordinate
 from gunpowder.ext import ZarrFile
 
 import logging
@@ -71,7 +71,7 @@ class ZarrWrite(BatchFilter):
         else:
             self.dataset_dtypes = dataset_dtypes
 
-        self.dataset_offsets = {}
+        self.dataset_offsets: dict[ArrayKey, Coordinate] = {}
 
     def _get_voxel_size(self, dataset):
         if "resolution" not in dataset.attrs:

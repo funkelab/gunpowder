@@ -4,7 +4,7 @@ from gunpowder.ext import torch
 from gunpowder.nodes.generic_predict import GenericPredict
 
 import logging
-from typing import Dict, Union
+from typing import Dict, Union, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,8 @@ class Predict(GenericPredict):
         model,
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[str, int], ArrayKey],
-        array_specs: Dict[ArrayKey, ArraySpec] = None,
-        checkpoint: str = None,
+        array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
+        checkpoint: Optional[str] = None,
         device="cuda",
         spawn_subprocess=False,
     ):
@@ -82,7 +82,7 @@ class Predict(GenericPredict):
         self.model = model
         self.checkpoint = checkpoint
 
-        self.intermediate_layers = {}
+        self.intermediate_layers: dict[ArrayKey, Any] = {}
         self.register_hooks()
 
     def start(self):

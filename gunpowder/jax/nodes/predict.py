@@ -6,7 +6,7 @@ from gunpowder.jax import GenericJaxModel
 
 import pickle
 import logging
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +52,8 @@ class Predict(GenericPredict):
         model: GenericJaxModel,
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[str, int], ArrayKey],
-        array_specs: Dict[ArrayKey, ArraySpec] = None,
-        checkpoint: str = None,
+        array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
+        checkpoint: Optional[str] = None,
         spawn_subprocess=False,
     ):
         self.array_specs = array_specs if array_specs is not None else {}

@@ -6,7 +6,8 @@ from gunpowder.array_spec import ArraySpec
 from gunpowder.ext import torch, tensorboardX, NoSuchModule
 from gunpowder.nodes.generic_train import GenericTrain
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Any
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ class Train(GenericTrain):
         array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
         checkpoint_basename: str = "model",
         save_every: int = 2000,
-        log_dir: str = None,
+        log_dir: Optional[str] = None,
         log_every: int = 1,
         spawn_subprocess: bool = False,
     ):
@@ -104,12 +105,16 @@ class Train(GenericTrain):
 
         # not yet implemented
         gradients = gradients
-        inputs.update(
-            {k: v for k, v in loss_inputs.items() if v not in outputs.values()}
-        )
+        all_inputs = {
+            {
+                k: v
+                for k, v in itertools.chain(inputs.items(), loss_inputs.items())
+                if v not in outputs.values()
+            }
+        }
 
         super(Train, self).__init__(
-            inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
+            all_inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
         )
 
         self.model = model
@@ -129,7 +134,7 @@ class Train(GenericTrain):
             if log_dir is not None:
                 logger.warning("log_dir given, but tensorboardX is not installed")
 
-        self.intermediate_layers = {}
+        self.intermediate_layers: dict[ArrayKey, Any] = {}
         self.register_hooks()
 
     def register_hooks(self):
