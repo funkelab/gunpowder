@@ -136,13 +136,13 @@ class Pad(BatchFilter):
                 pass  # handled later
             else:
                 diff = Coordinate(b.shape) - Coordinate(a.shape)
-                if diff.ndim == 3:  # (C Y X)
+                if len(diff) == 3:  # (C Y X)
                     b[:, : diff[1], diff[2] :] = a[:, : diff[1], :][:, ::-1, :]  # Y
                     b[:, diff[1] :, : diff[2]] = a[:, :, : diff[2]][:, :, ::-1]  # X
                     b[:, : diff[1], : diff[2]] = a[:, : diff[1], : diff[2]][
                         :, ::-1, ::-1
                     ]
-                elif diff.ndim == 4:  # (C Z Y X)
+                elif len(diff) == 4:  # (C Z Y X)
                     b[:, : diff[1], diff[2] :, diff[3] :] = a[:, : diff[1], :, :][
                         :, ::-1, :, :
                     ]  # Z
