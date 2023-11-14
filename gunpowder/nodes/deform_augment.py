@@ -115,13 +115,21 @@ class DeformAugment(BatchFilter):
         self.use_fast_points_transform = use_fast_points_transform
         self.recompute_missing_points = recompute_missing_points
         self.transform_key = transform_key
-        self.graph_raster_voxel_size = Coordinate(graph_raster_voxel_size)
-        self.p = p
-        assert (
-            self.control_point_spacing.dims
-            == self.jitter_sigma.dims
-            == self.graph_raster_voxel_size.dims
+        self.graph_raster_voxel_size = (
+            Coordinate(graph_raster_voxel_size)
+            if graph_raster_voxel_size is not None
+            else None
         )
+        self.p = p
+        assert self.control_point_spacing.dims == self.jitter_sigma.dims, (
+            self.control_point_spacing,
+            self.jitter_sigma,
+        )
+        if self.graph_raster_voxel_size is not None:
+            assert self.graph_raster_voxel_size.dims == self.jitter_sigma.dims, (
+                self.graph_raster_voxel_size,
+                self.jitter_sigma,
+            )
 
     def setup(self):
         if self.transform_key is not None:
