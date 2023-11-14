@@ -135,6 +135,7 @@ def test_3d_basics(rotate, spatial_dims, fast_points):
         rotate=rotate,
         spatial_dims=spatial_dims,
         use_fast_points_transform=fast_points,
+        subsample=2,
     )
 
     for _ in range(5):
