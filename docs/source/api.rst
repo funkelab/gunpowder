@@ -334,6 +334,7 @@ Iterative Processing Nodes
 Scan
 ^^^^
   .. autoclass:: Scan
+  .. autoclass:: ScanCallback
 
 DaisyRequestBlocks
 ^^^^^^^^^^^^^^^^^^
