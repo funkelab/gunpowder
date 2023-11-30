@@ -89,7 +89,7 @@ class GenericPredict(BatchFilter):
         if self.spawn_subprocess:
             # start prediction as a producer pool, so that we can gracefully
             # exit if anything goes wrong
-            self.worker = ProducerPool([self.__produce_predict_batch], queue_size=1)
+            self.worker = ProducerPool([self._produce_predict_batch], queue_size=1)
             self.batch_in = multiprocessing.Queue(maxsize=1)
             self.batch_in_lock = multiprocessing.Lock()
             self.batch_out_lock = multiprocessing.Lock()
@@ -177,7 +177,7 @@ class GenericPredict(BatchFilter):
         """
         pass
 
-    def __produce_predict_batch(self):
+    def _produce_predict_batch(self):
         """Process one batch."""
 
         if not self.initialized:
