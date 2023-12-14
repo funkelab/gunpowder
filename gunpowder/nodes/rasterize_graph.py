@@ -17,6 +17,7 @@ from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 
 import matplotlib.pyplot as plt
+
 logger = logging.getLogger(__name__)
 
 
@@ -271,12 +272,18 @@ class RasterizeGraph(BatchFilter):
                             # hence explicitly casting the resulting bool array as np.uint8.
                             # Yet to be tested that it works in pytest!!
                             # Array(data=mask_array.data == label, spec=ArraySpec()),
-                            Array(data=(mask_array.data == label).astype(mask_array.spec.dtype), spec=mask_array.spec),
+                            Array(
+                                data=(mask_array.data == label).astype(
+                                    mask_array.spec.dtype
+                                ),
+                                spec=mask_array.spec,
+                            ),
                             # Array(data=mask_array.data == label, spec=mask_array.spec),
                         )
                         for label in labels
                     ],
-                    axis=0, dtype=self.spec[self.array].dtype
+                    axis=0,
+                    dtype=self.spec[self.array].dtype,
                 )
                 print(np.max(rasterized_graph_data))
 
@@ -300,7 +307,6 @@ class RasterizeGraph(BatchFilter):
         spec.roi = data_roi * voxel_size
         rasterized_points = Array(data=rasterized_graph_data, spec=spec)
         batch[self.array] = rasterized_points.crop(request[self.array].roi)
-
 
     def __rasterize(
         self, graph, data_roi, voxel_size, dtype, settings, mask_array=None
