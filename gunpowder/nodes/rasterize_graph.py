@@ -16,6 +16,7 @@ from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 
+import matplotlib.pyplot as plt
 logger = logging.getLogger(__name__)
 
 
@@ -189,8 +190,21 @@ class RasterizeGraph(BatchFilter):
                 self.spec[self.array].voxel_size == mask_voxel_size
             ), "Voxel size of mask and rasterized volume need to be equal"
 
+            # This sends a larger array than requested RoI, which cause batch_merge to
+            # throw an error later.
+            # deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
+
+            # Restrict request to provided mask array
+            # Copied from gunpowder v0.3.1
             new_mask_roi = graph_roi.snap_to_grid(mask_voxel_size)
-            deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
+
+            new_mask_roi = new_mask_roi.intersect(self.spec[self.settings.mask].roi)
+            if self.settings.mask in request:
+                new_mask_roi = request[self.settings.mask].roi.union(new_mask_roi)
+                deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
+
+            else:
+                deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)
 
         return deps
 
@@ -221,7 +235,6 @@ class RasterizeGraph(BatchFilter):
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
             # get those component labels in the mask, that contain graph
             labels = []
-            # Fix for Git Issue: #193 Mohinta2892
             # for i, point in graph.data.items():
             for i, point in enumerate(graph.nodes):
                 v = Coordinate(point.location / voxel_size)
@@ -252,19 +265,18 @@ class RasterizeGraph(BatchFilter):
                             voxel_size,
                             self.spec[self.array].dtype,
                             self.settings,
-                            # Fix for Git Issue: #193 Mohinta2892
-                            Array(
-                                data=(mask_array.data == label).astype(
-                                    mask_array.spec.dtype
-                                ),
-                                spec=mask_array.spec,
-                            ),
+                            # this will be always cast to mask_array dtype,
+                            # makes no sense to save 0s and 1s in dtype > np.uint8;
+                            # Array(data=(mask_array.data == label).astype(mask_array.spec.dtype), spec=mask_array.spec),
+                            # hence explicitly casting the resulting bool array as np.uint8.
+                            # Yet to be tested that it works in pytest!!
+                            # Array(data=mask_array.data == label, spec=ArraySpec()),
+                            Array(data=(mask_array.data == label).astype(mask_array.spec.dtype), spec=mask_array.spec),
                             # Array(data=mask_array.data == label, spec=mask_array.spec),
                         )
                         for label in labels
                     ],
-                    axis=0,
-                    dtype=self.spec[self.array].dtype,
+                    axis=0, dtype=self.spec[self.array].dtype
                 )
                 print(np.max(rasterized_graph_data))
 
@@ -288,6 +300,7 @@ class RasterizeGraph(BatchFilter):
         spec.roi = data_roi * voxel_size
         rasterized_points = Array(data=rasterized_graph_data, spec=spec)
         batch[self.array] = rasterized_points.crop(request[self.array].roi)
+
 
     def __rasterize(
         self, graph, data_roi, voxel_size, dtype, settings, mask_array=None
@@ -414,8 +427,13 @@ class RasterizeGraph(BatchFilter):
         if mask_array is not None:
             # use more efficient bitwise operation when possible
             if settings.mode == "ball":
+                # error: if mask/rasterize_graph arrays are of dtypes that require
+                # implicit casting of lower (int8) to higher (int64) in safe mode
                 rasterized_graph &= mask
             else:
                 rasterized_graph *= mask
 
+        # plt.close('all')
+        # plt.imshow(rasterized_graph[np.argwhere(rasterized_graph> 0)[0][0], ...], cmap='gray')
+        # plt.show()
         return rasterized_graph
