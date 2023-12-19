@@ -68,4 +68,8 @@ def test_output(mode):
             )
         elif mode == "reflect":
             octants = [100 * 1 * 5 * 10 for _ in range(8)]
-            assert np.sum(data) == np.sum(octants), data.shape
+            assert np.sum(data) == np.sum(octants), (
+                np.sum(data),
+                np.sum(octants),
+                data,
+            )
