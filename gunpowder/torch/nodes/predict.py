@@ -85,10 +85,13 @@ class Predict(GenericPredict):
         self.intermediate_layers: dict[ArrayKey, Any] = {}
 
     def start(self):
-        self.use_cuda = torch.cuda.is_available() and self.device_string == "cuda"
-        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+        # Issue #188
+        self.use_cuda = torch.cuda.is_available() and self.device_string.__contains__(
+            "cuda"
+        )
 
+        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
+        self.device = torch.device(self.device_string if self.use_cuda else "cpu")
         try:
             self.model = self.model.to(self.device)
         except RuntimeError as e:
