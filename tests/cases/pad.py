@@ -17,6 +17,8 @@ from gunpowder import (
 import pytest
 import numpy as np
 
+from itertools import product
+
 
 @pytest.mark.parametrize("mode", ["constant", "reflect"])
 def test_output(mode):
@@ -50,7 +52,20 @@ def test_output(mode):
         assert pipeline.spec[graph_key].roi == Roi((190, 10, 10), (1820, 200, 200))
 
         batch = pipeline.request_batch(
-            BatchRequest({array_key: ArraySpec(Roi((180, 0, 0), (20, 20, 20)))})
+            BatchRequest({array_key: ArraySpec(Roi((180, 0, 0), (40, 40, 40)))})
         )
 
-        assert np.sum(batch.arrays[array_key].data) == 1 * 10 * 10
+        data = batch.arrays[array_key].data
+        if mode == "constant":
+            octants = [
+                (1 * 10 * 10) if zi + yi + xi < 3 else 100 * 1 * 5 * 10
+                for zi, yi, xi in product(range(2), range(2), range(2))
+            ]
+            assert np.sum(data) == np.sum(octants), (
+                np.sum(data),
+                np.sum(octants),
+                np.unique(data),
+            )
+        elif mode == "reflect":
+            octants = [100 * 1 * 5 * 10 for _ in range(8)]
+            assert np.sum(data) == np.sum(octants), data.shape
