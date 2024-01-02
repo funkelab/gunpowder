@@ -5,10 +5,7 @@ import numpy as np
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
-from gunpowder.graph import GraphKey, Graph
-from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
-from gunpowder.roi import Roi
 from gunpowder.nodes.batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)

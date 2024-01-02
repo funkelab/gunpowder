@@ -1,7 +1,6 @@
 from .provider_test import ProviderTest
 from gunpowder import IntensityAugment, ArrayKeys, build, Normalize, NoiseAugment
 
-import numpy as np
 
 
 class TestIntensityAugment(ProviderTest):

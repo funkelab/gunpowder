@@ -6,7 +6,6 @@ from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 from .freezable import Freezable
-import time
 import logging
 import copy
 
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 import logging
-import warnings
 
 logger = logging.getLogger(__file__)
 

@@ -4,7 +4,6 @@ import numpy as np
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
 from gunpowder.nodes.batch_filter import BatchFilter
-from numpy.lib.stride_tricks import as_strided
 from scipy.ndimage.morphology import distance_transform_edt
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
         return deps
 
     def process(self, batch, request):
-        if not self.gradient_array_key in request:
+        if self.gradient_array_key not in request:
             return
 
         labels = batch.arrays[self.label_array_key].data

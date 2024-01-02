@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
@@ -12,7 +11,6 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map, create_ball_kernel
 from gunpowder.ndarray import replace
-from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 

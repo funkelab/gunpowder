@@ -1,7 +1,5 @@
-import copy
 import logging
 import numpy as np
-import pdb
 
 from gunpowder.array import Array
 from gunpowder.nodes.batch_filter import BatchFilter

@@ -2,7 +2,7 @@ import gunpowder as gp
 from gunpowder.nodes.batch_provider import BatchRequestError
 from .helper_sources import ArraySource
 
-from funlib.geometry import Roi, Coordinate
+from funlib.geometry import Coordinate
 
 import numpy as np
 import pytest

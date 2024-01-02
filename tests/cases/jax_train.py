@@ -4,18 +4,15 @@ from gunpowder import (
     BatchRequest,
     ArraySpec,
     Roi,
-    Coordinate,
     ArrayKeys,
     ArrayKey,
     Array,
     Batch,
-    Scan,
-    PreCache,
     build,
 )
 from gunpowder.ext import jax, haiku, optax, NoSuchModule
 from gunpowder.jax import Train, Predict, GenericJaxModel
-from unittest import skipIf, expectedFailure
+from unittest import skipIf
 import numpy as np
 
 import logging

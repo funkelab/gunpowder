@@ -2,7 +2,6 @@ import numpy as np
 from scipy import ndimage
 
 from .batch_filter import BatchFilter
-from gunpowder.array import Array
 
 
 class GrowBoundary(BatchFilter):

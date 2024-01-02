@@ -1,7 +1,4 @@
 import logging
-import multiprocessing
-import time
-import random
 
 from .batch_filter import BatchFilter
 from gunpowder.profiling import Timing

@@ -71,7 +71,7 @@ class ExcludeLabels(BatchFilter):
                 include_mask[gt.data == label] = 0
 
         # if no ignore mask is provided or requested, we are done
-        if not self.ignore_mask or not self.ignore_mask in request:
+        if not self.ignore_mask or self.ignore_mask not in request:
             return
 
         voxel_size = self.spec[self.labels].voxel_size
