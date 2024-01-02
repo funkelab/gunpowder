@@ -221,7 +221,8 @@ class RasterizeGraph(BatchFilter):
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
             # get those component labels in the mask, that contain graph
             labels = []
-            for i, point in graph.data.items():
+            # for i, point in graph.data.items():
+            for i, point in enumerate(graph.nodes):
                 v = Coordinate(point.location / voxel_size)
                 v -= data_roi.begin
                 labels.append(mask_array.data[v])
@@ -250,11 +251,15 @@ class RasterizeGraph(BatchFilter):
                             voxel_size,
                             self.spec[self.array].dtype,
                             self.settings,
-                            Array(data=mask_array.data == label, spec=mask_array.spec),
+                            Array(
+                                data=(mask_array.data == label),
+                                spec=mask_array.spec,
+                            ),
                         )
                         for label in labels
                     ],
                     axis=0,
+                    dtype=self.spec[self.array].dtype,
                 )
 
         else:
