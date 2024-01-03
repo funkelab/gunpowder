@@ -68,6 +68,7 @@ if not isinstance(torch, NoSuchModule):
             return d_pred
 
 
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -80,7 +81,6 @@ if not isinstance(torch, NoSuchModule):
         ),
     ],
 )
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 def test_loss_drops(tmpdir, device):
     checkpoint_basename = str(tmpdir / "model")
 
@@ -143,6 +143,7 @@ def test_loss_drops(tmpdir, device):
             assert loss2 < loss1
 
 
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -160,7 +161,6 @@ def test_loss_drops(tmpdir, device):
         ),
     ],
 )
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 def test_output(device):
     logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
@@ -222,6 +222,7 @@ if not isinstance(torch, NoSuchModule):
             return pred
 
 
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -239,7 +240,6 @@ if not isinstance(torch, NoSuchModule):
         ),
     ],
 )
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 def test_scan(device):
     logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
@@ -275,6 +275,7 @@ def test_scan(device):
         assert pred in batch
 
 
+@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -292,7 +293,6 @@ def test_scan(device):
         ),
     ],
 )
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
 def test_precache(device):
     logging.getLogger("gunpowder.torch.nodes.predict").setLevel(logging.INFO)
 
