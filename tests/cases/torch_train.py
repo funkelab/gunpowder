@@ -18,6 +18,8 @@ import pytest
 
 import logging
 
+TORCH_AVAILABLE = isinstance(torch, NoSuchModule)
+
 
 # Example 2D source
 def example_2d_source(array_key: ArrayKey):
@@ -52,7 +54,7 @@ def example_train_source(a_key, b_key, c_key):
     return (source_a, source_b, source_c) + MergeProvider()
 
 
-if not isinstance(torch, NoSuchModule):
+if not TORCH_AVAILABLE:
 
     class ExampleLinearModel(torch.nn.Module):
         def __init__(self):
@@ -68,7 +70,7 @@ if not isinstance(torch, NoSuchModule):
             return d_pred
 
 
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
+@skipIf(TORCH_AVAILABLE, "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -76,7 +78,8 @@ if not isinstance(torch, NoSuchModule):
         pytest.param(
             "cuda:0",
             marks=pytest.mark.skipif(
-                not torch.cuda.is_available(), reason="CUDA not available"
+                TORCH_AVAILABLE or not torch.cuda.is_available(),
+                reason="CUDA not available",
             ),
         ),
     ],
@@ -143,7 +146,7 @@ def test_loss_drops(tmpdir, device):
             assert loss2 < loss1
 
 
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
+@skipIf(TORCH_AVAILABLE, "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -152,7 +155,8 @@ def test_loss_drops(tmpdir, device):
             "cuda:0",
             marks=[
                 pytest.mark.skipif(
-                    not torch.cuda.is_available(), reason="CUDA not available"
+                    TORCH_AVAILABLE or not torch.cuda.is_available(),
+                    reason="CUDA not available",
                 ),
                 pytest.mark.xfail(
                     reason="failing to move model to device when using a subprocess"
@@ -207,7 +211,7 @@ def test_output(device):
         assert np.isclose(batch2[d_pred].data, 2 * (1 + 4 * 2 + 9 * 3))
 
 
-if not isinstance(torch, NoSuchModule):
+if not TORCH_AVAILABLE:
 
     class Example2DModel(torch.nn.Module):
         def __init__(self):
@@ -222,7 +226,7 @@ if not isinstance(torch, NoSuchModule):
             return pred
 
 
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
+@skipIf(TORCH_AVAILABLE, "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -231,7 +235,8 @@ if not isinstance(torch, NoSuchModule):
             "cuda:0",
             marks=[
                 pytest.mark.skipif(
-                    not torch.cuda.is_available(), reason="CUDA not available"
+                    TORCH_AVAILABLE or not torch.cuda.is_available(),
+                    reason="CUDA not available",
                 ),
                 pytest.mark.xfail(
                     reason="failing to move model to device in multiprocessing context"
@@ -275,7 +280,7 @@ def test_scan(device):
         assert pred in batch
 
 
-@skipIf(isinstance(torch, NoSuchModule), "torch is not installed")
+@skipIf(TORCH_AVAILABLE, "torch is not installed")
 @pytest.mark.parametrize(
     "device",
     [
@@ -284,7 +289,8 @@ def test_scan(device):
             "cuda:0",
             marks=[
                 pytest.mark.skipif(
-                    not torch.cuda.is_available(), reason="CUDA not available"
+                    TORCH_AVAILABLE or not torch.cuda.is_available(),
+                    reason="CUDA not available",
                 ),
                 pytest.mark.xfail(
                     reason="failing to move model to device in multiprocessing context"
