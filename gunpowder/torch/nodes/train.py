@@ -99,7 +99,7 @@ class Train(GenericTrain):
         array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
         checkpoint_basename: str = "model",
         save_every: int = 2000,
-        log_dir: str = None,
+        log_dir: Optional[str] = None,
         log_every: int = 1,
         spawn_subprocess: bool = False,
         device: str = "cuda",
