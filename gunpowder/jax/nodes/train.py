@@ -11,7 +11,7 @@ from gunpowder.ext import tensorboardX, NoSuchModule
 from gunpowder.nodes.generic_train import GenericTrain
 from gunpowder.jax import GenericJaxModel
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Any
 
 
 logger = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ class Train(GenericTrain):
         checkpoint_basename: str = "model",
         save_every: int = 2000,
         keep_n_checkpoints: Optional[int] = None,
-        log_dir: str = None,
+        log_dir: Optional[str] = None,
         log_every: int = 1,
         spawn_subprocess: bool = False,
         n_devices: Optional[int] = None,
@@ -141,7 +141,7 @@ class Train(GenericTrain):
             if log_dir is not None:
                 logger.warning("log_dir given, but tensorboardX is not installed")
 
-        self.intermediate_layers = {}
+        self.intermediate_layers: dict[ArrayKey, Any] = {}
 
         self.validate_fn = validate_fn
         self.validate_every = validate_every

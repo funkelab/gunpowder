@@ -1,7 +1,6 @@
 from copy import copy as shallow_copy
 import logging
 import multiprocessing
-import warnings
 
 from .freezable import Freezable
 from .profiling import ProfilingStats
@@ -75,7 +74,7 @@ class Batch(Freezable):
         elif isinstance(value, Graph):
             assert isinstance(
                 key, GraphKey
-            ), f"Only a GraphKey is allowed as key for Graph value."
+            ), "Only a GraphKey is allowed as key for Graph value."
             self.graphs[key] = value
 
         else:

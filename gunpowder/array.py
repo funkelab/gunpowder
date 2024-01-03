@@ -1,7 +1,5 @@
 from .freezable import Freezable
 from copy import deepcopy
-from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
 import logging
 import numpy as np
 import copy

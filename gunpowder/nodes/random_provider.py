@@ -69,7 +69,6 @@ class RandomProvider(BatchProvider):
             self.provides(self.random_provider_key, ArraySpec(nonspatial=True))
 
     def provide(self, request):
-
         if self.random_provider_key is not None:
             del request[self.random_provider_key]
 

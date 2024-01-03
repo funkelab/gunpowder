@@ -143,7 +143,7 @@ class AddBlobsFromPoints(BatchFilter):
                 synapse_ids = []
                 for point_id, point in points.data.items():
                     # pdb.set_trace()
-                    if not point.partner_ids[0] in partner_points.data.keys():
+                    if point.partner_ids[0] not in partner_points.data.keys():
                         logger.warning(
                             "Point %s has no partner. Deleting..." % point_id
                         )

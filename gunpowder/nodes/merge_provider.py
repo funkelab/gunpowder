@@ -1,4 +1,3 @@
-from gunpowder.provider_spec import ProviderSpec
 from gunpowder.batch import Batch
 from gunpowder.batch_request import BatchRequest
 

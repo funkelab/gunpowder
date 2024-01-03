@@ -4,7 +4,6 @@ import numpy as np
 import random
 from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
-from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 

@@ -104,7 +104,7 @@ class GenericTrain(BatchFilter):
         if self.spawn_subprocess:
             # start training as a producer pool, so that we can gracefully exit if
             # anything goes wrong
-            self.worker = ProducerPool([self.__produce_train_batch], queue_size=1)
+            self.worker = ProducerPool([self._produce_train_batch], queue_size=1)
             self.batch_in = multiprocessing.Queue(maxsize=1)
             self.worker.start()
         else:
@@ -208,7 +208,7 @@ class GenericTrain(BatchFilter):
 
         return None, 0
 
-    def __produce_train_batch(self):
+    def _produce_train_batch(self):
         """Process one train batch."""
 
         if not self.initialized:

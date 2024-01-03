@@ -1,10 +1,9 @@
 import copy
 import logging
 import numpy as np
-from scipy import ndimage
 
 from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.array import Array, ArrayKeys
+from gunpowder.array import Array
 from gunpowder.nodes.rasterize_graph import RasterizationSettings
 from gunpowder.morphology import enlarge_binary_map
 

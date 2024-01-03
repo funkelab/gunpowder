@@ -5,7 +5,6 @@ from gunpowder import (
     ArraySpec,
     Roi,
     Coordinate,
-    Batch,
     BatchRequest,
     Array,
     MergeProvider,

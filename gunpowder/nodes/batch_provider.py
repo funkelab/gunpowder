@@ -3,6 +3,8 @@ import numpy as np
 import copy
 import logging
 import random
+import traceback
+from typing import Optional
 
 from gunpowder.coordinate import Coordinate
 from gunpowder.provider_spec import ProviderSpec
@@ -15,17 +17,22 @@ logger = logging.getLogger(__name__)
 
 
 class BatchRequestError(Exception):
-    def __init__(self, provider, request, batch):
+    def __init__(
+        self, provider, request, batch, original_traceback: Optional[list[str]] = None
+    ):
         self.provider = provider
         self.request = request
         self.batch = batch
+        self.original_traceback = original_traceback
 
     def __str__(self):
         return (
             f"Exception in {self.provider.name()} while processing request"
-            f"{self.request} \n"
+            f"{self.request}"
             "Batch returned so far:\n"
-            f"{self.batch}"
+            f"{self.batch}" + ("\n\n" + "".join(self.original_traceback))
+            if self.original_traceback is not None
+            else ""
         )
 
 
@@ -174,7 +181,6 @@ class BatchProvider(object):
         batch = None
 
         try:
-
             self.set_seeds(request)
 
             logger.debug("%s got request %s", self.name(), request)
@@ -195,7 +201,12 @@ class BatchProvider(object):
             logger.debug("%s provides %s", self.name(), batch)
 
         except Exception as e:
-            raise BatchRequestError(self, request, batch) from e
+            tb = traceback.format_exception(type(e), e, e.__traceback__)
+            if isinstance(e, BatchRequestError):
+                tb = tb[-1:]
+            raise BatchRequestError(
+                self, request, batch, original_traceback=tb
+            ) from None
 
         return batch
 

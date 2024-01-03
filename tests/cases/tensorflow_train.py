@@ -11,7 +11,7 @@ from gunpowder import (
     build,
 )
 from gunpowder.ext import tensorflow, NoSuchModule
-from gunpowder.tensorflow import Train, Predict, LocalServer
+from gunpowder.tensorflow import Train
 import multiprocessing
 import numpy as np
 from unittest import skipIf

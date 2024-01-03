@@ -1,4 +1,3 @@
-import unittest
 from gunpowder import (
     BatchProvider,
     Batch,
@@ -25,7 +24,6 @@ from .provider_test import ProviderTest
 import numpy as np
 import math
 import time
-import unittest
 
 
 class PointTestSource3D(BatchProvider):

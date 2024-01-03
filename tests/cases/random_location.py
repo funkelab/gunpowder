@@ -3,7 +3,6 @@ from gunpowder import (
     BatchProvider,
     Roi,
     Coordinate,
-    ArrayKeys,
     ArrayKey,
     ArraySpec,
     Array,

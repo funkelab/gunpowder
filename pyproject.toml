@@ -6,77 +6,71 @@ requires = ["setuptools", "wheel"]
 name = "gunpowder"
 description = "A library to facilitate machine learning on large, multi-dimensional images."
 authors = [
-  {name = "Jan Funke", email = "funkej@hhmi.org"},
-  {name = "William Patton", email = "pattonw@hhmi.org"},
-  {name = "Renate Krause"},
-  {name = "Julia Buhmann"},
-  {name = "Rodrigo Ceballos Lentini"},
-  {name = "William Grisaitis"},
-  {name = "Chris Barnes"},
-  {name = "Caroline Malin-Mayor"},
-  {name = "Larissa Heinrich"},
-  {name = "Philipp Hanslovsky"},
-  {name = "Sherry Ding"},
-  {name = "Andrew Champion"},
-  {name = "Arlo Sheridan"},
-  {name = "Constantin Pape"},
+    { name = "Jan Funke", email = "funkej@hhmi.org" },
+    { name = "William Patton", email = "pattonw@hhmi.org" },
+    { name = "Renate Krause" },
+    { name = "Julia Buhmann" },
+    { name = "Rodrigo Ceballos Lentini" },
+    { name = "William Grisaitis" },
+    { name = "Chris Barnes" },
+    { name = "Caroline Malin-Mayor" },
+    { name = "Larissa Heinrich" },
+    { name = "Philipp Hanslovsky" },
+    { name = "Sherry Ding" },
+    { name = "Andrew Champion" },
+    { name = "Arlo Sheridan" },
+    { name = "Constantin Pape" },
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 readme = "README.md"
 dynamic = ["version"]
 
-classifiers = [
-  "Programming Language :: Python :: 3",
-]
+classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
 requires-python = ">=3.7"
 
 dependencies = [
-  "numpy",
-  "scipy",
-  "h5py",
-  "scikit-image",
-  "requests",
-  "augment-nd>=0.1.3",
-  "tqdm",
-  "funlib.geometry",
-  "zarr",
-  "networkx",
+    "numpy>=1.24",
+    "scipy>=1.6",
+    "h5py>=3.10",
+    "scikit-image",
+    "requests",
+    "augment-nd>=0.1.3",
+    "tqdm",
+    "funlib.geometry>=0.3",
+    "zarr",
+    "networkx>=3.1",
 ]
 
 [project.optional-dependencies]
-dev = [
-  "pytest",
-  "pytest-cov",
-  "flake8",
-]
+dev = ["pytest", "pytest-cov", "flake8", "mypy", "types-requests", "types-tqdm"]
 docs = [
-  "sphinx",
-  "sphinx_rtd_theme",
-  "sphinx_togglebutton",
-  "tomli",
-  "jupyter_sphinx",
-  "ipykernel",
-  "matplotlib",
-  "torch",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_togglebutton",
+    "tomli",
+    "jupyter_sphinx",
+    "ipykernel",
+    "matplotlib",
+    "torch",
 ]
 pytorch = ['torch']
 tensorflow = [
-  # TF doesn't provide <2.0 wheels for py>=3.8 on pypi
-  'tensorflow<2.0; python_version<"3.8"', # https://stackoverflow.com/a/72493690
-  'protobuf==3.20.*; python_version=="3.7"',
+    # TF doesn't provide <2.0 wheels for py>=3.8 on pypi
+    'tensorflow<2.0; python_version<"3.8"',    # https://stackoverflow.com/a/72493690
+    'protobuf==3.20.*; python_version=="3.7"',
 ]
 full = [
-  'torch',
-  'tensorflow<2.0; python_version<"3.8"',
-  'protobuf==3.20.*; python_version=="3.7"',
+    'torch',
+    'tensorflow<2.0; python_version<"3.8"',
+    'protobuf==3.20.*; python_version=="3.7"',
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "gunpowder.version_info.__version__"}
+version = { attr = "gunpowder.version_info.__version__" }
 
 [tool.black]
-target_version = ['py36', 'py37', 'py38', 'py39', 'py310']
+target_version = ['py38', 'py39', 'py310']
 
 [tool.setuptools.packages.find]
 include = ["gunpowder*"]

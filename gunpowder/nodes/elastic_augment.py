@@ -9,7 +9,6 @@ from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import augment
 from gunpowder.roi import Roi
-from gunpowder.array import ArrayKey
 
 import warnings
 

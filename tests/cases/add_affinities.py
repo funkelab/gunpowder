@@ -1,10 +1,6 @@
-from .provider_test import ProviderTest
 from gunpowder import *
 from itertools import product
-from unittest import skipIf
-import itertools
 import numpy as np
-import logging
 
 
 class ExampleSource(BatchProvider):

@@ -2,7 +2,6 @@ from .provider_test import ProviderTest
 from unittest import skipIf
 from gunpowder import *
 from gunpowder.ext import dvision, NoSuchModule
-import numpy as np
 import socket
 import logging
 

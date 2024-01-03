@@ -13,7 +13,10 @@ class ArraySource(BatchProvider):
 
     def provide(self, request):
         outputs = Batch()
-        outputs[self.key] = copy.deepcopy(self.array.crop(request[self.key].roi))
+        if self.array.spec.nonspatial:
+            outputs[self.key] = copy.deepcopy(self.array)
+        else:
+            outputs[self.key] = copy.deepcopy(self.array.crop(request[self.key].roi))
         return outputs
 
 
