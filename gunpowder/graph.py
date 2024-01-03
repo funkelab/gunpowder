@@ -9,7 +9,6 @@ from copy import deepcopy
 from typing import Dict, Optional, Set, Iterator, Any
 import logging
 import itertools
-import warnings
 
 
 logger = logging.getLogger(__name__)
@@ -485,7 +484,7 @@ class Graph(Freezable):
 
         offset = outside - inside
         distance = np.linalg.norm(offset)
-        assert not np.isclose(distance, 0), f"Inside and Outside are the same location"
+        assert not np.isclose(distance, 0), "Inside and Outside are the same location"
         direction = offset / distance
 
         # `offset` can be 0 on some but not all axes leaving a 0 in the denominator.

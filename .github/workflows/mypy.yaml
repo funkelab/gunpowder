@@ -15,6 +15,5 @@ jobs:
         uses: actions/checkout@v2
       - name: mypy
         run: |
-          pip install .
-          pip install --upgrade mypy
+          pip install ".[dev]"
           mypy gunpowder

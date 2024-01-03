@@ -3,7 +3,6 @@ from gunpowder import (
     IntensityScaleShift,
     ArrayKey,
     build,
-    Normalize,
     Array,
     ArraySpec,
     Roi,

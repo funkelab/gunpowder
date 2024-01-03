@@ -1,5 +1,8 @@
-import logging
 from gunpowder.nodes import BatchProvider
+from gunpowder.nodes.batch_provider import BatchRequestError
+
+import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +24,19 @@ class PipelineTeardownError(Exception):
 
 
 class PipelineRequestError(Exception):
-    def __init__(self, pipeline, request):
+    def __init__(self, pipeline, request, original_traceback=None):
         self.pipeline = pipeline
         self.request = request
+        self.original_traceback = original_traceback
 
     def __str__(self):
         return (
-            "Exception in pipeline:\n"
+            (
+                ("".join(self.original_traceback))
+                if self.original_traceback is not None
+                else ""
+            )
+            + "Exception in pipeline:\n"
             f"{self.pipeline}\n"
             "while trying to process request\n"
             f"{self.request}"
@@ -123,6 +132,11 @@ class Pipeline:
 
         try:
             return self.output.request_batch(request)
+        except BatchRequestError as e:
+            tb = traceback.format_exception(type(e), e, e.__traceback__)
+            if isinstance(e, BatchRequestError):
+                tb = tb[-1:]
+            raise PipelineRequestError(self, request, original_traceback=tb) from None
         except Exception as e:
             raise PipelineRequestError(self, request) from e
 

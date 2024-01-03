@@ -7,6 +7,7 @@ from gunpowder.roi import Roi
 from gunpowder.coordinate import Coordinate
 from gunpowder.batch_request import BatchRequest
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,15 +28,22 @@ class Pad(BatchFilter):
             a coordinate, this amount will be added to the ROI in the positive
             and negative direction.
 
+        mode (string):
+
+            One of 'constant' or 'reflect'.
+            Default is 'constant'
+
         value (scalar or ``None``):
 
             The value to report inside the padding. If not given, 0 is used.
+            Only used in case of 'constant' mode.
             Only used for :class:`Array<Arrays>`.
     """
 
-    def __init__(self, key, size, value=None):
+    def __init__(self, key, size, mode="constant", value=None):
         self.key = key
         self.size = size
+        self.mode = mode
         self.value = value
 
     def setup(self):
@@ -118,19 +126,11 @@ class Pad(BatchFilter):
         )
 
         num_channels = len(a.shape) - from_roi.dims
-        channel_shapes = a.shape[:num_channels]
-
-        b = np.zeros(channel_shapes + to_roi.shape, dtype=a.dtype)
-        if value != 0:
-            b[:] = value
-
-        shift = -to_roi.offset
-        logger.debug("shifting 'from' by " + str(shift))
-        a_in_b = from_roi.shift(shift).to_slices()
-
-        logger.debug("target shape is " + str(b.shape))
-        logger.debug("target slice is " + str(a_in_b))
-
-        b[(slice(None),) * num_channels + a_in_b] = a
-
-        return b
+        lower_pad = from_roi.begin - to_roi.begin
+        upper_pad = to_roi.end - from_roi.end
+        pad_width = [(0, 0)] * num_channels + list(zip(lower_pad, upper_pad))
+        if self.mode == "constant":
+            padded = np.pad(a, pad_width, "constant", constant_values=value)
+        elif self.mode == "reflect":
+            padded = np.pad(a, pad_width, "reflect")
+        return padded

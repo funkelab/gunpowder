@@ -1,6 +1,4 @@
 from gunpowder import (
-    Batch,
-    BatchProvider,
     BatchRequest,
     Array,
     ArrayKey,

@@ -3,6 +3,7 @@ import logging
 import traceback
 
 import sys
+from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,72 +21,73 @@ class NoSuchModule(object):
 
 try:
     import dvision
-except ImportError as e:
+except ImportError:
     dvision = NoSuchModule("dvision")
 
 try:
     import h5py
-except ImportError as e:
+except ImportError:
     h5py = NoSuchModule("h5py")
 
 try:
     import pyklb
-except ImportError as e:
+except ImportError:
     pyklb = NoSuchModule("pyklb")
 
 try:
     import tensorflow
-except ImportError as e:
+except ImportError:
     tensorflow = NoSuchModule("tensorflow")
 
 try:
     import torch
-except ImportError as e:
+except ImportError:
     torch = NoSuchModule("torch")
 
 try:
     import tensorboardX
-except ImportError as e:
+except ImportError:
     tensorboardX = NoSuchModule("tensorboardX")
 
 try:
     import malis
-except ImportError as e:
+except ImportError:
     malis = NoSuchModule("malis")
 
 try:
     import augment
-except ImportError as e:
+except ImportError:
     augment = NoSuchModule("augment")
 
+ZarrFile: Optional[Any] = None
 try:
     import zarr
     from .zarr_file import ZarrFile
-except ImportError as e:
+except ImportError:
     zarr = NoSuchModule("zarr")
     ZarrFile = None
 
 try:
     import daisy
-except ImportError as e:
+except ImportError:
     daisy = NoSuchModule("daisy")
 
 try:
     import jax
-except ImportError as e:
+except ImportError:
     jax = NoSuchModule("jax")
 
 try:
     import jax.numpy as jnp
-except ImportError as e:
+except ImportError:
     jnp = NoSuchModule("jnp")
 
 try:
     import haiku
-except ImportError as e:
+except ImportError:
     haiku = NoSuchModule("haiku")
 
 try:
     import optax
-except ImportError as e:
+except ImportError:
     optax = NoSuchModule("optax")

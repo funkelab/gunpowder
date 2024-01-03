@@ -21,6 +21,7 @@ from scipy.spatial.transform import Rotation
 import logging
 import math
 import random
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +94,8 @@ class DeformAugment(BatchFilter):
         spatial_dims=3,
         use_fast_points_transform=False,
         recompute_missing_points=True,
-        transform_key: ArrayKey = None,
-        graph_raster_voxel_size: Coordinate = None,
+        transform_key: Optional[ArrayKey] = None,
+        graph_raster_voxel_size: Optional[Coordinate] = None,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
         self.jitter_sigma = Coordinate(jitter_sigma)
@@ -129,7 +130,6 @@ class DeformAugment(BatchFilter):
             self.provides(self.transform_key, spec)
 
     def prepare(self, request):
-
         # get the total ROI of all requests
         total_roi = request.get_total_roi()
         logger.debug("total ROI is %s" % total_roi)

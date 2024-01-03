@@ -1,4 +1,3 @@
-import copy
 import logging
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
@@ -12,7 +11,6 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
 from gunpowder.morphology import enlarge_binary_map, create_ball_kernel
 from gunpowder.ndarray import replace
-from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
 
@@ -221,7 +219,8 @@ class RasterizeGraph(BatchFilter):
             mask_array = batch.arrays[mask].crop(enlarged_vol_roi)
             # get those component labels in the mask, that contain graph
             labels = []
-            for i, point in graph.data.items():
+            # for i, point in graph.data.items():
+            for i, point in enumerate(graph.nodes):
                 v = Coordinate(point.location / voxel_size)
                 v -= data_roi.begin
                 labels.append(mask_array.data[v])
@@ -250,11 +249,15 @@ class RasterizeGraph(BatchFilter):
                             voxel_size,
                             self.spec[self.array].dtype,
                             self.settings,
-                            Array(data=mask_array.data == label, spec=mask_array.spec),
+                            Array(
+                                data=(mask_array.data == label),
+                                spec=mask_array.spec,
+                            ),
                         )
                         for label in labels
                     ],
                     axis=0,
+                    dtype=self.spec[self.array].dtype,
                 )
 
         else:

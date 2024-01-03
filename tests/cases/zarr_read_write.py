@@ -1,7 +1,7 @@
 from .helper_sources import ArraySource
 
 from gunpowder import *
-from gunpowder.ext import zarr, ZarrFile, NoSuchModule
+from gunpowder.ext import zarr, NoSuchModule
 
 import pytest
 import numpy as np

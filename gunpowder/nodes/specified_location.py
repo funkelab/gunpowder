@@ -1,10 +1,8 @@
 from random import randrange
-from random import choice, seed
 import logging
 import numpy as np
 
 from gunpowder.coordinate import Coordinate
-from gunpowder.batch_request import BatchRequest
 
 from .batch_filter import BatchFilter
 

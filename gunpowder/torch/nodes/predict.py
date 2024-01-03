@@ -4,7 +4,7 @@ from gunpowder.ext import torch
 from gunpowder.nodes.generic_predict import GenericPredict
 
 import logging
-from typing import Dict, Union
+from typing import Dict, Union, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,8 @@ class Predict(GenericPredict):
         model,
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[str, int], ArrayKey],
-        array_specs: Dict[ArrayKey, ArraySpec] = None,
-        checkpoint: str = None,
+        array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
+        checkpoint: Optional[str] = None,
         device="cuda",
         spawn_subprocess=False,
     ):
@@ -82,14 +82,16 @@ class Predict(GenericPredict):
         self.model = model
         self.checkpoint = checkpoint
 
-        self.intermediate_layers = {}
-        self.register_hooks()
+        self.intermediate_layers: dict[ArrayKey, Any] = {}
 
     def start(self):
-        self.use_cuda = torch.cuda.is_available() and self.device_string == "cuda"
-        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
-        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+        # Issue #188
+        self.use_cuda = torch.cuda.is_available() and self.device_string.__contains__(
+            "cuda"
+        )
 
+        logger.info(f"Predicting on {'gpu' if self.use_cuda else 'cpu'}")
+        self.device = torch.device(self.device_string if self.use_cuda else "cpu")
         try:
             self.model = self.model.to(self.device)
         except RuntimeError as e:
@@ -105,6 +107,8 @@ class Predict(GenericPredict):
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict(checkpoint)
+
+        self.register_hooks()
 
     def predict(self, batch, request):
         inputs = self.get_inputs(batch)

@@ -14,13 +14,12 @@ class ArraySpec(Freezable):
         roi (:class:`Roi`):
 
             The region of interested represented by this array spec. Can be
-            ``None`` for :class:`BatchProviders<BatchProvider>` that allow
-            requests for arrays everywhere, but will always be set for array
-            specs that are part of a :class:`Array`.
+            ``None`` for nonspatial arrays or to indicate the true value is unknown.
 
         voxel_size (:class:`Coordinate`):
 
-            The size of the spatial axises in world units.
+            The size of the spatial axises in world units. Can be ``None`` for
+            nonspatial arrays or to indicate the true value is unknown.
 
         interpolatable (``bool``):
 
@@ -55,7 +54,7 @@ class ArraySpec(Freezable):
 
         if nonspatial:
             assert roi is None, "Non-spatial arrays can not have a ROI"
-            assert voxel_size is None, "Non-spatial arrays can not " "have a voxel size"
+            assert voxel_size is None, "Non-spatial arrays can not have a voxel size"
 
         self.freeze()
 
