@@ -2,7 +2,6 @@ from .provider_test import ProviderTest
 from gunpowder import IntensityAugment, ArrayKeys, build, Normalize, NoiseAugment
 
 
-
 class TestIntensityAugment(ProviderTest):
     def test_shift(self):
         pipeline = (

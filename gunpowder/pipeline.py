@@ -32,7 +32,7 @@ class PipelineRequestError(Exception):
     def __str__(self):
         return (
             (
-                ("".join(self.original_traceback) )
+                ("".join(self.original_traceback))
                 if self.original_traceback is not None
                 else ""
             )
