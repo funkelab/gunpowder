@@ -6,7 +6,7 @@ from .array import Array, ArrayKey, ArrayKeys
 from .array_spec import ArraySpec
 from .batch import Batch
 from .batch_request import BatchRequest
-from .build import build
+from .build import build, build_neuroglancer
 from .coordinate import Coordinate
 from .graph import Graph, Node, Edge, GraphKey, GraphKeys
 from .graph_spec import GraphSpec

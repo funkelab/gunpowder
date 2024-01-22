@@ -12,6 +12,8 @@ from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.neuroglancer.event import wait_for_step
+from gunpowder.neuroglancer.visualize import visualize
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,8 @@ class BatchProvider(object):
     instead.
     """
 
+    viewer = None
+
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
         return provider
@@ -70,7 +74,7 @@ class BatchProvider(object):
             return True
         return self._remove_placeholders
 
-    def setup(self):
+    def setup(self, viewer=None):
         """To be implemented in subclasses.
 
         Called during initialization of the DAG. Callees can assume that all
@@ -190,6 +194,9 @@ class BatchProvider(object):
             upstream_request = request.copy()
             if self.remove_placeholders:
                 upstream_request.remove_placeholders()
+
+            self.observe_request(request)
+
             batch = self.provide(upstream_request)
 
             request.remove_placeholders()
@@ -197,6 +204,8 @@ class BatchProvider(object):
             self.check_batch_consistency(batch, request)
 
             self.remove_unneeded(batch, request)
+
+            self.observe_batch(batch)
 
             logger.debug("%s provides %s", self.name(), batch)
 
@@ -209,6 +218,21 @@ class BatchProvider(object):
             ) from None
 
         return batch
+
+    def setup_viewer(self, viewer):
+        self.viewer = viewer
+
+    def observe_request(self, request):
+        if self.viewer is not None:
+            print("Waiting for step...")
+            visualize(self.viewer, request)
+            wait_for_step()
+
+    def observe_batch(self, batch):
+        if self.viewer is not None:
+            print("Waiting for step...")
+            visualize(self.viewer, batch)
+            wait_for_step()
 
     def set_seeds(self, request):
         seed = request.random_seed

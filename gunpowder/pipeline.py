@@ -77,7 +77,7 @@ class Pipeline:
 
         return pipeline
 
-    def setup(self):
+    def setup(self, viewer=None):
         """Connect all batch providers in the pipeline and call setup for
         each, from source to sink."""
 
@@ -94,6 +94,8 @@ class Pipeline:
             def node_setup(node):
                 try:
                     node.output.setup()
+                    if viewer is not None:
+                        node.output.setup_viewer(viewer)
                 except Exception as e:
                     raise PipelineSetupError(node.output) from e
 

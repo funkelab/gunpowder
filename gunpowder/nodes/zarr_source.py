@@ -5,6 +5,7 @@ from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.neuroglancer.add_layer import add_layer
 from .batch_provider import BatchProvider
 
 from zarr._storage.store import BaseStore
@@ -123,6 +124,17 @@ class ZarrSource(BatchProvider):
                 spec = self.__read_spec(array_key, data_file, ds_name)
 
                 self.provides(array_key, spec)
+
+    def setup_viewer(self, viewer):
+        self.viewer = viewer
+        with viewer.txn() as s:
+            with self._open_file(self.store) as data_file:
+                for array_key, ds_name in self.datasets.items():
+                    if ds_name not in data_file:
+                        raise RuntimeError("%s not in %s" % (ds_name, self.store))
+
+                    spec = self.__read_spec(array_key, data_file, ds_name)
+                    add_layer(s, Array(data_file[ds_name], spec), f"{array_key}_SOURCE")
 
     def provide(self, request):
         timing = Timing(self)
