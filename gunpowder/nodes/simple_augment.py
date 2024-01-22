@@ -176,7 +176,7 @@ class SimpleAugment(BatchFilter):
             array.data = array.data[channel_slices + mirror]
 
             transpose = [t + num_channels for t in self.transpose]
-            array.data = array.data = array.data.transpose(
+            array.data = array.data.transpose(
                 list(range(num_channels)) + transpose
             )
 
