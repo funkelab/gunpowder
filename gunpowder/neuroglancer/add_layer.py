@@ -52,10 +52,6 @@ def parse_dims(array):
     spatial_dims = array.spec.roi.dims
     channel_dims = dims - spatial_dims
 
-    print("dims        :", dims)
-    print("spatial dims:", spatial_dims)
-    print("channel dims:", channel_dims)
-
     return dims, spatial_dims, channel_dims
 
 
@@ -72,10 +68,6 @@ def create_coordinate_space(array, spatial_dim_names, channel_dim_names, unit):
     names = channel_names + spatial_names
     units = [""] * channel_dims + [unit] * spatial_dims
     scales = [1] * channel_dims + list(array.spec.voxel_size)
-
-    print("Names    :", names)
-    print("Units    :", units)
-    print("Scales   :", scales)
 
     return neuroglancer.CoordinateSpace(
         names=names,

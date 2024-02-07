@@ -1,8 +1,10 @@
 from gunpowder.nodes import BatchProvider
 from gunpowder.nodes.batch_provider import BatchRequestError
+from .observers import Observer
 
 import logging
 import traceback
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +79,11 @@ class Pipeline:
 
         return pipeline
 
-    def setup(self, viewer=None):
+    def setup(self, observers: Optional[list[Observer]] = None):
         """Connect all batch providers in the pipeline and call setup for
         each, from source to sink."""
+
+        observers = observers if observers is not None else []
 
         def connect(node):
             for child in node.children:
@@ -94,8 +98,8 @@ class Pipeline:
             def node_setup(node):
                 try:
                     node.output.setup()
-                    if viewer is not None:
-                        node.output.setup_viewer(viewer)
+                    for observer in observers:
+                        node.output.register_observer(observer)
                 except Exception as e:
                     raise PipelineSetupError(node.output) from e
 
@@ -194,6 +198,17 @@ class Pipeline:
     def __repr__(self):
         def to_string(node):
             return node.output.name()
+
+        reprs = self.traverse(to_string, reverse=True)
+
+        return self.__rec_repr__(reprs)
+    
+    def to_string(self, bold=None):
+        def to_string(node):
+            if node.output == bold:
+                return f"\033[1m{node.output.name()}\033[0m"
+            else:
+                return node.output.name()
 
         reprs = self.traverse(to_string, reverse=True)
 

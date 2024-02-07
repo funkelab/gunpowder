@@ -25,36 +25,17 @@ class build(object):
         logger.debug("tear down completed")
 
 
-import neuroglancer
-from .neuroglancer.event import step_next
+from .observers import NeuroglancerObserver
 
 
 class build_neuroglancer(object):
     def __init__(self, pipeline):
         self.pipeline = pipeline
+        self.observer = NeuroglancerObserver("neuroglancer", pipeline)
 
     def __enter__(self):
-        neuroglancer.set_server_bind_address("0.0.0.0")
-        viewer = neuroglancer.Viewer()
-
-        viewer.actions.add("continue", step_next)
-
-        with viewer.config_state.txn() as s:
-            s.input_event_bindings.data_view["keyt"] = "continue"
-        with viewer.txn() as s:
-            s.layout = neuroglancer.row_layout(
-                [
-                    neuroglancer.column_layout(
-                        [
-                            neuroglancer.LayerGroupViewer(layers=[]),
-                            neuroglancer.LayerGroupViewer(layers=[]),
-                        ]
-                    ),
-                ]
-            )
-
         try:
-            self.pipeline.setup(viewer)
+            self.pipeline.setup([self.observer])
         except:
             logger.error(
                 "something went wrong during the setup of the pipeline, calling tear down"
@@ -63,7 +44,6 @@ class build_neuroglancer(object):
             logger.debug("tear down completed")
             raise
 
-        print(viewer)
         return self.pipeline
 
     def __exit__(self, type, value, traceback):

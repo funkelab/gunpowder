@@ -12,8 +12,7 @@ from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
-from gunpowder.neuroglancer.event import wait_for_step
-from gunpowder.neuroglancer.visualize import visualize
+from gunpowder.observers import Observer
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,13 @@ class BatchProvider(object):
     instead.
     """
 
-    viewer = None
+    _observers = None
+
+    @property
+    def observers(self):
+        if self._observers is None:
+            self._observers = []
+        return self._observers
 
     def add_upstream_provider(self, provider):
         self.get_upstream_providers().append(provider)
@@ -219,20 +224,23 @@ class BatchProvider(object):
 
         return batch
 
-    def setup_viewer(self, viewer):
-        self.viewer = viewer
+    def register_observer(self, observer: Observer):
+        self.observers.append(observer)
+        self.observe_sources(observer)
+
+    def observe_sources(self, observer):
+        """
+        to be implemented in subclasses
+        """
+        pass
 
     def observe_request(self, request):
-        if self.viewer is not None:
-            print("Waiting for step...")
-            visualize(self.viewer, request)
-            wait_for_step()
+        for observer in self.observers:
+            observer.update(request, self)
 
     def observe_batch(self, batch):
-        if self.viewer is not None:
-            print("Waiting for step...")
-            visualize(self.viewer, batch)
-            wait_for_step()
+        for observer in self.observers:
+            observer.update(batch, self)
 
     def set_seeds(self, request):
         seed = request.random_seed
