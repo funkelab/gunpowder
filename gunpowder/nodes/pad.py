@@ -129,8 +129,11 @@ class Pad(BatchFilter):
         lower_pad = from_roi.begin - to_roi.begin
         upper_pad = to_roi.end - from_roi.end
         pad_width = [(0, 0)] * num_channels + list(zip(lower_pad, upper_pad))
-        if self.mode == "constant":
-            padded = np.pad(a, pad_width, "constant", constant_values=value)
-        elif self.mode == "reflect":
+        if self.mode == "reflect":
             padded = np.pad(a, pad_width, "reflect")
+        elif self.mode == "constant":
+            padded = np.pad(a, pad_width, "constant", constant_values=value)
+        else:
+            logger.error("Unknown mode %s, using 'constant' instead" % self.mode)
+            padded = np.pad(a, pad_width, "constant", constant_values=value)
         return padded
