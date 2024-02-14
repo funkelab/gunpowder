@@ -159,9 +159,11 @@ class DefectAugment(BatchFilter):
             logger.debug("before growth: %s" % spec.roi)
             growth = Coordinate(
                 tuple(
-                    0
-                    if d == self.axis
-                    else raw_voxel_size[d] * self.deformation_strength
+                    (
+                        0
+                        if d == self.axis
+                        else raw_voxel_size[d] * self.deformation_strength
+                    )
                     for d in range(spec.roi.dims)
                 )
             )
@@ -267,9 +269,11 @@ class DefectAugment(BatchFilter):
             old_roi = request[self.intensities].roi
             logger.debug("resetting roi to %s" % old_roi)
             crop = tuple(
-                slice(None)
-                if d == self.axis
-                else slice(self.deformation_strength, -self.deformation_strength)
+                (
+                    slice(None)
+                    if d == self.axis
+                    else slice(self.deformation_strength, -self.deformation_strength)
+                )
                 for d in range(raw.spec.roi.dims)
             )
             raw.data = raw.data[crop]

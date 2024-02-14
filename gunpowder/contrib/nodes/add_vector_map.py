@@ -215,9 +215,9 @@ class AddVectorMap(BatchFilter):
                     if num_src_vectors_per_trg_loc > 0:
                         dist_to_locs = {}
                         for phys_loc in relevant_partner_loc:
-                            dist_to_locs[
-                                np.linalg.norm(node.location - phys_loc)
-                            ] = phys_loc
+                            dist_to_locs[np.linalg.norm(node.location - phys_loc)] = (
+                                phys_loc
+                            )
                         for nr, dist in enumerate(
                             reversed(np.sort(list(dist_to_locs.keys())))
                         ):
