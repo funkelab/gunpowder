@@ -44,6 +44,8 @@ class Pad(BatchFilter):
         self.key = key
         self.size = size
         self.mode = mode
+        if self.mode not in ["constant", "reflect"]:
+            raise ValueError("Invalid padding mode %s provided. Must be 'constant' or 'reflect'." % self.mode)
         self.value = value
 
     def setup(self):
@@ -134,6 +136,5 @@ class Pad(BatchFilter):
         elif self.mode == "constant":
             padded = np.pad(a, pad_width, "constant", constant_values=value)
         else:
-            logger.error("Unknown mode %s, using 'constant' instead" % self.mode)
-            padded = np.pad(a, pad_width, "constant", constant_values=value)
+            raise ValueError("Invalid padding mode %s provided. Must be 'constant' or 'reflect'." % self.mode)
         return padded
