@@ -106,9 +106,9 @@ class SpecifiedLocation(BatchFilter):
         for array_key, spec in request.array_specs.items():
             batch.arrays[array_key].spec.roi = spec.roi
             if self.extra_data is not None:
-                batch.arrays[array_key].attrs[
-                    "specified_location_extra_data"
-                ] = self.extra_data[self.loc_i]
+                batch.arrays[array_key].attrs["specified_location_extra_data"] = (
+                    self.extra_data[self.loc_i]
+                )
 
         for graph_key, spec in request.graph_specs.items():
             batch.points[graph_key].spec.roi = spec.roi
