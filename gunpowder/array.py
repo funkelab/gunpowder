@@ -179,7 +179,6 @@ class ArrayKey(Freezable):
 
     def __init__(self, identifier):
         self.identifier = identifier
-        self.hash = hash(identifier)
         self.freeze()
         logger.debug("Registering array key %s", self)
         setattr(ArrayKeys, self.identifier, self)
@@ -188,7 +187,7 @@ class ArrayKey(Freezable):
         return hasattr(other, "identifier") and self.identifier == other.identifier
 
     def __hash__(self):
-        return self.hash
+        return hash(self.identifier)
 
     def __repr__(self):
         return self.identifier
