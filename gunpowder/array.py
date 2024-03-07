@@ -188,7 +188,7 @@ class ArrayKey(Freezable):
         return hasattr(other, "identifier") and self.identifier == other.identifier
 
     def __hash__(self):
-        return self.hash
+        return hash(self.identifier)
 
     def __repr__(self):
         return self.identifier
