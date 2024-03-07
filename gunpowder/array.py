@@ -179,7 +179,6 @@ class ArrayKey(Freezable):
 
     def __init__(self, identifier):
         self.identifier = identifier
-        self.hash = hash(identifier)
         self.freeze()
         logger.debug("Registering array key %s", self)
         setattr(ArrayKeys, self.identifier, self)
