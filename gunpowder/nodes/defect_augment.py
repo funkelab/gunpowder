@@ -192,7 +192,7 @@ class DefectAugment(BatchFilter):
             if augmentation_type == "zero_out":
                 raw.data[section_selector] = 0
 
-            elif augmentation_type == "low_contrast":
+            elif augmentation_type == "lower_contrast":
                 section = raw.data[section_selector]
 
                 mean = section.mean()

@@ -140,8 +140,7 @@ class Train(GenericTrain):
         self.summary_saver = None
         self.log_dir = log_dir
         self.log_every = log_every
-        # Check if optimizer is a str in python 2/3 compatible way.
-        if isinstance(optimizer, ("".__class__, "".__class__)):
+        if isinstance(optimizer, str):
             self.optimizer_loss_names = (optimizer, loss)
         else:
             self.optimizer_func = optimizer

@@ -44,15 +44,29 @@ class SpecifiedLocation(BatchFilter):
             Default is None, which places the point in the center.
             Chooses uniformly from [loc - jitter, loc + jitter] in each
             direction.
+
+        attempt_factor (``int``):
+
+            If choosing randomly then given `n` points, sample
+            `attempt_factor * n` points at most before giving up and
+            throwing an error.
     """
 
-    def __init__(self, locations, choose_randomly=False, extra_data=None, jitter=None):
+    def __init__(
+        self,
+        locations,
+        choose_randomly=False,
+        extra_data=None,
+        jitter=None,
+        attempt_factor: int = 5,
+    ):
         self.coordinates = locations
         self.choose_randomly = choose_randomly
         self.jitter = jitter
         self.loc_i = -1
         self.upstream_spec = None
         self.specified_shift = None
+        self.attempt_factor = attempt_factor
 
         if extra_data is not None:
             assert len(extra_data) == len(locations), (
@@ -79,12 +93,27 @@ class SpecifiedLocation(BatchFilter):
         request_center = total_roi.shape / 2 + total_roi.offset
 
         self.specified_shift = self._get_next_shift(request_center, lcm_voxel_size)
+        loop_counter = 0
         while not self.__check_shift(request):
             logger.warning(
                 "Location %s (shift %s) skipped"
                 % (self.coordinates[self.loc_i], self.specified_shift)
             )
             self.specified_shift = self._get_next_shift(request_center, lcm_voxel_size)
+
+            loop_counter += 1
+            if loop_counter >= len(self.coordinates) * (
+                1 + (self.attempt_factor - 1) * int(self.choose_randomly)
+            ):
+                if self.choose_randomly:
+                    raise Exception(
+                        f"Took {5*len(self.coordinates)} samples of {len(self.coordinates)} points "
+                        "and did not find a suitible location"
+                    )
+                else:
+                    raise Exception(
+                        "Looped through every possible location and None are valid"
+                    )
 
         # Set shift for all requests
         for specs_type in [request.array_specs, request.graph_specs]:

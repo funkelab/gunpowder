@@ -299,6 +299,7 @@ class RasterizeGraph(BatchFilter):
             settings.mode == "ball"
             and settings.inner_radius_fraction is None
             and len(list(graph.edges)) == 0
+            and settings.color_attr is None
         )
 
         if use_fast_rasterization:
@@ -347,7 +348,7 @@ class RasterizeGraph(BatchFilter):
 
             else:
                 if settings.color_attr is not None:
-                    c = graph.nodes[node].get(settings.color_attr)
+                    c = node.attrs.get(settings.color_attr)
                     if c is None:
                         logger.debug(f"Skipping node: {node}")
                         continue
@@ -363,7 +364,7 @@ class RasterizeGraph(BatchFilter):
         if settings.edges:
             for e in graph.edges:
                 if settings.color_attr is not None:
-                    c = graph.edges[e].get(settings.color_attr)
+                    c = e.attrs.get(settings.color_attr)
                     if c is None:
                         continue
                     elif np.isclose(c, 1) and not np.isclose(settings.fg_value, 1):
@@ -372,26 +373,44 @@ class RasterizeGraph(BatchFilter):
                             f"attribute {settings.color_attr} "
                             f"but color 1 will be replaced with fg_value: {settings.fg_value}"
                         )
+                else:
+                    c = 1
 
                 u = graph.node(e.u)
                 v = graph.node(e.v)
                 u_coord = Coordinate(u.location / voxel_size)
                 v_coord = Coordinate(v.location / voxel_size)
                 line = draw.line_nd(u_coord, v_coord, endpoint=True)
-                rasterized_graph[line] = 1
+                rasterized_graph[line] = c
 
         # grow graph
         if not use_fast_rasterization:
             if settings.mode == "ball":
-                enlarge_binary_map(
-                    rasterized_graph,
-                    settings.radius,
-                    voxel_size,
-                    settings.inner_radius_fraction,
-                    in_place=True,
-                )
+                if settings.color_attr is not None:
+                    for color in np.unique(rasterized_graph):
+                        if color == 0:
+                            continue
+                        assert color in [2,3], np.unique(rasterized_graph)
+                        mask = rasterized_graph == color
+                        enlarge_binary_map(
+                            mask,
+                            settings.radius,
+                            voxel_size,
+                            settings.inner_radius_fraction,
+                            in_place=True,
+                        )
+                        rasterized_graph[mask] = color
+                else:
+                    enlarge_binary_map(
+                        rasterized_graph,
+                        settings.radius,
+                        voxel_size,
+                        settings.inner_radius_fraction,
+                        in_place=True,
+                    )
 
             else:
+
                 sigmas = settings.radius / voxel_size
 
                 gaussian_filter(
