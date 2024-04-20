@@ -47,6 +47,7 @@ def test_rasterize_graph_colors():
         assert rasterized[4, 0] == 3
         assert rasterized[4, :].sum() == 15
 
+
 def test_3d():
     graph_key = GraphKey("TEST_GRAPH")
     array_key = ArrayKey("TEST_ARRAY")

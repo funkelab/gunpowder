@@ -390,7 +390,6 @@ class RasterizeGraph(BatchFilter):
                     for color in np.unique(rasterized_graph):
                         if color == 0:
                             continue
-                        assert color in [2,3], np.unique(rasterized_graph)
                         mask = rasterized_graph == color
                         enlarge_binary_map(
                             mask,

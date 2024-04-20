@@ -153,7 +153,7 @@ class Edge(Freezable):
     @property
     def attrs(self):
         return self.__attrs
-        
+
     @property
     def all(self):
         return self.__attrs

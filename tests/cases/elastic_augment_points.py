@@ -213,8 +213,8 @@ class TestElasticAugment(ProviderTest):
                 [0.1, 0.1, 0.1],
                 # [0, 0, 0], # no jitter
                 [0, 2.0 * math.pi],
-            )
-            +  # rotate randomly
+            )  # rotate randomly
+            +
             # [math.pi/4, math.pi/4]) + # rotate by 45 deg
             # [0, 0]) + # no rotation
             RasterizeGraph(
