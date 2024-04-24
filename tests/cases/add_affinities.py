@@ -1,6 +1,20 @@
-from gunpowder import *
 from itertools import product
+
 import numpy as np
+
+from gunpowder import (
+    AddAffinities,
+    Array,
+    ArrayKey,
+    ArrayKeys,
+    ArraySpec,
+    Batch,
+    BatchProvider,
+    BatchRequest,
+    Coordinate,
+    Roi,
+    build,
+)
 
 
 class ExampleSource(BatchProvider):

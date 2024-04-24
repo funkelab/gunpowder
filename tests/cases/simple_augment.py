@@ -1,22 +1,22 @@
+import numpy as np
+
 from gunpowder import (
-    BatchRequest,
     Array,
     ArrayKey,
     ArraySpec,
+    BatchRequest,
+    Coordinate,
     Graph,
     GraphKey,
     GraphSpec,
+    MergeProvider,
     Node,
-    Coordinate,
     Roi,
     SimpleAugment,
-    MergeProvider,
     build,
 )
 
-import numpy as np
-
-from .helper_sources import GraphSource, ArraySource
+from .helper_sources import ArraySource, GraphSource
 
 
 def test_mirror():

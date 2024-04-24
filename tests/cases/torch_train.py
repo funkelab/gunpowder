@@ -1,22 +1,24 @@
-from .helper_sources import ArraySource
-from gunpowder import (
-    BatchRequest,
-    ArraySpec,
-    Roi,
-    ArrayKey,
-    Array,
-    Scan,
-    PreCache,
-    MergeProvider,
-    build,
-)
-from gunpowder.ext import torch, NoSuchModule
-from gunpowder.torch import Train, Predict
+import logging
 from unittest import skipIf
+
 import numpy as np
 import pytest
 
-import logging
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BatchRequest,
+    MergeProvider,
+    PreCache,
+    Roi,
+    Scan,
+    build,
+)
+from gunpowder.ext import NoSuchModule, torch
+from gunpowder.torch import Predict, Train
+
+from .helper_sources import ArraySource
 
 TORCH_AVAILABLE = isinstance(torch, NoSuchModule)
 

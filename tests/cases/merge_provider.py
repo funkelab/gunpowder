@@ -1,24 +1,24 @@
-import unittest
+import numpy as np
+import pytest
+
 from gunpowder import (
-    GraphSpec,
-    GraphKey,
-    Roi,
-    Coordinate,
+    Array,
+    ArrayKey,
+    ArrayKeys,
+    ArraySpec,
     Batch,
     BatchProvider,
-    ArrayKeys,
-    ArrayKey,
-    ArraySpec,
-    Array,
     BatchRequest,
+    Coordinate,
+    GraphKey,
+    GraphSpec,
     MergeProvider,
     RandomLocation,
+    Roi,
     build,
 )
-from gunpowder.graph import GraphKeys, Graph
+from gunpowder.graph import Graph, GraphKeys
 from gunpowder.pipeline import PipelineSetupError
-
-import numpy as np
 
 
 class GraphTestSource(BatchProvider):
@@ -56,34 +56,33 @@ class ArrayTestSoure(BatchProvider):
         return batch
 
 
-class TestMergeProvider(unittest.TestCase):
-    def test_merge_basics(self):
-        voxel_size = (1, 1, 1)
-        GraphKey("PRESYN")
-        ArrayKey("GT_LABELS")
-        graphsource = GraphTestSource(voxel_size)
-        arraysource = ArrayTestSoure(voxel_size)
-        pipeline = (graphsource, arraysource) + MergeProvider() + RandomLocation()
-        window_request = Coordinate((50, 50, 50))
-        with build(pipeline):
-            # Check basic merging.
-            request = BatchRequest()
-            request.add((GraphKeys.PRESYN), window_request)
-            request.add((ArrayKeys.GT_LABELS), window_request)
-            batch_res = pipeline.request_batch(request)
-            self.assertTrue(ArrayKeys.GT_LABELS in batch_res.arrays)
-            self.assertTrue(GraphKeys.PRESYN in batch_res.graphs)
+def test_merge_basics():
+    voxel_size = (1, 1, 1)
+    GraphKey("PRESYN")
+    ArrayKey("GT_LABELS")
+    graphsource = GraphTestSource(voxel_size)
+    arraysource = ArrayTestSoure(voxel_size)
+    pipeline = (graphsource, arraysource) + MergeProvider() + RandomLocation()
+    window_request = Coordinate((50, 50, 50))
+    with build(pipeline):
+        # Check basic merging.
+        request = BatchRequest()
+        request.add((GraphKeys.PRESYN), window_request)
+        request.add((ArrayKeys.GT_LABELS), window_request)
+        batch_res = pipeline.request_batch(request)
+        assert ArrayKeys.GT_LABELS in batch_res.arrays
+        assert GraphKeys.PRESYN in batch_res.graphs
 
-            # Check that request of only one source also works.
-            request = BatchRequest()
-            request.add((GraphKeys.PRESYN), window_request)
-            batch_res = pipeline.request_batch(request)
-            self.assertFalse(ArrayKeys.GT_LABELS in batch_res.arrays)
-            self.assertTrue(GraphKeys.PRESYN in batch_res.graphs)
+        # Check that request of only one source also works.
+        request = BatchRequest()
+        request.add((GraphKeys.PRESYN), window_request)
+        batch_res = pipeline.request_batch(request)
+        assert ArrayKeys.GT_LABELS not in batch_res.arrays
+        assert GraphKeys.PRESYN in batch_res.graphs
 
-        # Check that it fails, when having two sources that provide the same type.
-        arraysource2 = ArrayTestSoure(voxel_size)
-        pipeline_fail = (arraysource, arraysource2) + MergeProvider() + RandomLocation()
-        with self.assertRaises(PipelineSetupError):
-            with build(pipeline_fail):
-                pass
+    # Check that it fails, when having two sources that provide the same type.
+    arraysource2 = ArrayTestSoure(voxel_size)
+    pipeline_fail = (arraysource, arraysource2) + MergeProvider() + RandomLocation()
+    with pytest.raises(PipelineSetupError):
+        with build(pipeline_fail):
+            pass

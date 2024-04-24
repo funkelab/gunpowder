@@ -1,6 +1,19 @@
-from .provider_test import ProviderTest
-from gunpowder import *
 import time
+
+import numpy as np
+
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BatchFilter,
+    BatchRequest,
+    PrintProfilingStats,
+    Roi,
+    build,
+)
+
+from .helper_sources import ArraySource
 
 
 class DelayNode(BatchFilter):
@@ -18,36 +31,43 @@ class DelayNode(BatchFilter):
         time.sleep(self.time_process)
 
 
-class TestProfiling(ProviderTest):
-    def test_profiling(self):
-        pipeline = (
-            self.test_source
-            + DelayNode(0.1, 0.2)
-            + PrintProfilingStats(every=2)
-            + DelayNode(0.2, 0.3)
-        )
+def test_profiling():
+    raw_key = ArrayKey("RAW")
+    raw_data = np.random.rand(100, 100, 100)
+    raw_spec = ArraySpec(Roi((0, 0, 0), (100, 100, 100)), voxel_size=(1, 1, 1))
+    raw_array = Array(raw_data, raw_spec)
+    raw_source = ArraySource(raw_key, raw_array)
+    pipeline = (
+        raw_source
+        + DelayNode(0.1, 0.2)
+        + PrintProfilingStats(every=2)
+        + DelayNode(0.2, 0.3)
+    )
 
-        with build(pipeline):
-            for i in range(5):
-                batch = pipeline.request_batch(self.test_request)
+    request = BatchRequest()
+    request.add(raw_key, (100, 100, 100))
 
-        profiling_stats = batch.profiling_stats
+    with build(pipeline):
+        for i in range(5):
+            batch = pipeline.request_batch(request)
 
-        summary = profiling_stats.get_timing_summary("DelayNode", "prepare")
+    profiling_stats = batch.profiling_stats
 
-        # is the timing for each pass correct?
-        self.assertGreaterEqual(summary.min(), 0.1)
-        self.assertLessEqual(summary.min(), 0.2 + 0.1)  # bit of tolerance
+    summary = profiling_stats.get_timing_summary("DelayNode", "prepare")
 
-        summary = profiling_stats.get_timing_summary("DelayNode", "process")
+    # is the timing for each pass correct?
+    assert summary.min() >= 0.1
+    assert summary.min() <= 0.2 + 0.1  # bit of tolerance
 
-        self.assertGreaterEqual(summary.min(), 0.2)
-        self.assertLessEqual(summary.min(), 0.3 + 0.1)  # bit of tolerance
+    summary = profiling_stats.get_timing_summary("DelayNode", "process")
 
-        # is the upstream time correct?
-        self.assertGreaterEqual(
-            profiling_stats.span_time(), 0.1 + 0.2 + 0.2 + 0.3
-        )  # total time spend upstream
-        self.assertLessEqual(
-            profiling_stats.span_time(), 0.1 + 0.2 + 0.2 + 0.3 + 0.1
-        )  # plus bit of tolerance
+    assert summary.min() >= 0.2
+    assert summary.min() <= 0.3 + 0.1  # bit of tolerance
+
+    # is the upstream time correct?
+    assert (
+        profiling_stats.span_time() >= 0.1 + 0.2 + 0.2 + 0.3
+    )  # total time spend upstream
+    assert (
+        profiling_stats.span_time() <= 0.1 + 0.2 + 0.2 + 0.3 + 0.1
+    )  # plus bit of tolerance

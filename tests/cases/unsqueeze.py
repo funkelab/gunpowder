@@ -1,12 +1,16 @@
 import copy
-import numpy as np
-import gunpowder as gp
 
-from .provider_test import ProviderTest
+import numpy as np
+import pytest
+
+import gunpowder as gp
 
 
 class ExampleSourceUnsqueeze(gp.BatchProvider):
-    def __init__(self, voxel_size):
+    def __init__(self, voxel_size, raw_key, labels_key):
+        self.raw_key = raw_key
+        self.labels_key = labels_key
+
         self.voxel_size = gp.Coordinate(voxel_size)
         self.roi = gp.Roi((0, 0, 0), (10, 10, 10)) * self.voxel_size
 
@@ -53,44 +57,46 @@ class ExampleSourceUnsqueeze(gp.BatchProvider):
         return outputs
 
 
-class TestUnsqueeze(ProviderTest):
-    def test_unsqueeze(self):
-        raw = gp.ArrayKey("RAW")
-        labels = gp.ArrayKey("LABELS")
+def test_unsqueeze():
+    raw = gp.ArrayKey("RAW")
+    labels = gp.ArrayKey("LABELS")
 
-        voxel_size = gp.Coordinate((50, 5, 5))
-        input_voxels = gp.Coordinate((10, 10, 10))
-        input_size = input_voxels * voxel_size
+    voxel_size = gp.Coordinate((50, 5, 5))
+    input_voxels = gp.Coordinate((10, 10, 10))
+    input_size = input_voxels * voxel_size
 
-        request = gp.BatchRequest()
-        request.add(raw, input_size)
-        request.add(labels, input_size)
+    request = gp.BatchRequest()
+    request.add(raw, input_size)
+    request.add(labels, input_size)
 
-        pipeline = (
-            ExampleSourceUnsqueeze(voxel_size)
-            + gp.Unsqueeze([raw, labels])
-            + gp.Unsqueeze([raw], axis=1)
-        )
+    pipeline = (
+        ExampleSourceUnsqueeze(voxel_size, raw, labels)
+        + gp.Unsqueeze([raw, labels])
+        + gp.Unsqueeze([raw], axis=1)
+    )
 
+    with gp.build(pipeline) as p:
+        batch = p.request_batch(request)
+        assert batch[raw].data.shape == (1,) + (1,) + input_voxels
+        assert batch[labels].data.shape == (1,) + input_voxels
+
+
+def test_unsqueeze_not_possible():
+    raw = gp.ArrayKey("RAW")
+    labels = gp.ArrayKey("LABELS")
+
+    voxel_size = gp.Coordinate((50, 5, 5))
+    input_voxels = gp.Coordinate((5, 5, 5))
+    input_size = input_voxels * voxel_size
+
+    request = gp.BatchRequest()
+    request.add(raw, input_size)
+    request.add(labels, input_size)
+
+    pipeline = ExampleSourceUnsqueeze(voxel_size, raw, labels) + gp.Unsqueeze(
+        [raw], axis=1
+    )
+
+    with pytest.raises(gp.PipelineRequestError):
         with gp.build(pipeline) as p:
-            batch = p.request_batch(request)
-            assert batch[raw].data.shape == (1,) + (1,) + input_voxels
-            assert batch[labels].data.shape == (1,) + input_voxels
-
-    def test_unsqueeze_not_possible(self):
-        raw = gp.ArrayKey("RAW")
-        labels = gp.ArrayKey("LABELS")
-
-        voxel_size = gp.Coordinate((50, 5, 5))
-        input_voxels = gp.Coordinate((5, 5, 5))
-        input_size = input_voxels * voxel_size
-
-        request = gp.BatchRequest()
-        request.add(raw, input_size)
-        request.add(labels, input_size)
-
-        pipeline = ExampleSourceUnsqueeze(voxel_size) + gp.Unsqueeze([raw], axis=1)
-
-        with self.assertRaises(gp.PipelineRequestError):
-            with gp.build(pipeline) as p:
-                batch = p.request_batch(request)
+            p.request_batch(request)

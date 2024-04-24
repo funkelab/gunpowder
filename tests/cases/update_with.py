@@ -1,21 +1,21 @@
 import numpy as np
+import pytest
 
 from gunpowder import (
-    BatchProvider,
-    BatchFilter,
     Array,
-    ArraySpec,
     ArrayKey,
-    Graph,
-    GraphSpec,
-    GraphKey,
+    ArraySpec,
     Batch,
+    BatchFilter,
+    BatchProvider,
     BatchRequest,
-    Roi,
+    Graph,
+    GraphKey,
+    GraphSpec,
     PipelineRequestError,
+    Roi,
     build,
 )
-import pytest
 
 
 class ArrayTestSource(BatchProvider):

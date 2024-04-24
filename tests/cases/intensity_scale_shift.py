@@ -1,16 +1,17 @@
-from .helper_sources import ArraySource
+import numpy as np
+
 from gunpowder import (
-    IntensityScaleShift,
-    ArrayKey,
-    build,
     Array,
+    ArrayKey,
     ArraySpec,
-    Roi,
-    Coordinate,
     BatchRequest,
+    Coordinate,
+    IntensityScaleShift,
+    Roi,
+    build,
 )
 
-import numpy as np
+from .helper_sources import ArraySource
 
 
 def test_shift():

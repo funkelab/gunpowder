@@ -1,14 +1,25 @@
-from .provider_test import ProviderTest
-from gunpowder import *
+import numpy as np
+
+from gunpowder import Array, ArrayKey, ArraySpec, BatchRequest, Normalize, Roi, build
+
+from .helper_sources import ArraySource
 
 
-class TestNormalize(ProviderTest):
-    def test_output(self):
-        pipeline = self.test_source + Normalize(ArrayKeys.RAW)
+def test_output():
+    raw_key = ArrayKey("RAW")
+    raw_spec = ArraySpec(
+        roi=Roi((0, 0, 0), (10, 10, 10)), voxel_size=(1, 1, 1), dtype=np.uint8
+    )
+    raw_data = np.zeros(raw_spec.roi.shape / raw_spec.voxel_size, dtype=np.uint8) + 128
+    raw_array = Array(raw_data, raw_spec)
+    pipeline = ArraySource(raw_key, raw_array) + Normalize(raw_key)
 
-        with build(pipeline):
-            batch = pipeline.request_batch(self.test_request)
+    request = BatchRequest()
+    request.add(raw_key, (10, 10, 10))
 
-            raw = batch.arrays[ArrayKeys.RAW]
-            self.assertTrue(raw.data.min() >= 0)
-            self.assertTrue(raw.data.max() <= 1)
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
+
+        raw = batch.arrays[raw_key]
+        assert raw.data.min() >= 0
+        assert raw.data.max() <= 1

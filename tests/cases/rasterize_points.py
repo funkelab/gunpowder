@@ -1,20 +1,21 @@
-from .helper_sources import ArraySource, GraphSource
+import numpy as np
+
 from gunpowder import (
-    BatchRequest,
-    Roi,
-    Coordinate,
-    GraphSpec,
     Array,
     ArrayKey,
     ArraySpec,
-    RasterizeGraph,
+    BatchRequest,
+    Coordinate,
+    GraphSpec,
     MergeProvider,
     RasterizationSettings,
+    RasterizeGraph,
+    Roi,
     build,
 )
-from gunpowder.graph import GraphKey, Graph, Node, Edge
+from gunpowder.graph import Edge, Graph, GraphKey, Node
 
-import numpy as np
+from .helper_sources import ArraySource, GraphSource
 
 
 def test_rasterize_graph_colors():

@@ -1,6 +1,6 @@
-from gunpowder import BatchProvider, GraphKey, Graph, ArrayKey, Array, Batch
-
 import copy
+
+from gunpowder import Array, ArrayKey, Batch, BatchProvider, Graph, GraphKey
 
 
 class ArraySource(BatchProvider):

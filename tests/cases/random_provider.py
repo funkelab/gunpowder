@@ -1,14 +1,14 @@
+import numpy as np
+
 from gunpowder import (
-    RandomProvider,
-    Roi,
+    Array,
     ArrayKey,
     ArraySpec,
-    Array,
-    Roi,
     BatchRequest,
+    RandomProvider,
+    Roi,
     build,
 )
-import numpy as np
 
 from .helper_sources import ArraySource
 

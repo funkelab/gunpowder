@@ -1,23 +1,24 @@
-from .helper_sources import ArraySource, GraphSource
+from itertools import product
+
+import numpy as np
+import pytest
+
 from gunpowder import (
-    BatchRequest,
+    Array,
+    ArrayKey,
     ArraySpec,
-    Roi,
+    BatchRequest,
     Coordinate,
     Graph,
     GraphKey,
     GraphSpec,
-    Array,
-    ArrayKey,
-    Pad,
-    build,
     MergeProvider,
+    Pad,
+    Roi,
+    build,
 )
 
-import pytest
-import numpy as np
-
-from itertools import product
+from .helper_sources import ArraySource, GraphSource
 
 
 @pytest.mark.parametrize("mode", ["constant", "reflect"])

@@ -1,23 +1,25 @@
+import itertools
+
+import numpy as np
+
 from gunpowder import (
+    Array,
+    ArrayKey,
+    ArrayKeys,
+    ArraySpec,
+    Batch,
     BatchProvider,
     BatchRequest,
-    Batch,
-    ArrayKeys,
-    ArrayKey,
-    ArraySpec,
-    Array,
+    Coordinate,
+    Graph,
     GraphKey,
     GraphKeys,
     GraphSpec,
-    Graph,
     Node,
     Roi,
-    Coordinate,
     Scan,
     build,
 )
-import numpy as np
-import itertools
 
 
 def coordinate_to_id(i, j, k):

@@ -1,24 +1,20 @@
+import numpy as np
+import pytest
+
 from gunpowder import (
-    RandomLocation,
-    BatchProvider,
-    Roi,
-    Coordinate,
+    Array,
     ArrayKey,
     ArraySpec,
-    Array,
-    Roi,
-    Coordinate,
     Batch,
-    BatchRequest,
     BatchProvider,
-    RandomLocation,
+    BatchRequest,
+    Coordinate,
     MergeProvider,
+    RandomLocation,
+    Roi,
     build,
 )
-import numpy as np
 from gunpowder.pipeline import PipelineRequestError
-
-import pytest
 
 
 class ExampleSourceRandomLocation(BatchProvider):

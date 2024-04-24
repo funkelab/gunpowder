@@ -1,22 +1,22 @@
+import numpy as np
+import pytest
+from scipy.ndimage import center_of_mass
+
 from gunpowder import (
-    BatchProvider,
-    GraphSpec,
-    Roi,
-    Coordinate,
-    ArraySpec,
-    Batch,
     Array,
     ArrayKey,
-    GraphKey,
+    ArraySpec,
+    Batch,
+    BatchProvider,
     BatchRequest,
+    Coordinate,
     DeformAugment,
+    GraphKey,
+    GraphSpec,
+    Roi,
     build,
 )
 from gunpowder.graph import Graph, Node
-
-from scipy.ndimage import center_of_mass
-import pytest
-import numpy as np
 
 
 class GraphTestSource3D(BatchProvider):

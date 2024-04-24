@@ -1,84 +1,54 @@
-from .provider_test import ProviderTest
-from gunpowder import *
-from gunpowder.contrib import AddBoundaryDistanceGradients
 import numpy as np
 
+from gunpowder import Array, ArrayKey, ArraySpec, BatchRequest, Roi, build
+from gunpowder.contrib import AddBoundaryDistanceGradients
 
-class ExampleSource(BatchProvider):
-    def setup(self):
-        self.provides(
-            ArrayKeys.GT_LABELS,
-            ArraySpec(
-                roi=Roi((-40, -40, -40), (160, 160, 160)),
-                voxel_size=(20, 4, 8),
-                interpolatable=False,
-            ),
-        )
-
-    def provide(self, request):
-        batch = Batch()
-
-        roi = request[ArrayKeys.GT_LABELS].roi
-        shape = (roi / self.spec[ArrayKeys.GT_LABELS].voxel_size).shape
-
-        spec = self.spec[ArrayKeys.GT_LABELS].copy()
-        spec.roi = roi
-        data = np.ones(shape)
-        data[shape[0] // 2 :, :, :] += 2
-        data[:, shape[1] // 2 :, :] += 4
-        data[:, :, shape[2] // 2 :] += 8
-        batch.arrays[ArrayKeys.GT_LABELS] = Array(data, spec)
-
-        return batch
+from .helper_sources import ArraySource
 
 
-class TestAddBoundaryDistanceGradients(ProviderTest):
-    def test_output(self):
-        ArrayKey("GT_BOUNDARY_DISTANCES")
-        ArrayKey("GT_BOUNDARY_GRADIENTS")
+def test_output():
+    labels_key = ArrayKey("LABELS")
+    dist_key = ArrayKey("BOUNDARY_DISTANCES")
+    grad_key = ArrayKey("BOUNDARY_GRADIENTS")
 
-        pipeline = ExampleSource() + AddBoundaryDistanceGradients(
-            label_array_key=ArrayKeys.GT_LABELS,
-            distance_array_key=ArrayKeys.GT_BOUNDARY_DISTANCES,
-            gradient_array_key=ArrayKeys.GT_BOUNDARY_GRADIENTS,
-        )
+    labels_spec = ArraySpec(
+        roi=Roi((0, 0, 0), (120, 16, 64)),
+        voxel_size=(20, 4, 8),
+        interpolatable=False,
+    )
+    shape = (labels_spec.roi / labels_spec.voxel_size).shape
+    labels_data = np.ones(shape)
+    labels_data[shape[0] // 2 :, :, :] += 2
+    labels_data[:, shape[1] // 2 :, :] += 4
+    labels_data[:, :, shape[2] // 2 :] += 8
+    labels_array = Array(labels_data, labels_spec)
 
-        with build(pipeline):
-            request = BatchRequest()
-            request.add(ArrayKeys.GT_LABELS, (120, 16, 64))
-            request.add(ArrayKeys.GT_BOUNDARY_DISTANCES, (120, 16, 64))
-            request.add(ArrayKeys.GT_BOUNDARY_GRADIENTS, (120, 16, 64))
+    labels_source = ArraySource(labels_key, labels_array)
 
-            batch = pipeline.request_batch(request)
+    pipeline = labels_source + AddBoundaryDistanceGradients(
+        label_array_key=labels_key,
+        distance_array_key=dist_key,
+        gradient_array_key=grad_key,
+    )
 
-            labels = batch.arrays[ArrayKeys.GT_LABELS].data
-            distances = batch.arrays[ArrayKeys.GT_BOUNDARY_DISTANCES].data
-            gradients = batch.arrays[ArrayKeys.GT_BOUNDARY_GRADIENTS].data
-            shape = distances.shape
+    with build(pipeline):
+        request = BatchRequest()
+        request.add(labels_key, (120, 16, 64))
+        request.add(dist_key, (120, 16, 64))
+        request.add(grad_key, (120, 16, 64))
 
-            l_001 = labels[: shape[0] // 2, : shape[1] // 2, shape[2] // 2 :]
-            l_101 = labels[shape[0] // 2 :, : shape[1] // 2, shape[2] // 2 :]
-            d_001 = distances[: shape[0] // 2, : shape[1] // 2, shape[2] // 2 :]
-            d_101 = distances[shape[0] // 2 :, : shape[1] // 2, shape[2] // 2 :]
-            g_001 = gradients[:, : shape[0] // 2, : shape[1] // 2, shape[2] // 2 :]
-            g_101 = gradients[:, shape[0] // 2 :, : shape[1] // 2, shape[2] // 2 :]
+        batch = pipeline.request_batch(request)
 
-            # print labels
-            # print
-            # print distances
-            # print
-            # print l_001
-            # print l_101
-            # print
-            # print d_001
-            # print d_101
-            # print
-            # print g_001
-            # print g_101
+        distances = batch.arrays[dist_key].data
+        gradients = batch.arrays[grad_key].data
+        shape = distances.shape
 
-            self.assertTrue((g_001 == g_101).all())
+        g_001 = gradients[:, : shape[0] // 2, : shape[1] // 2, shape[2] // 2 :]
+        g_101 = gradients[:, shape[0] // 2 :, : shape[1] // 2, shape[2] // 2 :]
 
-            top = gradients[:, 0 : shape[0] // 2, :]
-            bot = gradients[:, shape[0] : shape[0] // 2 - 1 : -1, :]
+        assert (g_001 == g_101).all()
 
-            self.assertTrue((top == bot).all())
+        top = gradients[:, 0 : shape[0] // 2, :]
+        bot = gradients[:, shape[0] : shape[0] // 2 - 1 : -1, :]
+
+        assert (top == bot).all()
