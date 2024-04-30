@@ -37,8 +37,8 @@ class Snapshot(BatchFilter):
 
             Template for output filenames. ``{id}`` in the string will be
             replaced with the ID of the batch. ``{iteration}`` with the training
-            iteration (if training was performed on this batch). Snapshot will 
-            be saved as zarr file if output_filename ends in ``.zarr`` and as 
+            iteration (if training was performed on this batch). Snapshot will
+            be saved as zarr file if output_filename ends in ``.zarr`` and as
             HDF otherwise.
 
         every (``int``):
