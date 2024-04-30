@@ -207,8 +207,8 @@ class Snapshot(BatchFilter):
 
                     if self.store_value_range:
                         dataset.attrs["value_range"] = (
-                            np.asscalar(array.data.min()),
-                            np.asscalar(array.data.max()),
+                            array.data.min().item(),
+                            array.data.max().item(),
                         )
 
                     # if array has attributes, add them to the dataset
