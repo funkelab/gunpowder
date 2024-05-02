@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Snapshot(BatchFilter):
-    """Save a passing batch in an HDF file.
+    """Save a passing batch in an HDF or Zarr file.
 
     The default behaviour is to periodically save a snapshot after
     ``every`` iterations.
@@ -37,7 +37,9 @@ class Snapshot(BatchFilter):
 
             Template for output filenames. ``{id}`` in the string will be
             replaced with the ID of the batch. ``{iteration}`` with the training
-            iteration (if training was performed on this batch).
+            iteration (if training was performed on this batch). Snapshot will
+            be saved as zarr file if output_filename ends in ``.zarr`` and as
+            HDF otherwise.
 
         every (``int``):
 
@@ -207,8 +209,8 @@ class Snapshot(BatchFilter):
 
                     if self.store_value_range:
                         dataset.attrs["value_range"] = (
-                            np.asscalar(array.data.min()),
-                            np.asscalar(array.data.max()),
+                            array.data.min().item(),
+                            array.data.max().item(),
                         )
 
                     # if array has attributes, add them to the dataset
