@@ -1,10 +1,14 @@
 import copy
+from typing import TYPE_CHECKING
 
-from gunpowder import Array, ArrayKey, Batch, BatchProvider
+from .batch_provider import BatchProvider
+
+if TYPE_CHECKING:
+    from gunpowder import Array, ArrayKey, Batch
 
 
 class ArraySource(BatchProvider):
-    def __init__(self, key: ArrayKey, array: Array):
+    def __init__(self, key: "ArrayKey", array: "Array"):
         self.key = key
         self.array = array
 

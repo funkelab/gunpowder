@@ -1,10 +1,14 @@
 import copy
+from typing import TYPE_CHECKING
 
-from gunpowder import Batch, BatchProvider, Graph, GraphKey
+from .batch_provider import BatchProvider
+
+if TYPE_CHECKING:
+    from gunpowder import Batch, Graph, GraphKey
 
 
 class GraphSource(BatchProvider):
-    def __init__(self, key: GraphKey, graph: Graph):
+    def __init__(self, key: "GraphKey", graph: "Graph"):
         self.key = key
         self.graph = graph
 
