@@ -4,7 +4,7 @@ import numpy as np
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
 from gunpowder.nodes.batch_filter import BatchFilter
-from scipy.ndimage.morphology import distance_transform_edt
+from scipy.ndimage import distance_transform_edt
 
 logger = logging.getLogger(__name__)
 

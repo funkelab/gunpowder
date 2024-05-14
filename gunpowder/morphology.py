@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage.morphology import distance_transform_edt
+from scipy.ndimage import distance_transform_edt
 
 
 def enlarge_binary_map(

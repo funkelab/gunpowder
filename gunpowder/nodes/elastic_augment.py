@@ -449,7 +449,7 @@ class ElasticAugment(BatchFilter):
         )
 
         missing_points = []
-        projected_locs = ndimage.measurements.center_of_mass(data > 0, data, ids)
+        projected_locs = ndimage.center_of_mass(data > 0, data, ids)
         projected_locs = [
             np.array(loc[-self.spatial_dims :]) * self.voxel_size + target_roi.begin
             for loc in projected_locs

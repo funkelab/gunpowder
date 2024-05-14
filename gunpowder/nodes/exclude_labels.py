@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from scipy.ndimage.morphology import distance_transform_edt
+from scipy.ndimage import distance_transform_edt
 
 from .batch_filter import BatchFilter
 from gunpowder.array import Array
