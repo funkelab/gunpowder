@@ -45,3 +45,5 @@ from .unsqueeze import Unsqueeze
 from .upsample import UpSample
 from .zarr_source import ZarrSource
 from .zarr_write import ZarrWrite
+from .gp_array_source import ArraySource as GPArraySource
+from .gp_graph_source import GraphSource as GPGraphSource
