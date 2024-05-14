@@ -1,0 +1,35 @@
+name: "Close inactive PRs"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  close-inactive-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close inactive PRs
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prs = await github.rest.pulls.list({ owner, repo, state: 'open' });
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 28);
+            const threeWeeksAgo = new Date();
+            threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
+
+            for (const pr of prs.data) {
+              const updatedAt = new Date(pr.updated_at);
+              const number = pr.number;
+              if (updatedAt < thirtyDaysAgo) {
+                await github.rest.pulls.update({ owner, repo, pull_number: number, state: 'closed' });
+                console.log(`Closed PR #${number}`);
+              } else if (updatedAt < threeWeeksAgo) {
+                const message = 'This PR will be closed in one week due to inactivity. Please update the PR if necessary.';
+                await github.rest.issues.createComment({ owner, repo, issue_number: number, body: message });
+                console.log(`Posted warning on PR #${number}`);
+              }
+            }

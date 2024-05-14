@@ -151,8 +151,18 @@ class Edge(Freezable):
         return self.__v
 
     @property
+    def attrs(self):
+        return self.__attrs
+
+    @property
     def all(self):
         return self.__attrs
+
+    @classmethod
+    def from_attrs(cls, attrs: Dict[str, Any]):
+        u = attrs["u"]
+        v = attrs["v"]
+        return cls(u, v, attrs=attrs)
 
     def __iter__(self):
         return iter([self.u, self.v])
@@ -286,6 +296,13 @@ class Graph(Freezable):
         """
         attrs = self.__graph.nodes[id]
         return Node.from_attrs(attrs)
+
+    def edge(self, id: tuple[int, int]):
+        """
+        Get specific edge
+        """
+        attrs = self.__graph.edges[id]
+        return Edge.from_attrs(attrs)
 
     def contains(self, node_id: int):
         return node_id in self.__graph.nodes

@@ -1,10 +1,22 @@
-from .helper_sources import ArraySource
-
-from gunpowder import *
-from gunpowder.ext import zarr, NoSuchModule
-
-import pytest
 import numpy as np
+import pytest
+
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BatchRequest,
+    Coordinate,
+    MergeProvider,
+    Roi,
+    Scan,
+    ZarrSource,
+    ZarrWrite,
+    build,
+)
+from gunpowder.ext import NoSuchModule, zarr
+
+from .helper_sources import ArraySource
 
 
 @pytest.mark.skipif(isinstance(zarr, NoSuchModule), reason="zarr is not installed")

@@ -188,9 +188,7 @@ class SimpleAugment(BatchFilter):
             array.data = array.data[channel_slices + mirror]
 
             transpose = [t + num_channels for t in self.transpose]
-            array.data = array.data = array.data.transpose(
-                list(range(num_channels)) + transpose
-            )
+            array.data = array.data.transpose(list(range(num_channels)) + transpose)
 
         # graphs
         total_roi_offset = total_roi.offset
@@ -215,9 +213,11 @@ class SimpleAugment(BatchFilter):
                 location_in_total_offset = np.asarray(node.location) - total_roi_offset
                 node.location = np.asarray(
                     [
-                        total_roi_end[dim] - location_in_total_offset[dim]
-                        if m
-                        else node.location[dim]
+                        (
+                            total_roi_end[dim] - location_in_total_offset[dim]
+                            if m
+                            else node.location[dim]
+                        )
                         for dim, m in enumerate(self.mirror)
                     ],
                     dtype=graph.spec.dtype,
@@ -267,9 +267,11 @@ class SimpleAugment(BatchFilter):
         end_of_roi_in_total = roi_in_total_offset + roi_shape
         roi_in_total_offset_mirrored = total_roi_shape - end_of_roi_in_total
         roi_offset = Coordinate(
-            total_roi_offset[d] + roi_in_total_offset_mirrored[d]
-            if mirror[d]
-            else roi_offset[d]
+            (
+                total_roi_offset[d] + roi_in_total_offset_mirrored[d]
+                if mirror[d]
+                else roi_offset[d]
+            )
             for d in range(self.dims)
         )
 

@@ -1,19 +1,34 @@
-from .provider_test import ProviderTest
-from gunpowder import *
 import numpy as np
+
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    Batch,
+    BatchProvider,
+    BatchRequest,
+    Hdf5Write,
+    Roi,
+    Scan,
+    build,
+)
 from gunpowder.ext import h5py
 
 
 class Hdf5WriteTestSource(BatchProvider):
+    def __init__(self, raw_key, labels_key):
+        self.raw_key = raw_key
+        self.labels_key = labels_key
+
     def setup(self):
         self.provides(
-            ArrayKeys.RAW,
+            self.raw_key,
             ArraySpec(
                 roi=Roi((20000, 2000, 2000), (2000, 200, 200)), voxel_size=(20, 2, 2)
             ),
         )
         self.provides(
-            ArrayKeys.GT_LABELS,
+            self.labels_key,
             ArraySpec(
                 roi=Roi((20100, 2010, 2010), (1800, 180, 180)), voxel_size=(20, 2, 2)
             ),
@@ -47,44 +62,44 @@ class Hdf5WriteTestSource(BatchProvider):
         return batch
 
 
-class TestHdf5Write(ProviderTest):
-    def test_output(self):
-        path = self.path_to("hdf5_write_test.hdf")
+def test_output(tmpdir):
+    path = tmpdir / "hdf5_write_test.hdf"
 
-        source = Hdf5WriteTestSource()
+    raw_key = ArrayKey("RAW")
+    labels_key = ArrayKey("LABELS")
 
-        chunk_request = BatchRequest()
-        chunk_request.add(ArrayKeys.RAW, (400, 30, 34))
-        chunk_request.add(ArrayKeys.GT_LABELS, (200, 10, 14))
+    source = Hdf5WriteTestSource(raw_key, labels_key)
 
-        pipeline = (
-            source
-            + Hdf5Write({ArrayKeys.RAW: "arrays/raw"}, output_filename=path)
-            + Scan(chunk_request)
+    chunk_request = BatchRequest()
+    chunk_request.add(raw_key, (400, 30, 34))
+    chunk_request.add(labels_key, (200, 10, 14))
+
+    pipeline = (
+        source
+        + Hdf5Write({raw_key: "arrays/raw"}, output_filename=path)
+        + Scan(chunk_request)
+    )
+
+    with build(pipeline):
+        raw_spec = pipeline.spec[raw_key]
+        labels_spec = pipeline.spec[labels_key]
+
+        full_request = BatchRequest({raw_key: raw_spec, labels_key: labels_spec})
+
+        batch = pipeline.request_batch(full_request)
+
+    # assert that stored HDF dataset equals batch array
+
+    with h5py.File(path, "r") as f:
+        ds = f["arrays/raw"]
+
+        batch_raw = batch.arrays[raw_key]
+        stored_raw = np.array(ds)
+
+        assert (
+            stored_raw.shape[-3:]
+            == batch_raw.spec.roi.shape // batch_raw.spec.voxel_size
         )
-
-        with build(pipeline):
-            raw_spec = pipeline.spec[ArrayKeys.RAW]
-            labels_spec = pipeline.spec[ArrayKeys.GT_LABELS]
-
-            full_request = BatchRequest(
-                {ArrayKeys.RAW: raw_spec, ArrayKeys.GT_LABELS: labels_spec}
-            )
-
-            batch = pipeline.request_batch(full_request)
-
-        # assert that stored HDF dataset equals batch array
-
-        with h5py.File(path, "r") as f:
-            ds = f["arrays/raw"]
-
-            batch_raw = batch.arrays[ArrayKeys.RAW]
-            stored_raw = np.array(ds)
-
-            self.assertEqual(
-                stored_raw.shape[-3:],
-                batch_raw.spec.roi.shape // batch_raw.spec.voxel_size,
-            )
-            self.assertEqual(tuple(ds.attrs["offset"]), batch_raw.spec.roi.offset)
-            self.assertEqual(tuple(ds.attrs["resolution"]), batch_raw.spec.voxel_size)
-            self.assertTrue((stored_raw == batch.arrays[ArrayKeys.RAW].data).all())
+        assert tuple(ds.attrs["offset"]) == batch_raw.spec.roi.offset
+        assert tuple(ds.attrs["resolution"]) == batch_raw.spec.voxel_size
+        assert (stored_raw == batch.arrays[raw_key].data).all()

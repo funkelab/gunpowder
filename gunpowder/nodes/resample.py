@@ -70,9 +70,6 @@ class Resample(BatchFilter):
             + source_voxel_size[-self.ndim :]
         )
 
-        spec.roi = spec.roi.grow(
-            -self.pad, -self.pad
-        )  # Pad w/ 1 voxel per side for interpolation to avoid edge effects
         spec.roi = spec.roi.snap_to_grid(
             np.lcm(source_voxel_size, self.target_voxel_size), mode="shrink"
         )

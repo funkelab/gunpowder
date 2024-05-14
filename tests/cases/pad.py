@@ -1,24 +1,27 @@
-from .helper_sources import ArraySource, GraphSource
+from itertools import product
+
+import numpy as np
+import pytest
+
 from gunpowder import (
-    BatchRequest,
+    Array,
+    ArrayKey,
     ArraySpec,
-    Roi,
+    BatchRequest,
     Coordinate,
     Graph,
     GraphKey,
     GraphSpec,
-    Array,
-    ArrayKey,
+    MergeProvider,
     Pad,
+    Roi,
     build,
     MergeProvider,
 )
 
-import pytest
-import numpy as np
+from .helper_sources import ArraySource, GraphSource
 
 from itertools import product
-
 
 @pytest.mark.parametrize("mode", ["constant", "reflect"])
 def test_padding(mode):

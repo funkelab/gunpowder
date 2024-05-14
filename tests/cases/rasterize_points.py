@@ -1,20 +1,52 @@
-from .helper_sources import ArraySource, GraphSource
+import numpy as np
+
 from gunpowder import (
-    BatchRequest,
-    Roi,
-    Coordinate,
-    GraphSpec,
     Array,
     ArrayKey,
     ArraySpec,
-    RasterizeGraph,
+    BatchRequest,
+    Coordinate,
+    GraphSpec,
     MergeProvider,
     RasterizationSettings,
+    RasterizeGraph,
+    Roi,
     build,
 )
-from gunpowder.graph import GraphKey, Graph, Node, Edge
+from gunpowder.graph import Edge, Graph, GraphKey, Node
 
-import numpy as np
+from .helper_sources import ArraySource, GraphSource
+
+
+def test_rasterize_graph_colors():
+    graph = Graph(
+        [
+            Node(id=1, location=np.array((0.5, 0.5)), attrs={"color": 2}),
+            Node(id=2, location=np.array((0.5, 4.5)), attrs={"color": 2}),
+            Node(id=3, location=np.array((4.5, 0.5)), attrs={"color": 3}),
+            Node(id=4, location=np.array((4.5, 4.5)), attrs={"color": 3}),
+        ],
+        [Edge(1, 2, attrs={"color": 2}), Edge(3, 4, attrs={"color": 3})],
+        GraphSpec(roi=Roi((0, 0), (5, 5))),
+    )
+
+    graph_key = GraphKey("G")
+    array_key = ArrayKey("A")
+    graph_source = GraphSource(graph_key, graph)
+    pipeline = graph_source + RasterizeGraph(
+        graph_key,
+        array_key,
+        ArraySpec(roi=Roi((0, 0), (5, 5)), voxel_size=Coordinate(1, 1), dtype=np.uint8),
+        settings=RasterizationSettings(1, color_attr="color"),
+    )
+    with build(pipeline):
+        request = BatchRequest()
+        request[array_key] = ArraySpec(Roi((0, 0), (5, 5)))
+        rasterized = pipeline.request_batch(request)[array_key].data
+        assert rasterized[0, 0] == 2
+        assert rasterized[0, :].sum() == 10
+        assert rasterized[4, 0] == 3
+        assert rasterized[4, :].sum() == 15
 
 
 def test_3d():

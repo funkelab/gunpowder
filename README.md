@@ -1,4 +1,4 @@
-![gunpowder](docs/_static/gunpowder.svg)
+![gunpowder](docs/source/img/gunpowder.svg)
 
 [![Tests](https://github.com/funkey/gunpowder/actions/workflows/test.yml/badge.svg)](https://github.com/funkey/gunpowder/actions/workflows/test.yml)
 

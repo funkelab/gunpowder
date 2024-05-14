@@ -1,19 +1,19 @@
 # from .provider_test import ProviderTest, ExampleSource
+import numpy as np
+
 from gunpowder import (
-    BatchProvider,
-    ArrayKeys,
-    ArraySpec,
-    Roi,
-    Batch,
-    Coordinate,
-    SpecifiedLocation,
-    build,
-    BatchRequest,
     Array,
     ArrayKey,
+    ArrayKeys,
+    ArraySpec,
+    Batch,
+    BatchProvider,
+    BatchRequest,
+    Coordinate,
+    Roi,
+    SpecifiedLocation,
+    build,
 )
-import numpy as np
-import unittest
 
 
 class ExampleSourceSpecifiedLocation(BatchProvider):
@@ -42,70 +42,63 @@ class ExampleSourceSpecifiedLocation(BatchProvider):
         return batch
 
 
-class TestSpecifiedLocation(unittest.TestCase):
-    def setUp(self):
-        ArrayKey("RAW")
+def test_simple():
+    ArrayKey("RAW")
+    locations = [[0, 0, 0], [100, 100, 100], [91, 20, 20], [42, 24, 57]]
 
-    def test_simple(self):
-        locations = [[0, 0, 0], [100, 100, 100], [91, 20, 20], [42, 24, 57]]
+    pipeline = ExampleSourceSpecifiedLocation(
+        roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(1, 1, 1)
+    ) + SpecifiedLocation(
+        locations, choose_randomly=False, extra_data=None, jitter=None
+    )
 
-        pipeline = ExampleSourceSpecifiedLocation(
-            roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(1, 1, 1)
-        ) + SpecifiedLocation(
-            locations, choose_randomly=False, extra_data=None, jitter=None
+    with build(pipeline):
+        batch = pipeline.request_batch(
+            BatchRequest({ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
         )
+        # first three locations are skipped
+        # fourth should start at [32, 14, 47] of self.data
+        assert batch.arrays[ArrayKeys.RAW].data[0, 0, 0] == 321447
 
-        with build(pipeline):
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))}
-                )
-            )
-            # first three locations are skipped
-            # fourth should start at [32, 14, 47] of self.data
-            self.assertEqual(batch.arrays[ArrayKeys.RAW].data[0, 0, 0], 321447)
 
-    def test_voxel_size(self):
-        locations = [[0, 0, 0], [91, 20, 20], [42, 24, 57]]
+def test_voxel_size():
+    ArrayKey("RAW")
+    locations = [[0, 0, 0], [91, 20, 20], [42, 24, 57]]
 
-        pipeline = ExampleSourceSpecifiedLocation(
-            roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(5, 2, 2)
-        ) + SpecifiedLocation(
-            locations, choose_randomly=False, extra_data=None, jitter=None
+    pipeline = ExampleSourceSpecifiedLocation(
+        roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(5, 2, 2)
+    ) + SpecifiedLocation(
+        locations, choose_randomly=False, extra_data=None, jitter=None
+    )
+
+    with build(pipeline):
+        batch = pipeline.request_batch(
+            BatchRequest({ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
         )
+        # first locations is skipped
+        # second should start at [80/5, 10/2, 10/2] = [16, 5, 5]
+        assert batch.arrays[ArrayKeys.RAW].data[0, 0, 0] == 40255
 
-        with build(pipeline):
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))}
-                )
-            )
-            # first locations is skipped
-            # second should start at [80/5, 10/2, 10/2] = [16, 5, 5]
-            self.assertEqual(batch.arrays[ArrayKeys.RAW].data[0, 0, 0], 40255)
-
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))}
-                )
-            )
-            # third should start at [30/5, 14/2, 48/2] = [6, 7, 23]
-            self.assertEqual(batch.arrays[ArrayKeys.RAW].data[0, 0, 0], 15374)
-
-    def test_jitter_and_random(self):
-        locations = [[0, 0, 0], [91, 20, 20], [42, 24, 57]]
-
-        pipeline = ExampleSourceSpecifiedLocation(
-            roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(5, 2, 2)
-        ) + SpecifiedLocation(
-            locations, choose_randomly=True, extra_data=None, jitter=(5, 5, 5)
+        batch = pipeline.request_batch(
+            BatchRequest({ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
         )
+        # third should start at [30/5, 14/2, 48/2] = [6, 7, 23]
+        assert batch.arrays[ArrayKeys.RAW].data[0, 0, 0] == 15374
 
-        with build(pipeline):
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))}
-                )
-            )
-            # Unclear what result should be, so no errors means passing
-            self.assertTrue(batch.arrays[ArrayKeys.RAW].data[0, 0, 0] > 0)
+
+def test_jitter_and_random():
+    ArrayKey("RAW")
+    locations = [[0, 0, 0], [91, 20, 20], [42, 24, 57]]
+
+    pipeline = ExampleSourceSpecifiedLocation(
+        roi=Roi((0, 0, 0), (100, 100, 100)), voxel_size=(5, 2, 2)
+    ) + SpecifiedLocation(
+        locations, choose_randomly=True, extra_data=None, jitter=(5, 5, 5)
+    )
+
+    with build(pipeline):
+        batch = pipeline.request_batch(
+            BatchRequest({ArrayKeys.RAW: ArraySpec(roi=Roi((0, 0, 0), (20, 20, 20)))})
+        )
+        # Unclear what result should be, so no errors means passing
+        assert batch.arrays[ArrayKeys.RAW].data[0, 0, 0] > 0

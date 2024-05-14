@@ -14,4 +14,4 @@ jobs:
       - name: Lint with Black
         run: |
           pip install black
-          black -v --check gunpowder tests
+          black --check gunpowder tests

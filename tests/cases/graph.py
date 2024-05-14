@@ -1,25 +1,24 @@
-from .provider_test import ProviderTest
+import numpy as np
+
 from gunpowder import (
+    Batch,
+    BatchFilter,
     BatchProvider,
     BatchRequest,
-    BatchFilter,
-    Batch,
-    Node,
+    Coordinate,
     Edge,
     Graph,
-    GraphSpec,
     GraphKey,
-    GraphKeys,
-    build,
+    GraphSpec,
+    Node,
     Roi,
-    Coordinate,
+    build,
 )
-
-import numpy as np
 
 
 class ExampleGraphSource(BatchProvider):
-    def __init__(self):
+    def __init__(self, graph_key):
+        self.graph_key = graph_key
         self.dtype = float
         self.__vertices = [
             Node(id=1, location=np.array([1, 1, 1], dtype=self.dtype)),
@@ -33,21 +32,24 @@ class ExampleGraphSource(BatchProvider):
         self.graph = Graph(self.__vertices, self.__edges, self.__spec)
 
     def setup(self):
-        self.provides(GraphKeys.TEST_GRAPH, self.__spec)
+        self.provides(self.graph_key, self.__spec)
 
     def provide(self, request):
         batch = Batch()
 
-        roi = request[GraphKeys.TEST_GRAPH].roi
+        roi = request[self.graph_key].roi
 
         sub_graph = self.graph.crop(roi)
 
-        batch[GraphKeys.TEST_GRAPH] = sub_graph
+        batch[self.graph_key] = sub_graph
 
         return batch
 
 
 class GrowFilter(BatchFilter):
+    def __init__(self, graph_key):
+        self.graph_key = graph_key
+
     def prepare(self, request):
         grow = Coordinate([50, 50, 50])
         for key, spec in request.items():
@@ -61,120 +63,119 @@ class GrowFilter(BatchFilter):
         return batch
 
 
-class TestGraphs(ProviderTest):
-    @property
-    def edges(self):
-        return [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
+def edges():
+    return [Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0)]
 
-    @property
-    def nodes(self):
-        return [
-            Node(0, location=np.array([0, 0, 0], dtype=self.spec.dtype)),
-            Node(1, location=np.array([1, 1, 1], dtype=self.spec.dtype)),
-            Node(2, location=np.array([2, 2, 2], dtype=self.spec.dtype)),
-            Node(3, location=np.array([3, 3, 3], dtype=self.spec.dtype)),
-            Node(4, location=np.array([4, 4, 4], dtype=self.spec.dtype)),
-        ]
 
-    @property
-    def spec(self):
-        return GraphSpec(
-            roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
+def nodes():
+    return [
+        Node(0, location=np.array([0, 0, 0])),
+        Node(1, location=np.array([1, 1, 1])),
+        Node(2, location=np.array([2, 2, 2])),
+        Node(3, location=np.array([3, 3, 3])),
+        Node(4, location=np.array([4, 4, 4])),
+    ]
+
+
+def spec():
+    return GraphSpec(
+        roi=Roi(Coordinate([0, 0, 0]), Coordinate([5, 5, 5])), directed=True
+    )
+
+
+def test_output():
+    graph_key = GraphKey("TEST_GRAPH")
+
+    pipeline = ExampleGraphSource(graph_key) + GrowFilter(graph_key)
+
+    with build(pipeline):
+        batch = pipeline.request_batch(
+            BatchRequest({graph_key: GraphSpec(roi=Roi((0, 0, 0), (50, 50, 50)))})
         )
 
-    def test_output(self):
-        GraphKey("TEST_GRAPH")
+        graph = batch[graph_key]
+        expected_vertices = (
+            Node(id=1, location=np.array([1.0, 1.0, 1.0], dtype=float)),
+            Node(
+                id=2,
+                location=np.array([50.0, 50.0, 50.0], dtype=float),
+                temporary=True,
+            ),
+        )
+        seen_vertices = tuple(graph.nodes)
+        assert sorted(
+            [
+                v.original_id if v.original_id is not None else -1
+                for v in expected_vertices
+            ]
+        ) == sorted(
+            [v.original_id if v.original_id is not None else -1 for v in seen_vertices]
+        )
+        for expected, actual in zip(
+            sorted(expected_vertices, key=lambda v: tuple(v.location)),
+            sorted(seen_vertices, key=lambda v: tuple(v.location)),
+        ):
+            assert all(np.isclose(expected.location, actual.location))
 
-        pipeline = ExampleGraphSource() + GrowFilter()
-
-        with build(pipeline):
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {GraphKeys.TEST_GRAPH: GraphSpec(roi=Roi((0, 0, 0), (50, 50, 50)))}
-                )
-            )
-
-            graph = batch[GraphKeys.TEST_GRAPH]
-            expected_vertices = (
-                Node(id=1, location=np.array([1.0, 1.0, 1.0], dtype=float)),
-                Node(
-                    id=2,
-                    location=np.array([50.0, 50.0, 50.0], dtype=float),
-                    temporary=True,
-                ),
-            )
-            seen_vertices = tuple(graph.nodes)
-            self.assertCountEqual(
-                [v.original_id for v in expected_vertices],
-                [v.original_id for v in seen_vertices],
-            )
-            for expected, actual in zip(
-                sorted(expected_vertices, key=lambda v: tuple(v.location)),
-                sorted(seen_vertices, key=lambda v: tuple(v.location)),
-            ):
-                assert all(np.isclose(expected.location, actual.location))
-
-            batch = pipeline.request_batch(
-                BatchRequest(
-                    {
-                        GraphKeys.TEST_GRAPH: GraphSpec(
-                            roi=Roi((25, 25, 25), (500, 500, 500))
-                        )
-                    }
-                )
-            )
-
-            graph = batch[GraphKeys.TEST_GRAPH]
-            expected_vertices = (
-                Node(
-                    id=1,
-                    location=np.array([25.0, 25.0, 25.0], dtype=float),
-                    temporary=True,
-                ),
-                Node(id=2, location=np.array([500.0, 500.0, 500.0], dtype=float)),
-                Node(
-                    id=3,
-                    location=np.array([525.0, 525.0, 525.0], dtype=float),
-                    temporary=True,
-                ),
-            )
-            seen_vertices = tuple(graph.nodes)
-            self.assertCountEqual(
-                [v.original_id for v in expected_vertices],
-                [v.original_id for v in seen_vertices],
-            )
-            for expected, actual in zip(
-                sorted(expected_vertices, key=lambda v: tuple(v.location)),
-                sorted(seen_vertices, key=lambda v: tuple(v.location)),
-            ):
-                assert all(np.isclose(expected.location, actual.location))
-
-    def test_neighbors(self):
-        # directed
-        d_spec = self.spec
-        # undirected
-        ud_spec = self.spec
-        ud_spec.directed = False
-
-        directed = Graph(self.nodes, self.edges, d_spec)
-        undirected = Graph(self.nodes, self.edges, ud_spec)
-
-        self.assertCountEqual(
-            directed.neighbors(self.nodes[0]), undirected.neighbors(self.nodes[0])
+        batch = pipeline.request_batch(
+            BatchRequest({graph_key: GraphSpec(roi=Roi((25, 25, 25), (500, 500, 500)))})
         )
 
-    def test_crop(self):
-        g = Graph(self.nodes, self.edges, self.spec)
-
-        sub_g = g.crop(Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3])))
-        self.assertEqual(g.spec.roi, self.spec.roi)
-        self.assertEqual(
-            sub_g.spec.roi, Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3]))
+        graph = batch[graph_key]
+        expected_vertices = (
+            Node(
+                id=1,
+                location=np.array([25.0, 25.0, 25.0], dtype=float),
+                temporary=True,
+            ),
+            Node(id=2, location=np.array([500.0, 500.0, 500.0], dtype=float)),
+            Node(
+                id=3,
+                location=np.array([525.0, 525.0, 525.0], dtype=float),
+                temporary=True,
+            ),
         )
+        seen_vertices = tuple(graph.nodes)
+        assert sorted(
+            [
+                v.original_id if v.original_id is not None else -1
+                for v in expected_vertices
+            ]
+        ) == sorted(
+            [v.original_id if v.original_id is not None else -1 for v in seen_vertices]
+        )
+        for expected, actual in zip(
+            sorted(expected_vertices, key=lambda v: tuple(v.location)),
+            sorted(seen_vertices, key=lambda v: tuple(v.location)),
+        ):
+            assert all(np.isclose(expected.location, actual.location))
 
-        sub_g.spec.directed = False
-        self.assertTrue(g.spec.directed)
-        self.assertFalse(sub_g.spec.directed)
+
+def test_neighbors():
+    # directed
+    d_spec = spec()
+    # undirected
+    ud_spec = spec()
+    ud_spec.directed = False
+
+    directed = Graph(nodes(), edges(), d_spec)
+    undirected = Graph(nodes(), edges(), ud_spec)
+
+    assert [x for x in directed.neighbors(nodes()[0])] == [
+        x for x in undirected.neighbors(nodes()[0])
+    ]
+
+
+def test_crop():
+    g = Graph(nodes(), edges(), spec())
+
+    sub_g = g.crop(Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3])))
+    assert g.spec.roi == spec().roi
+    assert sub_g.spec.roi == Roi(Coordinate([1, 1, 1]), Coordinate([3, 3, 3]))
+
+    sub_g.spec.directed = False
+    assert g.spec.directed
+    assert not sub_g.spec.directed
 
 
 def test_nodes():

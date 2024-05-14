@@ -1,6 +1,17 @@
-from .helper_sources import ArraySource
-from gunpowder import *
 import numpy as np
+
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BatchRequest,
+    MergeProvider,
+    Roi,
+    UpSample,
+    build,
+)
+
+from .helper_sources import ArraySource
 
 
 def test_output():

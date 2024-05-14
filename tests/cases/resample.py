@@ -1,17 +1,18 @@
-from .helper_sources import ArraySource
+import numpy as np
 
 from gunpowder import (
+    Array,
     ArrayKey,
     ArraySpec,
-    Roi,
-    Coordinate,
     BatchRequest,
-    Array,
+    Coordinate,
     MergeProvider,
     Resample,
+    Roi,
     build,
 )
-import numpy as np
+
+from .helper_sources import ArraySource
 
 
 def test_up_and_downsample():
@@ -73,7 +74,10 @@ def test_up_and_downsample():
             assert np.array_equal(array.data, data), str(array_key)
 
         elif array_key == raw_resampled_key:
-            # Note: First assert averages over the voxels in the raw roi: (40:48, 40:48, 40:48), values of [30,31,31,32,31,32,32,33], the average of which is 31.5. Casting to an integer, in this case, rounds down, resulting in 31.
+            # Note: First assert averages over the voxels in the raw roi:
+            # (40:48, 40:48, 40:48), values of [30,31,31,32,31,32,32,33], the average of
+            # which is 31.5. Casting to an integer, in this case, rounds down, resulting
+            # in 31.
             assert (
                 array.data[0, 0, 0, 0] == 31
             ), f"RAW_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 31"

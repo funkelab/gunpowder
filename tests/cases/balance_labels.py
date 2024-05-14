@@ -1,73 +1,136 @@
-from .provider_test import ProviderTest
-from gunpowder import *
 import numpy as np
 
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BalanceLabels,
+    BatchRequest,
+    MergeProvider,
+    Roi,
+    build,
+)
 
-class ExampleSource(BatchProvider):
-    def setup(self):
-        for identifier in [
-            ArrayKeys.GT_AFFINITIES,
-            ArrayKeys.GT_AFFINITIES_MASK,
-            ArrayKeys.GT_IGNORE,
-        ]:
-            self.provides(
-                identifier,
-                ArraySpec(roi=Roi((0, 0, 0), (2000, 200, 200)), voxel_size=(20, 2, 2)),
-            )
+from .helper_sources import ArraySource
 
-    def provide(self, request):
-        batch = Batch()
 
-        roi = request[ArrayKeys.GT_AFFINITIES].roi
-        shape_vx = roi.shape // self.spec[ArrayKeys.GT_AFFINITIES].voxel_size
+def test_output():
+    affs_key = ArrayKey("AFFS")
+    affs_mask_key = ArrayKey("AFFS_MASK")
+    ignore_key = ArrayKey("IGNORE")
+    loss_scale_key = ArrayKey("LOSS_SCALE")
 
-        spec = self.spec[ArrayKeys.GT_AFFINITIES].copy()
-        spec.roi = roi
+    array_spec = ArraySpec(roi=Roi((0, 0, 0), (2000, 200, 200)), voxel_size=(20, 2, 2))
 
-        batch.arrays[ArrayKeys.GT_AFFINITIES] = Array(
-            np.random.randint(0, 2, (3,) + shape_vx), spec
+    data_shape = array_spec.roi.shape // array_spec.voxel_size
+    affs_data = np.random.randint(0, 2, (3,) + data_shape)
+    affs_mask_data = np.random.randint(0, 2, (3,) + data_shape)
+    ignore_data = np.random.randint(0, 2, (3,) + data_shape)
+
+    affs_array = Array(affs_data, array_spec.copy())
+    affs_mask_array = Array(affs_mask_data, array_spec.copy())
+    ignore_array = Array(ignore_data, array_spec.copy())
+
+    pipeline = (
+        (
+            ArraySource(affs_key, affs_array),
+            ArraySource(affs_mask_key, affs_mask_array),
+            ArraySource(ignore_key, ignore_array),
         )
-        batch.arrays[ArrayKeys.GT_AFFINITIES_MASK] = Array(
-            np.random.randint(0, 2, (3,) + shape_vx), spec
+        + MergeProvider()
+        + BalanceLabels(
+            labels=affs_key,
+            scales=loss_scale_key,
+            mask=[affs_mask_key, ignore_key],
         )
-        batch.arrays[ArrayKeys.GT_IGNORE] = Array(
-            np.random.randint(0, 2, (3,) + shape_vx), spec
+    )
+
+    with build(pipeline):
+        # check correct scaling on 10 random samples
+        for i in range(10):
+            request = BatchRequest()
+            request.add(affs_key, (400, 30, 34))
+            request.add(affs_mask_key, (400, 30, 34))
+            request.add(ignore_key, (400, 30, 34))
+            request.add(loss_scale_key, (400, 30, 34))
+
+            batch = pipeline.request_batch(request)
+
+            assert loss_scale_key in batch.arrays
+
+            affs = batch.arrays[affs_key].data
+            scale = batch.arrays[loss_scale_key].data
+            mask = batch.arrays[affs_mask_key].data
+            ignore = batch.arrays[ignore_key].data
+
+            # combine mask and ignore
+            mask *= ignore
+
+            assert (scale[mask == 1] > 0).all()
+            assert (scale[mask == 0] == 0).all()
+
+            num_masked_out = affs.size - mask.sum()
+            num_masked_in = affs.size - num_masked_out
+            num_pos = (affs * mask).sum()
+            num_neg = affs.size - num_masked_out - num_pos
+
+            frac_pos = float(num_pos) / num_masked_in if num_masked_in > 0 else 0
+            frac_pos = min(0.95, max(0.05, frac_pos))
+            frac_neg = 1.0 - frac_pos
+
+            w_pos = 1.0 / (2.0 * frac_pos)
+            w_neg = 1.0 / (2.0 * frac_neg)
+
+            assert abs((scale * mask * affs).sum() - w_pos * num_pos) < 1e-3
+            assert abs((scale * mask * (1 - affs)).sum() - w_neg * num_neg < 1e-3)
+
+            # check if LOSS_SCALE is omitted if not requested
+            del request[loss_scale_key]
+
+            batch = pipeline.request_batch(request)
+            assert loss_scale_key not in batch.arrays
+
+    # same using a slab for balancing
+
+    pipeline = (
+        (
+            ArraySource(affs_key, affs_array),
+            ArraySource(affs_mask_key, affs_mask_array),
+            ArraySource(ignore_key, ignore_array),
         )
-
-        return batch
-
-
-class TestBalanceLabels(ProviderTest):
-    def test_output(self):
-        pipeline = ExampleSource() + BalanceLabels(
-            labels=ArrayKeys.GT_AFFINITIES,
-            scales=ArrayKeys.LOSS_SCALE,
-            mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE],
+        + MergeProvider()
+        + BalanceLabels(
+            labels=affs_key,
+            scales=loss_scale_key,
+            mask=[affs_mask_key, ignore_key],
+            slab=(1, -1, -1, -1),  # every channel individually
         )
+    )
 
-        with build(pipeline):
-            # check correct scaling on 10 random samples
-            for i in range(10):
-                request = BatchRequest()
-                request.add(ArrayKeys.GT_AFFINITIES, (400, 30, 34))
-                request.add(ArrayKeys.GT_AFFINITIES_MASK, (400, 30, 34))
-                request.add(ArrayKeys.GT_IGNORE, (400, 30, 34))
-                request.add(ArrayKeys.LOSS_SCALE, (400, 30, 34))
+    with build(pipeline):
+        # check correct scaling on 10 random samples
+        for i in range(10):
+            request = BatchRequest()
+            request.add(affs_key, (400, 30, 34))
+            request.add(affs_mask_key, (400, 30, 34))
+            request.add(ignore_key, (400, 30, 34))
+            request.add(loss_scale_key, (400, 30, 34))
 
-                batch = pipeline.request_batch(request)
+            batch = pipeline.request_batch(request)
 
-                self.assertTrue(ArrayKeys.LOSS_SCALE in batch.arrays)
+            assert loss_scale_key in batch.arrays
 
-                affs = batch.arrays[ArrayKeys.GT_AFFINITIES].data
-                scale = batch.arrays[ArrayKeys.LOSS_SCALE].data
-                mask = batch.arrays[ArrayKeys.GT_AFFINITIES_MASK].data
-                ignore = batch.arrays[ArrayKeys.GT_IGNORE].data
+            for c in range(3):
+                affs = batch.arrays[affs_key].data[c]
+                scale = batch.arrays[loss_scale_key].data[c]
+                mask = batch.arrays[affs_mask_key].data[c]
+                ignore = batch.arrays[ignore_key].data[c]
 
                 # combine mask and ignore
                 mask *= ignore
 
-                self.assertTrue((scale[mask == 1] > 0).all())
-                self.assertTrue((scale[mask == 0] == 0).all())
+                assert (scale[mask == 1] > 0).all()
+                assert (scale[mask == 0] == 0).all()
 
                 num_masked_out = affs.size - mask.sum()
                 num_masked_in = affs.size - num_masked_out
@@ -81,68 +144,5 @@ class TestBalanceLabels(ProviderTest):
                 w_pos = 1.0 / (2.0 * frac_pos)
                 w_neg = 1.0 / (2.0 * frac_neg)
 
-                self.assertAlmostEqual((scale * mask * affs).sum(), w_pos * num_pos, 3)
-                self.assertAlmostEqual(
-                    (scale * mask * (1 - affs)).sum(), w_neg * num_neg, 3
-                )
-
-                # check if LOSS_SCALE is omitted if not requested
-                del request[ArrayKeys.LOSS_SCALE]
-
-                batch = pipeline.request_batch(request)
-                self.assertTrue(ArrayKeys.LOSS_SCALE not in batch.arrays)
-
-        # same using a slab for balancing
-
-        pipeline = ExampleSource() + BalanceLabels(
-            labels=ArrayKeys.GT_AFFINITIES,
-            scales=ArrayKeys.LOSS_SCALE,
-            mask=[ArrayKeys.GT_AFFINITIES_MASK, ArrayKeys.GT_IGNORE],
-            slab=(1, -1, -1, -1),
-        )  # every channel individually
-
-        with build(pipeline):
-            # check correct scaling on 10 random samples
-            for i in range(10):
-                request = BatchRequest()
-                request.add(ArrayKeys.GT_AFFINITIES, (400, 30, 34))
-                request.add(ArrayKeys.GT_AFFINITIES_MASK, (400, 30, 34))
-                request.add(ArrayKeys.GT_IGNORE, (400, 30, 34))
-                request.add(ArrayKeys.LOSS_SCALE, (400, 30, 34))
-
-                batch = pipeline.request_batch(request)
-
-                self.assertTrue(ArrayKeys.LOSS_SCALE in batch.arrays)
-
-                for c in range(3):
-                    affs = batch.arrays[ArrayKeys.GT_AFFINITIES].data[c]
-                    scale = batch.arrays[ArrayKeys.LOSS_SCALE].data[c]
-                    mask = batch.arrays[ArrayKeys.GT_AFFINITIES_MASK].data[c]
-                    ignore = batch.arrays[ArrayKeys.GT_IGNORE].data[c]
-
-                    # combine mask and ignore
-                    mask *= ignore
-
-                    self.assertTrue((scale[mask == 1] > 0).all())
-                    self.assertTrue((scale[mask == 0] == 0).all())
-
-                    num_masked_out = affs.size - mask.sum()
-                    num_masked_in = affs.size - num_masked_out
-                    num_pos = (affs * mask).sum()
-                    num_neg = affs.size - num_masked_out - num_pos
-
-                    frac_pos = (
-                        float(num_pos) / num_masked_in if num_masked_in > 0 else 0
-                    )
-                    frac_pos = min(0.95, max(0.05, frac_pos))
-                    frac_neg = 1.0 - frac_pos
-
-                    w_pos = 1.0 / (2.0 * frac_pos)
-                    w_neg = 1.0 / (2.0 * frac_neg)
-
-                    self.assertAlmostEqual(
-                        (scale * mask * affs).sum(), w_pos * num_pos, 3
-                    )
-                    self.assertAlmostEqual(
-                        (scale * mask * (1 - affs)).sum(), w_neg * num_neg, 3
-                    )
+                assert abs((scale * mask * affs).sum() - w_pos * num_pos) < 1e-3
+                assert abs((scale * mask * (1 - affs)).sum() - w_neg * num_neg) < 1e-3

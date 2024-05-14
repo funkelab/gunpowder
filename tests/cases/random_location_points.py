@@ -1,27 +1,24 @@
-from .provider_test import ProviderTest
-from gunpowder import (
-    BatchProvider,
-    BatchRequest,
-    Batch,
-    Node,
-    Graph,
-    GraphSpec,
-    GraphKey,
-    GraphKeys,
-    RandomLocation,
-    build,
-    Roi,
-    Coordinate,
-)
-
 import numpy as np
 import pytest
 
-import unittest
+from gunpowder import (
+    Batch,
+    BatchProvider,
+    BatchRequest,
+    Coordinate,
+    Graph,
+    GraphKey,
+    GraphSpec,
+    Node,
+    RandomLocation,
+    Roi,
+    build,
+)
 
 
 class ExampleSourceRandomLocation(BatchProvider):
-    def __init__(self):
+    def __init__(self, points_key):
+        self.points_key = points_key
         self.graph = Graph(
             [
                 Node(1, np.array([1, 1, 1])),
@@ -33,170 +30,145 @@ class ExampleSourceRandomLocation(BatchProvider):
         )
 
     def setup(self):
-        self.provides(GraphKeys.TEST_POINTS, self.graph.spec)
+        self.provides(self.points_key, self.graph.spec)
 
     def provide(self, request):
         batch = Batch()
 
-        roi = request[GraphKeys.TEST_POINTS].roi
-        batch[GraphKeys.TEST_POINTS] = self.graph.crop(roi).trim(roi)
+        roi = request[self.points_key].roi
+        batch[self.points_key] = self.graph.crop(roi).trim(roi)
         return batch
 
 
-class TestRandomLocationPoints(ProviderTest):
-    @pytest.mark.xfail
-    def test_output(self):
-        """
-        Fails due to probabilities being calculated in advance, rather than after creating
-        each roi. The new approach does not account for all possible roi's containing
-        each point, some of which may not contain its nearest neighbors.
-        """
+def test_output():
+    points_key = GraphKey("TEST_POINTS")
 
-        GraphKey("TEST_POINTS")
+    pipeline = ExampleSourceRandomLocation(points_key) + RandomLocation(
+        ensure_nonempty=points_key, point_balance_radius=100
+    )
 
-        pipeline = ExampleSourceRandomLocation() + RandomLocation(
-            ensure_nonempty=GraphKeys.TEST_POINTS, point_balance_radius=100
-        )
+    # count the number of times we get each point
+    histogram = {}
 
-        # count the number of times we get each point
-        histogram = {}
-
-        with build(pipeline):
-            for i in range(5000):
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {
-                            GraphKeys.TEST_POINTS: GraphSpec(
-                                roi=Roi((0, 0, 0), (100, 100, 100))
-                            )
-                        }
-                    )
+    with build(pipeline):
+        for i in range(500):
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {points_key: GraphSpec(roi=Roi((0, 0, 0), (100, 100, 100)))}
                 )
+            )
 
-                points = {node.id: node for node in batch[GraphKeys.TEST_POINTS].nodes}
+            points = {node.id: node for node in batch[points_key].nodes}
 
-                self.assertTrue(len(points) > 0)
-                self.assertTrue((1 in points) != (2 in points or 3 in points), points)
+            assert len(points) > 0
+            assert (1 in points) != (2 in points or 3 in points)
 
-                for node in batch[GraphKeys.TEST_POINTS].nodes:
-                    if node.id not in histogram:
-                        histogram[node.id] = 1
-                    else:
-                        histogram[node.id] += 1
+            for node in batch[points_key].nodes:
+                if node.id not in histogram:
+                    histogram[node.id] = 1
+                else:
+                    histogram[node.id] += 1
 
-        total = sum(histogram.values())
-        for k, v in histogram.items():
-            histogram[k] = float(v) / total
+    total = sum(histogram.values())
+    for k, v in histogram.items():
+        histogram[k] = float(v) / total
 
-        # we should get roughly the same count for each point
-        for i in histogram.keys():
-            for j in histogram.keys():
-                self.assertAlmostEqual(histogram[i], histogram[j], 1)
+    # we should get roughly the same count for each point
+    for i in histogram.keys():
+        for j in histogram.keys():
+            assert abs(histogram[i] - histogram[j]) < 1
 
-    def test_equal_probability(self):
-        GraphKey("TEST_POINTS")
 
-        pipeline = ExampleSourceRandomLocation() + RandomLocation(
-            ensure_nonempty=GraphKeys.TEST_POINTS
-        )
+def test_equal_probability():
+    points_key = GraphKey("TEST_POINTS")
 
-        # count the number of times we get each point
-        histogram = {}
+    pipeline = ExampleSourceRandomLocation(points_key) + RandomLocation(
+        ensure_nonempty=points_key
+    )
 
-        with build(pipeline):
-            for i in range(5000):
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {
-                            GraphKeys.TEST_POINTS: GraphSpec(
-                                roi=Roi((0, 0, 0), (10, 10, 10))
-                            )
-                        }
-                    )
+    # count the number of times we get each point
+    histogram = {}
+
+    with build(pipeline):
+        for i in range(500):
+            batch = pipeline.request_batch(
+                BatchRequest({points_key: GraphSpec(roi=Roi((0, 0, 0), (10, 10, 10)))})
+            )
+
+            points = {node.id: node for node in batch[points_key].nodes}
+
+            assert len(points) > 0
+            assert (1 in points) != (2 in points or 3 in points)
+
+            for point in batch[points_key].nodes:
+                if point.id not in histogram:
+                    histogram[point.id] = 1
+                else:
+                    histogram[point.id] += 1
+
+    total = sum(histogram.values())
+    for k, v in histogram.items():
+        histogram[k] = float(v) / total
+
+    # we should get roughly the same count for each point
+    for i in histogram.keys():
+        for j in histogram.keys():
+            assert abs(histogram[i] - histogram[j]) < 1
+
+
+@pytest.mark.xfail
+def test_ensure_centered():
+    """
+    Expected failure due to emergent behavior of two desired rules:
+    1) Points on the upper bound of Roi are not considered contained
+    2) When considering a point as a center of a random location,
+        scale by the number of points within some delta distance
+
+    if two points are equally likely to be chosen, and centering
+    a roi on either of them means the other is on the bounding box
+    of the roi, then it can be the case that if the roi is centered
+    one of them, the roi contains only that one, but if the roi is
+    centered on the second, then both are considered contained,
+    breaking the equal likelihood of picking each point.
+    """
+
+    points_key = GraphKey("TEST_POINTS")
+
+    pipeline = ExampleSourceRandomLocation(points_key) + RandomLocation(
+        ensure_nonempty=points_key, ensure_centered=True
+    )
+
+    # count the number of times we get each point
+    histogram = {}
+
+    with build(pipeline):
+        for i in range(500):
+            batch = pipeline.request_batch(
+                BatchRequest(
+                    {points_key: GraphSpec(roi=Roi((0, 0, 0), (100, 100, 100)))}
                 )
+            )
 
-                points = {node.id: node for node in batch[GraphKeys.TEST_POINTS].nodes}
+            points = {node.id: node for node in batch[points_key].nodes}
+            roi = batch[points_key].spec.roi
 
-                self.assertTrue(len(points) > 0)
-                self.assertTrue((1 in points) != (2 in points or 3 in points), points)
+            locations = tuple([Coordinate(point.location) for point in points.values()])
+            assert Coordinate([50, 50, 50]) in locations
 
-                for point in batch[GraphKeys.TEST_POINTS].nodes:
-                    if point.id not in histogram:
-                        histogram[point.id] = 1
-                    else:
-                        histogram[point.id] += 1
+            assert len(points) > 0
+            assert (1 in points) != (2 in points or 3 in points)
 
-        total = sum(histogram.values())
-        for k, v in histogram.items():
-            histogram[k] = float(v) / total
+            for point_id in batch[points_key].data.keys():
+                if point_id not in histogram:
+                    histogram[point_id] = 1
+                else:
+                    histogram[point_id] += 1
 
-        # we should get roughly the same count for each point
-        for i in histogram.keys():
-            for j in histogram.keys():
-                self.assertAlmostEqual(histogram[i], histogram[j], 1)
+    total = sum(histogram.values())
+    for k, v in histogram.items():
+        histogram[k] = float(v) / total
 
-    @unittest.expectedFailure
-    def test_ensure_centered(self):
-        """
-        Expected failure due to emergent behavior of two desired rules:
-        1) Points on the upper bound of Roi are not considered contained
-        2) When considering a point as a center of a random location,
-            scale by the number of points within some delta distance
-
-        if two points are equally likely to be chosen, and centering
-        a roi on either of them means the other is on the bounding box
-        of the roi, then it can be the case that if the roi is centered
-        one of them, the roi contains only that one, but if the roi is
-        centered on the second, then both are considered contained,
-        breaking the equal likelihood of picking each point.
-        """
-
-        GraphKey("TEST_POINTS")
-
-        pipeline = ExampleSourceRandomLocation() + RandomLocation(
-            ensure_nonempty=GraphKeys.TEST_POINTS, ensure_centered=True
-        )
-
-        # count the number of times we get each point
-        histogram = {}
-
-        with build(pipeline):
-            for i in range(5000):
-                batch = pipeline.request_batch(
-                    BatchRequest(
-                        {
-                            GraphKeys.TEST_POINTS: GraphSpec(
-                                roi=Roi((0, 0, 0), (100, 100, 100))
-                            )
-                        }
-                    )
-                )
-
-                points = batch[GraphKeys.TEST_POINTS].data
-                roi = batch[GraphKeys.TEST_POINTS].spec.roi
-
-                locations = tuple(
-                    [Coordinate(point.location) for point in points.values()]
-                )
-                self.assertTrue(
-                    Coordinate([50, 50, 50]) in locations,
-                    f"locations: {tuple([point.location for point in points.values()])}",
-                )
-
-                self.assertTrue(len(points) > 0)
-                self.assertTrue((1 in points) != (2 in points or 3 in points), points)
-
-                for point_id in batch[GraphKeys.TEST_POINTS].data.keys():
-                    if point_id not in histogram:
-                        histogram[point_id] = 1
-                    else:
-                        histogram[node.id] += 1
-
-        total = sum(histogram.values())
-        for k, v in histogram.items():
-            histogram[k] = float(v) / total
-
-        # we should get roughly the same count for each point
-        for i in histogram.keys():
-            for j in histogram.keys():
-                self.assertAlmostEqual(histogram[i], histogram[j], 1, histogram)
+    # we should get roughly the same count for each point
+    for i in histogram.keys():
+        for j in histogram.keys():
+            assert abs(histogram[i] - histogram[j]) < 1

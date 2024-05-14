@@ -1,24 +1,20 @@
+import numpy as np
+import pytest
+
 from gunpowder import (
-    RandomLocation,
-    BatchProvider,
-    Roi,
-    Coordinate,
+    Array,
     ArrayKey,
     ArraySpec,
-    Array,
-    Roi,
-    Coordinate,
     Batch,
-    BatchRequest,
     BatchProvider,
-    RandomLocation,
+    BatchRequest,
+    Coordinate,
     MergeProvider,
+    RandomLocation,
+    Roi,
     build,
 )
-import numpy as np
 from gunpowder.pipeline import PipelineRequestError
-
-import pytest
 
 
 class ExampleSourceRandomLocation(BatchProvider):
@@ -60,7 +56,7 @@ class CustomRandomLocation(RandomLocation):
         return request.array_specs[self.array].roi.contains((0, 0, 0))
 
 
-def test_output():
+def test_random_shift():
     a = ArrayKey("A")
     b = ArrayKey("B")
     random_shift_key = ArrayKey("RANDOM_SHIFT")
@@ -120,7 +116,7 @@ def test_output():
         assert len(sums) > 1
 
 
-def test_output():
+def test_random_location():
     a = ArrayKey("A")
     b = ArrayKey("B")
     source_a = ExampleSourceRandomLocation(a)

@@ -1,28 +1,31 @@
-from .provider_test import ProviderTest
+import numpy as np
+
 from gunpowder import (
-    BatchProvider,
-    BatchFilter,
-    BatchRequest,
-    Batch,
-    ArrayKeys,
-    ArraySpec,
-    ArrayKey,
     Array,
+    ArrayKey,
+    ArraySpec,
+    Batch,
+    BatchFilter,
+    BatchProvider,
+    BatchRequest,
     Roi,
     build,
 )
-import numpy as np
 
 
 class NodeDependenciesTestSource(BatchProvider):
+    def __init__(self, a_key, b_key):
+        self.a_key = a_key
+        self.b_key = b_key
+
     def setup(self):
         self.provides(
-            ArrayKeys.A,
+            self.a_key,
             ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
         )
 
         self.provides(
-            ArrayKeys.B,
+            self.b_key,
             ArraySpec(roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)),
         )
 
@@ -56,18 +59,20 @@ class NodeDependenciesTestSource(BatchProvider):
 class NodeDependenciesTestNode(BatchFilter):
     """Creates C from B."""
 
-    def __init__(self):
+    def __init__(self, b_key, c_key):
+        self.b_key = b_key
+        self.c_key = c_key
         self.context = (20, 20, 20)
 
     def setup(self):
-        self.provides(ArrayKeys.C, self.spec[ArrayKeys.B])
+        self.provides(self.c_key, self.spec[self.b_key])
 
     def prepare(self, request):
-        assert ArrayKeys.C in request
+        assert self.c_key in request
 
         dependencies = BatchRequest()
-        dependencies[ArrayKeys.B] = ArraySpec(
-            request[ArrayKeys.C].roi.grow(self.context, self.context)
+        dependencies[self.b_key] = ArraySpec(
+            request[self.c_key].roi.grow(self.context, self.context)
         )
 
         return dependencies
@@ -76,87 +81,86 @@ class NodeDependenciesTestNode(BatchFilter):
         outputs = Batch()
 
         # make sure a ROI is what we requested
-        b_roi = request[ArrayKeys.C].roi.grow(self.context, self.context)
-        assert batch[ArrayKeys.B].spec.roi == b_roi
+        b_roi = request[self.c_key].roi.grow(self.context, self.context)
+        assert batch[self.b_key].spec.roi == b_roi
 
         # add C to batch
-        c = batch[ArrayKeys.B].crop(request[ArrayKeys.C].roi)
-        outputs[ArrayKeys.C] = c
+        c = batch[self.b_key].crop(request[self.c_key].roi)
+        outputs[self.c_key] = c
         return outputs
 
 
-class TestNodeDependencies(ProviderTest):
-    def test_dependecies(self):
-        ArrayKey("A")
-        ArrayKey("B")
-        ArrayKey("C")
+def test_dependecies():
+    a_key = ArrayKey("A")
+    b_key = ArrayKey("B")
+    c_key = ArrayKey("C")
 
-        pipeline = NodeDependenciesTestSource()
-        pipeline += NodeDependenciesTestNode()
+    pipeline = NodeDependenciesTestSource(a_key, b_key)
+    pipeline += NodeDependenciesTestNode(b_key, c_key)
 
-        c_roi = Roi((100, 100, 100), (100, 100, 100))
+    c_roi = Roi((100, 100, 100), (100, 100, 100))
 
-        # simple test, ask only for C
+    # simple test, ask only for C
 
-        request = BatchRequest()
-        request[ArrayKeys.C] = ArraySpec(roi=c_roi)
+    request = BatchRequest()
+    request[c_key] = ArraySpec(roi=c_roi)
 
-        with build(pipeline):
-            batch = pipeline.request_batch(request)
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
 
-        assert ArrayKeys.A not in batch
-        assert ArrayKeys.B not in batch
-        assert batch[ArrayKeys.C].spec.roi == c_roi
+    assert a_key not in batch
+    assert b_key not in batch
+    assert batch[c_key].spec.roi == c_roi
 
-        # ask for C and B of same size as needed by node
+    # ask for C and B of same size as needed by node
 
-        b_roi = c_roi.grow((20, 20, 20), (20, 20, 20))
+    b_roi = c_roi.grow((20, 20, 20), (20, 20, 20))
 
-        request = BatchRequest()
-        request[ArrayKeys.C] = ArraySpec(roi=c_roi)
-        request[ArrayKeys.B] = ArraySpec(roi=b_roi)
+    request = BatchRequest()
+    request[c_key] = ArraySpec(roi=c_roi)
+    request[b_key] = ArraySpec(roi=b_roi)
 
-        with build(pipeline):
-            batch = pipeline.request_batch(request)
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
 
-        c = batch[ArrayKeys.C]
-        b = batch[ArrayKeys.B]
-        assert b.spec.roi == b_roi
-        assert c.spec.roi == c_roi
-        assert np.equal(b.crop(c.spec.roi).data, c.data).all()
+    c = batch[c_key]
+    b = batch[b_key]
+    assert b.spec.roi == b_roi
+    assert c.spec.roi == c_roi
+    assert np.equal(b.crop(c.spec.roi).data, c.data).all()
 
-        # ask for C and B of larger size
+    # ask for C and B of larger size
 
-        b_roi = c_roi.grow((40, 40, 40), (40, 40, 40))
+    b_roi = c_roi.grow((40, 40, 40), (40, 40, 40))
 
-        request = BatchRequest()
-        request[ArrayKeys.B] = ArraySpec(roi=b_roi)
-        request[ArrayKeys.C] = ArraySpec(roi=c_roi)
+    request = BatchRequest()
+    request[b_key] = ArraySpec(roi=b_roi)
+    request[c_key] = ArraySpec(roi=c_roi)
 
-        with build(pipeline):
-            batch = pipeline.request_batch(request)
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
 
-        b = batch[ArrayKeys.B]
-        c = batch[ArrayKeys.C]
-        assert ArrayKeys.A not in batch
-        assert b.spec.roi == b_roi
-        assert c.spec.roi == c_roi
-        assert np.equal(b.crop(c.spec.roi).data, c.data).all()
+    b = batch[b_key]
+    c = batch[c_key]
+    assert a_key not in batch
+    assert b.spec.roi == b_roi
+    assert c.spec.roi == c_roi
+    assert np.equal(b.crop(c.spec.roi).data, c.data).all()
 
-        # ask for C and B of smaller size
+    # ask for C and B of smaller size
 
-        b_roi = c_roi.grow((-40, -40, -40), (-40, -40, -40))
+    b_roi = c_roi.grow((-40, -40, -40), (-40, -40, -40))
 
-        request = BatchRequest()
-        request[ArrayKeys.B] = ArraySpec(roi=b_roi)
-        request[ArrayKeys.C] = ArraySpec(roi=c_roi)
+    request = BatchRequest()
+    request[b_key] = ArraySpec(roi=b_roi)
+    request[c_key] = ArraySpec(roi=c_roi)
 
-        with build(pipeline):
-            batch = pipeline.request_batch(request)
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
 
-        b = batch[ArrayKeys.B]
-        c = batch[ArrayKeys.C]
-        assert ArrayKeys.A not in batch
-        assert b.spec.roi == b_roi
-        assert c.spec.roi == c_roi
-        assert np.equal(c.crop(b.spec.roi).data, b.data).all()
+    b = batch[b_key]
+    c = batch[c_key]
+    assert a_key not in batch
+    assert b.spec.roi == b_roi
+    assert c.spec.roi == c_roi
+    assert np.equal(c.crop(b.spec.roi).data, b.data).all()
