@@ -47,10 +47,14 @@ class CsvPointsSource(BatchProvider):
 
             Each line may optionally contain an id for each point. This parameter
             specifies its location, has to come after the position values.
+        
+        sep (``str``):
+
+            Separator in the csv file. Defaults to None
     """
 
     def __init__(
-        self, filename, points, points_spec=None, scale=None, ndims=None, id_dim=None
+        self, filename, points, points_spec=None, scale=None, ndims=None, id_dim=None, sep=None
     ):
         self.filename = filename
         self.points = points
@@ -59,6 +63,7 @@ class CsvPointsSource(BatchProvider):
         self.ndims = ndims
         self.id_dim = id_dim
         self.data = None
+        self.sep = sep
 
     def setup(self):
         self._parse_csv()
@@ -117,13 +122,13 @@ class CsvPointsSource(BatchProvider):
         """
 
         with open(self.filename, "r") as f:
-            self.data = np.array(
-                [[float(t.strip(",")) for t in line.split()] for line in f],
-                dtype=np.float32,
-            )
-
-        if self.ndims is None:
-            self.ndims = self.data.shape[1]
-
+            data = []
+            for line in f:
+                split = line.split(self.sep)
+                if self.ndims is not None:
+                    split = split[0:self.ndims]
+                data.append(list(map(float, split)))
+            self.data = np.array(data, dtype=np.float32)
+        
         if self.scale is not None:
             self.data[:, : self.ndims] *= self.scale
