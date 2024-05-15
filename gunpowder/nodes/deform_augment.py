@@ -474,11 +474,12 @@ class DeformAugment(BatchFilter):
                 rot_transformation = create_rotation_transformation(
                     target_shape,
                     random.random() * math.pi,
+                    subsample=self.subsample,
                 )
             else:
                 angle = Rotation.random()
                 rot_transformation = create_3D_rotation_transformation(
-                    target_shape, angle
+                    target_shape, angle, subsample=self.subsample
                 )
 
             local_transformation += rot_transformation
