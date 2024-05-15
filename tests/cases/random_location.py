@@ -60,15 +60,16 @@ def test_output():
     a = ArrayKey("A")
     b = ArrayKey("B")
     random_shift_key = ArrayKey("RANDOM_SHIFT")
-    source_a = ExampleSourceRandomLocation(a)
-    source_b = ExampleSourceRandomLocation(b)
 
     pipeline = (
-        (source_a, source_b)
+        (ExampleSourceRandomLocation(a), ExampleSourceRandomLocation(b))
         + MergeProvider()
-        + CustomRandomLocation(a, random_store_key=random_shift_key)
+        + CustomRandomLocation(a, random_shift_key=random_shift_key)
     )
-    pipeline_no_random = (source_a, source_b) + MergeProvider()
+    pipeline_no_random = (
+        ExampleSourceRandomLocation(a),
+        ExampleSourceRandomLocation(b),
+    ) + MergeProvider()
 
     with build(pipeline), build(pipeline_no_random):
         sums = set()
@@ -95,8 +96,7 @@ def test_output():
                         ),
                         b: ArraySpec(
                             roi=Roi(batch[random_shift_key].data, (20, 20, 20))
-                        ),
-                        random_shift_key: ArraySpec(nonspatial=True),
+                        )
                     }
                 )
             )
@@ -106,8 +106,8 @@ def test_output():
             sums.add(batch[a].data.sum())
 
             # Request a ROI with the same shape as the entire ROI
-            full_roi_a = Roi((0, 0, 0), source_a.roi.shape)
-            full_roi_b = Roi((0, 0, 0), source_b.roi.shape)
+            full_roi_a = Roi((0, 0, 0), ExampleSourceRandomLocation(a).roi.shape)
+            full_roi_b = Roi((0, 0, 0), ExampleSourceRandomLocation(b).roi.shape)
             batch = pipeline.request_batch(
                 BatchRequest(
                     {a: ArraySpec(roi=full_roi_a), b: ArraySpec(roi=full_roi_b)}
