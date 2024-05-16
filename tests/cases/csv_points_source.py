@@ -2,10 +2,8 @@ import random
 
 import numpy as np
 import pytest
-import unittest
 
 from gunpowder import (
-    ArraySpec,
     BatchRequest,
     CsvPointsSource,
     GraphKey,
@@ -47,16 +45,11 @@ def test_pipeline3(test_points):
     fake_points_file, fake_points = test_points
 
     points_key = GraphKey("TEST_POINTS")
-    voxel_size = Coordinate((1, 1))
-    spec = ArraySpec(voxel_size=voxel_size, interpolatable=True)
 
     csv_source = CsvPointsSource(
         fake_points_file,
         points_key,
-        spatial_cols=[
-            0,
-            1,
-        ],
+        spatial_cols=[0, 1],
         delimiter="\t",
         points_spec=GraphSpec(roi=Roi(shape=Coordinate((100, 100)), offset=(0, 0))),
     )
