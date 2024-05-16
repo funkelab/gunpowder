@@ -43,7 +43,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "flake8", "mypy", "types-requests", "types-tqdm"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pyest_unordered",
+    "flake8",
+    "mypy",
+    "types-requests",
+    "types-tqdm",
+    "black",
+    "ruff",
+]
 docs = [
     "sphinx",
     "sphinx_rtd_theme",
