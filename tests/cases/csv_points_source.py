@@ -2,7 +2,6 @@ import random
 
 import numpy as np
 import pytest
-from pytest_unordered import unordered
 import unittest
 
 from gunpowder import (
@@ -74,4 +73,4 @@ def test_pipeline3(test_points):
     result_points = list(request[points_key].nodes)
     result_locs = [list(point.location) for point in result_points]
 
-    assert result_locs == unordered(target_locs)
+    assert sorted(result_locs) == sorted(target_locs)

@@ -46,7 +46,6 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "pytest-unordered",
     "flake8",
     "mypy",
     "types-requests",
