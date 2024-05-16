@@ -49,7 +49,8 @@ class CsvPointsSource(BatchProvider):
         id_col (``int``, optional):
 
             The column of the csv that holds an id for each point. If not
-            provided, the index of the rows are used as the ids.
+            provided, the index of the rows are used as the ids. When read
+            from file, ids are left as strings and not cast to anything.
 
         delimiter (``str``, optional):
 
@@ -136,7 +137,7 @@ class CsvPointsSource(BatchProvider):
 
         self.data = np.array(data, dtype=np.float32)
         if self.id_dim:
-            self.ids = np.array(data)
+            self.ids = np.array(ids)
         else:
             self.ids = np.arange(len(self.data))
 
