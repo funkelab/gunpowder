@@ -128,12 +128,18 @@ class CsvPointsSource(BatchProvider):
         data = []
         ids = []
         with open(self.filename, "r", newline="") as f:
+            has_header = csv.Sniffer().has_header(f.read(1024))
+            f.seek(0)
+            first_line = True
             reader = csv.reader(f, delimiter=self.delimiter)
             for line in reader:
-                space = [line[c] for c in self.spatial_cols]
+                if first_line and has_header:
+                    first_line = False
+                    continue
+                space = [float(line[c]) for c in self.spatial_cols]
+                data.append(space)
                 if self.id_dim is not None:
                     ids.append(line[self.id_dim])
-                data.append(list(map(float, space)))
 
         self.data = np.array(data, dtype=np.float32)
         if self.id_dim:
