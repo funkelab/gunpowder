@@ -143,7 +143,10 @@ def test_pipeline3(test_points):
     csv_source = CsvPointsSource(
         fake_points_file,
         points_key,
-        spatial_cols=[0,1,],
+        spatial_cols=[
+            0,
+            1,
+        ],
         delimiter="\t",
         points_spec=GraphSpec(roi=Roi(shape=Coordinate((100, 100)), offset=(0, 0))),
     )

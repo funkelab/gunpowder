@@ -13,8 +13,9 @@ from gunpowder import (
     GraphSpec,
     build,
     Coordinate,
-    Roi
+    Roi,
 )
+
 
 # automatically set the seed for all tests
 @pytest.fixture(autouse=True)
@@ -53,7 +54,10 @@ def test_pipeline3(test_points):
     csv_source = CsvPointsSource(
         fake_points_file,
         points_key,
-        spatial_cols=[0,1,],
+        spatial_cols=[
+            0,
+            1,
+        ],
         delimiter="\t",
         points_spec=GraphSpec(roi=Roi(shape=Coordinate((100, 100)), offset=(0, 0))),
     )
@@ -62,14 +66,12 @@ def test_pipeline3(test_points):
     shape = Coordinate((100, 100))
     request.add(points_key, shape)
 
-    pipeline = (
-        csv_source
-    )
+    pipeline = csv_source
     with build(pipeline) as b:
         request = b.request_batch(request)
 
     target_locs = [list(fake_point) for fake_point in fake_points]
     result_points = list(request[points_key].nodes)
     result_locs = [list(point.location) for point in result_points]
-    
+
     assert result_locs == unordered(target_locs)
