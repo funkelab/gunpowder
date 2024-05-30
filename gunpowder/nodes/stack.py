@@ -47,7 +47,9 @@ class Stack(BatchFilter):
 
         for key, spec in request.array_specs.items():
             data = np.stack([b[key].data for b in batches])
+            attrs = [b[key].attrs for b in batches]
             batch[key] = Array(data, batches[0][key].spec.copy())
+            batch[key].attrs = attrs
 
         # copy points of first batch requested
         for key, spec in request.graph_specs.items():
