@@ -493,6 +493,9 @@ class DeformAugment(BatchFilter):
             local_transformation += rot_transformation
 
         if self.subsample > 1:
+            global_transformation = upscale_transformation(
+                global_transformation, target_shape
+            )
             local_transformation = upscale_transformation(
                 local_transformation, target_shape
             )

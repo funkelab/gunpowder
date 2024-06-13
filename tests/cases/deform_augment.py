@@ -130,13 +130,13 @@ def test_3d_basics(rotate, spatial_dims, fast_points, subsampling):
     test_graph = GraphKey("TEST_GRAPH")
 
     pipeline = GraphTestSource3D(test_graph, test_labels, test_labels2) + DeformAugment(
-        [10] * spatial_dims,
+        [4] * spatial_dims,
         [1] * spatial_dims,
         graph_raster_voxel_size=[1] * spatial_dims,
         rotate=rotate,
         spatial_dims=spatial_dims,
         use_fast_points_transform=fast_points,
-        subsample=subsampling
+        subsample=subsampling,
     )
 
     for _ in range(5):
@@ -153,7 +153,9 @@ def test_3d_basics(rotate, spatial_dims, fast_points, subsampling):
             labels2 = batch[test_labels2]
             graph = batch[test_graph]
 
-            assert Node(id=1, location=np.array([0, 0, 0])) in list(graph.nodes)
+            assert Node(id=1, location=np.array([0, 0, 0])) in list(graph.nodes), list(
+                graph.nodes
+            )
 
             # graph should have moved together with the voxels
             for node in graph.nodes:
