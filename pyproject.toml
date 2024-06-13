@@ -60,6 +60,12 @@ tensorflow = [
     'tensorflow<2.0; python_version<"3.8"',    # https://stackoverflow.com/a/72493690
     'protobuf==3.20.*; python_version=="3.7"',
 ]
+jax = [
+    'jax',
+    'jaxlib',
+    'haiku',
+    'optax',
+]
 full = [
     'torch',
     'tensorflow<2.0; python_version<"3.8"',
@@ -74,3 +80,7 @@ target_version = ['py38', 'py39', 'py310']
 
 [tool.setuptools.packages.find]
 include = ["gunpowder*"]
+
+[tool.ruff]
+# pyflakes, pycodestyle, isort
+select = ["F", "E", "W", "I001"]

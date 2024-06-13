@@ -12,6 +12,7 @@ from gunpowder.roi import Roi
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from .batch_filter import BatchFilter
+from gunpowder.profiling import Timing
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +210,35 @@ class RandomLocation(BatchFilter):
         self.__shift_request(request, random_shift)
 
         return request
+
+    def provide(self, request):
+
+        timing_prepare = Timing(self, "prepare")
+        timing_prepare.start()
+
+        downstream_request = request.copy()
+
+        self.prepare(request)
+
+        self.remove_provided(request)
+
+        timing_prepare.stop()
+
+        batch = self.get_upstream_provider().request_batch(request)
+
+        timing_process = Timing(self, "process")
+        timing_process.start()
+
+        downstream_request.remove_placeholders()
+
+        self.process(batch, downstream_request)
+
+        timing_process.stop()
+
+        batch.profiling_stats.add(timing_prepare)
+        batch.profiling_stats.add(timing_process)
+
+        return batch
 
     def process(self, batch, request):
         if self.random_shift_key is not None:
@@ -435,7 +465,6 @@ class RandomLocation(BatchFilter):
                 point,
                 points,
             )
-            num_points = len(points)
 
             return random_shift
 

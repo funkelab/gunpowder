@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 from skimage import draw
 
 from .batch_filter import BatchFilter

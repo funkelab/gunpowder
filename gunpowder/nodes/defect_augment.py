@@ -4,9 +4,7 @@ import numpy as np
 
 # imports for deformed slice
 from skimage.draw import line
-from scipy.ndimage.measurements import label
-from scipy.ndimage.interpolation import map_coordinates
-from scipy.ndimage.morphology import binary_dilation
+from scipy.ndimage import label, map_coordinates, binary_dilation
 
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
