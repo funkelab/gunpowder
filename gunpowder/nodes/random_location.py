@@ -229,6 +229,8 @@ class RandomLocation(BatchFilter):
         timing_process = Timing(self, "process")
         timing_process.start()
 
+        downstream_request.remove_placeholders()
+
         self.process(batch, downstream_request)
 
         timing_process.stop()
