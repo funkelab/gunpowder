@@ -96,7 +96,7 @@ def test_output():
                         ),
                         b: ArraySpec(
                             roi=Roi(batch[random_shift_key].data, (20, 20, 20))
-                        )
+                        ),
                     }
                 )
             )

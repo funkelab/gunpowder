@@ -22,4 +22,3 @@ class ArraySource(BatchProvider):
         else:
             outputs[self.key] = copy.deepcopy(self.array.crop(request[self.key].roi))
         return outputs
-

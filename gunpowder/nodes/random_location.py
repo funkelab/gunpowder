@@ -459,13 +459,11 @@ class RandomLocation(BatchFilter):
 
             # count all points inside the shifted ROI
             points = self.__get_points_in_roi(request_points_roi.shift(random_shift))
-            assert point in points, (
-                "Requested batch to contain point %s, but got points "
-                "%s"
-                % (
-                    point,
-                    points,
-                )
+            assert (
+                point in points
+            ), "Requested batch to contain point %s, but got points " "%s" % (
+                point,
+                points,
             )
 
             return random_shift
