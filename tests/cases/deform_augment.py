@@ -123,7 +123,8 @@ class GraphTestSource3D(BatchProvider):
 @pytest.mark.parametrize("rotate", [True, False])
 @pytest.mark.parametrize("spatial_dims", [2, 3])
 @pytest.mark.parametrize("fast_points", [True, False])
-def test_3d_basics(rotate, spatial_dims, fast_points):
+@pytest.mark.parametrize("subsampling", [1, 2, 4])
+def test_3d_basics(rotate, spatial_dims, fast_points, subsampling):
     test_labels = ArrayKey("TEST_LABELS")
     test_labels2 = ArrayKey("TEST_LABELS2")
     test_graph = GraphKey("TEST_GRAPH")
@@ -135,6 +136,7 @@ def test_3d_basics(rotate, spatial_dims, fast_points):
         rotate=rotate,
         spatial_dims=spatial_dims,
         use_fast_points_transform=fast_points,
+        subsample=subsampling
     )
 
     for _ in range(5):
