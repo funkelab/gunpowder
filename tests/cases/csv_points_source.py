@@ -24,8 +24,6 @@ def seeds():
 
 @pytest.fixture
 def test_points_2d(tmpdir):
-    random.seed(1234)
-    np.random.seed(1234)
 
     fake_points_file = tmpdir / "shift_test.csv"
     fake_points = np.random.randint(0, 100, size=(2, 2))
@@ -33,19 +31,11 @@ def test_points_2d(tmpdir):
         for point in fake_points:
             f.write(str(point[0]) + "\t" + str(point[1]) + "\n")
 
-    # This fixture will run after seeds since it is set
-    # with autouse=True. So make sure to reset the seeds properly at the end
-    # of this fixture
-    random.seed(12345)
-    np.random.seed(12345)
-
     yield fake_points_file, fake_points
 
 
 @pytest.fixture
 def test_points_3d(tmpdir):
-    random.seed(1234)
-    np.random.seed(1234)
 
     fake_points_file = tmpdir / "shift_test.csv"
     fake_points = np.random.randint(0, 100, size=(3, 3)).astype(float)
@@ -55,12 +45,6 @@ def test_points_3d(tmpdir):
         for i, point in enumerate(fake_points):
             pointdict = {"x": point[0], "y": point[1], "z": point[2], "id": i}
             writer.writerow(pointdict)
-
-    # This fixture will run after seeds since it is set
-    # with autouse=True. So make sure to reset the seeds properly at the end
-    # of this fixture
-    random.seed(12345)
-    np.random.seed(12345)
 
     yield fake_points_file, fake_points
 
