@@ -23,6 +23,7 @@ from .helper_sources import ArraySource, GraphSource
 
 from itertools import product
 
+
 @pytest.mark.parametrize("mode", ["constant", "reflect"])
 def test_padding(mode):
     array_key = ArrayKey("TEST_ARRAY")
