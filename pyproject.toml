@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 
 dependencies = [
     "numpy>=1.24",
@@ -43,7 +43,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "flake8", "mypy", "types-requests", "types-tqdm"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "flake8",
+    "mypy",
+    "types-requests",
+    "types-tqdm",
+    "black",
+    "ruff",
+]
 docs = [
     "sphinx",
     "sphinx_rtd_theme",

@@ -1,19 +1,23 @@
+from typing import Union, Optional
 import numpy as np
 import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.graph import Node, Graph
+from gunpowder.graph import Node, Graph, GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
+import csv
 
 logger = logging.getLogger(__name__)
 
 
 class CsvPointsSource(BatchProvider):
     """Read a set of points from a comma-separated-values text file. Each line
-    in the file represents one point, e.g. z y x (id)
+    in the file represents one point, e.g. z y x (id). Note: this reads all
+    points into memory and finds the ones in the given roi by iterating
+    over all the points. For large datasets, this may be too slow.
 
     Args:
 
@@ -24,6 +28,11 @@ class CsvPointsSource(BatchProvider):
         points (:class:`GraphKey`):
 
             The key of the points set to create.
+
+        spatial_cols (list[``int``]):
+
+            The columns of the csv that hold the coordinates of the points
+            (in the order that you want them to be used in training)
 
         points_spec (:class:`GraphSpec`, optional):
 
@@ -37,28 +46,36 @@ class CsvPointsSource(BatchProvider):
             from the CSV file. This is useful if the points refer to voxel
             positions to convert them to world units.
 
-        ndims (``int``):
+        id_col (``int``, optional):
 
-            If ``ndims`` is None, all values in one line are considered as the
-            location of the point. If positive, only the first ``ndims`` are used.
-            If negative, all but the last ``-ndims`` are used.
+            The column of the csv that holds an id for each point. If not
+            provided, the index of the rows are used as the ids. When read
+            from file, ids are left as strings and not cast to anything.
 
-         id_dim (``int``):
+        delimiter (``str``, optional):
 
-            Each line may optionally contain an id for each point. This parameter
-            specifies its location, has to come after the position values.
+            Delimiter to pass to the csv reader. Defaults to ",".
     """
 
     def __init__(
-        self, filename, points, points_spec=None, scale=None, ndims=None, id_dim=None
+        self,
+        filename: str,
+        points: GraphKey,
+        spatial_cols: list[int],
+        points_spec: Optional[GraphSpec] = None,
+        scale: Optional[Union[int, float, tuple, list, np.ndarray]] = None,
+        id_col: Optional[int] = None,
+        delimiter: str = ",",
     ):
         self.filename = filename
         self.points = points
         self.points_spec = points_spec
         self.scale = scale
-        self.ndims = ndims
-        self.id_dim = id_dim
-        self.data = None
+        self.spatial_cols = spatial_cols
+        self.id_dim = id_col
+        self.delimiter = delimiter
+        self.data: Optional[np.ndarray] = None
+        self.ids: Optional[list] = None
 
     def setup(self):
         self._parse_csv()
@@ -67,8 +84,8 @@ class CsvPointsSource(BatchProvider):
             self.provides(self.points, self.points_spec)
             return
 
-        min_bb = Coordinate(np.floor(np.amin(self.data[:, : self.ndims], 0)))
-        max_bb = Coordinate(np.ceil(np.amax(self.data[:, : self.ndims], 0)) + 1)
+        min_bb = Coordinate(np.floor(np.amin(self.data, 0)))
+        max_bb = Coordinate(np.ceil(np.amax(self.data, 0)) + 1)
 
         roi = Roi(min_bb, max_bb - min_bb)
 
@@ -84,7 +101,7 @@ class CsvPointsSource(BatchProvider):
         logger.debug("CSV points source got request for %s", request[self.points].roi)
 
         point_filter = np.ones((self.data.shape[0],), dtype=bool)
-        for d in range(self.ndims):
+        for d in range(len(self.spatial_cols)):
             point_filter = np.logical_and(point_filter, self.data[:, d] >= min_bb[d])
             point_filter = np.logical_and(point_filter, self.data[:, d] < max_bb[d])
 
@@ -100,30 +117,35 @@ class CsvPointsSource(BatchProvider):
         return batch
 
     def _get_points(self, point_filter):
-        filtered = self.data[point_filter][:, : self.ndims]
-
-        if self.id_dim is not None:
-            ids = self.data[point_filter][:, self.id_dim]
-        else:
-            ids = np.arange(len(self.data))[point_filter]
-
+        filtered = self.data[point_filter]
+        ids = self.ids[point_filter]
         return [Node(id=i, location=p) for i, p in zip(ids, filtered)]
 
     def _parse_csv(self):
-        """Read one point per line. If ``ndims`` is None, all values in one line
-        are considered as the location of the point. If positive, only the
-        first ``ndims`` are used. If negative, all but the last ``-ndims`` are
-        used.
+        """Read one point per line, with spatial and id columns determined by
+        self.spatial_cols and self.id_col.
         """
+        data = []
+        ids = []
+        with open(self.filename, "r", newline="") as f:
+            has_header = csv.Sniffer().has_header(f.read(1024))
+            f.seek(0)
+            first_line = True
+            reader = csv.reader(f, delimiter=self.delimiter)
+            for line in reader:
+                if first_line and has_header:
+                    first_line = False
+                    continue
+                space = [float(line[c]) for c in self.spatial_cols]
+                data.append(space)
+                if self.id_dim is not None:
+                    ids.append(line[self.id_dim])
 
-        with open(self.filename, "r") as f:
-            self.data = np.array(
-                [[float(t.strip(",")) for t in line.split()] for line in f],
-                dtype=np.float32,
-            )
-
-        if self.ndims is None:
-            self.ndims = self.data.shape[1]
+        self.data = np.array(data, dtype=np.float32)
+        if self.id_dim:
+            self.ids = np.array(ids)
+        else:
+            self.ids = np.arange(len(self.data))
 
         if self.scale is not None:
-            self.data[:, : self.ndims] *= self.scale
+            self.data *= self.scale
