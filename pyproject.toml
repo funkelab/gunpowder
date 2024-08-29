@@ -40,6 +40,7 @@ dependencies = [
     "funlib.geometry>=0.3",
     "zarr",
     "networkx>=3.1",
+    "funlib.persistence>=0.5",
 ]
 
 [project.optional-dependencies]
