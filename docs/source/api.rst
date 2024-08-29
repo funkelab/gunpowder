@@ -91,6 +91,11 @@ BatchFilter
 Source Nodes
 ------------
 
+ArraySource
+^^^^^^^^^^^
+
+  .. autoclass:: ArraySource
+
 ZarrSource
 ^^^^^^^^^^
   .. autoclass:: ZarrSource
