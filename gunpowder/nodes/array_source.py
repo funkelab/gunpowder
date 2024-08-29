@@ -1,5 +1,8 @@
 from funlib.persistence.arrays import Array as PersistenceArray
-from gunpowder import Array, ArrayKey, Batch, BatchProvider, ArraySpec
+from gunpowder.array import Array, ArrayKey
+from gunpowder.array_spec import ArraySpec
+from gunpowder.batch import Batch
+from .batch_provider import BatchProvider
 
 
 class ArraySource(BatchProvider):
@@ -33,20 +36,17 @@ class ArraySource(BatchProvider):
         self.array_spec = ArraySpec(
             self.array.roi,
             self.array.voxel_size,
-            self.interpolatable,
-            self.nonspatial,
+            interpolatable,
+            nonspatial,
             self.array.dtype,
         )
-
-        self.interpolatable = interpolatable
-        self.nonspatial = nonspatial
 
     def setup(self):
         self.provides(self.key, self.array_spec)
 
     def provide(self, request):
         outputs = Batch()
-        if self.nonspatial:
+        if self.array_spec.nonspatial:
             outputs[self.key] = Array(self.array[:], self.array_spec.copy())
         else:
             out_spec = self.array_spec.copy()

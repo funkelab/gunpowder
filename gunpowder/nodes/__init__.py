@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from .array_source import ArraySource
 from .add_affinities import AddAffinities
 from .astype import AsType
 from .balance_labels import BalanceLabels
