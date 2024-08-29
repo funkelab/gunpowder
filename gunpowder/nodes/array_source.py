@@ -22,6 +22,12 @@ class ArraySource(BatchProvider):
         array (``Array``):
 
             A `funlib.persistence.Array` object.
+
+        interpolatable (``bool``, optional):
+
+            Whether the array is interpolatable. If not given it is
+            guessed based on dtype.
+
     """
 
     def __init__(
@@ -29,7 +35,6 @@ class ArraySource(BatchProvider):
         key: ArrayKey,
         array: PersistenceArray,
         interpolatable: bool | None = None,
-        nonspatial: bool = False,
     ):
         self.key = key
         self.array = array
@@ -37,7 +42,7 @@ class ArraySource(BatchProvider):
             self.array.roi,
             self.array.voxel_size,
             interpolatable,
-            nonspatial,
+            False,
             self.array.dtype,
         )
 
@@ -46,10 +51,7 @@ class ArraySource(BatchProvider):
 
     def provide(self, request):
         outputs = Batch()
-        if self.array_spec.nonspatial:
-            outputs[self.key] = Array(self.array[:], self.array_spec.copy())
-        else:
-            out_spec = self.array_spec.copy()
-            out_spec.roi = request[self.key].roi
-            outputs[self.key] = Array(self.array[out_spec.roi], out_spec)
+        out_spec = self.array_spec.copy()
+        out_spec.roi = request[self.key].roi
+        outputs[self.key] = Array(self.array[out_spec.roi], out_spec)
         return outputs

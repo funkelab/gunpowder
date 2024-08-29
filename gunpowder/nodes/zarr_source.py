@@ -206,11 +206,8 @@ class ZarrSource(BatchProvider):
             spec.dtype = dataset.dtype
 
         if spec.interpolatable is None:
-            spec.interpolatable = spec.dtype in (
-                np.sctypes["float"]
-                + [
-                    np.uint8,  # assuming this is not used for labels
-                ]
+            spec.interpolatable = np.issubdtype(spec.dtype, np.floating) or (
+                spec.dtype == np.uint8
             )
             logger.warning(
                 "WARNING: You didn't set 'interpolatable' for %s "
