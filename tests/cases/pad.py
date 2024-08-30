@@ -16,9 +16,12 @@ from gunpowder import (
     Pad,
     Roi,
     build,
+    MergeProvider,
 )
 
 from .helper_sources import ArraySource, GraphSource
+
+from itertools import product
 
 
 @pytest.mark.parametrize("mode", ["constant", "reflect"])

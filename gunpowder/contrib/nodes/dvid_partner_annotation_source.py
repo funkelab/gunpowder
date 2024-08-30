@@ -1,4 +1,3 @@
-import distutils.util
 import numpy as np
 import logging
 import requests
@@ -13,6 +12,16 @@ from gunpowder.profiling import Timing
 from gunpowder.graph import Node
 
 logger = logging.getLogger(__name__)
+
+
+def strtobool(val):
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    else:
+        raise ValueError(f"Invalid truth value: {val}")
 
 
 class DvidPartnerAnnoationSourceReadException(Exception):
@@ -198,10 +207,10 @@ class DvidPartnerAnnotationSource(BatchProvider):
                 props["agent"] = str(node["Prop"]["agent"])
             if "flagged" in node["Prop"]:
                 str_value_flagged = str(node["Prop"]["flagged"])
-                props["flagged"] = bool(distutils.util.strtobool(str_value_flagged))
+                props["flagged"] = bool(strtobool(str_value_flagged))
             if "multi" in node["Prop"]:
                 str_value_multi = str(node["Prop"]["multi"])
-                props["multi"] = bool(distutils.util.strtobool(str_value_multi))
+                props["multi"] = bool(strtobool(str_value_multi))
 
             # create synPoint with information collected so far (partner_ids not completed yet)
             if kind == "PreSyn":

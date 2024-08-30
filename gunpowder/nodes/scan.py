@@ -2,6 +2,7 @@ import logging
 import multiprocessing
 import numpy as np
 import tqdm
+from abc import ABC
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
@@ -11,6 +12,55 @@ from gunpowder.roi import Roi
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
+
+
+class ScanCallback(ABC):
+    """Base class for :class:`Scan` callbacks. Implement any of ``start``,
+    ``update``, and ``stop`` in a subclass to create your own callback.
+    """
+
+    def start(self, num_total):
+        """Called once before :class:`Scan` starts scanning over chunks.
+
+        Args:
+
+            num_total (int):
+
+                The total number of chunks to process.
+        """
+        pass
+
+    def update(self, num_processed):
+        """Called periodically by :class:`Scan` while processing chunks.
+
+        Args:
+
+            num_processed (int):
+
+                The number of chunks already processed.
+        """
+        pass
+
+    def stop(self):
+        """Called once after :class:`Scan` scanned over all chunks."""
+        pass
+
+
+class TqdmCallback(ScanCallback):
+    """A default callback that uses ``tqdm`` to show a progress bar."""
+
+    def start(self, num_total):
+        logger.info("scanning over %d chunks", num_total)
+
+        self.progress_bar = tqdm.tqdm(desc="Scan, chunks processed", total=num_total)
+        self.num_processed = 0
+
+    def update(self, num_processed):
+        self.progress_bar.update(num_processed - self.num_processed)
+        self.num_processed = num_processed
+
+    def stop(self):
+        self.progress_bar.close()
 
 
 class Scan(BatchFilter):
@@ -40,14 +90,24 @@ class Scan(BatchFilter):
         cache_size (``int``, optional):
 
             If multiple workers are used, how many batches to hold at most.
+
+        progress_callback (class:`ScanCallback`, optional):
+
+            A callback instance to get updated from this node while processing
+            chunks. See :class:`ScanCallback` for details. The default is a
+            callback that shows a ``tqdm`` progress bar.
     """
 
-    def __init__(self, reference, num_workers=1, cache_size=50):
+    def __init__(self, reference, num_workers=1, cache_size=50, progress_callback=None):
         self.reference = reference.copy()
         self.num_workers = num_workers
         self.cache_size = cache_size
         self.workers = None
         self.batch = None
+        if progress_callback is None:
+            self.progress_callback = TqdmCallback()
+        else:
+            self.progress_callback = progress_callback
 
     def setup(self):
         if self.num_workers > 1:
@@ -75,7 +135,8 @@ class Scan(BatchFilter):
         shifts = self._enumerate_shifts(shift_roi, stride)
         num_chunks = len(shifts)
 
-        logger.info("scanning over %d chunks", num_chunks)
+        if self.progress_callback is not None:
+            self.progress_callback.start(num_chunks)
 
         # the batch to return
         self.batch = Batch()
@@ -85,23 +146,32 @@ class Scan(BatchFilter):
                 shifted_reference = self._shift_request(self.reference, shift)
                 self.request_queue.put(shifted_reference)
 
-            for i in tqdm.tqdm(range(num_chunks)):
+            for i in range(num_chunks):
                 chunk = self.workers.get()
 
                 if not empty_request:
                     self._add_to_batch(request, chunk)
 
+                if self.progress_callback is not None:
+                    self.progress_callback.update(i + 1)
+
                 logger.debug("processed chunk %d/%d", i + 1, num_chunks)
 
         else:
-            for i, shift in enumerate(tqdm.tqdm(shifts)):
+            for i, shift in enumerate(shifts):
                 shifted_reference = self._shift_request(self.reference, shift)
                 chunk = self._get_chunk(shifted_reference)
 
                 if not empty_request:
                     self._add_to_batch(request, chunk)
 
+                if self.progress_callback is not None:
+                    self.progress_callback.update(i + 1)
+
                 logger.debug("processed chunk %d/%d", i + 1, num_chunks)
+
+        if self.progress_callback is not None:
+            self.progress_callback.stop()
 
         batch = self.batch
         self.batch = None

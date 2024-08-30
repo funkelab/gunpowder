@@ -82,6 +82,14 @@ class DeformAugment(BatchFilter):
 
             Whether or not to compute the elastic transform node wise for nodes
             that were lossed during the fast elastic transform process.
+
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
     def __init__(
@@ -96,6 +104,7 @@ class DeformAugment(BatchFilter):
         recompute_missing_points=True,
         transform_key: Optional[ArrayKey] = None,
         graph_raster_voxel_size: Optional[Coordinate] = None,
+        p: float = 1.0,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
         self.jitter_sigma = Coordinate(jitter_sigma)
@@ -121,6 +130,7 @@ class DeformAugment(BatchFilter):
             f"jitter_sigma: {self.jitter_sigma}, "
             f"and graph_raster_voxel_size must have the same number of dimensions"
         )
+        self.p = p
 
     def setup(self):
         if self.transform_key is not None:
@@ -136,6 +146,9 @@ class DeformAugment(BatchFilter):
             )
 
             self.provides(self.transform_key, spec)
+
+    def skip_node(self, request):
+        return random.random() > self.p
 
     def prepare(self, request):
         # get the total ROI of all requests
@@ -498,6 +511,9 @@ class DeformAugment(BatchFilter):
             )
             local_transformation = upscale_transformation(
                 local_transformation, target_shape
+            )
+            global_transformation = upscale_transformation(
+                global_transformation, target_shape
             )
 
         # transform into world units

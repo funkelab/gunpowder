@@ -112,7 +112,7 @@ class Predict(GenericPredict):
                     break
 
             if can_skip:
-                logger.info("Skipping batch %i (all inputs are 0)" % batch.id)
+                logger.info(f"Skipping batch for request: {request} (all inputs are 0)")
 
                 for name, array_key in self.outputs.items():
                     shape = self.shared_output_arrays[name].shape
@@ -124,7 +124,7 @@ class Predict(GenericPredict):
 
                 return
 
-        logger.debug("predicting in batch %i", batch.id)
+        logger.debug(f"predicting for request: {request}")
 
         output_tensors = self.__collect_outputs(request)
         input_data = self.__collect_provided_inputs(batch)
@@ -160,7 +160,7 @@ class Predict(GenericPredict):
             spec.roi = request[array_key].roi
             batch.arrays[array_key] = Array(output_data[array_key], spec)
 
-        logger.debug("predicted in batch %i", batch.id)
+        logger.debug("predicted")
 
     def __predict(self):
         """The background predict process."""

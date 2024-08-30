@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from .array_source import ArraySource
 from .add_affinities import AddAffinities
 from .astype import AsType
 from .balance_labels import BalanceLabels
@@ -34,7 +35,7 @@ from .rasterize_graph import RasterizationSettings, RasterizeGraph
 from .reject import Reject
 from .renumber_connected_components import RenumberConnectedComponents
 from .resample import Resample
-from .scan import Scan
+from .scan import Scan, ScanCallback
 from .shift_augment import ShiftAugment
 from .simple_augment import SimpleAugment
 from .snapshot import Snapshot

@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import skimage
 
 from gunpowder.batch_request import BatchRequest
@@ -24,17 +25,28 @@ class NoiseAugment(BatchFilter):
 
             Whether to preserve the image range (either [-1, 1] or [0, 1]) by clipping values in the end, see
             scikit-image documentation
+
+        p (``float``, optional):
+
+            Probability applying the augmentation. Default is 1.0 (always
+            apply). Should be a float value between 0 and 1. Lowering this value
+            could be useful for computational efficiency and increasing
+            augmentation space.
     """
 
-    def __init__(self, array, mode="gaussian", clip=True, **kwargs):
+    def __init__(self, array, mode="gaussian", clip=True, p=1.0, **kwargs):
         self.array = array
         self.mode = mode
         self.clip = clip
+        self.p = p
         self.kwargs = kwargs
 
     def setup(self):
         self.enable_autoskip()
         self.updates(self.array, self.spec[self.array])
+
+    def skip_node(self, request):
+        return random.random() > self.p
 
     def prepare(self, request):
         deps = BatchRequest()

@@ -91,6 +91,11 @@ BatchFilter
 Source Nodes
 ------------
 
+ArraySource
+^^^^^^^^^^^
+
+  .. autoclass:: ArraySource
+
 ZarrSource
 ^^^^^^^^^^
   .. autoclass:: ZarrSource
@@ -334,6 +339,7 @@ Iterative Processing Nodes
 Scan
 ^^^^
   .. autoclass:: Scan
+  .. autoclass:: ScanCallback
 
 DaisyRequestBlocks
 ^^^^^^^^^^^^^^^^^^

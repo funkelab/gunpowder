@@ -76,7 +76,7 @@ class Snapshot(BatchFilter):
         self,
         dataset_names,
         output_dir="snapshots",
-        output_filename="{id}.zarr",
+        output_filename="{iteration}.zarr",
         every=1,
         additional_request=None,
         compression_type=None,
@@ -99,6 +99,7 @@ class Snapshot(BatchFilter):
             self.dataset_dtypes = dataset_dtypes
 
         self.mode = "w"
+        self.id = 0
 
     def write_if(self, batch):
         """To be implemented in subclasses.
@@ -159,6 +160,7 @@ class Snapshot(BatchFilter):
         return deps
 
     def process(self, batch, request):
+        self.id += 1
         if self.record_snapshot and self.write_if(batch):
             try:
                 os.makedirs(self.output_dir)
@@ -168,7 +170,7 @@ class Snapshot(BatchFilter):
             snapshot_name = os.path.join(
                 self.output_dir,
                 self.output_filename.format(
-                    id=str(batch.id).zfill(8), iteration=int(batch.iteration or 0)
+                    id=str(self.id).zfill(8), iteration=int(batch.iteration or self.id)
                 ),
             )
             logger.info("saving to %s" % snapshot_name)

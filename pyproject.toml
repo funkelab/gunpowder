@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 
 dependencies = [
     "numpy>=1.24",
@@ -40,10 +40,20 @@ dependencies = [
     "funlib.geometry>=0.3",
     "zarr",
     "networkx>=3.1",
+    "funlib.persistence>=0.5",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "flake8", "mypy", "types-requests", "types-tqdm"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "flake8",
+    "mypy",
+    "types-requests",
+    "types-tqdm",
+    "black",
+    "ruff",
+]
 docs = [
     "sphinx",
     "sphinx_rtd_theme",

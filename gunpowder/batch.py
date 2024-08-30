@@ -44,17 +44,7 @@ class Batch(Freezable):
             Contains all graphs that have been requested for this batch.
     """
 
-    __next_id = multiprocessing.Value("L")
-
-    @staticmethod
-    def get_next_id():
-        with Batch.__next_id.get_lock():
-            next_id = Batch.__next_id.value
-            Batch.__next_id.value += 1
-        return next_id
-
     def __init__(self):
-        self.id = Batch.get_next_id()
         self.profiling_stats = ProfilingStats()
         self.arrays = {}
         self.graphs = {}
