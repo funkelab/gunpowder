@@ -69,7 +69,7 @@ class ZarrSource(BatchProvider):
 
         if filename is not None:
             warnings.warn(
-                "Argument 'filename' will be replaced in v2.0, " "use 'store' instead",
+                "Argument 'filename' will be replaced in v2.0, use 'store' instead",
                 DeprecationWarning,
             )
 
@@ -117,7 +117,7 @@ class ZarrSource(BatchProvider):
     def setup(self):
         with self._open_file(self.store) as data_file:
             for array_key, ds_name in self.datasets.items():
-                if ds_name not in data_file:
+                if ds_name is not None and ds_name not in data_file:
                     raise RuntimeError("%s not in %s" % (ds_name, self.store))
 
                 spec = self.__read_spec(array_key, data_file, ds_name)
@@ -160,7 +160,10 @@ class ZarrSource(BatchProvider):
         return batch
 
     def __read_spec(self, array_key, data_file, ds_name):
-        dataset = data_file[ds_name]
+        if ds_name is None:
+            dataset = data_file
+        else:
+            dataset = data_file[ds_name]
 
         if array_key in self.array_specs:
             spec = self.array_specs[array_key].copy()
@@ -222,12 +225,17 @@ class ZarrSource(BatchProvider):
         return spec
 
     def __read(self, data_file, ds_name, roi):
-        c = len(data_file[ds_name].shape) - self.ndims
+        if ds_name is None:
+            dataset = data_file
+        else:
+            dataset = data_file[ds_name]
+
+        c = len(dataset.shape) - self.ndims
 
         if self.channels_first:
-            array = np.asarray(data_file[ds_name][(slice(None),) * c + roi.to_slices()])
+            array = np.asarray(dataset[(slice(None),) * c + roi.to_slices()])
         else:
-            array = np.asarray(data_file[ds_name][roi.to_slices() + (slice(None),) * c])
+            array = np.asarray(dataset[roi.to_slices() + (slice(None),) * c])
             array = np.transpose(
                 array, axes=[i + self.ndims for i in range(c)] + list(range(self.ndims))
             )
