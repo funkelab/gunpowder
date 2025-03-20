@@ -1,10 +1,11 @@
 import logging
+
 import numpy as np
+from scipy.ndimage import distance_transform_edt
 
 from gunpowder.array import Array
 from gunpowder.batch_request import BatchRequest
 from gunpowder.nodes.batch_filter import BatchFilter
-from scipy.ndimage import distance_transform_edt
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +152,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
         dims = len(labels.shape)
         in_shape = labels.shape
         out_shape = tuple(2 * s - 1 for s in in_shape)
-        out_slices = tuple(slice(0, s) for s in out_shape)
+        tuple(slice(0, s) for s in out_shape)
 
         boundaries = np.zeros(out_shape, dtype=bool)
 
@@ -193,7 +194,7 @@ class AddBoundaryDistanceGradients(BatchFilter):
         gradients /= factors
 
     def __scale(self, gradients, distances, scale, scale_args):
-        dims = gradients.shape[0]
+        gradients.shape[0]
 
         if scale == "exp":
             alpha, beta = self.scale_args

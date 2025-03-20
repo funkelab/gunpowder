@@ -1,13 +1,13 @@
 import copy
-from .provider_spec import ProviderSpec
-from .roi import Roi
+import time
+from warnings import warn
+
 from .array import ArrayKey
 from .array_spec import ArraySpec
 from .graph import GraphKey
 from .graph_spec import GraphSpec
-
-from warnings import warn
-import time
+from .provider_spec import ProviderSpec
+from .roi import Roi
 
 
 class BatchRequest(ProviderSpec):
