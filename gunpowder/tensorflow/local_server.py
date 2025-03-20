@@ -1,6 +1,7 @@
+import ctypes
 import logging
 import multiprocessing
-import ctypes
+
 from gunpowder.ext import tensorflow as tf
 from gunpowder.freezable import Freezable
 

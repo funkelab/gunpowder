@@ -1,5 +1,6 @@
-from random import randrange
 import logging
+from random import randrange
+
 import numpy as np
 
 from gunpowder.coordinate import Coordinate

@@ -1,17 +1,17 @@
-import numpy as np
-
 import copy
 import logging
 import random
 import traceback
 from typing import Optional
 
-from gunpowder.coordinate import Coordinate
-from gunpowder.provider_spec import ProviderSpec
+import numpy as np
+
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.coordinate import Coordinate
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.provider_spec import ProviderSpec
 
 logger = logging.getLogger(__name__)
 
