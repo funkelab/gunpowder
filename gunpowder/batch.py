@@ -1,5 +1,4 @@
 import logging
-import multiprocessing
 from copy import copy as shallow_copy
 
 from .array import Array, ArrayKey
