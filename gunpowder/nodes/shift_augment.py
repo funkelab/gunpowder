@@ -1,12 +1,9 @@
-from __future__ import division, print_function
-
+from __future__ import print_function, division
 import logging
-import random
-
 import numpy as np
-
-from gunpowder.coordinate import Coordinate
+import random
 from gunpowder.roi import Roi
+from gunpowder.coordinate import Coordinate
 
 from .batch_filter import BatchFilter
 

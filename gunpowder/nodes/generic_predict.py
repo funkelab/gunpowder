@@ -1,13 +1,13 @@
 import logging
 import multiprocessing
 import time
-from queue import Full
 
+from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.producer_pool import ProducerPool, WorkersDied, NoResult
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
-from gunpowder.nodes.batch_filter import BatchFilter
-from gunpowder.producer_pool import NoResult, ProducerPool, WorkersDied
+from queue import Full
 
 logger = logging.getLogger(__name__)
 

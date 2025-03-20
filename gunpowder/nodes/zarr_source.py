@@ -1,21 +1,21 @@
-import logging
-import warnings
-from collections.abc import MutableMapping
-from typing import Union
-
-import numpy as np
-from zarr import N5FSStore, N5Store
-from zarr._storage.store import BaseStore
-
-from gunpowder.array import Array
-from gunpowder.array_spec import ArraySpec
+from gunpowder.ext import ZarrFile
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import ZarrFile
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
+
+from zarr._storage.store import BaseStore
+from zarr import N5Store, N5FSStore
+import numpy as np
+
+from collections.abc import MutableMapping
+from typing import Union
+import warnings
+import logging
+
 
 logger = logging.getLogger(__name__)
 

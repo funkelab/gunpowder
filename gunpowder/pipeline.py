@@ -1,8 +1,8 @@
-import logging
-import traceback
-
 from gunpowder.nodes import BatchProvider
 from gunpowder.nodes.batch_provider import BatchRequestError
+
+import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 

@@ -71,7 +71,7 @@ class GraphTestSource3D(BatchProvider):
         batch = Batch()
 
         roi_graph = request[self.graph_key].roi
-        request[self.array_key].roi // self.spec[self.array_key].voxel_size
+        roi_voxel = request[self.array_key].roi // self.spec[self.array_key].voxel_size
 
         data = np.zeros(
             (request[self.array_key].roi // self.spec[self.array_key].voxel_size).shape,

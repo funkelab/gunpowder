@@ -1,12 +1,9 @@
-import random
-
-import numpy as np
-
+from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.batch import Batch
 from gunpowder.profiling import Timing
-
-from .batch_filter import BatchFilter
+import numpy as np
+import random
 
 
 class Stack(BatchFilter):

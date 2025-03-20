@@ -1,10 +1,8 @@
 from __future__ import print_function
-
-import json
-import logging
-import math
-
 import gunpowder as gp
+import json
+import math
+import logging
 
 logging.basicConfig(level=logging.INFO)
 

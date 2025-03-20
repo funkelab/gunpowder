@@ -1,6 +1,5 @@
-import itertools
 import logging
-
+import itertools
 import numpy as np
 
 from gunpowder.array import Array

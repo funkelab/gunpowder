@@ -1,27 +1,27 @@
-import logging
-import math
-import random
-from typing import Optional
+from .batch_filter import BatchFilter
+from gunpowder.batch import Batch
+from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
+from gunpowder.array import ArrayKey, Array
+from gunpowder.array_spec import ArraySpec
 
-import numpy as np
-from augment.augment import apply_transformation, upscale_transformation
 from augment.transform import (
     create_3D_rotation_transformation,
     create_elastic_transformation,
     create_identity_transformation,
     create_rotation_transformation,
 )
+from augment.augment import apply_transformation, upscale_transformation
+
+import numpy as np
 from scipy import ndimage
 from scipy.spatial.transform import Rotation
 
-from gunpowder.array import Array, ArrayKey
-from gunpowder.array_spec import ArraySpec
-from gunpowder.batch import Batch
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
-
-from .batch_filter import BatchFilter
+import logging
+import math
+import random
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,14 @@
 import ctypes
 import logging
 import multiprocessing as mp
-from functools import reduce
-from operator import mul
-
 import numpy as np
 
-from gunpowder.array import Array, ArrayKey
+from functools import reduce
+from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_predict import GenericPredict
 from gunpowder.tensorflow.local_server import LocalServer
+from operator import mul
 
 logger = logging.getLogger(__name__)
 

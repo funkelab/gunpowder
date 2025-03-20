@@ -1,11 +1,10 @@
-import logging
-import multiprocessing
-import time
-
 from gunpowder.batch import Batch
 from gunpowder.ext import daisy
 from gunpowder.nodes.batch_filter import BatchFilter
 from gunpowder.roi import Roi
+import logging
+import multiprocessing
+import time
 
 logger = logging.getLogger(__name__)
 

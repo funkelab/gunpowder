@@ -1,6 +1,5 @@
-import random
-
 import numpy as np
+import random
 import skimage
 
 from gunpowder.batch_request import BatchRequest

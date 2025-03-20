@@ -1,6 +1,6 @@
-import copy
-
 import numpy as np
+
+import copy
 
 from .freezable import Freezable
 

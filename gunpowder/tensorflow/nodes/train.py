@@ -1,9 +1,8 @@
 import logging
 import os
-
 import numpy as np
 
-from gunpowder.array import Array, ArrayKey
+from gunpowder.array import ArrayKey, Array
 from gunpowder.ext import tensorflow as tf
 from gunpowder.nodes.generic_train import GenericTrain
 from gunpowder.tensorflow.local_server import LocalServer

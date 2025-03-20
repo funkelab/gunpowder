@@ -1,16 +1,14 @@
-import csv
-import logging
-from typing import Optional, Union
-
+from typing import Union, Optional
 import numpy as np
-
+import logging
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.graph import Graph, GraphKey, Node
-from gunpowder.graph_spec import GraphSpec
 from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.graph import Node, Graph, GraphKey
+from gunpowder.graph_spec import GraphSpec
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
+import csv
 
 logger = logging.getLogger(__name__)
 

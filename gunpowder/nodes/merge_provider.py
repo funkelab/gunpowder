@@ -1,9 +1,9 @@
-import random
-
 from gunpowder.batch import Batch
 from gunpowder.batch_request import BatchRequest
 
 from .batch_provider import BatchProvider
+
+import random
 
 
 class MergeProvider(BatchProvider):

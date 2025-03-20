@@ -33,6 +33,7 @@ def seeds():
 
 @pytest.fixture
 def test_points(tmpdir):
+
     fake_points_file = tmpdir / "shift_test.csv"
     fake_data_file = tmpdir / "shift_test.hdf5"
     fake_data = np.array([[i + j for i in range(100)] for j in range(100)])

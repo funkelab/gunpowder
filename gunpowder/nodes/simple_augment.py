@@ -1,12 +1,11 @@
-import itertools
 import logging
 import random
+import itertools
 
 import numpy as np
 
-from gunpowder.coordinate import Coordinate
-
 from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 
 logger = logging.getLogger(__name__)
 

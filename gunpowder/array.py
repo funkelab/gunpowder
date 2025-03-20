@@ -1,10 +1,8 @@
-import copy
-import logging
-from copy import deepcopy
-
-import numpy as np
-
 from .freezable import Freezable
+from copy import deepcopy
+import logging
+import numpy as np
+import copy
 
 logger = logging.getLogger(__name__)
 

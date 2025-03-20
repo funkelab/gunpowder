@@ -1,13 +1,12 @@
 import copy
 import logging
-
 import numpy as np
 
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.ext import h5py
-from gunpowder.nodes.batch_provider import BatchProvider
 from gunpowder.profiling import Timing
+from gunpowder.nodes.batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 

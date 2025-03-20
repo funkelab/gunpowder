@@ -1,6 +1,5 @@
 import copy
 import logging
-
 import numpy as np
 from scipy.spatial import KDTree
 
@@ -8,9 +7,9 @@ from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.graph_spec import GraphSpec
 from gunpowder.morphology import enlarge_binary_map
 from gunpowder.nodes.batch_filter import BatchFilter
+from gunpowder.graph_spec import GraphSpec
 
 logger = logging.getLogger(__name__)
 
@@ -216,9 +215,9 @@ class AddVectorMap(BatchFilter):
                     if num_src_vectors_per_trg_loc > 0:
                         dist_to_locs = {}
                         for phys_loc in relevant_partner_loc:
-                            dist_to_locs[
-                                np.linalg.norm(node.location - phys_loc)
-                            ] = phys_loc
+                            dist_to_locs[np.linalg.norm(node.location - phys_loc)] = (
+                                phys_loc
+                            )
                         for nr, dist in enumerate(
                             reversed(np.sort(list(dist_to_locs.keys())))
                         ):

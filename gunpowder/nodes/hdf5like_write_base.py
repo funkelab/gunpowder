@@ -1,12 +1,10 @@
-import logging
-import os
-import warnings
-
+from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
-
-from .batch_filter import BatchFilter
+import logging
+import os
+import warnings
 
 logger = logging.getLogger(__name__)
 

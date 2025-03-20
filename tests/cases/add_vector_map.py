@@ -234,9 +234,9 @@ def test_output_min_distance():
             for partner_id in point.attrs["partner_ids"]:
                 if partner_id in postsyn_locs.keys():
                     partner_location = postsyn_locs[partner_id].location
-                    dist_to_loc[
-                        np.linalg.norm(partner_location - point.location)
-                    ] = partner_location
+                    dist_to_loc[np.linalg.norm(partner_location - point.location)] = (
+                        partner_location
+                    )
             min_dist = np.min(list(dist_to_loc.keys()))
             relevant_partner_loc = dist_to_loc[min_dist]
 

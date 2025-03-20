@@ -1,17 +1,17 @@
-import csv
 import random
 
 import numpy as np
 import pytest
+import csv
 
 from gunpowder import (
     BatchRequest,
-    Coordinate,
     CsvPointsSource,
     GraphKey,
     GraphSpec,
-    Roi,
     build,
+    Coordinate,
+    Roi,
 )
 
 
@@ -24,6 +24,7 @@ def seeds():
 
 @pytest.fixture
 def test_points_2d(tmpdir):
+
     fake_points_file = tmpdir / "shift_test.csv"
     fake_points = np.random.randint(0, 100, size=(2, 2))
     with open(fake_points_file, "w") as f:
@@ -35,6 +36,7 @@ def test_points_2d(tmpdir):
 
 @pytest.fixture
 def test_points_3d(tmpdir):
+
     fake_points_file = tmpdir / "shift_test.csv"
     fake_points = np.random.randint(0, 100, size=(3, 3)).astype(float)
     with open(fake_points_file, "w") as f:

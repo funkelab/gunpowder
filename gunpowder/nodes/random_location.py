@@ -1,20 +1,18 @@
-import itertools
-import logging
 import math
-from random import choices, randint, random
+import logging
+from random import random, randint, choices
+import itertools
 
 import numpy as np
 from scipy.spatial import cKDTree
 from skimage.transform import integral_image, integrate
-
-from gunpowder.array import Array
-from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from .batch_filter import BatchFilter
+from gunpowder.profiling import Timing
 
 logger = logging.getLogger(__name__)
 
@@ -214,6 +212,7 @@ class RandomLocation(BatchFilter):
         return request
 
     def provide(self, request):
+
         timing_prepare = Timing(self, "prepare")
         timing_prepare.start()
 

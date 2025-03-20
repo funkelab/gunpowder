@@ -1,11 +1,9 @@
 import logging
-
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
-from gunpowder.array import Array
-
 from .batch_filter import BatchFilter
+from gunpowder.array import Array
 
 logger = logging.getLogger(__name__)
 

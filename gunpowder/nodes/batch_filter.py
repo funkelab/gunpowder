@@ -1,9 +1,8 @@
 import logging
 
+from .batch_provider import BatchProvider
 from gunpowder.batch_request import BatchRequest
 from gunpowder.profiling import Timing
-
-from .batch_provider import BatchProvider
 
 logger = logging.getLogger(__name__)
 

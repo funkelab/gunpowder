@@ -1,12 +1,12 @@
-import logging
-import pickle
-from typing import Dict, Optional, Union
-
-from gunpowder.array import Array, ArrayKey
+from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.ext import jax
-from gunpowder.jax import GenericJaxModel
 from gunpowder.nodes.generic_predict import GenericPredict
+from gunpowder.jax import GenericJaxModel
+
+import pickle
+import logging
+from typing import Dict, Union, Optional
 
 logger = logging.getLogger(__name__)
 

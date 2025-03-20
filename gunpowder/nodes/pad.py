@@ -1,13 +1,12 @@
 import logging
-
 import numpy as np
 
-from gunpowder.array import ArrayKey
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
-
 from .batch_filter import BatchFilter
+from gunpowder.array import ArrayKey
+from gunpowder.roi import Roi
+from gunpowder.coordinate import Coordinate
+from gunpowder.batch_request import BatchRequest
+
 
 logger = logging.getLogger(__name__)
 

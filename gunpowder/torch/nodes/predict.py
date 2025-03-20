@@ -1,10 +1,10 @@
-import logging
-from typing import Any, Dict, Optional, Union
-
-from gunpowder.array import Array, ArrayKey
+from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.ext import torch
 from gunpowder.nodes.generic_predict import GenericPredict
+
+import logging
+from typing import Dict, Union, Optional, Any
 
 logger = logging.getLogger(__name__)
 

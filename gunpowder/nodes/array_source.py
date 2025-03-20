@@ -1,9 +1,7 @@
 from funlib.persistence.arrays import Array as PersistenceArray
-
 from gunpowder.array import Array, ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch import Batch
-
 from .batch_provider import BatchProvider
 
 

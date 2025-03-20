@@ -1,9 +1,8 @@
 import logging
 import random
 
-from gunpowder.profiling import Timing
-
 from .batch_filter import BatchFilter
+from gunpowder.profiling import Timing
 
 logger = logging.getLogger(__name__)
 

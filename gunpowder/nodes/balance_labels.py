@@ -1,14 +1,11 @@
+from .batch_filter import BatchFilter
+from gunpowder.array import Array
+from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
+from collections.abc import Iterable
 import itertools
 import logging
-from collections.abc import Iterable
-
 import numpy as np
-
-from gunpowder.array import Array
-from gunpowder.batch import Batch
-from gunpowder.batch_request import BatchRequest
-
-from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

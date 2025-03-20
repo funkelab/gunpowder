@@ -1,10 +1,11 @@
-import logging
 from copy import copy as shallow_copy
+import logging
+import multiprocessing
 
-from .array import Array, ArrayKey
 from .freezable import Freezable
-from .graph import Graph, GraphKey
 from .profiling import ProfilingStats
+from .array import Array, ArrayKey
+from .graph import Graph, GraphKey
 
 logger = logging.getLogger(__name__)
 

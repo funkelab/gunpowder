@@ -1,15 +1,12 @@
+from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
+from gunpowder.array import ArrayKey, Array
+from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
+from gunpowder.batch import Batch
 import logging
 import numbers
-
 import numpy as np
-
-from gunpowder.array import Array, ArrayKey
-from gunpowder.array_spec import ArraySpec
-from gunpowder.batch import Batch
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
-
-from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

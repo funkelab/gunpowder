@@ -1,16 +1,14 @@
-import logging
-import warnings
-
-import numpy as np
-
-from gunpowder.array import Array
-from gunpowder.array_spec import ArraySpec
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
-
+from gunpowder.array import Array
+from gunpowder.array_spec import ArraySpec
 from .batch_provider import BatchProvider
+
+import logging
+import numpy as np
+import warnings
 
 logger = logging.getLogger(__name__)
 

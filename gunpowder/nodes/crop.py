@@ -1,8 +1,7 @@
 import logging
 
-from gunpowder.coordinate import Coordinate
-
 from .batch_filter import BatchFilter
+from gunpowder.coordinate import Coordinate
 
 logger = logging.getLogger(__name__)
 

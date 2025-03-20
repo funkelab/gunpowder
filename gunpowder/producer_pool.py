@@ -61,7 +61,7 @@ class ProducerPool(object):
             block = True
 
         item = None
-        while item is None:
+        while item == None:
             try:
                 item = self.__result_queue.get(timeout=timeout)
             except Queue.Empty:

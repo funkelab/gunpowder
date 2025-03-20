@@ -233,9 +233,9 @@ def test_mismatched_voxel_multiples():
 
     test_array = ArrayKey("TEST_ARRAY")
     data = np.zeros([3, 3])
-    data[
-        2, 1
-    ] = 1  # voxel has Roi((4, 2) (2, 2)). Contained in Roi((0, 0), (6, 4)). at 2, 1
+    data[2, 1] = (
+        1  # voxel has Roi((4, 2) (2, 2)). Contained in Roi((0, 0), (6, 4)). at 2, 1
+    )
     source = ArraySource(
         test_array,
         Array(

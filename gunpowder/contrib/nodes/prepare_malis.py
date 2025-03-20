@@ -1,6 +1,5 @@
 import copy
 import logging
-
 import numpy as np
 
 from gunpowder.array import Array

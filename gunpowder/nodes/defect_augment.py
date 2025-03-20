@@ -1,15 +1,13 @@
 import logging
 import random
-
 import numpy as np
-from scipy.ndimage import binary_dilation, label, map_coordinates
 
 # imports for deformed slice
 from skimage.draw import line
+from scipy.ndimage import label, map_coordinates, binary_dilation
 
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)

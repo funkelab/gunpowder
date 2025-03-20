@@ -1,12 +1,13 @@
 import logging
-from typing import Any, Dict, Optional, Union
-
 import numpy as np
 
-from gunpowder.array import Array, ArrayKey
+from gunpowder.array import ArrayKey, Array
 from gunpowder.array_spec import ArraySpec
-from gunpowder.ext import NoSuchModule, tensorboardX, torch
+from gunpowder.ext import torch, tensorboardX, NoSuchModule
 from gunpowder.nodes.generic_train import GenericTrain
+
+from typing import Dict, Union, Optional, Any
+import itertools
 
 logger = logging.getLogger(__name__)
 

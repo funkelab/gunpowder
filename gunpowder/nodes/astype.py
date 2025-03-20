@@ -1,9 +1,7 @@
-import logging
-
-from gunpowder.array import Array, ArrayKey
-from gunpowder.batch import Batch
-
 from .batch_filter import BatchFilter
+from gunpowder.array import ArrayKey, Array
+from gunpowder.batch import Batch
+import logging
 
 logger = logging.getLogger(__name__)
 

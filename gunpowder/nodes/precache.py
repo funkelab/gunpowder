@@ -1,10 +1,10 @@
 import logging
-from collections import deque
-
-from gunpowder.producer_pool import ProducerPool
-from gunpowder.profiling import Timing
 
 from .batch_filter import BatchFilter
+from gunpowder.profiling import Timing
+from gunpowder.producer_pool import ProducerPool
+
+from collections import deque
 
 logger = logging.getLogger(__name__)
 

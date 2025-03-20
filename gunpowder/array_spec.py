@@ -1,5 +1,4 @@
 import copy
-
 from .coordinate import Coordinate
 from .freezable import Freezable
 
