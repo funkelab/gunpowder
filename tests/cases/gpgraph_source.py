@@ -1,5 +1,6 @@
-import gunpowder as gp
 import numpy as np
+
+import gunpowder as gp
 from gunpowder.nodes import GPGraphSource
 
 
@@ -11,12 +12,16 @@ def test_gpgraph_source():
         gp.graph.Node(2, np.array([10, 50, 50, 50])),
         gp.graph.Node(3, np.array([15, 90, 90, 90])),
     ]
-    points_source = GPGraphSource(points, gp.Graph(nodes=nodes, edges=[], spec=gp.GraphSpec()))
-    
+    points_source = GPGraphSource(
+        points, gp.Graph(nodes=nodes, edges=[], spec=gp.GraphSpec())
+    )
+
     request = gp.BatchRequest()
     request_shape = gp.Coordinate((10, 40, 40, 40))
     request_roi = gp.Roi(offset=(5, 30, 30, 30), shape=request_shape)
-    points_request = gp.GraphSpec(request_roi,)
+    points_request = gp.GraphSpec(
+        request_roi,
+    )
     request[points] = points_request
 
     with gp.build(points_source):
