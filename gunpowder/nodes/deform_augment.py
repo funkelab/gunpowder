@@ -95,7 +95,7 @@ class DeformAugment(BatchFilter):
     def __init__(
         self,
         control_point_spacing: Coordinate,
-        jitter_sigma: tuple[float, ...],
+        jitter_sigma: Coordinate,
         scale_interval=(1.0, 1.0),
         rotate: bool = True,
         subsample=1,
@@ -107,7 +107,7 @@ class DeformAugment(BatchFilter):
         p: float = 1.0,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
-        self.jitter_sigma = jitter_sigma
+        self.jitter_sigma = Coordinate(jitter_sigma)
         self.scale_min = scale_interval[0]
         self.scale_max = scale_interval[1]
         self.rotate = rotate
@@ -123,7 +123,7 @@ class DeformAugment(BatchFilter):
         )
         assert (
             self.control_point_spacing.dims
-            == len(jitter_sigma)
+            == self.jitter_sigma.dims
             == self.graph_raster_voxel_size.dims
         ), (
             f"control_point_spacing: {self.control_point_spacing}, "
@@ -306,11 +306,11 @@ class DeformAugment(BatchFilter):
             out_batch[array_key] = transformed_array
 
         for graph_key, graph in batch.graphs.items():
-            target_spatial_roi = Roi(
+            target_roi = Roi(
                 request[graph_key].roi.offset[-self.spatial_dims :],
                 request[graph_key].roi.shape[-self.spatial_dims :],
             )
-            transform_roi = target_spatial_roi.grow(
+            transform_roi = target_roi.grow(
                 self.graph_raster_voxel_size, self.graph_raster_voxel_size
             )
             source_roi = Roi(
@@ -338,7 +338,7 @@ class DeformAugment(BatchFilter):
                 missed_nodes = nodes
 
             for node in missed_nodes:
-                logger.debug("projecting %s", node.location)
+                # logger.debug("projecting %s", node.location)
 
                 # get location relative to beginning of upstream ROI
                 location = node.location
@@ -364,8 +364,6 @@ class DeformAugment(BatchFilter):
 
                 logger.debug("final location: %s", node.location)
 
-            target_roi = request[graph_key].roi
-            logger.debug("Cropping graph to target roi %s", target_roi)
             out_batch[graph_key] = graph.crop(target_roi)
 
         if self.transform_key is not None:
@@ -449,16 +447,15 @@ class DeformAugment(BatchFilter):
                 for o, i in zip(output_spec.voxel_size, transformation.spec.voxel_size)
             ]
         )
-        coordinates = np.stack(
-            np.meshgrid(
-                range(dims),
-                *[
-                    np.linspace(o, (shape - 1) * step + o, shape)
-                    for o, shape, step in zip(offset, output_shape, step)
-                ],
-                indexing="ij",
-            )
+        coordinates = np.meshgrid(
+            range(dims),
+            *[
+                np.linspace(o, (shape - 1) * step + o, shape)
+                for o, shape, step in zip(offset, output_shape, step)
+            ],
+            indexing="ij",
         )
+        coordinates = np.stack(coordinates)
 
         sampled = ndimage.map_coordinates(
             transformation.data,
@@ -537,8 +534,7 @@ class DeformAugment(BatchFilter):
         )
 
     def __fast_point_projection(self, transformation, nodes, source_roi, target_roi):
-        valid_nodes = [node for node in nodes if source_roi.contains(node.location)]
-        if len(valid_nodes) < 1:
+        if len(nodes) < 1:
             return []
         # rasterize the points into an array
         ids, locs = zip(
@@ -551,7 +547,8 @@ class DeformAugment(BatchFilter):
                     )
                     // self.graph_raster_voxel_size,
                 )
-                for node in valid_nodes
+                for node in nodes
+                if source_roi.contains(node.location)
             ]
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
