@@ -1,17 +1,17 @@
+import csv
 import random
 
 import numpy as np
 import pytest
-import csv
 
 from gunpowder import (
     BatchRequest,
+    Coordinate,
     CsvPointsSource,
     GraphKey,
     GraphSpec,
-    build,
-    Coordinate,
     Roi,
+    build,
 )
 
 

@@ -1,6 +1,8 @@
 from __future__ import print_function
-import gunpowder as gp
+
 import json
+
+import gunpowder as gp
 
 
 def predict(iteration):

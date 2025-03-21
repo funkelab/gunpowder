@@ -1,18 +1,20 @@
 import logging
+
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from skimage import draw
 
-from .batch_filter import BatchFilter
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.freezable import Freezable
-from gunpowder.morphology import enlarge_binary_map, create_ball_kernel
-from gunpowder.ndarray import replace
 from gunpowder.graph_spec import GraphSpec
+from gunpowder.morphology import create_ball_kernel, enlarge_binary_map
+from gunpowder.ndarray import replace
 from gunpowder.roi import Roi
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

@@ -1,20 +1,17 @@
+import copy
+import logging
 import math
-from gunpowder.coordinate import Coordinate
+
 from gunpowder.array import ArrayKey
 from gunpowder.array_spec import ArraySpec
+from gunpowder.coordinate import Coordinate
 from gunpowder.graph import GraphKey
 from gunpowder.graph_spec import GraphSpec
 from gunpowder.roi import Roi
+
 from .freezable import Freezable
-import logging
-import copy
 
 logger = logging.getLogger(__name__)
-
-
-import logging
-
-logger = logging.getLogger(__file__)
 
 
 class ProviderSpec(Freezable):

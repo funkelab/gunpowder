@@ -1,15 +1,14 @@
-import numpy as np
 import logging
-import requests
 from copy import deepcopy
 
-from gunpowder.batch import Batch
-from gunpowder.nodes.batch_provider import BatchProvider
-from gunpowder.graph import GraphKey, Graph
-from gunpowder.graph_spec import GraphSpec
-from gunpowder.profiling import Timing
+import numpy as np
+import requests
 
-from gunpowder.graph import Node
+from gunpowder.batch import Batch
+from gunpowder.graph import Graph, GraphKey, Node
+from gunpowder.graph_spec import GraphSpec
+from gunpowder.nodes.batch_provider import BatchProvider
+from gunpowder.profiling import Timing
 
 logger = logging.getLogger(__name__)
 

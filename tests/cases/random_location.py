@@ -183,7 +183,7 @@ def test_impossible():
 
     with build(pipeline):
         with pytest.raises(PipelineRequestError):
-            batch = pipeline.request_batch(
+            pipeline.request_batch(
                 BatchRequest(
                     {
                         a: ArraySpec(roi=Roi((0, 0, 0), (200, 20, 20))),

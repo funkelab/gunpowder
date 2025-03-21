@@ -150,7 +150,6 @@ def test_ensure_centered():
             )
 
             points = {node.id: node for node in batch[points_key].nodes}
-            roi = batch[points_key].spec.roi
 
             locations = tuple([Coordinate(point.location) for point in points.values()])
             assert Coordinate([50, 50, 50]) in locations
