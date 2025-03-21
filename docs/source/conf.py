@@ -19,8 +19,9 @@
 
 from datetime import datetime
 
-import gunpowder
 import tomli
+
+import gunpowder
 
 with open("../../pyproject.toml", "rb") as fh:
     project = tomli.load(fh)["project"]

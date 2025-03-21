@@ -1,6 +1,8 @@
-from .hdf5like_write_base import Hdf5LikeWrite
-from gunpowder.ext import h5py
 import os
+
+from gunpowder.ext import h5py
+
+from .hdf5like_write_base import Hdf5LikeWrite
 
 
 class Hdf5Write(Hdf5LikeWrite):

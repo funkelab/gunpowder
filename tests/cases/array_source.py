@@ -1,9 +1,9 @@
-from funlib.persistence import prepare_ds
-from funlib.geometry import Roi
-from gunpowder.nodes import ArraySource
-from gunpowder import ArrayKey, build, BatchRequest, ArraySpec
-
 import numpy as np
+from funlib.geometry import Roi
+from funlib.persistence import prepare_ds
+
+from gunpowder import ArrayKey, ArraySpec, BatchRequest, build
+from gunpowder.nodes import ArraySource
 
 
 def test_array_source(tmpdir):

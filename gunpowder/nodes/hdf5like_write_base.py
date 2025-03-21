@@ -1,10 +1,12 @@
-from .batch_filter import BatchFilter
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
 import logging
 import os
 import warnings
+
+from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

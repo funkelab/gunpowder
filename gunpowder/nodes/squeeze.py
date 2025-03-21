@@ -1,11 +1,12 @@
-from typing import List
 import logging
+from typing import List
 
 import numpy as np
 
 from gunpowder.array import ArrayKey
-from gunpowder.batch_request import BatchRequest
 from gunpowder.batch import Batch
+from gunpowder.batch_request import BatchRequest
+
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)

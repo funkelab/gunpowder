@@ -1,6 +1,7 @@
 import copy
-import numpy as np
 import time
+
+import numpy as np
 
 from .freezable import Freezable
 

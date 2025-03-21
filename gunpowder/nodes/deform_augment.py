@@ -1,27 +1,27 @@
-from .batch_filter import BatchFilter
-from gunpowder.batch import Batch
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
-from gunpowder.roi import Roi
-from gunpowder.array import ArrayKey, Array
-from gunpowder.array_spec import ArraySpec
+import logging
+import math
+import random
+from typing import Optional
 
+import numpy as np
+from augment.augment import apply_transformation, upscale_transformation
 from augment.transform import (
     create_3D_rotation_transformation,
     create_elastic_transformation,
     create_identity_transformation,
     create_rotation_transformation,
 )
-from augment.augment import apply_transformation, upscale_transformation
-
-import numpy as np
 from scipy import ndimage
 from scipy.spatial.transform import Rotation
 
-import logging
-import math
-import random
-from typing import Optional
+from gunpowder.array import Array, ArrayKey
+from gunpowder.array_spec import ArraySpec
+from gunpowder.batch import Batch
+from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+from gunpowder.roi import Roi
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 
@@ -447,15 +447,16 @@ class DeformAugment(BatchFilter):
                 for o, i in zip(output_spec.voxel_size, transformation.spec.voxel_size)
             ]
         )
-        coordinates = np.meshgrid(
-            range(dims),
-            *[
-                np.linspace(o, (shape - 1) * step + o, shape)
-                for o, shape, step in zip(offset, output_shape, step)
-            ],
-            indexing="ij",
+        coordinates = np.stack(
+            np.meshgrid(
+                range(dims),
+                *[
+                    np.linspace(o, (shape - 1) * step + o, shape)
+                    for o, shape, step in zip(offset, output_shape, step)
+                ],
+                indexing="ij",
+            )
         )
-        coordinates = np.stack(coordinates)
 
         sampled = ndimage.map_coordinates(
             transformation.data,
