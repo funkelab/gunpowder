@@ -447,15 +447,16 @@ class DeformAugment(BatchFilter):
                 for o, i in zip(output_spec.voxel_size, transformation.spec.voxel_size)
             ]
         )
-        coordinates = np.meshgrid(
-            range(dims),
-            *[
-                np.linspace(o, (shape - 1) * step + o, shape)
-                for o, shape, step in zip(offset, output_shape, step)
-            ],
-            indexing="ij",
+        coordinates = np.stack(
+            np.meshgrid(
+                range(dims),
+                *[
+                    np.linspace(o, (shape - 1) * step + o, shape)
+                    for o, shape, step in zip(offset, output_shape, step)
+                ],
+                indexing="ij",
+            )
         )
-        coordinates = np.stack(coordinates)
 
         sampled = ndimage.map_coordinates(
             transformation.data,
