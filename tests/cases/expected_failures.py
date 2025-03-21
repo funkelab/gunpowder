@@ -34,4 +34,4 @@ def test_request_too_large():
             with pytest.raises(BatchRequestError):
                 batch = pipeline.request_batch(request)
 
-            x = batch.arrays[raw_key].data
+            batch.arrays[raw_key].data

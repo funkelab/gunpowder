@@ -151,7 +151,7 @@ class KlbSource(BatchProvider):
             assert spec.dtype == dtype, (
                 "dtype %s provided in array_specs for %s, but differs from "
                 "dataset dtype %s"
-                % (self.array_specs[self.array].dtype, self.array, dataset.dtype)
+                % (self.array_specs[self.array].dtype, self.array, dtype)
             )
         else:
             spec.dtype = dtype

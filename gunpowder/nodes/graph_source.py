@@ -85,7 +85,7 @@ class GraphSource(BatchProvider):
         dangling_nodes = []
         for node, data in daisy_graph.nodes(data=True):
             position_attribute = graph_provider.position_attribute
-            if type(position_attribute) == list:
+            if isinstance(position_attribute, list):
                 if position_attribute[0] not in data:
                     dangling_nodes.append(node)
                     continue

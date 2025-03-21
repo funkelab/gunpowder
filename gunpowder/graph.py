@@ -381,17 +381,8 @@ class Graph(Freezable):
                 if e.u in contained_nodes or e.v in contained_nodes
             ]
         )
-        fully_contained_edges = set(
-            [
-                e
-                for e in all_contained_edges
-                if e.u in contained_nodes and e.v in contained_nodes
-            ]
-        )
-        partially_contained_edges = all_contained_edges - fully_contained_edges
         contained_edge_nodes = set(list(itertools.chain(*all_contained_edges)))
         all_nodes = contained_edge_nodes | contained_nodes
-        dangling_nodes = all_nodes - contained_nodes
 
         for node in list(cropped.nodes):
             if node.id not in all_nodes:
@@ -442,7 +433,6 @@ class Graph(Freezable):
         partially_contained_edges = all_contained_edges - fully_contained_edges
         contained_edge_nodes = set(list(itertools.chain(*all_contained_edges)))
         all_nodes = contained_edge_nodes | contained_nodes
-        dangling_nodes = all_nodes - contained_nodes
 
         next_node = 0 if len(all_nodes) == 0 else max(all_nodes) + 1
 

@@ -14,11 +14,6 @@ from .freezable import Freezable
 logger = logging.getLogger(__name__)
 
 
-import logging
-
-logger = logging.getLogger(__file__)
-
-
 class ProviderSpec(Freezable):
     """A collection of (possibly partial) :class:`ArraySpecs<ArraySpec>` and
     :class:`GraphSpecs<GraphSpec>` describing a

@@ -91,12 +91,18 @@ target_version = ['py38', 'py39', 'py310']
 [tool.setuptools.packages.find]
 include = ["gunpowder*"]
 
-[tool.ruff]
+[tool.ruff.lint]
 # pyflakes, pycodestyle, isort
 select = ["F", "E", "W", "I001"]
-ignore = ["E501"]
+ignore = [
+    "E501",  # line length
+    "E722",  # bare except
+    "E741",  # ambiguous variable name
+]
+exclude = ["gunpowder/contrib/*"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
-# ruff complains about escape sequence in docstring which renders math correctly
-"gunpowder/nodes/rasterize_graph.py" = ["W605"]  
+# ruff complains about escape sequence in docstring which renders math
+"gunpowder/nodes/rasterize_graph.py" = ["W605"]
+"docker/test_environment.py" = ["F401"]  # unused import in test env
