@@ -98,3 +98,5 @@ ignore = ["E501"]
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
+# ruff complains about escape sequence in docstring which renders math correctly
+"gunpowder/nodes/rasterize_graph.py" = ["W605"]  
