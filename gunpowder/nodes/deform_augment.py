@@ -95,7 +95,7 @@ class DeformAugment(BatchFilter):
     def __init__(
         self,
         control_point_spacing: Coordinate,
-        jitter_sigma: Coordinate,
+        jitter_sigma: tuple[float, ...],
         scale_interval=(1.0, 1.0),
         rotate: bool = True,
         subsample=1,
@@ -107,7 +107,7 @@ class DeformAugment(BatchFilter):
         p: float = 1.0,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
-        self.jitter_sigma = Coordinate(jitter_sigma)
+        self.jitter_sigma = jitter_sigma
         self.scale_min = scale_interval[0]
         self.scale_max = scale_interval[1]
         self.rotate = rotate
@@ -123,7 +123,7 @@ class DeformAugment(BatchFilter):
         )
         assert (
             self.control_point_spacing.dims
-            == self.jitter_sigma.dims
+            == len(jitter_sigma)
             == self.graph_raster_voxel_size.dims
         ), (
             f"control_point_spacing: {self.control_point_spacing}, "
@@ -306,11 +306,11 @@ class DeformAugment(BatchFilter):
             out_batch[array_key] = transformed_array
 
         for graph_key, graph in batch.graphs.items():
-            target_roi = Roi(
+            target_spatial_roi = Roi(
                 request[graph_key].roi.offset[-self.spatial_dims :],
                 request[graph_key].roi.shape[-self.spatial_dims :],
             )
-            transform_roi = target_roi.grow(
+            transform_roi = target_spatial_roi.grow(
                 self.graph_raster_voxel_size, self.graph_raster_voxel_size
             )
             source_roi = Roi(
@@ -364,6 +364,8 @@ class DeformAugment(BatchFilter):
 
                 logger.debug("final location: %s", node.location)
 
+            target_roi = request[graph_key].roi
+            logger.debug("Cropping graph to target roi %s", target_roi)
             out_batch[graph_key] = graph.crop(target_roi)
 
         if self.transform_key is not None:
@@ -535,7 +537,8 @@ class DeformAugment(BatchFilter):
         )
 
     def __fast_point_projection(self, transformation, nodes, source_roi, target_roi):
-        if len(nodes) < 1:
+        valid_nodes = [node for node in nodes if source_roi.contains(node.location)]
+        if len(valid_nodes) < 1:
             return []
         # rasterize the points into an array
         ids, locs = zip(
@@ -548,8 +551,7 @@ class DeformAugment(BatchFilter):
                     )
                     // self.graph_raster_voxel_size,
                 )
-                for node in nodes
-                if source_roi.contains(node.location)
+                for node in valid_nodes
             ]
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
