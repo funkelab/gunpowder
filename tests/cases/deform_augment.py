@@ -11,8 +11,10 @@ from gunpowder import (
     BatchRequest,
     Coordinate,
     DeformAugment,
+    GPGraphSource,
     GraphKey,
     GraphSpec,
+    Pipeline,
     Roi,
     build,
 )
@@ -180,3 +182,46 @@ def test_3d_basics(rotate, spatial_dims, fast_points, subsampling):
                         np.linalg.norm(com2 - loc2)
                         < np.linalg.norm(labels2.spec.voxel_size) * 2
                     ), (com2, loc2)
+
+
+@pytest.fixture
+def mock_4d_source() -> Pipeline:
+    points = GraphKey("points")
+    nodes = [
+        Node(0, np.array([0, 0, 0, 0])),
+        Node(1, np.array([5, 10, 10, 10])),
+        Node(2, np.array([10, 50, 50, 50])),
+        Node(3, np.array([15, 90, 90, 90])),
+    ]
+    points_source = GPGraphSource(
+        points, Graph(nodes=nodes, edges=[], spec=GraphSpec())
+    )
+    return points_source
+
+
+def test_4d_basics(mock_4d_source):
+    points = GraphKey("points")
+    deform = DeformAugment(
+        control_point_spacing=Coordinate((5, 5, 5)),
+        jitter_sigma=[0.1, 0.1, 0.1],
+        scale_interval=[0.9, 1.1],
+        rotate=True,
+        subsample=4,
+        spatial_dims=3,
+        use_fast_points_transform=True,
+    )
+    pipeline = mock_4d_source + deform
+
+    request = BatchRequest()
+    request_shape = Coordinate((15, 40, 40, 40))
+    request_roi = Roi(offset=(5, 30, 30, 30), shape=request_shape)
+    points_request = GraphSpec(
+        request_roi,
+    )
+    request[points] = points_request
+
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
+        points_data = batch[points]
+        # not enough deformation to remove node from center
+        assert len(list(points_data.nodes)) == 1
