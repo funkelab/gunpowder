@@ -1,10 +1,11 @@
 import copy
 from typing import TYPE_CHECKING
 
+from ..batch import Batch
 from .batch_provider import BatchProvider
 
 if TYPE_CHECKING:
-    from gunpowder import Batch, Graph, GraphKey
+    from gunpowder import Graph, GraphKey
 
 
 class GraphSource(BatchProvider):
