@@ -1,7 +1,7 @@
 import logging
 import math
 import random
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 from augment.augment import apply_transformation, upscale_transformation
@@ -39,7 +39,7 @@ class DeformAugment(BatchFilter):
             Distance between control points for the elastic deformation, in
             physical units per dimension.
 
-        jitter_sigma (``tuple`` of ``float``):
+        jitter_sigma (``Sequence`` of ``float``):
 
             Standard deviation of control point jitter distribution, in physical units
             per dimension.
@@ -95,7 +95,7 @@ class DeformAugment(BatchFilter):
     def __init__(
         self,
         control_point_spacing: Coordinate,
-        jitter_sigma: tuple[float, ...],
+        jitter_sigma: Sequence[float],
         scale_interval=(1.0, 1.0),
         rotate: bool = True,
         subsample=1,
@@ -107,7 +107,7 @@ class DeformAugment(BatchFilter):
         p: float = 1.0,
     ):
         self.control_point_spacing = Coordinate(control_point_spacing)
-        self.jitter_sigma = jitter_sigma
+        self.jitter_sigma = np.array(jitter_sigma)
         self.scale_min = scale_interval[0]
         self.scale_max = scale_interval[1]
         self.rotate = rotate
@@ -123,7 +123,7 @@ class DeformAugment(BatchFilter):
         )
         assert (
             self.control_point_spacing.dims
-            == len(jitter_sigma)
+            == len(self.jitter_sigma)
             == self.graph_raster_voxel_size.dims
         ), (
             f"control_point_spacing: {self.control_point_spacing}, "
@@ -484,7 +484,7 @@ class DeformAugment(BatchFilter):
             el_transformation = create_elastic_transformation(
                 target_shape,
                 1,
-                np.array(self.jitter_sigma) / self.control_point_spacing,
+                self.jitter_sigma / self.control_point_spacing,
                 subsample=self.subsample,
             )
 
