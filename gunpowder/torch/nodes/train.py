@@ -258,13 +258,13 @@ class Train(GenericTrain):
         # Update device loss inputs with tensors from outputs if available
         flipped_outputs = {v: outputs[k] for k, v in self.outputs.items()}
         device_loss_inputs = {
-            k: flipped_outputs.get(v, device_loss_inputs.get(k))
+            k[5:]: flipped_outputs.get(v, device_loss_inputs.get(k))
             for k, v in self.loss_inputs.items()
         }
 
         device_loss_args = []
         for i in range(len(device_loss_inputs)):
-            key = f"loss_{i}"
+            key = f"{i}"
             if key in device_loss_inputs:
                 device_loss_args.append(device_loss_inputs.pop(key))
             else:
