@@ -106,7 +106,7 @@ def test_loss_drops(tmpdir, device, input_args):
         optimizer=optimizer,
         loss=loss,
         inputs={"a": a_key, "b": b_key} if not input_args else {0: a_key, 1: b_key},
-        loss_inputs={0: c_predicted_key, 1: c_key},
+        loss_inputs={0: c_predicted_key, "target": c_key},
         outputs={0: c_predicted_key},
         gradients={0: c_gradient_key},
         array_specs={
