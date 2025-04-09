@@ -69,7 +69,7 @@ class ZarrSource(BatchProvider):
 
         if filename is not None:
             warnings.warn(
-                "Argument 'filename' will be replaced in v2.0, " "use 'store' instead",
+                "Argument 'filename' will be replaced in v2.0, use 'store' instead",
                 DeprecationWarning,
             )
 

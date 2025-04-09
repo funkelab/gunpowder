@@ -190,7 +190,7 @@ class AddVectorMap(BatchFilter):
                                     (
                                         offset_vx_considered_mask[dim]
                                         + (2 * self.radius_phys // voxel_size_vm[dim]),
-                                        ((mask.shape[dim])),
+                                        (mask.shape[dim]),
                                     )
                                 )
                             ),

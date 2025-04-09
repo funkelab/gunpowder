@@ -176,7 +176,7 @@ class IterateLocations(BatchFilter):
             shifted_roi = request_roi.shift(self.shift)
             if not provided_roi.contains(shifted_roi):
                 logger.warning(
-                    ("Provided roi %s for key %s does notcontain" " shifted roi %s"),
+                    ("Provided roi %s for key %s does notcontain shifted roi %s"),
                     provided_roi,
                     key,
                     shifted_roi,

@@ -162,7 +162,7 @@ class AddAffinities(BatchFilter):
 
     def setup(self):
         assert self.labels in self.spec, (
-            "Upstream does not provide %s needed by " "AddAffinities" % self.labels
+            "Upstream does not provide %s needed by AddAffinities" % self.labels
         )
 
         voxel_size = self.spec[self.labels].voxel_size
@@ -242,9 +242,7 @@ class AddAffinities(BatchFilter):
 
         if self.affinities_mask and self.affinities_mask in request:
             if self.labels_mask:
-                logger.debug(
-                    "computing ground-truth affinities mask from " "labels mask"
-                )
+                logger.debug("computing ground-truth affinities mask from labels mask")
                 affinities_mask = seg_to_affgraph(
                     batch.arrays[self.labels_mask].data.astype(np.int32),
                     self.affinity_neighborhood,
@@ -274,8 +272,7 @@ class AddAffinities(BatchFilter):
         else:
             if self.labels_mask is not None:
                 logger.warning(
-                    "GT labels does have a mask, but affinities "
-                    "mask is not requested."
+                    "GT labels does have a mask, but affinities mask is not requested."
                 )
 
         # Should probably have a better way of handling arbitrary batch attributes

@@ -1,24 +1,22 @@
 import numpy as np
 import pytest
-from scipy.ndimage import center_of_mass
 from funlib.persistence import Array
+from scipy.ndimage import center_of_mass
 
 from gunpowder import (
     ArrayKey,
+    ArraySource,
     ArraySpec,
-    Batch,
-    BatchProvider,
     BatchRequest,
     Coordinate,
     DeformAugment,
     GPGraphSource,
-    ArraySource,
     GraphKey,
     GraphSpec,
+    MergeProvider,
     Pipeline,
     Roi,
     build,
-    MergeProvider,
 )
 from gunpowder.graph import Graph, Node
 

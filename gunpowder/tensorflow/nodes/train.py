@@ -279,7 +279,7 @@ class Train(GenericTrain):
                 # variables of the original meta-graph and 'gunpowder'
                 # variables. Custom optimizer variables will be default
                 # initialized.
-                logger.info("Checkpoint did not contain custom optimizer " "variables")
+                logger.info("Checkpoint did not contain custom optimizer variables")
                 self.__restore_graph(checkpoint, restore_full=False)
         else:
             logger.info("No checkpoint found")
@@ -326,7 +326,7 @@ class Train(GenericTrain):
                     inputs[input_name] = batch.arrays[input_key].data
                 else:
                     logger.warn(
-                        "batch does not contain %s, input %s will not " "be set",
+                        "batch does not contain %s, input %s will not be set",
                         input_key,
                         input_name,
                     )
@@ -336,8 +336,9 @@ class Train(GenericTrain):
                 inputs[input_name] = getattr(batch, input_key)
             else:
                 raise Exception(
-                    "Unknown network input key {}, can't be given to "
-                    "network".format(input_key)
+                    "Unknown network input key {}, can't be given to network".format(
+                        input_key
+                    )
                 )
 
         return inputs

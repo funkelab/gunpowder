@@ -1,10 +1,10 @@
+import itertools
 import random
+import warnings
 
 import numpy as np
 
 from gunpowder.batch_request import BatchRequest
-import itertools
-import warnings
 
 from .batch_filter import BatchFilter
 

@@ -225,7 +225,7 @@ class BatchProvider(object):
                 isinstance(request_spec, ArraySpec)
                 or isinstance(request_spec, GraphSpec)
                 or isinstance(request_spec, GraphSpec)
-            ), "spec for %s is of type" "%s" % (key, type(request_spec))
+            ), "spec for %s is of type%s" % (key, type(request_spec))
 
             provided_spec = self.spec[key]
 
@@ -387,8 +387,7 @@ class BatchProvider(object):
 
         if not isinstance(other, Pipeline):
             raise RuntimeError(
-                f"Don't know how to add {type(other)} to BatchProvider "
-                f"{self.name()}"
+                f"Don't know how to add {type(other)} to BatchProvider {self.name()}"
             )
 
         return Pipeline(self) + other
@@ -404,5 +403,5 @@ class BatchProvider(object):
             return other + Pipeline(self)
 
         raise RuntimeError(
-            f"Don't know how to radd {type(other)} to BatchProvider" f"{self.name()}"
+            f"Don't know how to radd {type(other)} to BatchProvider{self.name()}"
         )

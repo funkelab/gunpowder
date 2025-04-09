@@ -200,9 +200,9 @@ class RandomLocation(BatchFilter):
             "Can not pick a random location, intersection of upstream ROIs is "
             "unbounded."
         )
-        assert not lcm_shift_roi.empty, (
-            "Can not satisfy batch request, no location covers all requested " "ROIs."
-        )
+        assert (
+            not lcm_shift_roi.empty
+        ), "Can not satisfy batch request, no location covers all requested ROIs."
 
         random_shift = self.__select_random_shift(
             request, lcm_shift_roi, lcm_voxel_size
@@ -214,7 +214,6 @@ class RandomLocation(BatchFilter):
         return request
 
     def provide(self, request):
-
         timing_prepare = Timing(self, "prepare")
         timing_prepare.start()
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from gunpowder import (
     Array,
@@ -9,7 +10,6 @@ from gunpowder import (
     Roi,
     build,
 )
-import pytest
 
 from .helper_sources import ArraySource
 

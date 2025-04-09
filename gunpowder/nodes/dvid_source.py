@@ -130,9 +130,7 @@ class DvidSource(BatchProvider):
             )
 
         else:
-            assert False, (
-                "Encountered a request that is neither a volume " "nor a mask."
-            )
+            assert False, "Encountered a request that is neither a volume nor a mask."
 
         return data.info
 

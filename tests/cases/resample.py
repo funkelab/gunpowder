@@ -80,25 +80,25 @@ def test_up_and_downsample():
             # in 31.
             assert (
                 array.data[0, 0, 0, 0] == 31
-            ), f"RAW_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 31"
+            ), f"RAW_RESAMPLED[0,0,0]: {array.data[0, 0, 0]} does not equal expected: 31"
             assert (
                 array.data[0, 1, 0, 0] == 33
-            ), f"RAW_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 33"
+            ), f"RAW_RESAMPLED[1,0,0]: {array.data[1, 0, 0]} does not equal expected: 33"
 
         elif array_key == gt_resampled_key:
             # Note: GT_LABELS_RESAMPLED is shifted a full pixel in from each side of original array to pad upsampling
             assert (
                 array.data[0, 0, 0, 0] == 3
-            ), f"GT_LABELS_RESAMPLED[0,0,0]: {array.data[0,0,0]} does not equal expected: 0"
+            ), f"GT_LABELS_RESAMPLED[0,0,0]: {array.data[0, 0, 0]} does not equal expected: 0"
             assert (
                 array.data[0, 1, 0, 0] == 3
-            ), f"GT_LABELS_RESAMPLED[1,0,0]: {array.data[1,0,0]} does not equal expected: 0"
+            ), f"GT_LABELS_RESAMPLED[1,0,0]: {array.data[1, 0, 0]} does not equal expected: 0"
             assert (
                 array.data[0, 2, 0, 0] == 4
-            ), f"GT_LABELS_RESAMPLED[2,0,0]: {array.data[2,0,0]} does not equal expected: 1"
+            ), f"GT_LABELS_RESAMPLED[2,0,0]: {array.data[2, 0, 0]} does not equal expected: 1"
             assert (
                 array.data[0, 3, 0, 0] == 4
-            ), f"GT_LABELS_RESAMPLED[3,0,0]: {array.data[3,0,0]} does not equal expected: 1"
+            ), f"GT_LABELS_RESAMPLED[3,0,0]: {array.data[3, 0, 0]} does not equal expected: 1"
 
         else:
             assert False, "unexpected array type"

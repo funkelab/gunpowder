@@ -87,7 +87,7 @@ class Pad(BatchFilter):
 
         if request[self.key].roi.empty:
             logger.warning(
-                "Requested %s ROI %s lies entirely outside of upstream " "ROI %s.",
+                "Requested %s ROI %s lies entirely outside of upstream ROI %s.",
                 self.key,
                 roi,
                 upstream_spec[self.key].roi,

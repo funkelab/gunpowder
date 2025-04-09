@@ -135,9 +135,9 @@ class DeformAugment(BatchFilter):
             f"and graph_raster_voxel_size must have the same number of dimensions"
         )
         if rotation_axes is not None:
-            assert 2 <= len(rotation_axes) <= spatial_dims <= 3, (
-                "Can only rotate in spatial dimensions and only in 2 or 3 dimensions"
-            )
+            assert (
+                2 <= len(rotation_axes) <= spatial_dims <= 3
+            ), "Can only rotate in spatial dimensions and only in 2 or 3 dimensions"
             assert all(a < spatial_dims for a in rotation_axes), (
                 "axis indexing must be relative to spatial dims. i.e. given b,c,z,y,x "
                 "rotation_axes must be a subset of [0,1,2] referencing z,y,x axes"
@@ -238,9 +238,9 @@ class DeformAugment(BatchFilter):
                 # grow target_roi by 1 voxel, this allows us catch nodes that project
                 # outside our bounds
                 target_roi = target_roi.grow(voxel_size, voxel_size)
-                assert voxel_size is not None, (
-                    "Please provide a graph_raster_voxel_size when deforming graphs"
-                )
+                assert (
+                    voxel_size is not None
+                ), "Please provide a graph_raster_voxel_size when deforming graphs"
 
             # use only spatial dims for transformations
             voxel_size = Coordinate(voxel_size[-self.spatial_dims :])
@@ -305,9 +305,7 @@ class DeformAugment(BatchFilter):
                 request_roi.offset,
                 request_roi.shape,
                 voxel_size,
-            ) in self.transformations, (
-                f"{(request_roi.offset, request_roi.shape, voxel_size)} not in {list(self.transformations.keys())}"
-            )
+            ) in self.transformations, f"{(request_roi.offset, request_roi.shape, voxel_size)} not in {list(self.transformations.keys())}"
 
             # reshape array data into (channels,) + spatial dims
             transformed_array = self.__apply_transform(
@@ -505,9 +503,9 @@ class DeformAugment(BatchFilter):
             local_transformation += el_transformation
 
         if self.rotate:
-            assert min(target_spec.voxel_size) == max(target_spec.voxel_size), (
-                "Only isotropic control point spacing supported when rotating"
-            )
+            assert min(target_spec.voxel_size) == max(
+                target_spec.voxel_size
+            ), "Only isotropic control point spacing supported when rotating"
 
             if self.spatial_dims == 2 or (
                 self.rotation_axes is not None and len(self.rotation_axes) == 2
@@ -538,7 +536,9 @@ class DeformAugment(BatchFilter):
                     print(rot_transformation.shape)
                     rot_transformation = np.stack(
                         rot_transformation[[max(x, 0) for x in dzyx_sampling]], axis=0
-                    ) * (np.array([min(x, 0) for x in dzyx_sampling]) + 1).reshape((-1,) + (1,) * self.spatial_dims)
+                    ) * (np.array([min(x, 0) for x in dzyx_sampling]) + 1).reshape(
+                        (-1,) + (1,) * self.spatial_dims
+                    )
                     print(rot_transformation.shape)
 
             else:
@@ -629,10 +629,10 @@ class DeformAugment(BatchFilter):
         for point_id, proj_loc in zip(ids, projected_locs):
             point = node_dict.pop(point_id)
             if not any([np.isnan(x) for x in proj_loc]):
-                assert len(proj_loc) == self.spatial_dims, (
-                    "projected location has wrong number of dimensions: {}, expected: {}".format(
-                        len(proj_loc), self.spatial_dims
-                    )
+                assert (
+                    len(proj_loc) == self.spatial_dims
+                ), "projected location has wrong number of dimensions: {}, expected: {}".format(
+                    len(proj_loc), self.spatial_dims
                 )
                 point.location[-self.spatial_dims :] = proj_loc
             else:

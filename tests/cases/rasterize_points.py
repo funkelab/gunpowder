@@ -323,4 +323,4 @@ def test_with_edge():
 
         assert (
             rasterized.sum() == 10
-        ), f"rasterized has ones at: {np.where(rasterized==1)}"
+        ), f"rasterized has ones at: {np.where(rasterized == 1)}"

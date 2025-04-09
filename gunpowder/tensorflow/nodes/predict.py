@@ -277,7 +277,7 @@ class Predict(GenericPredict):
                     inputs[input_name] = batch.arrays[input_key].data
                 else:
                     logger.warn(
-                        "batch does not contain %s, input %s will not " "be set",
+                        "batch does not contain %s, input %s will not be set",
                         input_key,
                         input_name,
                     )
@@ -287,8 +287,9 @@ class Predict(GenericPredict):
                 inputs[input_name] = getattr(batch, input_key)
             else:
                 raise Exception(
-                    "Unknown network input key {}, can't be given to "
-                    "network".format(input_key)
+                    "Unknown network input key {}, can't be given to network".format(
+                        input_key
+                    )
                 )
 
         return inputs

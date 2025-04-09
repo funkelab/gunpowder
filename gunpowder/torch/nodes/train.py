@@ -376,8 +376,9 @@ class Train(GenericTrain):
                 arrays[array_name] = getattr(batch, array_key)
             else:
                 raise Exception(
-                    "Unknown network array key {}, can't be given to "
-                    "network".format(array_key)
+                    "Unknown network array key {}, can't be given to network".format(
+                        array_key
+                    )
                 )
 
         return arrays

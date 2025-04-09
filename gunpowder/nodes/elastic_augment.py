@@ -196,8 +196,7 @@ class ElasticAugment(BatchFilter):
             # not be the case for points)
             target_roi = target_roi.snap_to_grid(self.voxel_size, mode="grow")
             logger.debug(
-                "downstream request spatial ROI aligned with voxel grid for %s "
-                "is %s",
+                "downstream request spatial ROI aligned with voxel grid for %s is %s",
                 key,
                 target_roi,
             )

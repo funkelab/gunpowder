@@ -411,7 +411,6 @@ class RasterizeGraph(BatchFilter):
                     )
 
             else:
-
                 sigmas = settings.radius / voxel_size
 
                 gaussian_filter(
