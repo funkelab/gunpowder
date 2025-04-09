@@ -1,5 +1,4 @@
 import numpy as np
-import dask.array as da
 import pytest
 from scipy.ndimage import center_of_mass
 from funlib.persistence import Array
@@ -48,13 +47,13 @@ def mock_3d_source():
         voxel_size=Coordinate((4, 1, 1)),
         interpolatable=False,
     )
-    data1 = da.zeros((array_spec1.roi.shape // array_spec1.voxel_size), dtype=np.uint32)
+    data1 = np.zeros((array_spec1.roi.shape // array_spec1.voxel_size), dtype=np.uint32)
     array_spec2 = ArraySpec(
         roi=Roi((-100, -100, -100), (200, 200, 200)),
         voxel_size=Coordinate((1, 2, 1)),
         interpolatable=False,
     )
-    data2 = da.zeros((array_spec2.roi.shape // array_spec2.voxel_size), dtype=np.uint32)
+    data2 = np.zeros((array_spec2.roi.shape // array_spec2.voxel_size), dtype=np.uint32)
     for node in nodes:
         loc = node_to_voxel(array_spec1.roi, array_spec1.voxel_size, node.location)
         data1[loc] = node.id
