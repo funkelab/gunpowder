@@ -1,6 +1,8 @@
-from gunpowder.zoo.tensorflow import unet, conv_pass
-import tensorflow as tf
 import json
+
+import tensorflow as tf
+
+from gunpowder.zoo.tensorflow import conv_pass, unet
 
 
 def create_network(input_shape, name):

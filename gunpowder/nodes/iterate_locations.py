@@ -2,11 +2,12 @@ import logging
 import multiprocessing as mp
 from random import randrange
 
-from .batch_filter import BatchFilter
-from gunpowder.batch_request import BatchRequest
-from gunpowder.coordinate import Coordinate
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
+from gunpowder.batch_request import BatchRequest
+from gunpowder.coordinate import Coordinate
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 from __future__ import print_function
-import logging
-import traceback
 
+import logging
 import sys
-from typing import Optional, Any
+import traceback
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ except ImportError:
 ZarrFile: Optional[Any] = None
 try:
     import zarr
+
     from .zarr_file import ZarrFile
 except ImportError:
     zarr = NoSuchModule("zarr")

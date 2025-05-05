@@ -1,18 +1,15 @@
 import logging
-import numpy as np
-from gunpowder.ext import jax
-from gunpowder.ext import jnp
-import pickle
 import os
+import pickle
+from typing import Any, Dict, Optional, Union
 
-from gunpowder.array import ArrayKey, Array
+import numpy as np
+
+from gunpowder.array import Array, ArrayKey
 from gunpowder.array_spec import ArraySpec
-from gunpowder.ext import tensorboardX, NoSuchModule
-from gunpowder.nodes.generic_train import GenericTrain
+from gunpowder.ext import NoSuchModule, jax, jnp, tensorboardX
 from gunpowder.jax import GenericJaxModel
-
-from typing import Dict, Union, Optional, Any
-
+from gunpowder.nodes.generic_train import GenericTrain
 
 logger = logging.getLogger(__name__)
 

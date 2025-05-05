@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
-from .array_source import ArraySource
 from .add_affinities import AddAffinities
+from .array_source import ArraySource
 from .astype import AsType
 from .balance_labels import BalanceLabels
 from .batch_filter import BatchFilter
@@ -10,11 +10,13 @@ from .crop import Crop
 from .csv_points_source import CsvPointsSource
 from .daisy_request_blocks import DaisyRequestBlocks
 from .defect_augment import DefectAugment
+from .deform_augment import DeformAugment
 from .downsample import DownSample
 from .dvid_source import DvidSource
-from .deform_augment import DeformAugment
 from .elastic_augment import ElasticAugment
 from .exclude_labels import ExcludeLabels
+from .gp_array_source import ArraySource as GPArraySource
+from .gp_graph_source import GraphSource as GPGraphSource
 from .graph_source import GraphSource
 from .grow_boundary import GrowBoundary
 from .hdf5_source import Hdf5Source
@@ -46,5 +48,3 @@ from .unsqueeze import Unsqueeze
 from .upsample import UpSample
 from .zarr_source import ZarrSource
 from .zarr_write import ZarrWrite
-from .gp_array_source import ArraySource as GPArraySource
-from .gp_graph_source import GraphSource as GPGraphSource

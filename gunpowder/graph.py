@@ -1,15 +1,14 @@
+import itertools
+import logging
+from copy import deepcopy
+from typing import Any, Dict, Iterator, Optional, Set
+
+import networkx as nx
+import numpy as np
+
+from .freezable import Freezable
 from .graph_spec import GraphSpec
 from .roi import Roi
-from .freezable import Freezable
-
-import numpy as np
-import networkx as nx
-
-from copy import deepcopy
-from typing import Dict, Optional, Set, Iterator, Any
-import logging
-import itertools
-
 
 logger = logging.getLogger(__name__)
 
