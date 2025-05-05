@@ -1,11 +1,12 @@
 import logging
-import numpy as np
 import os
 
-from .batch_filter import BatchFilter
+import numpy as np
+
 from gunpowder.batch_request import BatchRequest
-from gunpowder.ext import h5py
-from gunpowder.ext import ZarrFile
+from gunpowder.ext import ZarrFile, h5py
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

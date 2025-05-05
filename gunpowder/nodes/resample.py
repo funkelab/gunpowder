@@ -1,12 +1,15 @@
-from .batch_filter import BatchFilter
-from gunpowder.array import ArrayKey, Array
-from gunpowder.batch_request import BatchRequest
+import logging
+
+import numpy as np
+from skimage.transform import rescale
+
+from gunpowder.array import Array, ArrayKey
 from gunpowder.batch import Batch
+from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
-from skimage.transform import rescale
-import numpy as np
-import logging
+
+from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
 

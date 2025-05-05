@@ -1,17 +1,19 @@
-from .helper_sources import ArraySource
-from gunpowder import (
-    ArrayKey,
-    build,
-    Array,
-    ArraySpec,
-    Roi,
-    Coordinate,
-    BatchRequest,
-    BatchFilter,
-)
+import random
 
 import numpy as np
-import random
+
+from gunpowder import (
+    Array,
+    ArrayKey,
+    ArraySpec,
+    BatchFilter,
+    BatchRequest,
+    Coordinate,
+    Roi,
+    build,
+)
+
+from .helper_sources import ArraySource
 
 
 class DummyNode(BatchFilter):
