@@ -495,8 +495,8 @@ class DeformAugment(BatchFilter):
         if sum(self.jitter_sigma) > 0:
             el_transformation = create_elastic_transformation(
                 target_shape,
-                1,
-                self.jitter_sigma / self.control_point_spacing,
+                np.array(self.control_point_spacing) / np.array(target_spec.voxel_size),
+                np.array(self.jitter_sigma) / np.array(target_spec.voxel_size),
                 subsample=self.subsample,
             )
 
@@ -543,12 +543,6 @@ class DeformAugment(BatchFilter):
                         ],
                         axis=0,
                     )
-                    for index, value in enumerate(dzyx_sampling):
-                        if value == -1:
-                            # add the skipped axis to the transformation
-                            rot_transformation = rot_transformation.repeat(
-                                target_shape[index], axis=index + 1
-                            )
 
             else:
                 angle = Rotation.random()
