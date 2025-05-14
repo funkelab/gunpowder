@@ -510,36 +510,45 @@ class DeformAugment(BatchFilter):
             if self.spatial_dims == 2 or (
                 self.rotation_axes is not None and len(self.rotation_axes) == 2
             ):
-                # shape = [5,4,3]
-                # rotation_axes = [0,2]
-                # target_rot_shape = [3, 5]
                 if self.rotation_axes is not None:
                     target_rot_shape = tuple(np.array(target_shape)[self.rotation_axes])
                 else:
                     target_rot_shape = target_shape
                 rot_transformation = create_rotation_transformation(
                     target_rot_shape,
-                    random.random() * math.pi,
+                    random.random() * math.pi * 2,
                     subsample=self.subsample,
                 )
                 if self.rotation_axes:
-                    # rev_ind = [:, newaxis, :]
                     slices = (slice(None),) + tuple(
                         slice(None) if i in self.rotation_axes else np.newaxis
                         for i in range(self.spatial_dims)
                     )
                     rot_transformation = rot_transformation[slices]
+                    # figure out which axes were skipped. i.e. [0,-1,2] means axes 0,2 were rotated
                     dzyx_sampling = [
                         self.rotation_axes.index(j) if j in self.rotation_axes else -1
                         for j in range(self.spatial_dims)
                     ]
-                    print(rot_transformation.shape)
+                    # stack the rotation transformation to have the appropriate number of offset dims
+                    # inserting 0s for the skipped axis
                     rot_transformation = np.stack(
-                        rot_transformation[[max(x, 0) for x in dzyx_sampling]], axis=0
-                    ) * (np.array([min(x, 0) for x in dzyx_sampling]) + 1).reshape(
-                        (-1,) + (1,) * self.spatial_dims
+                        [
+                            (
+                                rot_transformation[x]
+                                if x >= 0
+                                else np.zeros_like(rot_transformation[0])
+                            )
+                            for x in dzyx_sampling
+                        ],
+                        axis=0,
                     )
-                    print(rot_transformation.shape)
+                    for index, value in enumerate(dzyx_sampling):
+                        if value == -1:
+                            # add the skipped axis to the transformation
+                            rot_transformation = rot_transformation.repeat(
+                                target_shape[index], axis=index + 1
+                            )
 
             else:
                 angle = Rotation.random()
