@@ -38,7 +38,7 @@ jobs:
         run: sphinx-build docs/source docs/build/html -b html
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs/build/html
           retention-days: 90
