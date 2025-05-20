@@ -147,7 +147,7 @@ def test_pipeline3(test_points):
     request.add(array_key, shape, voxel_size=Coordinate((1, 1)))
     request.add(points_key, shape)
 
-    shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=4, shift_axis=0)
+    shift_node = ShiftAugment(prob_slip=0.2, prob_shift=0.2, sigma=3, shift_axis=0)
     pipeline = (
         (hdf5_source, csv_source)
         + MergeProvider()
