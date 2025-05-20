@@ -90,6 +90,17 @@ class DeformAugment(BatchFilter):
             apply). Should be a float value between 0 and 1. Lowering this value
             could be useful for computational efficiency and increasing
             augmentation space.
+
+        rotation_axes (``Sequence`` of ``int``, optional):
+
+            The spatial axes within which to rotate. The default is to rotate in all
+            spatial dimensions. It is assumed that the spatial dimensions are the last
+            dimensions of the array. I.e. if your array is indexed as ``(b,c,z,y,x)``
+            we will rotate in zyx. If you want to rotate in xz, you would set
+            ``rotation_axes=[1,2]`` since these are correspond to the axis indices after
+            removing the non-spatial "b" and "c" dimensions. Given axes ``(c,t,z,y,x)``
+            and a need to rotate in just x,y, you would set the rotation axes to
+            ``rotation_axes=[1,2]``.
     """
 
     def __init__(
