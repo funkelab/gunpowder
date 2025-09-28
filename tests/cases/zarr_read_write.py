@@ -41,17 +41,17 @@ def test_read_write(tmp_path, zarr_store_func):
 
     raw_data = np.array(
         np.meshgrid(
-            range((roi_raw / voxel_size).begin[0], (roi_raw / voxel_size).end[0]),
-            range((roi_raw / voxel_size).begin[1], (roi_raw / voxel_size).end[1]),
-            range((roi_raw / voxel_size).begin[2], (roi_raw / voxel_size).end[2]),
+            range((roi_raw // voxel_size).begin[0], (roi_raw // voxel_size).end[0]),
+            range((roi_raw // voxel_size).begin[1], (roi_raw // voxel_size).end[1]),
+            range((roi_raw // voxel_size).begin[2], (roi_raw // voxel_size).end[2]),
             indexing="ij",
         )
     )
     gt_data = np.array(
         np.meshgrid(
-            range((roi_gt / voxel_size).begin[0], (roi_gt / voxel_size).end[0]),
-            range((roi_gt / voxel_size).begin[1], (roi_gt / voxel_size).end[1]),
-            range((roi_gt / voxel_size).begin[2], (roi_gt / voxel_size).end[2]),
+            range((roi_gt // voxel_size).begin[0], (roi_gt // voxel_size).end[0]),
+            range((roi_gt // voxel_size).begin[1], (roi_gt // voxel_size).end[1]),
+            range((roi_gt // voxel_size).begin[2], (roi_gt // voxel_size).end[2]),
             indexing="ij",
         )
     )

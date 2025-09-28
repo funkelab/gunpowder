@@ -54,10 +54,10 @@ class GrowBoundary(BatchFilter):
                 )
             voxel_size = self.spec[self.labels].voxel_size
             crop_in_gt = (
-                crop.shift(-gt.spec.roi.offset) / voxel_size
+                crop.shift(-gt.spec.roi.offset) // voxel_size
             ).get_bounding_box()
             crop_in_gt_mask = (
-                crop.shift(-gt_mask.spec.roi.offset) / voxel_size
+                crop.shift(-gt_mask.spec.roi.offset) // voxel_size
             ).get_bounding_box()
 
             self.__grow(

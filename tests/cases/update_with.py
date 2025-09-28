@@ -31,7 +31,7 @@ class ArrayTestSource(BatchProvider):
         self.key = key
         self.array = Array(
             np.zeros(
-                spec.roi.shape / spec.voxel_size,
+                spec.roi.shape // spec.voxel_size,
                 dtype=spec.dtype,
             ),
             spec=spec,

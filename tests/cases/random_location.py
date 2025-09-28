@@ -35,8 +35,8 @@ class ExampleSourceRandomLocation(BatchProvider):
         spec = request[self.array].copy()
         spec.voxel_size = self.voxel_size
 
-        start = (request[self.array].roi.begin / self.voxel_size) + 10
-        end = (request[self.array].roi.end / self.voxel_size) + 10
+        start = (request[self.array].roi.begin // self.voxel_size) + 10
+        end = (request[self.array].roi.end // self.voxel_size) + 10
         data_slices = tuple(map(slice, start, end))
 
         data = self.data[data_slices]

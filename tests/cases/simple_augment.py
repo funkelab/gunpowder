@@ -56,9 +56,10 @@ def test_mirror():
         assert len(list(batch[graph_key].nodes)) == 1
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
-        node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.offset) / voxel_size
+        node_voxel_index = (
+            Coordinate(node.location - batch[array_key].spec.roi.offset) // voxel_size
         )
+
         assert batch[array_key].data[node_voxel_index] == 1
 
     with build(mirror_pipeline):
@@ -68,12 +69,13 @@ def test_mirror():
         assert len(list(batch[graph_key].nodes)) == 1
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
-        node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.offset) / voxel_size
+        node_voxel_index = (
+            Coordinate(node.location - batch[array_key].spec.roi.offset) // voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_transpose():
@@ -113,12 +115,13 @@ def test_transpose():
         assert len(list(batch[graph_key].nodes)) == 1
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
-        node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.offset) / voxel_size
+        node_voxel_index = (
+            Coordinate(node.location - batch[array_key].spec.roi.offset) // voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
     with build(transpose_pipeline):
         expected_location = [410, 590]
@@ -127,12 +130,13 @@ def test_transpose():
         assert len(list(batch[graph_key].nodes)) == 1
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
-        node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.offset) / voxel_size
+        node_voxel_index = (
+            Coordinate(node.location - batch[array_key].spec.roi.offset) // voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_mirror_and_transpose():
@@ -182,8 +186,8 @@ def test_mirror_and_transpose():
         assert len(list(batch[graph_key].nodes)) == 1
         node = list(batch[graph_key].nodes)[0]
         assert all(np.isclose(node.location, expected_location))
-        node_voxel_index = Coordinate(
-            (node.location - batch[array_key].spec.roi.offset) / voxel_size
+        node_voxel_index = (
+            Coordinate(node.location - batch[array_key].spec.roi.offset) // voxel_size
         )
         assert batch[array_key].data[node_voxel_index] == 1
 
@@ -196,11 +200,11 @@ def test_mirror_and_transpose():
         assert all(np.isclose(node.location, expected_location))
         node_voxel_index = Coordinate(
             (np.array(expected_location) - batch[array_key].spec.roi.offset)
-            / voxel_size
+            // voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_mismatched_voxel_multiples():

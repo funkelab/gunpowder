@@ -86,10 +86,10 @@ class KlbSource(BatchProvider):
         voxel_size = self.spec[self.array].voxel_size
 
         # scale request roi to voxel units
-        dataset_roi = request_spec.roi / voxel_size
+        dataset_roi = request_spec.roi // voxel_size
 
         # shift request roi into dataset
-        dataset_roi = dataset_roi - self.spec[self.array].roi.offset / voxel_size
+        dataset_roi = dataset_roi - self.spec[self.array].roi.offset // voxel_size
 
         # create array spec
         array_spec = self.spec[self.array].copy()

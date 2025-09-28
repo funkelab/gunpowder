@@ -61,7 +61,7 @@ def test_up_and_downsample():
         # arrays
         if array_key in [raw_key, gt_key]:
             # the z,y,x coordinates of the ROI
-            roi = array.spec.roi / 4
+            roi = array.spec.roi // 4
             meshgrids = np.meshgrid(
                 range(roi.get_begin()[0], roi.get_end()[0]),
                 range(roi.get_begin()[1], roi.get_end()[1]),

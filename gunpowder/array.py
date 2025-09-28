@@ -83,7 +83,7 @@ class Array(Freezable):
             return self
 
         voxel_size = self.spec.voxel_size
-        data_roi = (roi - self.spec.roi.offset) / voxel_size
+        data_roi = (roi - self.spec.roi.offset) // voxel_size
         slices = data_roi.get_bounding_box()
 
         while len(slices) < len(self.data.shape):
@@ -144,7 +144,7 @@ class Array(Freezable):
         merged = self.copy()
 
         voxel_size = self.spec.voxel_size
-        data_roi = (array_roi - self_roi.offset) / voxel_size
+        data_roi = (array_roi - self_roi.offset) // voxel_size
         slices = data_roi.get_bounding_box()
 
         while len(slices) < len(self.data.shape):

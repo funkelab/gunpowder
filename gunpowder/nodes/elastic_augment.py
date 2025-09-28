@@ -159,7 +159,7 @@ class ElasticAugment(BatchFilter):
         logger.debug("master ROI aligned with voxel size is %s" % master_roi)
 
         # get master roi in voxels
-        master_roi_voxels = master_roi / self.voxel_size
+        master_roi_voxels = master_roi // self.voxel_size
         logger.debug("master ROI in voxels is %s" % master_roi_voxels)
 
         # Second, create a master transformation. This is a transformation that
@@ -206,7 +206,7 @@ class ElasticAugment(BatchFilter):
             self.target_rois[key] = target_roi
 
             # get ROI in voxels
-            target_roi_voxels = target_roi / self.voxel_size
+            target_roi_voxels = target_roi // self.voxel_size
 
             # get ROI relative to master ROI
             target_roi_in_master_roi_voxels = (
@@ -329,7 +329,7 @@ class ElasticAugment(BatchFilter):
                 logger.debug("relative to upstream ROI: %s", location)
 
                 # get spatial coordinates of node in voxels
-                location_voxels = location[-self.spatial_dims :] / self.voxel_size
+                location_voxels = location[-self.spatial_dims :] // self.voxel_size
 
                 # get projected location in transformation data space, this
                 # yields voxel coordinates relative to target ROI
@@ -443,7 +443,7 @@ class ElasticAugment(BatchFilter):
             ]
         )
         ids, locs = np.array(ids), tuple(zip(*locs))
-        points_array = np.zeros(source_roi.shape / self.voxel_size, dtype=np.int64)
+        points_array = np.zeros(source_roi.shape // self.voxel_size, dtype=np.int64)
         points_array[locs] = ids
 
         # reshape array data into (channels,) + spatial dims

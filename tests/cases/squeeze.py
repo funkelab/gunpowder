@@ -36,7 +36,7 @@ class ExampleSourceSqueeze(gp.BatchProvider):
         raw_spec = copy.deepcopy(self.array_spec_raw)
         raw_spec.roi = request[self.raw].roi
 
-        raw_shape = request[self.raw].roi.shape / self.voxel_size
+        raw_shape = request[self.raw].roi.shape // self.voxel_size
 
         outputs[self.raw] = gp.Array(
             np.random.randint(0, 256, raw_shape, dtype=raw_spec.dtype), raw_spec
@@ -50,7 +50,7 @@ class ExampleSourceSqueeze(gp.BatchProvider):
         labels_spec = copy.deepcopy(self.array_spec_labels)
         labels_spec.roi = request[self.labels].roi
 
-        labels_shape = request[self.labels].roi.shape / self.voxel_size
+        labels_shape = request[self.labels].roi.shape // self.voxel_size
 
         labels = np.ones(labels_shape, dtype=labels_spec.dtype)
         outputs[self.labels] = gp.Array(labels, labels_spec)

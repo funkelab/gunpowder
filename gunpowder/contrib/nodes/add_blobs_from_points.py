@@ -172,7 +172,7 @@ class AddBlobsFromPoints(BatchFilter):
                 id_mapper.make_map(all_points)
 
             # Initialize output array
-            shape_array = np.asarray(request[array_key].roi.shape) / voxel_size
+            shape_array = np.asarray(request[array_key].roi.shape) // voxel_size
             blob_map = np.zeros(shape_array, dtype=dtype)
 
             # Get point data

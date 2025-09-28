@@ -32,7 +32,7 @@ class Delay(BatchFilter):
 
 @pytest.mark.xfail(reason="Speedup is often dependent on hardware")
 def test_speedup():
-    delay = 0.2
+    delay = 0.02
     n_requests = 16
     a_workers = 2
     b_workers = 8

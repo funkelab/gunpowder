@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 dependencies = [
     "numpy>=1.24",
@@ -37,10 +37,10 @@ dependencies = [
     "requests",
     "augment-nd>=0.1.3",
     "tqdm",
-    "funlib.geometry>=0.3",
+    "funlib-geometry>=0.3",
     "zarr",
     "networkx>=3.1",
-    "funlib.persistence>=0.5",
+    "funlib-persistence>=0.5",
 ]
 
 [project.optional-dependencies]
@@ -106,3 +106,7 @@ exclude = ["gunpowder/contrib/*"]
 # ruff complains about escape sequence in docstring which renders math
 "gunpowder/nodes/rasterize_graph.py" = ["W605"]
 "docker/test_environment.py" = ["F401"]  # unused import in test env
+
+[tool.uv.sources]
+funlib-persistence = { git = "https://github.com/funkelab/funlib.persistence", rev = "float-coords" }
+funlib-geometry = { git = "https://github.com/funkelab/funlib.geometry", rev = "float-coords" }

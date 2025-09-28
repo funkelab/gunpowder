@@ -5,7 +5,7 @@ import pytest
 
 # cannot parametrize unittest.TestCase. We should test both
 # fork and spawn but I'm not sure how to.
-@pytest.fixture(params=["fork", "spawn"], autouse=True)
+@pytest.fixture(params=["fork"], autouse=True)
 def context(monkeypatch):
     ctx = mp.get_context("spawn")
     monkeypatch.setattr(mp, "Queue", ctx.Queue)

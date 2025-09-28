@@ -202,8 +202,8 @@ class RasterizeGraph(BatchFilter):
         # get roi used for creating the new array (graph_roi does not
         # necessarily align with voxel size)
         enlarged_vol_roi = graph.spec.roi.snap_to_grid(voxel_size)
-        offset = enlarged_vol_roi.begin / voxel_size
-        shape = enlarged_vol_roi.shape / voxel_size
+        offset = enlarged_vol_roi.begin // voxel_size
+        shape = enlarged_vol_roi.shape // voxel_size
         data_roi = Roi(offset, shape)
 
         logger.debug("Graph in %s", graph.spec.roi)
@@ -223,7 +223,7 @@ class RasterizeGraph(BatchFilter):
             labels = []
             # for i, point in graph.data.items():
             for i, point in enumerate(graph.nodes):
-                v = Coordinate(point.location / voxel_size)
+                v = Coordinate(point.location // voxel_size)
                 v -= data_roi.begin
                 labels.append(mask_array.data[v])
             # Make list unique
@@ -320,25 +320,25 @@ class RasterizeGraph(BatchFilter):
         # Rasterize volume either with single voxel or with defined struct elememt
         for node in graph.nodes:
             # get the voxel coordinate, 'Coordinate' ensures integer
-            v = Coordinate(node.location / voxel_size)
+            voxel_loc = Coordinate(node.location) // voxel_size
 
             # get the voxel coordinate relative to output array start
-            v -= data_roi.begin
+            voxel_loc -= data_roi.begin
 
             # skip graph outside of mask
-            if mask is not None and not mask[v]:
+            if mask is not None and not mask[voxel_loc]:
                 continue
 
             logger.debug(
                 "Rasterizing node %s at %s",
                 node.location,
-                node.location / voxel_size - data_roi.begin,
+                node.location // voxel_size - data_roi.begin,
             )
 
             if use_fast_rasterization:
                 # Calculate where to crop the kernel mask and the rasterized array
-                shifted_kernel = kernel_roi_base.shift(v - radius_voxel)
-                shifted_data = data_roi_base.shift(-(v - radius_voxel))
+                shifted_kernel = kernel_roi_base.shift(voxel_loc - radius_voxel)
+                shifted_data = data_roi_base.shift(-(voxel_loc - radius_voxel))
                 arr_crop = data_roi_base.intersect(shifted_kernel)
                 kernel_crop = kernel_roi_base.intersect(shifted_data)
                 arr_crop_ind = arr_crop.get_bounding_box()
@@ -362,7 +362,7 @@ class RasterizeGraph(BatchFilter):
                         )
                 else:
                     c = 1
-                rasterized_graph[v] = c
+                rasterized_graph[voxel_loc] = c
         if settings.edges:
             for e in graph.edges:
                 if settings.color_attr is not None:
