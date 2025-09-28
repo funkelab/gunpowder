@@ -98,7 +98,9 @@ class Hdf5LikeSource(BatchProvider):
                 dataset_roi = request_spec.roi // voxel_size
 
                 # shift request roi into dataset
-                dataset_roi = dataset_roi - self.spec[array_key].roi.offset // voxel_size
+                dataset_roi = (
+                    dataset_roi - self.spec[array_key].roi.offset // voxel_size
+                )
 
                 # create array spec
                 array_spec = self.spec[array_key].copy()
