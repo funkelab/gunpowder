@@ -1,8 +1,11 @@
 from funlib.persistence.arrays import Array as PersistenceArray
+from funlib.geometry import Roi, FloatRoi as FR, FloatCoordinate as FC
 
 from gunpowder.array import Array, ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch import Batch
+
+import numpy as np
 
 from .batch_provider import BatchProvider
 
@@ -40,9 +43,22 @@ class ArraySource(BatchProvider):
     ):
         self.key = key
         self.array = array
+        in_roi = self.array.roi
+        in_voxel_size = self.array.voxel_size
+        rounded_roi = Roi(in_roi.offset.round(), in_roi.shape.round())
+        rounded_voxel_size = in_voxel_size.round()
+        assert all(np.isclose(in_roi.offset, rounded_roi.offset)), (
+            f"ArraySource requires array ROI offset to be an integer. Got {in_roi.offset}."
+        )
+        assert all(np.isclose(in_roi.shape, rounded_roi.shape)), (
+            f"ArraySource requires array ROI shape to be an integer. Got {in_roi.shape}."
+        )
+        assert all(np.isclose(in_voxel_size, rounded_voxel_size)), (
+            f"ArraySource requires array voxel size to be integer. Got {in_voxel_size}."
+        )
         self.array_spec = ArraySpec(
-            self.array.roi,
-            self.array.voxel_size,
+            rounded_roi,
+            rounded_voxel_size,
             interpolatable,
             False,
             self.array.dtype,
@@ -55,5 +71,7 @@ class ArraySource(BatchProvider):
         outputs = Batch()
         out_spec = self.array_spec.copy()
         out_spec.roi = request[self.key].roi
-        outputs[self.key] = Array(self.array[out_spec.roi], out_spec)
+        outputs[self.key] = Array(
+            self.array[FR(FC(out_spec.roi.offset), FC(out_spec.roi.shape))], out_spec
+        )
         return outputs
