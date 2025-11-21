@@ -1,8 +1,8 @@
 import logging
 import math
 import random
-from typing import Optional, Sequence
 import warnings
+from typing import Optional, Sequence
 
 import numpy as np
 from augment.augment import apply_transformation, upscale_transformation
@@ -18,7 +18,6 @@ from scipy.spatial.transform import Rotation
 from gunpowder.array import Array, ArrayKey
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch import Batch
-from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 

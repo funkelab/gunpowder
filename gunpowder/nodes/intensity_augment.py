@@ -29,7 +29,10 @@ class IntensityAugment(BatchFilter):
 
                 a = a.mean() + (a-a.mean())*scale + shift
 
-        z_section_wise (``bool``):
+        z_section_wise (``bool``, optional):
+
+            **Deprecated.** Use ``slab`` instead. This parameter will be removed
+            in a future version.
 
             Perform the augmentation z-section wise. Requires 3D arrays and
             assumes that z is the first dimension.
@@ -65,7 +68,7 @@ class IntensityAugment(BatchFilter):
         scale_max,
         shift_min,
         shift_max,
-        z_section_wise=False,
+        z_section_wise=None,
         clip=True,
         p=1.0,
         slab=None,
@@ -76,7 +79,7 @@ class IntensityAugment(BatchFilter):
         self.shift_min = shift_min
         self.shift_max = shift_max
         self.z_section_wise = z_section_wise
-        if self.z_section_wise:
+        if self.z_section_wise is not None:
             warnings.warn(
                 DeprecationWarning(
                     "z_section_wise is deprecated and will be removed in the future. Please use slab instead."
@@ -113,7 +116,7 @@ class IntensityAugment(BatchFilter):
                 raw.data.min() >= 0 and raw.data.max() <= 1
             ), "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
 
-        if self.z_section_wise is not None:
+        if self.z_section_wise:
             slab = [-1] * len(raw.data.shape)
             slab[-raw.spec.voxel_size.dims] = 1
         elif self.slab is not None:
