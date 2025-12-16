@@ -442,7 +442,6 @@ class DeformAugment(BatchFilter):
         in_roi = output_spec.roi.snap_to_grid(
             transformation.spec.voxel_size, mode="grow"
         )
-        in_shape = in_roi.shape / transformation.spec.voxel_size
         out_shape = in_roi.shape / output_spec.voxel_size
 
         relative_in_roi = (
