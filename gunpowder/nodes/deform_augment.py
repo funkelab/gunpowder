@@ -131,7 +131,7 @@ class DeformAugment(BatchFilter):
         self.graph_raster_voxel_size = (
             Coordinate(graph_raster_voxel_size)
             if graph_raster_voxel_size is not None
-            else control_point_spacing * 0 + 1
+            else self.control_point_spacing * 0 + 1
         )
         self.rotation_axes = (
             list(sorted(rotation_axes)) if rotation_axes is not None else None
