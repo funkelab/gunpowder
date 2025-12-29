@@ -700,7 +700,3 @@ class DeformAugment(BatchFilter):
         )
 
         return source_roi
-
-    def __shift_transformation(self, shift, transformation):
-        for d in range(transformation.shape[0]):
-            transformation[d] += shift[d]
