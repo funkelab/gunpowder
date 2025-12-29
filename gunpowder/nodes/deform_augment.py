@@ -48,6 +48,14 @@ class DeformAugment(BatchFilter):
 
             Interval to randomly sample scale factors from.
 
+        rotate (``bool``):
+
+            Whether or not to apply rotations to the requested data. By default
+            True. Rotations can be an expensive operation, especially when requesting
+            very non-isometric arrays, rotations may cause excessive deformations
+            and greatly expand the data read necessary to resolve the request. In these
+            cases I recommend looking into rotation_axes.
+
         subsample (``int``):
 
             Instead of creating an elastic transformation on the full
@@ -82,6 +90,18 @@ class DeformAugment(BatchFilter):
 
             Whether or not to compute the elastic transform node wise for nodes
             that were lossed during the fast elastic transform process.
+
+        transform_key (``ArrayKey``, optional):
+
+            The key in which to store the used transformation. If provided this will
+            allow you to request the deformation field that was applied to your
+            image.
+
+        graph_raster_voxel_size (``Coordinate``, optional):
+
+            The voxel size to use for the fast points transform. This step requires
+            generating an image with a specific voxel size. We default to a size of
+            1 per axis.
 
 
         p (``float``, optional):
