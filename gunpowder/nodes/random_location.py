@@ -182,7 +182,11 @@ class RandomLocation(BatchFilter):
         # 1. All upstream rois are unbounded - infinite number of valid shifts and no way to sample
         # 2. No overlap in shift rois - no options to sample from
         if all(
-            [self.upstream_spec[key].roi.unbounded for key, spec in request.items()]
+            [
+                self.upstream_spec[key].roi.unbounded
+                for key, spec in request.items()
+                if key in self.upstream_spec
+            ]
         ):
             raise ValueError(
                 "\n\tCannot request a random location from upstream spec without bounds!\n"
