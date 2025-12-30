@@ -178,6 +178,18 @@ class RandomLocation(BatchFilter):
         logger.debug("request: %s", request.array_specs)
         logger.debug("my spec: %s", self.spec)
 
+        # failure cases:
+        # 1. All upstream rois are unbounded - infinite number of valid shifts and no way to sample
+        # 2. No overlap in shift rois - no options to sample from
+        if all(
+            [self.upstream_spec[key].roi.unbounded for key, spec in request.items()]
+        ):
+            raise ValueError(
+                "\n\tCannot request a random location from upstream spec without bounds!\n"
+                "\tThis is most likely caused by infinite padding upstream of your RandomLocation node\n"
+                f"\tUpstream spec: {self.upstream_spec}",
+            )
+
         if request.array_specs.keys():
             lcm_voxel_size = self.spec.get_lcm_voxel_size(request.array_specs.keys())
         else:
@@ -196,13 +208,11 @@ class RandomLocation(BatchFilter):
         else:
             lcm_shift_roi = shift_roi
 
-        assert not lcm_shift_roi.unbounded, (
-            "Can not pick a random location, intersection of upstream ROIs is "
-            "unbounded."
+        assert not (lcm_shift_roi.unbounded or lcm_shift_roi.empty), (
+            "\n\tCan not satisfy request with the upstream data provided.\n"
+            f"\tBatch Request: {request}\n"
+            f"\tUpstream Spec: {self.upstream_spec}"
         )
-        assert (
-            not lcm_shift_roi.empty
-        ), "Can not satisfy batch request, no location covers all requested ROIs."
 
         random_shift = self.__select_random_shift(
             request, lcm_shift_roi, lcm_voxel_size
