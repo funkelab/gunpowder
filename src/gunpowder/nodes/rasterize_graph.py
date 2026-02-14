@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class RasterizationSettings(Freezable):
-    """Data structure to store parameters for rasterization of graph.
+    r"""Data structure to store parameters for rasterization of graph.
 
     Args:
 
