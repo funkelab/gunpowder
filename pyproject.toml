@@ -105,9 +105,6 @@ docs = [
 [tool.setuptools.dynamic]
 version = { attr = "gunpowder.version_info.__version__" }
 
-[tool.setuptools.packages.find]
-include = ["gunpowder*"]
-
 [tool.ruff.lint]
 # pyflakes, pycodestyle, isort
 select = ["F", "E", "W", "I001"]
