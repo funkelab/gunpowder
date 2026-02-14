@@ -444,9 +444,9 @@ class Graph(Freezable):
         )
 
         for node in trimmed.nodes:
-            assert roi.contains(
-                node.location
-            ), f"Failed to properly contain node {node.id} at {node.location}"
+            assert roi.contains(node.location), (
+                f"Failed to properly contain node {node.id} at {node.location}"
+            )
 
         return trimmed
 
@@ -537,9 +537,9 @@ class Graph(Freezable):
         self_roi = self.spec.roi
         other_roi = other.spec.roi
 
-        assert self_roi.contains(other_roi) or other_roi.contains(
-            self_roi
-        ), "Can not merge graphs that are not contained in each other."
+        assert self_roi.contains(other_roi) or other_roi.contains(self_roi), (
+            "Can not merge graphs that are not contained in each other."
+        )
 
         # make sure self contains other
         if not self_roi.contains(other_roi):

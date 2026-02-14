@@ -94,9 +94,9 @@ class RasterizationSettings(Freezable):
         radius = np.array([radius]).flatten().astype(np.float64)
 
         if inner_radius_fraction is not None:
-            assert (
-                inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0
-            ), "Inner radius fraction has to be between (excluding) 0 and 1"
+            assert inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0, (
+                "Inner radius fraction has to be between (excluding) 0 and 1"
+            )
             inner_radius_fraction = 1.0 - inner_radius_fraction
 
         self.radius = radius
@@ -185,9 +185,9 @@ class RasterizeGraph(BatchFilter):
 
         if self.settings.mask is not None:
             mask_voxel_size = self.spec[self.settings.mask].voxel_size
-            assert (
-                self.spec[self.array].voxel_size == mask_voxel_size
-            ), "Voxel size of mask and rasterized volume need to be equal"
+            assert self.spec[self.array].voxel_size == mask_voxel_size, (
+                "Voxel size of mask and rasterized volume need to be equal"
+            )
 
             new_mask_roi = graph_roi.snap_to_grid(mask_voxel_size)
             deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)

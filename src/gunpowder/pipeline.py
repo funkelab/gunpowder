@@ -164,14 +164,14 @@ class Pipeline:
         return result
 
     def __radd__(self, other):
-        assert isinstance(
-            other, tuple
-        ), f"Don't know how to radd {type(other)} to Pipeline"
+        assert isinstance(other, tuple), (
+            f"Don't know how to radd {type(other)} to Pipeline"
+        )
 
         for o in other:
-            assert isinstance(o, Pipeline) or isinstance(
-                o, BatchProvider
-            ), f"Don't know how to radd {type(o)} to Pipeline"
+            assert isinstance(o, Pipeline) or isinstance(o, BatchProvider), (
+                f"Don't know how to radd {type(o)} to Pipeline"
+            )
 
         other = tuple(
             Pipeline(o) if isinstance(o, BatchProvider) else o.copy() for o in other

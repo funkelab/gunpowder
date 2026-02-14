@@ -41,9 +41,9 @@ class RandomProvider(BatchProvider):
 
     def setup(self):
         self.enable_placeholders()
-        assert (
-            len(self.get_upstream_providers()) > 0
-        ), "at least one batch provider must be added to the RandomProvider"
+        assert len(self.get_upstream_providers()) > 0, (
+            "at least one batch provider must be added to the RandomProvider"
+        )
         if self.probabilities is not None:
             assert len(self.get_upstream_providers()) == len(self.probabilities), (
                 "if probabilities are specified, they "

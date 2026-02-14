@@ -81,10 +81,10 @@ class AddVectorMap(BatchFilter):
             (src_points_key, trg_points_key),
         ) in self.array_to_src_trg_points.items():
             for points_key in [src_points_key, trg_points_key]:
-                assert (
-                    points_key in self.spec
-                ), "Asked for {} in AddVectorMap from {}, where {} is not provided.".format(
-                    array_key, points_key, points_key
+                assert points_key in self.spec, (
+                    "Asked for {} in AddVectorMap from {}, where {} is not provided.".format(
+                        array_key, points_key, points_key
+                    )
                 )
             neg_pad_for_partners = Coordinate(
                 (self.pad_for_partners * np.asarray([-1])).tolist()

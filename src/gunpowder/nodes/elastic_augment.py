@@ -470,10 +470,10 @@ class ElasticAugment(BatchFilter):
         for point_id, proj_loc in zip(ids, projected_locs):
             point = node_dict.pop(point_id)
             if not any([np.isnan(x) for x in proj_loc]):
-                assert (
-                    len(proj_loc) == self.spatial_dims
-                ), "projected location has wrong number of dimensions: {}, expected: {}".format(
-                    len(proj_loc), self.spatial_dims
+                assert len(proj_loc) == self.spatial_dims, (
+                    "projected location has wrong number of dimensions: {}, expected: {}".format(
+                        len(proj_loc), self.spatial_dims
+                    )
                 )
                 point.location[-self.spatial_dims :] = proj_loc
             else:
@@ -590,9 +590,9 @@ class ElasticAugment(BatchFilter):
             transformation[d] += shift[d]
 
     def __misalign(self, transformation):
-        assert (
-            transformation.shape[0] == 3
-        ), "misalign can only be applied to 3D volumes"
+        assert transformation.shape[0] == 3, (
+            "misalign can only be applied to 3D volumes"
+        )
 
         num_sections = transformation[0].shape[0]
 

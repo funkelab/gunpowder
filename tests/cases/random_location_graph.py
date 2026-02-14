@@ -37,9 +37,9 @@ class BatchTester(BatchFilter):
                     f"PROCESS TESTBATCH ======== {key}: {graph.spec.roi} {graph}"
                 )
                 if self.exact:
-                    assert (
-                        graph.spec.roi == self.roi_to_match
-                    ), "graph roi does not match possible roi"
+                    assert graph.spec.roi == self.roi_to_match, (
+                        "graph roi does not match possible roi"
+                    )
                 else:
                     assert self.roi_to_match.contains(
                         batch[GraphKeys.TEST_GRAPH].spec.roi

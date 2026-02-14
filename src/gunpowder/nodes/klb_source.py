@@ -114,9 +114,9 @@ class KlbSource(BatchProvider):
                 assert (common_header[attr] == header[attr]).all(), (
                     "Headers of provided KLB files differ in attribute %s" % attr
                 )
-            assert (
-                common_header["datatype"] == header["datatype"]
-            ), "Headers of provided KLB files differ in attribute datatype"
+            assert common_header["datatype"] == header["datatype"], (
+                "Headers of provided KLB files differ in attribute datatype"
+            )
 
         size = Coordinate(common_header["imagesize_tczyx"])
         voxel_size = Coordinate(common_header["pixelspacing_tczyx"])

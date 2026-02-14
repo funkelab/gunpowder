@@ -71,9 +71,9 @@ def test_mirror():
         node_voxel_index = Coordinate(
             (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_transpose():
@@ -116,9 +116,9 @@ def test_transpose():
         node_voxel_index = Coordinate(
             (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
     with build(transpose_pipeline):
         expected_location = [410, 590]
@@ -130,9 +130,9 @@ def test_transpose():
         node_voxel_index = Coordinate(
             (node.location - batch[array_key].spec.roi.offset) / voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_mirror_and_transpose():
@@ -198,9 +198,9 @@ def test_mirror_and_transpose():
             (np.array(expected_location) - batch[array_key].spec.roi.offset)
             / voxel_size
         )
-        assert (
-            batch[array_key].data[node_voxel_index] == 1
-        ), f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        assert batch[array_key].data[node_voxel_index] == 1, (
+            f"Node at {np.where(batch[array_key].data == 1)} not {node_voxel_index}"
+        )
 
 
 def test_mismatched_voxel_multiples():

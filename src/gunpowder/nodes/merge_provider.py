@@ -21,9 +21,9 @@ class MergeProvider(BatchProvider):
 
     def setup(self):
         self.enable_placeholders()
-        assert (
-            len(self.get_upstream_providers()) > 0
-        ), "at least one batch provider needs to be added to the MergeProvider"
+        assert len(self.get_upstream_providers()) > 0, (
+            "at least one batch provider needs to be added to the MergeProvider"
+        )
         # Only allow merging if no two upstream_providers have the same
         # array/points keys
         error_message = (

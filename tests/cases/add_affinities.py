@@ -113,17 +113,17 @@ def test_output():
                     masked = labels_mask.data[p] == 0 or labels_mask.data[pn] == 0
 
                     if a == b and a != 0 and b != 0:
-                        assert (
-                            affs.data[(n,) + p] == 1.0
-                        ), "%s -> %s, %s -> %s, but is not 1" % (p, pn, a, b)
+                        assert affs.data[(n,) + p] == 1.0, (
+                            "%s -> %s, %s -> %s, but is not 1" % (p, pn, a, b)
+                        )
                     else:
-                        assert (
-                            affs.data[(n,) + p] == 0.0
-                        ), "%s -> %s, %s -> %s, but is not 0" % (p, pn, a, b)
+                        assert affs.data[(n,) + p] == 0.0, (
+                            "%s -> %s, %s -> %s, but is not 0" % (p, pn, a, b)
+                        )
                     if masked:
-                        assert (
-                            affs_mask.data[(n,) + p] == 0.0
-                        ), "%s or %s are masked, but mask is not 0" % (p, pn)
+                        assert affs_mask.data[(n,) + p] == 0.0, (
+                            "%s or %s are masked, but mask is not 0" % (p, pn)
+                        )
 
         request = BatchRequest()
         request.add(affs_key, (100, 16, 64))

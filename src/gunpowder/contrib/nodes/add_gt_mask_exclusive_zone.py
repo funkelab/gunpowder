@@ -63,16 +63,18 @@ class AddGtMaskExclusiveZone(BatchFilter):
             # do nothing if binary mask to create EZ mask around is not requested as well
             if EZ_mask_type in request.arrays:
                 # assert that binary mask for which EZ mask is created for is requested
-                assert (
-                    binary_map_type in request.arrays
-                ), "ExclusiveZone Mask for {}, can only be created if {} also requested.".format(
-                    EZ_mask_type, binary_map_type
+                assert binary_map_type in request.arrays, (
+                    "ExclusiveZone Mask for {}, can only be created if {} also requested.".format(
+                        EZ_mask_type, binary_map_type
+                    )
                 )
                 # assert that ROI of EZ lies within ROI of binary mask
                 assert request.arrays[binary_map_type].contains(
                     request.arrays[EZ_mask_type]
-                ), "EZ mask for {} requested for ROI outside of source's ({}) ROI.".format(
-                    EZ_mask_type, binary_map_type
+                ), (
+                    "EZ mask for {} requested for ROI outside of source's ({}) ROI.".format(
+                        EZ_mask_type, binary_map_type
+                    )
                 )
 
                 self.EZ_masks_to_create.append(EZ_mask_type)

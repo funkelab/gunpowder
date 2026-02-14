@@ -33,9 +33,9 @@ class DownSample(BatchFilter):
     def __init__(self, source, factor, target):
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
-        assert isinstance(factor, numbers.Number) or isinstance(
-            factor, tuple
-        ), "Scaling factor should be a number or a tuple of numbers."
+        assert isinstance(factor, numbers.Number) or isinstance(factor, tuple), (
+            "Scaling factor should be a number or a tuple of numbers."
+        )
 
         self.source = source
         self.factor = (

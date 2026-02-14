@@ -55,15 +55,15 @@ class Batch(Freezable):
 
     def __setitem__(self, key, value):
         if isinstance(value, Array):
-            assert isinstance(
-                key, ArrayKey
-            ), "Only a ArrayKey is allowed as key for an Array value."
+            assert isinstance(key, ArrayKey), (
+                "Only a ArrayKey is allowed as key for an Array value."
+            )
             self.arrays[key] = value
 
         elif isinstance(value, Graph):
-            assert isinstance(
-                key, GraphKey
-            ), "Only a GraphKey is allowed as key for Graph value."
+            assert isinstance(key, GraphKey), (
+                "Only a GraphKey is allowed as key for Graph value."
+            )
             self.graphs[key] = value
 
         else:

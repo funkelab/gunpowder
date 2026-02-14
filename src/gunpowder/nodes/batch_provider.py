@@ -111,11 +111,13 @@ class BatchProvider(object):
         if self.spec is None:
             self._spec = ProviderSpec()
 
-        assert (
-            key not in self.spec
-        ), "Node %s is trying to add spec for %s, but is already " "provided." % (
-            type(self).__name__,
-            key,
+        assert key not in self.spec, (
+            "Node %s is trying to add spec for %s, but is already "
+            "provided."
+            % (
+                type(self).__name__,
+                key,
+            )
         )
 
         self.spec[key] = copy.deepcopy(spec)
@@ -218,9 +220,9 @@ class BatchProvider(object):
 
     def check_request_consistency(self, request):
         for key, request_spec in request.items():
-            assert (
-                key in self.spec
-            ), "%s: Asked for %s which this node does not provide" % (self.name(), key)
+            assert key in self.spec, (
+                "%s: Asked for %s which this node does not provide" % (self.name(), key)
+            )
             assert (
                 isinstance(request_spec, ArraySpec)
                 or isinstance(request_spec, GraphSpec)
@@ -233,13 +235,14 @@ class BatchProvider(object):
             request_roi = request_spec.roi
 
             if provided_roi is not None:
-                assert provided_roi.contains(
-                    request_roi
-                ), "%s: %s's ROI %s outside of my ROI %s" % (
-                    self.name(),
-                    key,
-                    request_roi,
-                    provided_roi,
+                assert provided_roi.contains(request_roi), (
+                    "%s: %s's ROI %s outside of my ROI %s"
+                    % (
+                        self.name(),
+                        key,
+                        request_roi,
+                        provided_roi,
+                    )
                 )
 
             if isinstance(key, ArrayKey):
@@ -272,24 +275,27 @@ class BatchProvider(object):
 
     def check_batch_consistency(self, batch, request):
         for array_key, request_spec in request.array_specs.items():
-            assert (
-                array_key in batch.arrays
-            ), "%s requested, but %s did not provide it." % (array_key, self.name())
-            array = batch.arrays[array_key]
-            assert (
-                array.spec.roi == request_spec.roi
-            ), "%s ROI %s requested, but ROI %s provided by %s." % (
-                array_key,
-                request_spec.roi,
-                array.spec.roi,
-                self.name(),
+            assert array_key in batch.arrays, (
+                "%s requested, but %s did not provide it." % (array_key, self.name())
             )
-            assert (
-                array.spec.voxel_size == self.spec[array_key].voxel_size
-            ), "voxel size of %s announced, but %s " "delivered for %s" % (
-                self.spec[array_key].voxel_size,
-                array.spec.voxel_size,
-                array_key,
+            array = batch.arrays[array_key]
+            assert array.spec.roi == request_spec.roi, (
+                "%s ROI %s requested, but ROI %s provided by %s."
+                % (
+                    array_key,
+                    request_spec.roi,
+                    array.spec.roi,
+                    self.name(),
+                )
+            )
+            assert array.spec.voxel_size == self.spec[array_key].voxel_size, (
+                "voxel size of %s announced, but %s "
+                "delivered for %s"
+                % (
+                    self.spec[array_key].voxel_size,
+                    array.spec.voxel_size,
+                    array_key,
+                )
             )
             # ensure that the spatial dimensions are the same (other dimensions
             # on top are okay, e.g., for affinities)
@@ -309,27 +315,29 @@ class BatchProvider(object):
                     )
                 )
             if request_spec.dtype is not None:
-                assert (
-                    batch[array_key].data.dtype == request_spec.dtype
-                ), "dtype of array %s (%s) does not match requested dtype %s by %s" % (
-                    array_key,
-                    batch[array_key].data.dtype,
-                    request_spec.dtype,
-                    self.name(),
+                assert batch[array_key].data.dtype == request_spec.dtype, (
+                    "dtype of array %s (%s) does not match requested dtype %s by %s"
+                    % (
+                        array_key,
+                        batch[array_key].data.dtype,
+                        request_spec.dtype,
+                        self.name(),
+                    )
                 )
 
         for graph_key, request_spec in request.graph_specs.items():
-            assert (
-                graph_key in batch.graphs
-            ), "%s requested, but %s did not provide it." % (graph_key, self.name())
+            assert graph_key in batch.graphs, (
+                "%s requested, but %s did not provide it." % (graph_key, self.name())
+            )
             graph = batch.graphs[graph_key]
-            assert (
-                graph.spec.roi == request_spec.roi
-            ), "%s ROI %s requested, but ROI %s provided by %s." % (
-                graph_key,
-                request_spec.roi,
-                graph.spec.roi,
-                self.name(),
+            assert graph.spec.roi == request_spec.roi, (
+                "%s ROI %s requested, but ROI %s provided by %s."
+                % (
+                    graph_key,
+                    request_spec.roi,
+                    graph.spec.roi,
+                    self.name(),
+                )
             )
 
             if request_spec.directed is not None:

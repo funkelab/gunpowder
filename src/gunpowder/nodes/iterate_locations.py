@@ -61,11 +61,12 @@ class IterateLocations(BatchFilter):
         upstream_batch = upstream.request_batch(upstream_request)
         self.nodes = list(upstream_batch[self.graph].nodes)
         self.coordinates = [node.location for node in self.nodes]
-        assert (
-            len(self.coordinates) > 0
-        ), "Graph  %s doesn't have nodes to iterate over in roi %s" % (
-            self.graph,
-            self.roi,
+        assert len(self.coordinates) > 0, (
+            "Graph  %s doesn't have nodes to iterate over in roi %s"
+            % (
+                self.graph,
+                self.roi,
+            )
         )
 
         # clear bounding boxes of all provided arrays and points

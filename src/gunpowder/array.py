@@ -47,17 +47,18 @@ class Array(Freezable):
                     data.shape,
                 )
                 if spec.roi.offset[d] is not None:
-                    assert (
-                        spec.roi.offset[d] % spec.voxel_size[d] == 0
-                    ), "ROI offset %s must be a multiple of voxel size %s" % (
-                        spec.roi.offset,
-                        spec.voxel_size,
+                    assert spec.roi.offset[d] % spec.voxel_size[d] == 0, (
+                        "ROI offset %s must be a multiple of voxel size %s"
+                        % (
+                            spec.roi.offset,
+                            spec.voxel_size,
+                        )
                     )
 
         if spec.dtype is not None:
-            assert (
-                data.dtype == spec.dtype
-            ), "data dtype %s does not match spec dtype %s" % (data.dtype, spec.dtype)
+            assert data.dtype == spec.dtype, (
+                "data dtype %s does not match spec dtype %s" % (data.dtype, spec.dtype)
+            )
 
         self.freeze()
 
@@ -75,9 +76,9 @@ class Array(Freezable):
                 Make a copy of the data.
         """
 
-        assert self.spec.roi.contains(
-            roi
-        ), "Requested crop ROI (%s) doesn't fit in array (%s)" % (roi, self.spec.roi)
+        assert self.spec.roi.contains(roi), (
+            "Requested crop ROI (%s) doesn't fit in array (%s)" % (roi, self.spec.roi)
+        )
 
         if self.spec.roi == roi and not copy:
             return self
@@ -116,13 +117,13 @@ class Array(Freezable):
         self_roi = self.spec.roi
         array_roi = array.spec.roi
 
-        assert self_roi.contains(array_roi) or array_roi.contains(
-            self_roi
-        ), "Can not merge arrays that are not contained in each other."
+        assert self_roi.contains(array_roi) or array_roi.contains(self_roi), (
+            "Can not merge arrays that are not contained in each other."
+        )
 
-        assert (
-            self.spec.voxel_size == array.spec.voxel_size
-        ), "Can not merge arrays with different voxel sizes."
+        assert self.spec.voxel_size == array.spec.voxel_size, (
+            "Can not merge arrays with different voxel sizes."
+        )
 
         # make sure self contains array
         if not self_roi.contains(array_roi):

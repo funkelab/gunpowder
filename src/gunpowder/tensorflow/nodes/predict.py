@@ -307,9 +307,9 @@ class Predict(GenericPredict):
             self.shared_input_array_config[name] = (begin, size, shape, dtype)
 
             begin += size * np.dtype(dtype).itemsize
-            assert (
-                begin <= self.max_shared_memory
-            ), "The input arrays exceed the max_shared_memory"
+            assert begin <= self.max_shared_memory, (
+                "The input arrays exceed the max_shared_memory"
+            )
 
     def __create_shared_output_array_config(self):
         """To be called by predict process."""
@@ -324,9 +324,9 @@ class Predict(GenericPredict):
             self.shared_output_array_config[name] = (begin, size, tuple(shape), dtype)
 
             begin += size * np.dtype(dtype).itemsize
-            assert (
-                begin <= self.max_shared_memory
-            ), "The output arrays exceed the max_shared_memory"
+            assert begin <= self.max_shared_memory, (
+                "The output arrays exceed the max_shared_memory"
+            )
 
     def __init_shared_input_arrays(self):
         """Assign the shared memory to numpy arrays."""

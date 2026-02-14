@@ -71,18 +71,20 @@ class AddNonsymmetricAffinities(BatchFilter):
         full_vol2 = batch.arrays[self.array_key_2]
 
         # Both full_vol1 should match
-        assert (
-            full_vol1.spec.dtype == full_vol2.spec.dtype
-        ), "data type of array 1(%s) and array 2(%s) should match" % (
-            full_vol1.spec.dtype,
-            full_vol2.spec.dtype,
+        assert full_vol1.spec.dtype == full_vol2.spec.dtype, (
+            "data type of array 1(%s) and array 2(%s) should match"
+            % (
+                full_vol1.spec.dtype,
+                full_vol2.spec.dtype,
+            )
         )
 
-        assert (
-            full_vol1.spec.voxel_size == full_vol2.spec.voxel_size
-        ), "data type of array 1(%s) and array 2(%s) should match" % (
-            full_vol1.spec.voxel_size,
-            full_vol2.spec.voxel_size,
+        assert full_vol1.spec.voxel_size == full_vol2.spec.voxel_size, (
+            "data type of array 1(%s) and array 2(%s) should match"
+            % (
+                full_vol1.spec.voxel_size,
+                full_vol2.spec.voxel_size,
+            )
         )
 
         logger.debug("computing ground-truth affinities from labels")
@@ -107,9 +109,9 @@ class AddNonsymmetricAffinities(BatchFilter):
             affinity_map, spec=request[self.affinity_array_key_1].copy()
         )
 
-        batch.arrays[self.affinity_array_key_1].attrs[
-            "affinity_vectors"
-        ] = self.affinity_vectors
+        batch.arrays[self.affinity_array_key_1].attrs["affinity_vectors"] = (
+            self.affinity_vectors
+        )
 
         # Calculate affinities 2: from vol1 onto vol2
 
@@ -131,9 +133,9 @@ class AddNonsymmetricAffinities(BatchFilter):
             affinity_map, spec=request[self.affinity_array_key_2].copy()
         )
 
-        batch.arrays[self.affinity_array_key_2].attrs[
-            "affinity_vectors"
-        ] = self.affinity_vectors
+        batch.arrays[self.affinity_array_key_2].attrs["affinity_vectors"] = (
+            self.affinity_vectors
+        )
 
         # Crop all other requests
         for array_key, array in request.array_specs.items():
