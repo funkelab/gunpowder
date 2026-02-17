@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
     "numpy>=1.24",
@@ -40,7 +40,7 @@ dependencies = [
     "funlib.geometry>=0.3",
     "zarr>=2,<3",
     "networkx>=3.1",
-    "funlib.persistence>=0.5,<=0.6",
+    "funlib.persistence>=0.7",
 ]
 
 [project.optional-dependencies]
@@ -101,6 +101,12 @@ docs = [
     "torch>=2.8.0",
 ]
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests/cases"]
+python_files = "*.py"
+python_classes = "Test*"
+python_functions = "test_*"
 
 [tool.setuptools.dynamic]
 version = { attr = "gunpowder.version_info.__version__" }

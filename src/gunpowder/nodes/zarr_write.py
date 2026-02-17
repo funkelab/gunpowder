@@ -3,9 +3,6 @@ import warnings
 from collections.abc import MutableMapping
 from typing import Union
 
-from zarr import N5FSStore, N5Store
-from zarr._storage.store import BaseStore
-
 from gunpowder.array import ArrayKey
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
@@ -55,7 +52,7 @@ class ZarrWrite(BatchFilter):
         output_filename="output.hdf",
         compression_type=None,
         dataset_dtypes=None,
-        store: Union[BaseStore, MutableMapping, str] = None,
+        store: Union[MutableMapping, str] = None,
     ):
         self.store = store if store is not None else f"{output_dir}/{output_filename}"
         if store is None:
@@ -102,10 +99,26 @@ class ZarrWrite(BatchFilter):
             dataset.attrs["offset"] = offset
 
     def _rev_metadata(self):
-        with ZarrFile(self.store, mode="a") as store:
-            return isinstance(store.chunk_store, N5Store) or isinstance(
-                store.chunk_store, N5FSStore
+        return False
+
+    def _get_compressors(self):
+        if self.compression_type is None:
+            return None
+        from zarr.codecs import GzipCodec, ZstdCodec
+
+        if isinstance(self.compression_type, int):
+            return [GzipCodec(level=self.compression_type)]
+        compression_map = {
+            "gzip": GzipCodec,
+            "zstd": ZstdCodec,
+        }
+        codec_cls = compression_map.get(self.compression_type)
+        if codec_cls is None:
+            raise ValueError(
+                f"Unsupported compression type: {self.compression_type!r}. "
+                f"Supported types: {list(compression_map.keys())}"
             )
+        return [codec_cls()]
 
     def _open_file(self, store):
         return ZarrFile(store, mode="a")
@@ -178,11 +191,12 @@ class ZarrWrite(BatchFilter):
                         voxel_size,
                     )
 
-                    dataset = data_file.create_dataset(
+                    compressors = self._get_compressors()
+                    dataset = data_file.create_array(
                         name=dataset_name,
                         shape=data_shape,
-                        compression=self.compression_type,
                         dtype=dtype,
+                        compressors=compressors,
                     )
 
                     self._set_offset(dataset, offset)

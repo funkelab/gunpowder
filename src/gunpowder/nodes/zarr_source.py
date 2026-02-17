@@ -4,8 +4,6 @@ from collections.abc import MutableMapping
 from typing import Union
 
 import numpy as np
-from zarr import N5FSStore, N5Store
-from zarr._storage.store import BaseStore
 
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
@@ -57,7 +55,7 @@ class ZarrSource(BatchProvider):
 
     def __init__(
         self,
-        store: Union[BaseStore, MutableMapping, str] = None,
+        store: Union[MutableMapping, str] = None,
         datasets=None,
         array_specs=None,
         channels_first=True,
@@ -106,10 +104,7 @@ class ZarrSource(BatchProvider):
             return Coordinate(dataset.attrs["offset"])
 
     def _rev_metadata(self):
-        with ZarrFile(self.store, mode="a") as store:
-            return isinstance(store.chunk_store, N5Store) or isinstance(
-                store.chunk_store, N5FSStore
-            )
+        return False
 
     def _open_file(self, store):
         return ZarrFile(store, mode="r")
