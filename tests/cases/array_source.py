@@ -6,9 +6,9 @@ from gunpowder import ArrayKey, ArraySpec, BatchRequest, build
 from gunpowder.nodes import ArraySource
 
 
-def test_array_source(tmpdir):
+def test_array_source(tmp_path):
     array = prepare_ds(
-        tmpdir / "data.zarr",
+        tmp_path / "data.zarr",
         shape=(100, 102, 108),
         offset=(100, 50, 0),
         voxel_size=(1, 2, 3),

@@ -54,8 +54,8 @@ def create_dataset(data_file, key, data, chunks=None, **kwargs):
         ),
     ],
 )
-def test_output_2d(extension, tmpdir):
-    path = tmpdir / f"test_{extension}_source.{extension}"
+def test_output_2d(extension, tmp_path):
+    path = tmp_path / f"test_{extension}_source.{extension}"
 
     with open_writable_file_func[extension](path) as f:
         create_dataset(f, "raw", np.zeros((100, 100), dtype=np.float32))
@@ -98,8 +98,8 @@ def test_output_2d(extension, tmpdir):
         ),
     ],
 )
-def test_output_3d(extension, tmpdir):
-    path = tmpdir / f"test_{extension}_source.{extension}"
+def test_output_3d(extension, tmp_path):
+    path = tmp_path / f"test_{extension}_source.{extension}"
 
     # create a test file
     with open_writable_file_func[extension](path) as f:
