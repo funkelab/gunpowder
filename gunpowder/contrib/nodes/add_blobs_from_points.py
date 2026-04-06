@@ -102,11 +102,8 @@ class AddBlobsFromPoints(BatchFilter):
                     ].roi.union(request_roi)
             else:
                 # do nothing if no blobs of this type were requested
-                logger.warning(
-                    "%s output array type for %s never requested. \
-                    Deleting entry..."
-                    % (settings["output_array_key"], blob_name)
-                )
+                logger.warning("%s output array type for %s never requested. \
+                    Deleting entry..." % (settings["output_array_key"], blob_name))
                 del self.blob_settings[blob_name]
 
     def process(self, batch, request):
@@ -122,14 +119,12 @@ class AddBlobsFromPoints(BatchFilter):
             # Make sure both the necesary point types and arrays are present
             assert points_key in batch.points, (
                 "Upstream does not provide required point type\
-            : %s"
-                % points_key
+            : %s" % points_key
             )
 
             assert restrictive_mask_key in batch.arrays, (
                 "Upstream does not provide required \
-            array type: %s"
-                % restrictive_mask_key
+            array type: %s" % restrictive_mask_key
             )
 
             # Get point data

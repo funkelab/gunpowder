@@ -103,7 +103,7 @@ def test_output(tmpdir):
     a_grad_key = ArrayKey("GRADIENT_A")
 
     # create model meta graph file and get input/output names
-    (a, b, c, optimizer, loss) = create_meta_graph(meta_base)
+    a, b, c, optimizer, loss = create_meta_graph(meta_base)
 
     source = ExampleTensorflowTrainSource()
     train = Train(
