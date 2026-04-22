@@ -7,11 +7,9 @@ jobs:
     name: Python Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Python
-        uses: actions/setup-python@v1
       - name: Setup checkout
         uses: actions/checkout@master
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
       - name: Lint with Black
-        run: |
-          pip install black
-          black --check gunpowder tests
+        run: uv run --extra dev black --check gunpowder tests
