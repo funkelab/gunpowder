@@ -51,7 +51,7 @@ dev = [
     "mypy",
     "types-requests",
     "types-tqdm",
-    "black",
+    "black>=25,<=26",
     "ruff",
 ]
 docs = [
