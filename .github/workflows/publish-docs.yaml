@@ -32,7 +32,7 @@ jobs:
       - name: Install package and dependencies
         run: |
           pip install git+https://github.com/funkelab/funlib.learn.torch
-          python -m pip install -e .[docs]
+          python -m pip install --group docs -e .
 
       - name: Build documentation
         run: sphinx-build docs/source docs/build/html -b html

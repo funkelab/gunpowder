@@ -38,32 +38,12 @@ dependencies = [
     "augment-nd>=0.1.3",
     "tqdm",
     "funlib.geometry>=0.3",
-    "zarr>=2,<3",
+    "zarr>=3",
     "networkx>=3.1",
     "funlib.persistence>=0.7",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-    "flake8",
-    "mypy",
-    "types-requests",
-    "types-tqdm",
-    "black>=26",
-    "ruff",
-]
-docs = [
-    "sphinx",
-    "sphinx_rtd_theme",
-    "sphinx_togglebutton",
-    "tomli",
-    "jupyter_sphinx",
-    "ipykernel",
-    "matplotlib",
-    "torch",
-]
 pytorch = ['torch']
 tensorflow = [
     # TF doesn't provide <2.0 wheels for py>=3.8 on pypi
