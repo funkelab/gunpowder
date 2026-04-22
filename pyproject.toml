@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 dependencies = [
     "numpy>=1.24",
@@ -41,6 +41,7 @@ dependencies = [
     "zarr>=3",
     "networkx>=3.1",
     "funlib.persistence>=0.7",
+    "iohub>=0.3",
 ]
 
 [project.optional-dependencies]
