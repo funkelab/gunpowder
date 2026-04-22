@@ -27,7 +27,7 @@ dynamic = ["version"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = []
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 dependencies = [
     "numpy>=1.24",
@@ -38,9 +38,9 @@ dependencies = [
     "augment-nd>=0.1.3",
     "tqdm",
     "funlib.geometry>=0.3",
-    "zarr",
+    "zarr>=2,<3",
     "networkx>=3.1",
-    "funlib.persistence>=0.5",
+    "funlib.persistence>=0.5,<=0.6",
 ]
 
 [project.optional-dependencies]
@@ -51,7 +51,7 @@ dev = [
     "mypy",
     "types-requests",
     "types-tqdm",
-    "black",
+    "black>=26",
     "ruff",
 ]
 docs = [

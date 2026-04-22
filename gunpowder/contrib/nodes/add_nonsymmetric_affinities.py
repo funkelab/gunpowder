@@ -24,16 +24,10 @@ class AddNonsymmetricAffinities(BatchFilter):
         self.affinity_vectors = affinity_vectors
 
     def setup(self):
-        assert self.array_key_1 in self.spec, (
-            "Upstream does not provide %s needed by \
-        AddNonsymmetricAffinities"
-            % self.array_key_1
-        )
-        assert self.array_key_2 in self.spec, (
-            "Upstream does not provide %s needed by \
-        AddNonsymmetricAffinities"
-            % self.array_key_2
-        )
+        assert self.array_key_1 in self.spec, "Upstream does not provide %s needed by \
+        AddNonsymmetricAffinities" % self.array_key_1
+        assert self.array_key_2 in self.spec, "Upstream does not provide %s needed by \
+        AddNonsymmetricAffinities" % self.array_key_2
 
         voxel_size = self.spec[self.array_key_1].voxel_size
 
