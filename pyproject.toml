@@ -68,6 +68,7 @@ dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.15.1",
+    "ty>=0.0.32",
     "types-requests>=2.32.4.20260107",
     "types-tqdm>=4.67.3.20260205",
 ]
