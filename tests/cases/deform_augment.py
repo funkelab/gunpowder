@@ -191,9 +191,7 @@ def test_4d_basics(mock_4d_source):
         ((8, 8, 8), (4, 4, 4)),  # array voxel coarser than control points
     ],
 )
-def test_sample_transform_voxel_size_relations(
-    array_voxel_size, control_point_spacing
-):
+def test_sample_transform_voxel_size_relations(array_voxel_size, control_point_spacing):
     array_spec = ArraySpec(
         roi=Roi((-128, -128, -128), (256, 256, 256)),
         voxel_size=Coordinate(array_voxel_size),
