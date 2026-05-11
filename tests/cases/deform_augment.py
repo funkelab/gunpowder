@@ -182,3 +182,39 @@ def test_4d_basics(mock_4d_source):
         points_data = batch[points]
         # not enough deformation to remove node from center
         assert len(list(points_data.nodes)) == 1
+
+
+@pytest.mark.parametrize(
+    "array_voxel_size, control_point_spacing",
+    [
+        ((4, 4, 4), (4, 4, 4)),  # equal: regression for sampled-unbound bug
+        ((8, 8, 8), (4, 4, 4)),  # array voxel coarser than control points
+    ],
+)
+def test_sample_transform_voxel_size_relations(
+    array_voxel_size, control_point_spacing
+):
+    array_spec = ArraySpec(
+        roi=Roi((-128, -128, -128), (256, 256, 256)),
+        voxel_size=Coordinate(array_voxel_size),
+        interpolatable=False,
+    )
+    data = np.zeros(array_spec.roi.shape // array_spec.voxel_size, dtype=np.uint32)
+    array = Array(data, offset=array_spec.roi.offset, voxel_size=array_spec.voxel_size)
+    source = ArraySource(ArrayKey("A"), array)
+    pipeline = source + DeformAugment(
+        control_point_spacing=Coordinate(control_point_spacing),
+        jitter_sigma=[1, 1, 1],
+        spatial_dims=3,
+        rotate=False,
+        use_fast_points_transform=False,
+        subsample=1,
+    )
+
+    request = BatchRequest()
+    request_roi = Roi((-32, -32, -32), (64, 64, 64))
+    request[ArrayKey("A")] = ArraySpec(roi=request_roi)
+
+    with build(pipeline):
+        batch = pipeline.request_batch(request)
+    assert batch[ArrayKey("A")].spec.roi == request_roi
