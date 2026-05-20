@@ -475,6 +475,8 @@ class DeformAugment(BatchFilter):
 
         if transformation.spec.voxel_size != output_spec.voxel_size:
             sampled = upscale_transformation(in_transform, out_shape)
+        else:
+            sampled = in_transform
 
         out_transform = Array(
             sampled, ArraySpec(in_roi, output_spec.voxel_size, interpolatable=True)
