@@ -27,7 +27,7 @@ class ZarrWrite(BatchFilter):
             A dictionary from array keys to names of the datasets to store them
             in.
 
-        store (``string`` or ``BaseStore``):
+        store (``string`` or ``zarr.abc.store.Store``):
 
             The directory to save the zarr container. Will be created, if it does
             not exist.

@@ -2,6 +2,7 @@ import logging
 import os
 
 import numpy as np
+import zarr
 
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import ZarrFile, h5py
@@ -9,6 +10,36 @@ from gunpowder.ext import ZarrFile, h5py
 from .batch_filter import BatchFilter
 
 logger = logging.getLogger(__name__)
+
+
+def _zarr_compressors(compression_type):
+    if compression_type is None:
+        return None
+    from zarr.codecs import GzipCodec, ZstdCodec
+
+    if isinstance(compression_type, int):
+        return [GzipCodec(level=compression_type)]
+    compression_map = {"gzip": GzipCodec, "zstd": ZstdCodec}
+    codec_cls = compression_map.get(compression_type)
+    if codec_cls is None:
+        raise ValueError(
+            f"Unsupported compression type: {compression_type!r}. "
+            f"Supported types: {list(compression_map.keys())}"
+        )
+    return [codec_cls()]
+
+
+def _create_snapshot_dataset(f, name, data, compression_type):
+    if isinstance(f, zarr.Group):
+        dataset = f.create_array(
+            name=name,
+            shape=data.shape,
+            dtype=data.dtype,
+            compressors=_zarr_compressors(compression_type),
+        )
+        dataset[:] = data
+        return dataset
+    return f.create_dataset(name=name, data=data, compression=compression_type)
 
 
 class Snapshot(BatchFilter):
@@ -192,17 +223,19 @@ class Snapshot(BatchFilter):
 
                     if array_key in self.dataset_dtypes:
                         dtype = self.dataset_dtypes[array_key]
-                        dataset = f.create_dataset(
+                        dataset = _create_snapshot_dataset(
+                            f,
                             name=ds_name,
                             data=array.data.astype(dtype),
-                            compression=self.compression_type,
+                            compression_type=self.compression_type,
                         )
 
                     else:
-                        dataset = f.create_dataset(
+                        dataset = _create_snapshot_dataset(
+                            f,
                             name=ds_name,
                             data=array.data,
-                            compression=self.compression_type,
+                            compression_type=self.compression_type,
                         )
 
                     if not array.spec.nonspatial:
@@ -235,23 +268,26 @@ class Snapshot(BatchFilter):
                     for edge in graph.edges:
                         edges.append((edge.u, edge.v))
 
-                    f.create_dataset(
+                    _create_snapshot_dataset(
+                        f,
                         name=f"{ds_name}-ids",
                         data=np.array(node_ids, dtype=int),
-                        compression=self.compression_type,
+                        compression_type=self.compression_type,
                     )
-                    f.create_dataset(
+                    _create_snapshot_dataset(
+                        f,
                         name=f"{ds_name}-locations",
                         data=np.array(locations),
-                        compression=self.compression_type,
+                        compression_type=self.compression_type,
                     )
-                    f.create_dataset(
+                    _create_snapshot_dataset(
+                        f,
                         name=f"{ds_name}-edges",
                         data=np.array(edges),
-                        compression=self.compression_type,
+                        compression_type=self.compression_type,
                     )
 
                 if batch.loss is not None:
-                    f["/"].attrs["loss"] = float(batch.loss)
+                    f.attrs["loss"] = float(batch.loss)
 
         self.n += 1

@@ -29,7 +29,7 @@ class ZarrSource(BatchProvider):
 
     Args:
 
-        store (``string``, ``zarr.BaseStore``):
+        store (``string``, ``zarr.abc.store.Store``):
 
             A zarr store or path to a zarr directory or zip file.
 
