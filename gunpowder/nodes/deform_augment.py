@@ -422,6 +422,11 @@ class DeformAugment(BatchFilter):
         return out_batch
 
     def __apply_transform(self, array: Array, transformation: Array) -> Array:
+        assert (
+            array.spec.roi is not None
+            and array.spec.voxel_size is not None
+            and transformation.spec.roi is not None
+        )
         input_shape = array.data.shape
         output_shape = transformation.data.shape
         channel_shape = input_shape[: -self.spatial_dims]
@@ -461,6 +466,12 @@ class DeformAugment(BatchFilter):
         output_spec: ArraySpec,
         interpolate_order=1,
     ) -> Array:
+        assert (
+            output_spec.roi is not None
+            and output_spec.voxel_size is not None
+            and transformation.spec.roi is not None
+            and transformation.spec.voxel_size is not None
+        )
         in_roi = output_spec.roi.snap_to_grid(
             transformation.spec.voxel_size, mode="grow"
         )
@@ -491,6 +502,7 @@ class DeformAugment(BatchFilter):
         return out_transform
 
     def __create_transformation(self, target_spec: ArraySpec):
+        assert target_spec.roi is not None and target_spec.voxel_size is not None
         scale = self.scale_min + random.random() * (self.scale_max - self.scale_min)
 
         target_shape = target_spec.roi.shape / target_spec.voxel_size
@@ -660,6 +672,10 @@ class DeformAugment(BatchFilter):
         """Find the projection of location given by transformation. Returns None
         if projection lies outside of transformation."""
 
+        assert (
+            transformation.spec.roi is not None
+            and transformation.spec.voxel_size is not None
+        )
         dims = len(location)
 
         # subtract location from transformation

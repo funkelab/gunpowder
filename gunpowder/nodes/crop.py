@@ -53,6 +53,7 @@ class Crop(BatchFilter):
 
     def setup(self):
         spec = self.spec[self.key]
+        assert spec.roi is not None
 
         if self.roi is not None:
             assert spec.roi.contains(self.roi), (

@@ -245,7 +245,7 @@ class DvidSource(BatchProvider):
                 "is allowed for masks.",
                 mask_key,
             )
-        spec.dtype = np.uint8
+        spec.dtype = np.dtype(np.uint8)
 
         return spec
 

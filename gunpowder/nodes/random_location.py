@@ -289,6 +289,7 @@ class RandomLocation(BatchFilter):
 
             request_roi = spec.roi
             provided_roi = self.upstream_spec[key].roi
+            assert provided_roi is not None
 
             shift_roi = provided_roi.shift(-request_roi.begin).grow(
                 (0,) * request_roi.dims, -(request_roi.shape - voxel_size)
@@ -335,6 +336,7 @@ class RandomLocation(BatchFilter):
 
         # get randomly chosen mask ROI
         request_mask_roi = request.array_specs[self.mask].roi
+        assert request_mask_roi is not None
         request_mask_roi = request_mask_roi.shift(random_shift)
 
         # get coordinates inside mask array

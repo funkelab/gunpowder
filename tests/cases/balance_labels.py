@@ -21,6 +21,7 @@ def test_output():
     loss_scale_key = ArrayKey("LOSS_SCALE")
 
     array_spec = ArraySpec(roi=Roi((0, 0, 0), (2000, 200, 200)), voxel_size=(20, 2, 2))
+    assert array_spec.roi is not None and array_spec.voxel_size is not None
 
     data_shape = array_spec.roi.shape // array_spec.voxel_size
     affs_data = np.random.randint(0, 2, (3,) + data_shape)

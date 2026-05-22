@@ -20,6 +20,7 @@ def test_noise():
     raw_spec = ArraySpec(
         roi=Roi((0, 0, 0), (10, 10, 10)), voxel_size=(1, 1, 1), dtype=np.float32
     )
+    assert raw_spec.roi is not None and raw_spec.voxel_size is not None
     raw_data = np.zeros(raw_spec.roi.shape / raw_spec.voxel_size, dtype=np.float32)
     raw_array = Array(raw_data, raw_spec)
     pipeline = (

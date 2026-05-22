@@ -182,6 +182,7 @@ class SpecifiedLocation(BatchFilter):
                 provided_roi = self.upstream_spec[key].roi
             else:
                 raise Exception("Requested %s, but upstream does not provide it." % key)
+            assert request_roi is not None and provided_roi is not None
             shifted_roi = request_roi.shift(self.specified_shift)
             if not provided_roi.contains(shifted_roi):
                 logger.warning(

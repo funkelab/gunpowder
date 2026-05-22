@@ -28,6 +28,7 @@ class ArrayTestSource(BatchProvider):
         )
         default_spec.update_with(spec)
         spec = default_spec
+        assert spec.roi is not None and spec.voxel_size is not None
         self.key = key
         self.array = Array(
             np.zeros(
