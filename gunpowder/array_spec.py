@@ -1,6 +1,8 @@
 import copy
+from collections.abc import Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 from .coordinate import Coordinate
 from .freezable import Freezable
@@ -50,17 +52,17 @@ class ArraySpec(Freezable):
     def __init__(
         self,
         roi: Roi | None = None,
-        voxel_size: Coordinate | None = None,
+        voxel_size: Sequence[int] | None = None,
         interpolatable: bool | None = None,
         nonspatial: bool = False,
-        dtype: np.dtype | None = None,
+        dtype: npt.DTypeLike | None = None,
         placeholder: bool = False,
     ):
         self.roi = roi
         self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)
         self.interpolatable = interpolatable
         self.nonspatial = nonspatial
-        self.dtype = dtype
+        self.dtype = None if dtype is None else np.dtype(dtype)
         self.placeholder = placeholder
 
         if nonspatial:

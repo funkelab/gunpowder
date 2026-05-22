@@ -1,7 +1,7 @@
 import itertools
 import logging
 from copy import deepcopy
-from typing import Any, Dict, Iterator, Optional, Set
+from typing import Any, Dict, Iterable, Iterator, Optional, Set
 
 import networkx as nx
 import numpy as np
@@ -204,7 +204,7 @@ class Graph(Freezable):
             A spec describing the data.
     """
 
-    def __init__(self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec):
+    def __init__(self, nodes: Iterable[Node], edges: Iterable[Edge], spec: GraphSpec):
         self.__spec = spec
         self.__graph = self.create_graph(nodes, edges)
 
@@ -224,7 +224,7 @@ class Graph(Freezable):
             else self.__graph.is_directed()
         )
 
-    def create_graph(self, nodes: Iterator[Node], edges: Iterator[Edge]):
+    def create_graph(self, nodes: Iterable[Node], edges: Iterable[Edge]):
         if self.__spec.directed is None:
             logger.debug(
                 "Trying to create a Graph without specifying directionality. Using default Directed!"
