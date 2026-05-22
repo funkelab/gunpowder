@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 
@@ -5,7 +6,7 @@ import numpy as np
 import zarr
 
 from gunpowder.batch_request import BatchRequest
-from gunpowder.ext import ZarrFile, h5py
+from gunpowder.ext import h5py
 
 from .batch_filter import BatchFilter
 
@@ -89,9 +90,10 @@ class Snapshot(BatchFilter):
 
         compression_type (``string`` or ``int``):
 
-            Compression strategy.  Legal values are ``gzip``, ``szip``,
-            ``lzf``. If an integer between 1 and 10, this indicates ``gzip``
-            compression level.
+            Compression strategy. For zarr outputs, legal values are ``gzip``
+            and ``zstd``. For HDF outputs, values are forwarded to ``h5py``
+            (e.g. ``gzip``, ``szip``, ``lzf``). If an integer between 1 and 10,
+            this indicates ``gzip`` compression level.
 
         dataset_dtypes (``dict``, :class:`ArrayKey` -> data type):
 
@@ -207,14 +209,16 @@ class Snapshot(BatchFilter):
             )
             logger.info("saving to %s" % snapshot_name)
             if snapshot_name.endswith(".hdf"):
-                open_func = h5py.File
+                file_ctx = h5py.File(snapshot_name, self.mode)
             elif snapshot_name.endswith(".zarr"):
-                open_func = ZarrFile
+                file_ctx = contextlib.nullcontext(
+                    zarr.open(snapshot_name, mode=self.mode)
+                )
             else:
                 logger.warning("ambiguous file type")
-                open_func = h5py.File
+                file_ctx = h5py.File(snapshot_name, self.mode)
 
-            with open_func(snapshot_name, self.mode) as f:
+            with file_ctx as f:
                 for array_key, array in batch.arrays.items():
                     if array_key not in self.dataset_names:
                         continue
