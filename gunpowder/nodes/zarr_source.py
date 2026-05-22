@@ -106,17 +106,17 @@ class ZarrSource(BatchProvider):
         return False
 
     def _open_file(self, store):
-        return ZarrFile(store, mode="r")
+        return zarr.open(store, mode="r")
 
     def setup(self):
-        with self._open_file(self.store) as data_file:
-            for array_key, ds_name in self.datasets.items():
-                if ds_name not in data_file:
-                    raise RuntimeError("%s not in %s" % (ds_name, self.store))
+        data_file = self._open_file(self.store)
+        for array_key, ds_name in self.datasets.items():
+            if ds_name not in data_file:
+                raise RuntimeError("%s not in %s" % (ds_name, self.store))
 
-                spec = self.__read_spec(array_key, data_file, ds_name)
+            spec = self.__read_spec(array_key, data_file, ds_name)
 
-                self.provides(array_key, spec)
+            self.provides(array_key, spec)
 
     def provide(self, request):
         timing = Timing(self)
@@ -124,27 +124,27 @@ class ZarrSource(BatchProvider):
 
         batch = Batch()
 
-        with self._open_file(self.store) as data_file:
-            for array_key, request_spec in request.array_specs.items():
-                logger.debug("Reading %s in %s...", array_key, request_spec.roi)
+        data_file = self._open_file(self.store)
+        for array_key, request_spec in request.array_specs.items():
+            logger.debug("Reading %s in %s...", array_key, request_spec.roi)
 
-                voxel_size = self.spec[array_key].voxel_size
+            voxel_size = self.spec[array_key].voxel_size
 
-                # scale request roi to voxel units
-                dataset_roi = request_spec.roi / voxel_size
+            # scale request roi to voxel units
+            dataset_roi = request_spec.roi / voxel_size
 
-                # shift request roi into dataset
-                dataset_roi = dataset_roi - self.spec[array_key].roi.offset / voxel_size
+            # shift request roi into dataset
+            dataset_roi = dataset_roi - self.spec[array_key].roi.offset / voxel_size
 
-                # create array spec
-                array_spec = self.spec[array_key].copy()
-                array_spec.roi = request_spec.roi
+            # create array spec
+            array_spec = self.spec[array_key].copy()
+            array_spec.roi = request_spec.roi
 
-                # add array to batch
-                batch.arrays[array_key] = Array(
-                    self.__read(data_file, self.datasets[array_key], dataset_roi),
-                    array_spec,
-                )
+            # add array to batch
+            batch.arrays[array_key] = Array(
+                self.__read(data_file, self.datasets[array_key], dataset_roi),
+                array_spec,
+            )
 
         logger.debug("done")
 
