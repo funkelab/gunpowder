@@ -42,9 +42,9 @@ class BatchTester(BatchFilter):
                         "graph roi does not match possible roi"
                     )
                 else:
-                    assert self.roi_to_match.contains(
-                        batch[TEST_GRAPH].spec.roi
-                    ), "batch is not contained in possible roi"
+                    assert self.roi_to_match.contains(batch[TEST_GRAPH].spec.roi), (
+                        "batch is not contained in possible roi"
+                    )
         else:
             self.visted = True
 

@@ -1,7 +1,7 @@
-import queue as Queue
 import logging
 import multiprocessing
 import os
+import queue as Queue
 import sys
 
 import numpy as np
