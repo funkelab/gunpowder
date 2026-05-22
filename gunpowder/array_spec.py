@@ -1,7 +1,10 @@
 import copy
 
+import numpy as np
+
 from .coordinate import Coordinate
 from .freezable import Freezable
+from .roi import Roi
 
 
 class ArraySpec(Freezable):
@@ -37,14 +40,21 @@ class ArraySpec(Freezable):
             The data type of the array.
     """
 
+    roi: Roi | None
+    voxel_size: Coordinate | None
+    interpolatable: bool | None
+    nonspatial: bool
+    dtype: np.dtype | None
+    placeholder: bool
+
     def __init__(
         self,
-        roi=None,
-        voxel_size=None,
-        interpolatable=None,
-        nonspatial=False,
-        dtype=None,
-        placeholder=False,
+        roi: Roi | None = None,
+        voxel_size: Coordinate | None = None,
+        interpolatable: bool | None = None,
+        nonspatial: bool = False,
+        dtype: np.dtype | None = None,
+        placeholder: bool = False,
     ):
         self.roi = roi
         self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)

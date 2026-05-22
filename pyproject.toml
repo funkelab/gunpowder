@@ -108,3 +108,11 @@ exclude = ["gunpowder/contrib/*"]
 # ruff complains about escape sequence in docstring which renders math
 "gunpowder/nodes/rasterize_graph.py" = ["W605"]
 "docker/test_environment.py" = ["F401"]  # unused import in test env
+
+[tool.ty.src]
+exclude = [
+    "gunpowder/contrib/**",       # legacy / unsupported nodes
+    "gunpowder/tensorflow/**",    # optional framework
+    "gunpowder/zoo/**",           # optional framework
+    "tests/cases/tensorflow_train.py",  # exercises optional framework
+]

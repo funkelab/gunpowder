@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from .array_spec import ArraySpec
 from .freezable import Freezable
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class Array(Freezable):
             The data to be stored in the array. Will be converted to a numpy
             array, if necessary.
 
-        spec (:class:`ArraySpec`, optional):
+        spec (:class:`ArraySpec`):
 
             A spec describing the data.
 
@@ -28,13 +29,14 @@ class Array(Freezable):
             Optional attributes to describe this array.
     """
 
-    def __init__(self, data, spec=None, attrs=None):
+    spec: ArraySpec
+    data: np.ndarray
+    attrs: dict
+
+    def __init__(self, data, spec: ArraySpec, attrs: dict | None = None):
         self.spec = spec.copy()
         self.data = np.asarray(data)
-        self.attrs = attrs
-
-        if attrs is None:
-            self.attrs = {}
+        self.attrs = attrs if attrs is not None else {}
 
         if spec is not None and spec.roi is not None and spec.voxel_size is not None:
             for d in range(len(spec.voxel_size)):
@@ -76,6 +78,9 @@ class Array(Freezable):
                 Make a copy of the data.
         """
 
+        assert self.spec.roi is not None and self.spec.voxel_size is not None, (
+            "Cannot crop an Array without a spatial ROI"
+        )
         assert self.spec.roi.contains(roi), (
             "Requested crop ROI (%s) doesn't fit in array (%s)" % (roi, self.spec.roi)
         )
