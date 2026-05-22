@@ -681,7 +681,7 @@ node with its equivalent :class:`torch.Predict`.
 
     # prepare the zarr dataset to write to
     f = zarr.open('sample_data.zarr')
-    ds = f.create_dataset('prediction', shape=(1, 1, 512, 512))
+    ds = f.create_array('prediction', shape=(1, 1, 512, 512), dtype='float32')
     ds.attrs['resolution'] = (1, 1)
     ds.attrs['offset'] = (0, 0)
 

@@ -17,14 +17,13 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
+import tomllib
 from datetime import datetime
-
-import tomli  # ty: ignore[unresolved-import]
 
 import gunpowder
 
 with open("../../pyproject.toml", "rb") as fh:
-    project = tomli.load(fh)["project"]
+    project = tomllib.load(fh)["project"]
 
 author_list = ", ".join([author["name"] for author in project["authors"]])
 
