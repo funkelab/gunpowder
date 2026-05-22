@@ -1,13 +1,12 @@
-from collections.abc import MutableMapping
-from typing import Union
-
 import zarr
+
+from zarr.abc.store import Store
 
 
 class ZarrFile:
     """To be used as a context manager, similar to h5py.File."""
 
-    def __init__(self, store: Union[MutableMapping, str], mode="a"):
+    def __init__(self, store: Store | str, mode="a"):
         self.store = store
         self.mode = mode
 
