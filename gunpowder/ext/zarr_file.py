@@ -1,5 +1,4 @@
 import zarr
-
 from zarr.abc.store import Store
 
 

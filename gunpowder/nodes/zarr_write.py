@@ -1,6 +1,8 @@
 import logging
 import warnings
+
 import zarr
+from zarr.abc.store import Store
 
 from gunpowder.array import ArrayKey
 from gunpowder.batch_request import BatchRequest
@@ -8,8 +10,6 @@ from gunpowder.coordinate import Coordinate
 from gunpowder.roi import Roi
 
 from .batch_filter import BatchFilter
-
-from zarr.abc.store import Store
 
 logger = logging.getLogger(__name__)
 
@@ -245,8 +245,7 @@ class ZarrWrite(BatchFilter):
             array_voxel_slices = array_voxel_roi.to_slices()
 
             logger.debug(
-                "writing %s to voxel coordinates %s"
-                % (array_key, dataset_voxel_roi)
+                "writing %s to voxel coordinates %s" % (array_key, dataset_voxel_roi)
             )
 
             data = batch.arrays[array_key].data[channel_slices + array_voxel_slices]

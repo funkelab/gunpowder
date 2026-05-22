@@ -1,5 +1,6 @@
 import logging
 import warnings
+
 import numpy as np
 import zarr
 from zarr.abc.store import Store
@@ -12,7 +13,6 @@ from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 
 from .batch_provider import BatchProvider
-
 
 logger = logging.getLogger(__name__)
 
