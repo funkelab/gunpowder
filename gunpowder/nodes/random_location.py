@@ -4,7 +4,7 @@ import math
 from random import choices, randint, random
 
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from skimage.transform import integral_image, integrate
 
 from gunpowder.array import Array
@@ -12,6 +12,7 @@ from gunpowder.array_spec import ArraySpec
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
 from gunpowder.profiling import Timing
+from gunpowder.provider_spec import ProviderSpec
 from gunpowder.roi import Roi
 
 from .batch_filter import BatchFilter
@@ -85,6 +86,15 @@ class RandomLocation(BatchFilter):
             if you want to figure out where that snapshot came from.
     """
 
+    # populated in setup() (some only if mask / ensure_nonempty are set)
+    upstream_spec: ProviderSpec
+    mask_spec: ArraySpec
+    mask_integral: np.ndarray
+    points: cKDTree
+    cumulative_weights: list
+    # populated in prepare() / process()
+    random_shift: Coordinate
+
     def __init__(
         self,
         min_masked=0,
@@ -97,13 +107,8 @@ class RandomLocation(BatchFilter):
     ):
         self.min_masked = min_masked
         self.mask = mask
-        self.mask_spec = None
-        self.mask_integral = None
         self.ensure_nonempty = ensure_nonempty
-        self.points = None
         self.p_nonempty = p_nonempty
-        self.upstream_spec = None
-        self.random_shift = None
         self.ensure_centered = ensure_centered
         self.point_balance_radius = point_balance_radius
         self.random_shift_key = random_shift_key
@@ -341,6 +346,7 @@ class RandomLocation(BatchFilter):
 
         # get coordinates inside mask array
         mask_voxel_size = self.spec[self.mask].voxel_size
+        assert self.mask_spec.roi is not None
         request_mask_roi_in_array = request_mask_roi / mask_voxel_size
         request_mask_roi_in_array -= self.mask_spec.roi.offset / mask_voxel_size
 

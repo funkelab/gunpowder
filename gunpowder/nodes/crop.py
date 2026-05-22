@@ -63,6 +63,10 @@ class Crop(BatchFilter):
             cropped_roi = self.roi
 
         else:
+            assert (
+                self.fraction_negative is not None
+                and self.fraction_positive is not None
+            )
             total_fraction = tuple(
                 n + p for n, p in zip(self.fraction_negative, self.fraction_positive)
             )

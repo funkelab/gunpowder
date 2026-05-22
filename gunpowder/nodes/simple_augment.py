@@ -57,21 +57,33 @@ class SimpleAugment(BatchFilter):
             augmentation space.
     """
 
+    # input args
+    mirror_only: list[int] | None
+    transpose_only: list[int] | None
+    mirror_probs: list[float] | None
+    transpose_probs: list[float] | dict | None
+    p: float
+    # populated in setup()
+    dims: int
+    mirror_mask: list[bool]
+    transpose_dims: list[int]
+    permutation_dict: dict | None
+    # populated in prepare()
+    mirror: list[int]
+    transpose: list[int]
+
     def __init__(
         self,
-        mirror_only=None,
-        transpose_only=None,
-        mirror_probs=None,
-        transpose_probs=None,
-        p=1.0,
+        mirror_only: list[int] | None = None,
+        transpose_only: list[int] | None = None,
+        mirror_probs: list[float] | None = None,
+        transpose_probs: list[float] | dict | None = None,
+        p: float = 1.0,
     ):
         self.mirror_only = mirror_only
         self.mirror_probs = mirror_probs
         self.transpose_only = transpose_only
         self.transpose_probs = transpose_probs
-        self.mirror_mask = None
-        self.dims = None
-        self.transpose_dims = None
         self.p = p
 
     def setup(self):
@@ -106,6 +118,7 @@ class SimpleAugment(BatchFilter):
                 if total_prob > 0:
                     self.permutation_dict[permutation] = total_prob
         elif isinstance(self.transpose_probs, dict):
+            assert self.transpose_only is not None
             self.permutation_dict = {}
             for k, v in self.transpose_probs.items():
                 valid = True
@@ -119,6 +132,7 @@ class SimpleAugment(BatchFilter):
         return random.random() > self.p
 
     def prepare(self, request):
+        assert self.mirror_probs is not None
         self.mirror = [
             random.random() < self.mirror_probs[d] if self.mirror_mask[d] else 0
             for d in range(self.dims)

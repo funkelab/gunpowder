@@ -35,15 +35,18 @@ class IterateLocations(BatchFilter):
     __global_index = mp.Value("i", -1)
     visited_all = mp.Value("b", False)
 
+    # populated in setup()
+    nodes: list
+    coordinates: list
+    # populated in prepare() / _get_next_shift()
+    local_index: int
+    shift: Coordinate
+
     def __init__(self, graph, roi=None, node_id=None, choose_randomly=False):
         self.graph = graph
         self.roi = roi
         self.node_id = node_id
         self.choose_randomly = choose_randomly
-        self.nodes = None
-        self.coordinates = None
-        self.local_index = None
-        self.shift = None
 
     def setup(self):
         upstream = self.get_upstream_provider()
