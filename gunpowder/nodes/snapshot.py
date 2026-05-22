@@ -1,6 +1,7 @@
 import contextlib
 import logging
 import os
+from typing import Literal
 
 import numpy as np
 import zarr
@@ -132,7 +133,7 @@ class Snapshot(BatchFilter):
         else:
             self.dataset_dtypes = dataset_dtypes
 
-        self.mode = "w"
+        self.mode: Literal["r", "r+", "a", "w", "w-"] = "w"
         self.id = 0
 
     def write_if(self, batch):
