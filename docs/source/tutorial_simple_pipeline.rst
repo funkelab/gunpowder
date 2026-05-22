@@ -52,7 +52,7 @@ following preliminaries (or simply head over to this tutorial's
     gt_data = gt_data[np.newaxis,:].astype(np.float32)
 
     # store image in zarr container
-    f = zarr.open('sample_data.zarr', 'w')
+    f = zarr.open('sample_data.zarr', mode='w')
     f['raw'] = raw_data
     f['raw'].attrs['resolution'] = (1, 1)
     f['ground_truth'] = gt_data
@@ -94,7 +94,7 @@ attribute ``resolution = (1, 1)``:
 
 .. jupyter-execute::
 
-  imshow(zarr.open('sample_data.zarr')['raw'][:])
+  imshow(zarr.open('sample_data.zarr', mode="r")['raw'][:])
 
 .. note::
 
@@ -365,8 +365,8 @@ segmentation to work with:
 .. jupyter-execute::
 
   imshow(
-    zarr.open('sample_data.zarr')['raw'][:],
-    zarr.open('sample_data.zarr')['ground_truth'][:])
+    zarr.open('sample_data.zarr', mode="r")['raw'][:],
+    zarr.open('sample_data.zarr', mode="r")['ground_truth'][:])
 
 With a slight modification to the source node and our request, we can now
 simultaneously request raw data and a segmentation:
@@ -708,9 +708,9 @@ node with its equivalent :class:`torch.Predict`.
 
     print(batch)
     imshow(
-      zarr.open('sample_data.zarr')['raw'][:],
+      zarr.open('sample_data.zarr', mode="r")['raw'][:],
       None,
-      zarr.open('sample_data.zarr')['prediction'][:])
+      zarr.open('sample_data.zarr', mode="r")['prediction'][:])
 
 What next?
 ^^^^^^^^^^
