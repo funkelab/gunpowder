@@ -35,9 +35,8 @@ class RandomProvider(BatchProvider):
 
         # automatically normalize probabilities to sum to 1
         if self.probabilities is not None:
-            self.probabilities = [
-                float(x) / np.sum(probabilities) for x in self.probabilities
-            ]
+            total = np.sum(self.probabilities)
+            self.probabilities = [float(x) / total for x in self.probabilities]
 
     def setup(self):
         self.enable_placeholders()
