@@ -6,7 +6,6 @@ from gunpowder import (
     AddAffinities,
     Array,
     ArrayKey,
-    ArrayKeys,
     ArraySpec,
     Batch,
     BatchProvider,
@@ -16,11 +15,16 @@ from gunpowder import (
     build,
 )
 
+GT_LABELS = ArrayKey("GT_LABELS")
+GT_MASK = ArrayKey("GT_MASK")
+GT_AFFINITIES = ArrayKey("GT_AFFINITIES")
+GT_AFFINITIES_MASK = ArrayKey("GT_AFFINITIES_MASK")
+
 
 class ExampleSource(BatchProvider):
     def setup(self):
         self.provides(
-            ArrayKeys.GT_LABELS,
+            GT_LABELS,
             ArraySpec(
                 roi=Roi((-40, -40, -40), (160, 160, 160)),
                 voxel_size=(20, 4, 8),
@@ -28,7 +32,7 @@ class ExampleSource(BatchProvider):
             ),
         )
         self.provides(
-            ArrayKeys.GT_MASK,
+            GT_MASK,
             ArraySpec(
                 roi=Roi((-40, -40, -40), (160, 160, 160)),
                 voxel_size=(20, 4, 8),
@@ -39,29 +43,24 @@ class ExampleSource(BatchProvider):
     def provide(self, request):
         batch = Batch()
 
-        roi = request[ArrayKeys.GT_LABELS].roi
-        shape = (roi / self.spec[ArrayKeys.GT_LABELS].voxel_size).get_shape()
-        spec = self.spec[ArrayKeys.GT_LABELS].copy()
+        roi = request[GT_LABELS].roi
+        shape = (roi / self.spec[GT_LABELS].voxel_size).get_shape()
+        spec = self.spec[GT_LABELS].copy()
         spec.roi = roi
 
-        batch.arrays[ArrayKeys.GT_LABELS] = Array(np.random.randint(0, 2, shape), spec)
+        batch.arrays[GT_LABELS] = Array(np.random.randint(0, 2, shape), spec)
 
-        roi = request[ArrayKeys.GT_MASK].roi
-        shape = (roi / self.spec[ArrayKeys.GT_MASK].voxel_size).get_shape()
-        spec = self.spec[ArrayKeys.GT_MASK].copy()
+        roi = request[GT_MASK].roi
+        shape = (roi / self.spec[GT_MASK].voxel_size).get_shape()
+        spec = self.spec[GT_MASK].copy()
         spec.roi = roi
 
-        batch.arrays[ArrayKeys.GT_MASK] = Array(np.random.randint(0, 2, shape), spec)
+        batch.arrays[GT_MASK] = Array(np.random.randint(0, 2, shape), spec)
 
         return batch
 
 
 def test_output():
-    labels_key = ArrayKey("GT_LABELS")
-    mask_key = ArrayKey("GT_MASK")
-    affs_key = ArrayKey("GT_AFFINITIES")
-    affs_mask_key = ArrayKey("GT_AFFINITIES_MASK")
-
     neighborhood = [
         Coordinate((-2, 0, 0)),
         Coordinate((0, -1, 0)),
@@ -71,31 +70,31 @@ def test_output():
 
     pipeline = ExampleSource() + AddAffinities(
         neighborhood,
-        labels=labels_key,
-        labels_mask=mask_key,
-        affinities=affs_key,
-        affinities_mask=affs_mask_key,
+        labels=GT_LABELS,
+        labels_mask=GT_MASK,
+        affinities=GT_AFFINITIES,
+        affinities_mask=GT_AFFINITIES_MASK,
     )
 
     with build(pipeline):
         for i in range(10):
             request = BatchRequest()
-            request.add(labels_key, (100, 16, 64))
-            request.add(mask_key, (100, 16, 64))
-            request.add(affs_key, (100, 16, 64))
-            request.add(affs_mask_key, (100, 16, 64))
+            request.add(GT_LABELS, (100, 16, 64))
+            request.add(GT_MASK, (100, 16, 64))
+            request.add(GT_AFFINITIES, (100, 16, 64))
+            request.add(GT_AFFINITIES_MASK, (100, 16, 64))
 
             batch = pipeline.request_batch(request)
 
-            assert labels_key in batch.arrays
-            assert mask_key in batch.arrays
-            assert affs_key in batch.arrays
-            assert affs_mask_key in batch.arrays
+            assert GT_LABELS in batch.arrays
+            assert GT_MASK in batch.arrays
+            assert GT_AFFINITIES in batch.arrays
+            assert GT_AFFINITIES_MASK in batch.arrays
 
-            labels = batch.arrays[labels_key]
-            labels_mask = batch.arrays[mask_key]
-            affs = batch.arrays[affs_key]
-            affs_mask = batch.arrays[affs_mask_key]
+            labels = batch.arrays[GT_LABELS]
+            labels_mask = batch.arrays[GT_MASK]
+            affs = batch.arrays[GT_AFFINITIES]
+            affs_mask = batch.arrays[GT_AFFINITIES_MASK]
 
             assert (len(neighborhood),) + labels.data.shape == affs.data.shape
 
@@ -126,12 +125,12 @@ def test_output():
                         )
 
         request = BatchRequest()
-        request.add(affs_key, (100, 16, 64))
-        request.add(affs_mask_key, (100, 16, 64))
+        request.add(GT_AFFINITIES, (100, 16, 64))
+        request.add(GT_AFFINITIES_MASK, (100, 16, 64))
 
         batch = pipeline.request_batch(request)
 
-        assert labels_key not in batch.arrays
-        assert mask_key not in batch.arrays
-        assert affs_key in batch.arrays
-        assert affs_mask_key in batch.arrays
+        assert GT_LABELS not in batch.arrays
+        assert GT_MASK not in batch.arrays
+        assert GT_AFFINITIES in batch.arrays
+        assert GT_AFFINITIES_MASK in batch.arrays

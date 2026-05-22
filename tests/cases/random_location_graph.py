@@ -9,7 +9,6 @@ from gunpowder import (
     BatchRequest,
     Graph,
     GraphKey,
-    GraphKeys,
     GraphSpec,
     Node,
     RandomLocation,
@@ -18,6 +17,8 @@ from gunpowder import (
 )
 
 logger = logging.getLogger(__name__)
+
+TEST_GRAPH = GraphKey("TEST_GRAPH")
 
 
 class BatchTester(BatchFilter):
@@ -42,7 +43,7 @@ class BatchTester(BatchFilter):
                     )
                 else:
                     assert self.roi_to_match.contains(
-                        batch[GraphKeys.TEST_GRAPH].spec.roi
+                        batch[TEST_GRAPH].spec.roi
                     ), "batch is not contained in possible roi"
         else:
             self.visted = True
