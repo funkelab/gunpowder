@@ -244,7 +244,7 @@ class Train(GenericTrain):
                 "Torch train node only supports return types of tuple",
                 f"and torch.Tensor from model.forward(). not {type(model_outputs)}",
             )
-        outputs.update(self.intermediate_layers)
+        outputs.update(self.intermediate_layers)  # ty: ignore[no-matching-overload]
 
         # Some inputs to the loss should come from the batch, not the model
         provided_loss_inputs = self.__collect_provided_loss_inputs(batch)
@@ -258,7 +258,7 @@ class Train(GenericTrain):
         # Update device loss inputs with tensors from outputs if available
         flipped_outputs = {v: outputs[k] for k, v in self.outputs.items()}
         device_loss_inputs = {
-            k[5:]: flipped_outputs.get(v, device_loss_inputs.get(k))
+            k[5:]: flipped_outputs.get(v, device_loss_inputs.get(k))  # ty: ignore[not-subscriptable]
             for k, v in self.loss_inputs.items()
         }
 

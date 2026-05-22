@@ -19,7 +19,7 @@
 
 from datetime import datetime
 
-import tomli
+import tomli  # ty: ignore[unresolved-import]
 
 import gunpowder
 

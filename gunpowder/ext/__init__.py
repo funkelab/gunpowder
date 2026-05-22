@@ -13,6 +13,7 @@ class NoSuchModule(object):
         self.__name = name
         self.__traceback_str = traceback.format_tb(sys.exc_info()[2])
         errtype, value = sys.exc_info()[:2]
+        assert errtype is not None
         self.__exception = errtype(value)
 
     def __getattr__(self, item):
@@ -20,44 +21,44 @@ class NoSuchModule(object):
 
 
 try:
-    import dvision
+    import dvision  # ty: ignore[unresolved-import]
 except ImportError:
-    dvision = NoSuchModule("dvision")  # type: ignore
+    dvision = NoSuchModule("dvision")
 
 try:
     import h5py
 except ImportError:
-    h5py = NoSuchModule("h5py")  # type: ignore
+    h5py = NoSuchModule("h5py")  # ty: ignore[invalid-assignment]
 
 try:
-    import pyklb
+    import pyklb  # ty: ignore[unresolved-import]
 except ImportError:
-    pyklb = NoSuchModule("pyklb")  # type: ignore
+    pyklb = NoSuchModule("pyklb")
 
 try:
-    import tensorflow
+    import tensorflow  # ty: ignore[unresolved-import]
 except ImportError:
-    tensorflow = NoSuchModule("tensorflow")  # type: ignore
+    tensorflow = NoSuchModule("tensorflow")
 
 try:
-    import torch
+    import torch  # ty: ignore[unresolved-import]
 except ImportError:
-    torch = NoSuchModule("torch")  # type: ignore
+    torch = NoSuchModule("torch")
 
 try:
-    import tensorboardX
+    import tensorboardX  # ty: ignore[unresolved-import]
 except ImportError:
-    tensorboardX = NoSuchModule("tensorboardX")  # type: ignore
+    tensorboardX = NoSuchModule("tensorboardX")
 
 try:
-    import malis
+    import malis  # ty: ignore[unresolved-import]
 except ImportError:
-    malis = NoSuchModule("malis")  # type: ignore
+    malis = NoSuchModule("malis")
 
 try:
     import augment
 except ImportError:
-    augment = NoSuchModule("augment")  # type: ignore
+    augment = NoSuchModule("augment")  # ty: ignore[invalid-assignment]
 
 ZarrFile: Optional[Any] = None
 try:
@@ -65,30 +66,30 @@ try:
 
     from .zarr_file import ZarrFile
 except ImportError:
-    zarr = NoSuchModule("zarr")  # type: ignore
-    ZarrFile = None
+    zarr = NoSuchModule("zarr")  # ty: ignore[invalid-assignment]
+    ZarrFile = None  # ty: ignore[conflicting-declarations]
 
 try:
-    import daisy
+    import daisy  # ty: ignore[unresolved-import]
 except ImportError:
-    daisy = NoSuchModule("daisy")  # type: ignore
+    daisy = NoSuchModule("daisy")
 
 try:
-    import jax
+    import jax  # ty: ignore[unresolved-import]
 except ImportError:
-    jax = NoSuchModule("jax")  # type: ignore
+    jax = NoSuchModule("jax")
 
 try:
-    import jax.numpy as jnp
+    import jax.numpy as jnp  # ty: ignore[unresolved-import]
 except ImportError:
-    jnp = NoSuchModule("jnp")  # type: ignore
+    jnp = NoSuchModule("jnp")
 
 try:
-    import haiku
+    import haiku  # ty: ignore[unresolved-import]
 except ImportError:
-    haiku = NoSuchModule("haiku")  # type: ignore
+    haiku = NoSuchModule("haiku")
 
 try:
-    import optax
+    import optax  # ty: ignore[unresolved-import]
 except ImportError:
-    optax = NoSuchModule("optax")  # type: ignore
+    optax = NoSuchModule("optax")
