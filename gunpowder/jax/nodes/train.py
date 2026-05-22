@@ -270,8 +270,13 @@ class Train(GenericTrain):
                 self.summary_writer.add_scalar("loss", loss, batch.iteration)
 
         # run validate
-        if self.validate_fn is not None and batch.iteration % self.validate_every == 0:
+        if (
+            self.validate_fn is not None
+            and self.validate_every is not None
+            and batch.iteration % self.validate_every == 0
+        ):
             val_ret = self.validate_fn(self.model, self.model_params)
+            assert self.summary_writer is not None
             if isinstance(val_ret, dict):
                 for k, v in val_ret.items():
                     self.summary_writer.add_scalar(k, v, batch.iteration)
@@ -299,7 +304,7 @@ class Train(GenericTrain):
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
                 else:
-                    logger.warn(msg)
+                    logger.warning(msg)
             elif isinstance(array_key, np.ndarray):
                 arrays[array_name] = array_key
             else:

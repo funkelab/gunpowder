@@ -4,6 +4,7 @@ from random import randrange
 import numpy as np
 
 from gunpowder.coordinate import Coordinate
+from gunpowder.provider_spec import ProviderSpec
 
 from .batch_filter import BatchFilter
 
@@ -53,6 +54,10 @@ class SpecifiedLocation(BatchFilter):
             throwing an error.
     """
 
+    # populated in setup() / prepare()
+    upstream_spec: ProviderSpec
+    specified_shift: Coordinate
+
     def __init__(
         self,
         locations,
@@ -65,8 +70,6 @@ class SpecifiedLocation(BatchFilter):
         self.choose_randomly = choose_randomly
         self.jitter = jitter
         self.loc_i = -1
-        self.upstream_spec = None
-        self.specified_shift = None
         self.attempt_factor = attempt_factor
 
         if extra_data is not None:

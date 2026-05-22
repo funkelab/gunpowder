@@ -115,6 +115,7 @@ class PreCache(BatchFilter):
 
         else:
             logger.debug("getting batch from queue...")
+            assert self.workers is not None
             batch = self.workers.get()
 
             timing.stop()
@@ -123,5 +124,6 @@ class PreCache(BatchFilter):
         return batch
 
     def _run_worker(self):
+        assert self.current_request is not None
         request = self.current_request.copy()
         return self.get_upstream_provider().request_batch(request)

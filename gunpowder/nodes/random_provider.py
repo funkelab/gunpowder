@@ -62,6 +62,7 @@ class RandomProvider(BatchProvider):
                     if key not in provider.spec:
                         del common_spec[key]
 
+        assert common_spec is not None
         for key, spec in common_spec.items():
             self.provides(key, spec)
 

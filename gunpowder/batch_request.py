@@ -88,6 +88,7 @@ class BatchRequest(ProviderSpec):
     def _update_random_seed(self):
         if not self.is_deterministic():
             return
+        assert self._random_seed is not None
         self._random_seed = hash((self._random_seed + 1) ** 2) % (2**32)
 
     def __center_rois(self):

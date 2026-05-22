@@ -14,17 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class ShiftAugment(BatchFilter):
+    # populated in prepare()
+    ndim: int
+    shift_sigmas: tuple
+    shift_array: np.ndarray
+    lcm_voxel_size: Coordinate
+
     def __init__(self, prob_slip=0, prob_shift=0, sigma=0, shift_axis=0, p=1.0):
         self.prob_slip = prob_slip
         self.prob_shift = prob_shift
         self.sigma = sigma
         self.shift_axis = shift_axis
         self.p = p
-
-        self.ndim = None
-        self.shift_sigmas = None
-        self.shift_array = None
-        self.lcm_voxel_size = None
 
     def skip_node(self, request):
         return random.random() > self.p
@@ -34,7 +35,7 @@ class ShiftAugment(BatchFilter):
         assert self.shift_axis in range(self.ndim)
 
         try:
-            self.shift_sigmas = tuple(self.sigma)
+            self.shift_sigmas = tuple(self.sigma)  # ty: ignore[invalid-argument-type]
         except TypeError:
             self.shift_sigmas = [float(self.sigma)] * self.ndim
             self.shift_sigmas[self.shift_axis] = 0.0

@@ -50,6 +50,9 @@ class Hdf5LikeSource(BatchProvider):
             data is read in channels_last manner and converted to channels_first.
     """
 
+    # number of spatial dimensions; populated in setup() via __read_spec
+    ndims: int
+
     def __init__(self, filename, datasets, array_specs=None, channels_first=True):
         warnings.warn(
             "HDF5LikeSource is depricated and will soon be removed in v2.0",
@@ -65,9 +68,6 @@ class Hdf5LikeSource(BatchProvider):
             self.array_specs = array_specs
 
         self.channels_first = channels_first
-
-        # number of spatial dimensions
-        self.ndims = None
 
     def _open_file(self, filename):
         raise NotImplementedError("Only implemented in subclasses")
