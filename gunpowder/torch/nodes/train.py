@@ -367,7 +367,7 @@ class Train(GenericTrain):
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
                 elif not expect_missing_arrays:
-                    logger.warn(msg)
+                    logger.warning(msg)
                 else:
                     logger.debug(msg)
             elif isinstance(array_key, np.ndarray):

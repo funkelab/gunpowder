@@ -203,7 +203,7 @@ class Hdf5LikeWrite(BatchFilter):
                 common_roi = array_roi.intersect(dataset_roi)
 
                 if common_roi.empty:
-                    logger.warn(
+                    logger.warning(
                         "array %s with ROI %s lies outside of dataset ROI %s, "
                         "skipping writing" % (array_key, array_roi, dataset_roi)
                     )
