@@ -1,7 +1,12 @@
 import copy
+from collections.abc import Sequence
+
+import numpy as np
+import numpy.typing as npt
 
 from .coordinate import Coordinate
 from .freezable import Freezable
+from .roi import Roi
 
 
 class ArraySpec(Freezable):
@@ -37,20 +42,27 @@ class ArraySpec(Freezable):
             The data type of the array.
     """
 
+    roi: Roi | None
+    voxel_size: Coordinate | None
+    interpolatable: bool | None
+    nonspatial: bool
+    dtype: np.dtype | None
+    placeholder: bool
+
     def __init__(
         self,
-        roi=None,
-        voxel_size=None,
-        interpolatable=None,
-        nonspatial=False,
-        dtype=None,
-        placeholder=False,
+        roi: Roi | None = None,
+        voxel_size: Sequence[int] | None = None,
+        interpolatable: bool | None = None,
+        nonspatial: bool = False,
+        dtype: npt.DTypeLike | None = None,
+        placeholder: bool = False,
     ):
         self.roi = roi
         self.voxel_size = None if voxel_size is None else Coordinate(voxel_size)
         self.interpolatable = interpolatable
         self.nonspatial = nonspatial
-        self.dtype = dtype
+        self.dtype = None if dtype is None else np.dtype(dtype)
         self.placeholder = placeholder
 
         if nonspatial:

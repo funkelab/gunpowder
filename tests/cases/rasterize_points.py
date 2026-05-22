@@ -321,6 +321,6 @@ def test_with_edge():
 
         rasterized = batch.arrays[rasterized_key].data
 
-        assert (
-            rasterized.sum() == 10
-        ), f"rasterized has ones at: {np.where(rasterized == 1)}"
+        assert rasterized.sum() == 10, (
+            f"rasterized has ones at: {np.where(rasterized == 1)}"
+        )

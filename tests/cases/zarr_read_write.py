@@ -24,10 +24,8 @@ from .helper_sources import ArraySource
     "zarr_store_func",
     [
         "tmp_path / 'zarr_write_test.zarr'",
-        "tmp_path / 'zarr_write_test.n5'",
         "tmp_path / 'zarr_write_test.hdf'",
-        "zarr.DirectoryStore(f'{tmp_path}/array.zarr')",
-        "zarr.storage.TempStore(dir=tmp_path)",
+        "zarr.storage.LocalStore(tmp_path / 'array.zarr')",
     ],
 )
 def test_read_write(tmp_path, zarr_store_func):

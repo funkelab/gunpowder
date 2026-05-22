@@ -16,6 +16,7 @@ def test_output():
         voxel_size=(20, 4, 8),
         interpolatable=False,
     )
+    assert labels_spec.roi is not None and labels_spec.voxel_size is not None
     shape = (labels_spec.roi / labels_spec.voxel_size).shape
     labels_data = np.ones(shape)
     labels_data[shape[0] // 2 :, :, :] += 2

@@ -1,10 +1,7 @@
-try:
-    import Queue
-except:
-    import queue as Queue
 import logging
 import multiprocessing
 import os
+import queue as Queue
 import sys
 
 import numpy as np
@@ -81,7 +78,7 @@ class ProducerPool(object):
             return
 
         self.__stop.set()
-        if self.__watch_dog._popen is not None:
+        if self.__watch_dog._popen is not None:  # ty: ignore[unresolved-attribute]
             self.__watch_dog.join()
         self.__watch_dog = None
 

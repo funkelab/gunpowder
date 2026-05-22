@@ -13,12 +13,13 @@ from gunpowder import (
     Coordinate,
     Graph,
     GraphKey,
-    GraphKeys,
     GraphSpec,
     Roi,
     Snapshot,
     build,
 )
+
+TEST_GRAPH = GraphKey("TEST_GRAPH")
 
 
 class ExampleSource(BatchProvider):
@@ -35,9 +36,9 @@ class ExampleSource(BatchProvider):
     def provide(self, request):
         outputs = Batch()
         if self.n % self.every == 0:
-            assert GraphKeys.TEST_GRAPH in request
+            assert TEST_GRAPH in request
         else:
-            assert GraphKeys.TEST_GRAPH not in request
+            assert TEST_GRAPH not in request
         for key, spec in request.items():
             if isinstance(key, GraphKey):
                 outputs[key] = Graph([], [], spec)
@@ -49,7 +50,7 @@ class ExampleSource(BatchProvider):
 
 
 def test_3d(tmpdir):
-    test_graph = GraphKey("TEST_GRAPH")
+    test_graph = TEST_GRAPH
     graph_spec = GraphSpec(roi=Roi((0, 0, 0), (5, 5, 5)))
     test_array = ArrayKey("TEST_ARRAY")
     array_spec = ArraySpec(

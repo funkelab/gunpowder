@@ -69,9 +69,9 @@ class GrowBoundary(BatchFilter):
 
     def __grow(self, gt, gt_mask=None, only_xy=False):
         if gt_mask is not None:
-            assert (
-                gt.shape == gt_mask.shape
-            ), "GT_LABELS and GT_MASK do not have the same size."
+            assert gt.shape == gt_mask.shape, (
+                "GT_LABELS and GT_MASK do not have the same size."
+            )
 
         if only_xy:
             assert len(gt.shape) == 3

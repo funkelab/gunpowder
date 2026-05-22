@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class RasterizationSettings(Freezable):
-    """Data structure to store parameters for rasterization of graph.
+    r"""Data structure to store parameters for rasterization of graph.
 
     Args:
 
@@ -94,9 +94,9 @@ class RasterizationSettings(Freezable):
         radius = np.array([radius]).flatten().astype(np.float64)
 
         if inner_radius_fraction is not None:
-            assert (
-                inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0
-            ), "Inner radius fraction has to be between (excluding) 0 and 1"
+            assert inner_radius_fraction > 0.0 and inner_radius_fraction < 1.0, (
+                "Inner radius fraction has to be between (excluding) 0 and 1"
+            )
             inner_radius_fraction = 1.0 - inner_radius_fraction
 
         self.radius = radius
@@ -144,15 +144,16 @@ class RasterizeGraph(BatchFilter):
 
     def setup(self):
         graph_roi = self.spec[self.graph].roi
+        assert graph_roi is not None
 
         if self.array_spec.voxel_size is None:
             self.array_spec.voxel_size = Coordinate((1,) * graph_roi.dims)
 
         if self.array_spec.dtype is None:
             if self.settings.mode == "ball":
-                self.array_spec.dtype = np.uint8
+                self.array_spec.dtype = np.dtype(np.uint8)
             else:
-                self.array_spec.dtype = np.float32
+                self.array_spec.dtype = np.dtype(np.float32)
 
         self.array_spec.roi = graph_roi.copy()
         self.provides(self.array, self.array_spec)
@@ -167,6 +168,7 @@ class RasterizeGraph(BatchFilter):
         else:
             raise RuntimeError("unknown raster mode %s" % self.settings.mode)
 
+        assert self.array_spec.roi is not None
         dims = self.array_spec.roi.dims
         if len(context) == 1:
             context = context.repeat(dims)
@@ -185,9 +187,9 @@ class RasterizeGraph(BatchFilter):
 
         if self.settings.mask is not None:
             mask_voxel_size = self.spec[self.settings.mask].voxel_size
-            assert (
-                self.spec[self.array].voxel_size == mask_voxel_size
-            ), "Voxel size of mask and rasterized volume need to be equal"
+            assert self.spec[self.array].voxel_size == mask_voxel_size, (
+                "Voxel size of mask and rasterized volume need to be equal"
+            )
 
             new_mask_roi = graph_roi.snap_to_grid(mask_voxel_size)
             deps[self.settings.mask] = ArraySpec(roi=new_mask_roi)

@@ -35,9 +35,9 @@ class UpSample(BatchFilter):
     def __init__(self, source, factor, target):
         assert isinstance(source, ArrayKey)
         assert isinstance(target, ArrayKey)
-        assert isinstance(factor, numbers.Number) or isinstance(
-            factor, Coordinate
-        ), "Scaling factor should be a number or a Coordinate."
+        assert isinstance(factor, numbers.Number) or isinstance(factor, Coordinate), (
+            "Scaling factor should be a number or a Coordinate."
+        )
 
         self.source = source
         self.factor = factor
@@ -49,12 +49,13 @@ class UpSample(BatchFilter):
         if not isinstance(self.factor, Coordinate):
             self.factor = Coordinate((self.factor,) * spec.roi.dims)
 
-        assert spec.voxel_size % self.factor == (0,) * len(
-            spec.voxel_size
-        ), "voxel size of upsampled volume is not integer: %s/%s = %s" % (
-            spec.voxel_size,
-            self.factor,
-            tuple(v / f for v, f in zip(spec.voxel_size, self.factor)),
+        assert spec.voxel_size % self.factor == (0,) * len(spec.voxel_size), (
+            "voxel size of upsampled volume is not integer: %s/%s = %s"
+            % (
+                spec.voxel_size,
+                self.factor,
+                tuple(v / f for v, f in zip(spec.voxel_size, self.factor)),
+            )
         )
         spec.voxel_size /= self.factor
         self.provides(self.target, spec)

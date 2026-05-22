@@ -59,6 +59,11 @@ class CsvPointsSource(BatchProvider):
             Delimiter to pass to the csv reader. Defaults to ",".
     """
 
+    # populated in setup() via _parse_csv()
+    data: np.ndarray
+    ids: np.ndarray
+    ndims: int
+
     def __init__(
         self,
         filename: str,
@@ -76,8 +81,6 @@ class CsvPointsSource(BatchProvider):
         self.spatial_cols = spatial_cols
         self.id_dim = id_col
         self.delimiter = delimiter
-        self.data: Optional[np.ndarray] = None
-        self.ids: Optional[list] = None
 
     def setup(self):
         self._parse_csv()

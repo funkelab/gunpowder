@@ -240,12 +240,12 @@ class DvidSource(BatchProvider):
         # set datatype
 
         if spec.dtype is not None and spec.dtype != np.uint8:
-            logger.warn(
+            logger.warning(
                 "Ignoring dtype in array_spec for %s, only np.uint8 "
                 "is allowed for masks.",
                 mask_key,
             )
-        spec.dtype = np.uint8
+        spec.dtype = np.dtype(np.uint8)
 
         return spec
 

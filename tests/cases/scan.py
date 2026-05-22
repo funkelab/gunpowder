@@ -5,7 +5,6 @@ import numpy as np
 from gunpowder import (
     Array,
     ArrayKey,
-    ArrayKeys,
     ArraySpec,
     Batch,
     BatchProvider,
@@ -13,7 +12,6 @@ from gunpowder import (
     Coordinate,
     Graph,
     GraphKey,
-    GraphKeys,
     GraphSpec,
     Node,
     Roi,
@@ -109,20 +107,20 @@ def test_output():
     )
 
     with build(pipeline):
-        raw_spec = pipeline.spec[ArrayKeys.RAW]
-        labels_spec = pipeline.spec[ArrayKeys.GT_LABELS]
-        graph_spec = pipeline.spec[GraphKeys.GT_GRAPH]
+        raw_spec = pipeline.spec[raw_key]
+        labels_spec = pipeline.spec[gt_labels_key]
+        graph_spec = pipeline.spec[gt_graph_key]
 
         full_request = BatchRequest(
             {
-                ArrayKeys.RAW: raw_spec,
-                ArrayKeys.GT_LABELS: labels_spec,
-                GraphKeys.GT_GRAPH: graph_spec,
+                raw_key: raw_spec,
+                gt_labels_key: labels_spec,
+                gt_graph_key: graph_spec,
             }
         )
 
         batch = pipeline.request_batch(full_request)
-        voxel_size = pipeline.spec[ArrayKeys.RAW].voxel_size
+        voxel_size = pipeline.spec[raw_key].voxel_size
 
     # assert that pixels encode their position
     for array_key, array in batch.arrays.items():
@@ -149,7 +147,7 @@ def test_output():
                 )
             )
 
-    assert batch.arrays[ArrayKeys.RAW].spec.roi.offset == (20000, 2000, 2000)
+    assert batch.arrays[raw_key].spec.roi.offset == (20000, 2000, 2000)
 
     # test scanning with empty request
 

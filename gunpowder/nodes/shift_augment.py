@@ -14,17 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class ShiftAugment(BatchFilter):
+    # populated in prepare()
+    ndim: int
+    shift_sigmas: tuple
+    shift_array: np.ndarray
+    lcm_voxel_size: Coordinate
+
     def __init__(self, prob_slip=0, prob_shift=0, sigma=0, shift_axis=0, p=1.0):
         self.prob_slip = prob_slip
         self.prob_shift = prob_shift
         self.sigma = sigma
         self.shift_axis = shift_axis
         self.p = p
-
-        self.ndim = None
-        self.shift_sigmas = None
-        self.shift_array = None
-        self.lcm_voxel_size = None
 
     def skip_node(self, request):
         return random.random() > self.p
@@ -34,7 +35,7 @@ class ShiftAugment(BatchFilter):
         assert self.shift_axis in range(self.ndim)
 
         try:
-            self.shift_sigmas = tuple(self.sigma)
+            self.shift_sigmas = tuple(self.sigma)  # ty: ignore[invalid-argument-type]
         except TypeError:
             self.shift_sigmas = [float(self.sigma)] * self.ndim
             self.shift_sigmas[self.shift_axis] = 0.0
@@ -63,10 +64,10 @@ class ShiftAugment(BatchFilter):
         assert self.lcm_voxel_size
 
         roi_shape = request.get_total_roi().shape
-        assert (
-            roi_shape // self.lcm_voxel_size * self.lcm_voxel_size == roi_shape
-        ), "total roi shape {} must be divisible by least common voxel size {}".format(
-            roi_shape, self.lcm_voxel_size
+        assert roi_shape // self.lcm_voxel_size * self.lcm_voxel_size == roi_shape, (
+            "total roi shape {} must be divisible by least common voxel size {}".format(
+                roi_shape, self.lcm_voxel_size
+            )
         )
         roi_shape_adjusted = roi_shape // self.lcm_voxel_size
         shift_axis_len = roi_shape_adjusted[self.shift_axis]
@@ -114,8 +115,10 @@ class ShiftAugment(BatchFilter):
             assert (
                 request[array_key].roi.shape
                 == Coordinate(array.data.shape) * self.lcm_voxel_size
-            ), "request roi shape {} is not the same as generated array shape {}".format(
-                request[array_key].roi.shape, array.data.shape
+            ), (
+                "request roi shape {} is not the same as generated array shape {}".format(
+                    request[array_key].roi.shape, array.data.shape
+                )
             )
             batch[array_key] = array
 
@@ -148,10 +151,10 @@ class ShiftAugment(BatchFilter):
 
         array_shift_axis_len = arr.shape[self.shift_axis]
         sub_shift_array_len = len(sub_shift_array)
-        assert (
-            array_shift_axis_len % sub_shift_array_len == 0
-        ), "array shift axis length {} is not divisible by the sub_shift_array length {}".format(
-            arr.shape[self.shift_axis], sub_shift_array.shape[0]
+        assert array_shift_axis_len % sub_shift_array_len == 0, (
+            "array shift axis length {} is not divisible by the sub_shift_array length {}".format(
+                arr.shape[self.shift_axis], sub_shift_array.shape[0]
+            )
         )
 
         voxel_ratio = array_shift_axis_len // sub_shift_array_len

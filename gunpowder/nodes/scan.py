@@ -101,12 +101,15 @@ class Scan(BatchFilter):
             callback that shows a ``tqdm`` progress bar.
     """
 
+    # populated lazily in setup() / provide() / _add_to_batch
+    workers: ProducerPool
+    request_queue: multiprocessing.Queue
+    batch: Batch
+
     def __init__(self, reference, num_workers=1, cache_size=50, progress_callback=None):
         self.reference = reference.copy()
         self.num_workers = num_workers
         self.cache_size = cache_size
-        self.workers = None
-        self.batch = None
         if progress_callback is None:
             self.progress_callback = TqdmCallback()
         else:
@@ -177,7 +180,6 @@ class Scan(BatchFilter):
             self.progress_callback.stop()
 
         batch = self.batch
-        self.batch = None
 
         logger.debug("returning batch %s", batch)
 

@@ -54,14 +54,15 @@ class KlbSource(BatchProvider):
 
     """
 
+    # populated in setup()
+    files: list[str]
+    ndims: int
+
     def __init__(self, filename, array, array_spec=None, num_threads=1):
         self.filename = filename
         self.array = array
         self.array_spec = array_spec
         self.num_threads = num_threads
-
-        self.files = None
-        self.ndims = None
 
     def setup(self):
         self.files = glob.glob(self.filename)
@@ -114,9 +115,9 @@ class KlbSource(BatchProvider):
                 assert (common_header[attr] == header[attr]).all(), (
                     "Headers of provided KLB files differ in attribute %s" % attr
                 )
-            assert (
-                common_header["datatype"] == header["datatype"]
-            ), "Headers of provided KLB files differ in attribute datatype"
+            assert common_header["datatype"] == header["datatype"], (
+                "Headers of provided KLB files differ in attribute datatype"
+            )
 
         size = Coordinate(common_header["imagesize_tczyx"])
         voxel_size = Coordinate(common_header["pixelspacing_tczyx"])
@@ -150,8 +151,7 @@ class KlbSource(BatchProvider):
         if spec.dtype is not None:
             assert spec.dtype == dtype, (
                 "dtype %s provided in array_specs for %s, but differs from "
-                "dataset dtype %s"
-                % (self.array_specs[self.array].dtype, self.array, dtype)
+                "dataset dtype %s" % (spec.dtype, self.array, dtype)
             )
         else:
             spec.dtype = dtype

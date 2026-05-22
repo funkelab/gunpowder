@@ -35,15 +35,14 @@ class RandomProvider(BatchProvider):
 
         # automatically normalize probabilities to sum to 1
         if self.probabilities is not None:
-            self.probabilities = [
-                float(x) / np.sum(probabilities) for x in self.probabilities
-            ]
+            total = np.sum(self.probabilities)
+            self.probabilities = [float(x) / total for x in self.probabilities]
 
     def setup(self):
         self.enable_placeholders()
-        assert (
-            len(self.get_upstream_providers()) > 0
-        ), "at least one batch provider must be added to the RandomProvider"
+        assert len(self.get_upstream_providers()) > 0, (
+            "at least one batch provider must be added to the RandomProvider"
+        )
         if self.probabilities is not None:
             assert len(self.get_upstream_providers()) == len(self.probabilities), (
                 "if probabilities are specified, they "
@@ -62,6 +61,7 @@ class RandomProvider(BatchProvider):
                     if key not in provider.spec:
                         del common_spec[key]
 
+        assert common_spec is not None
         for key, spec in common_spec.items():
             self.provides(key, spec)
 

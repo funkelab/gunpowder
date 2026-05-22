@@ -21,6 +21,7 @@ def test_shift(slab, z_section_wise):
     raw_spec = ArraySpec(
         roi=Roi((0, 0, 0), (10, 10, 10)), voxel_size=(1, 1, 1), dtype=np.float32
     )
+    assert raw_spec.roi is not None and raw_spec.voxel_size is not None
     raw_data = np.random.randn(*(raw_spec.roi.shape / raw_spec.voxel_size)).astype(
         np.float32
     )

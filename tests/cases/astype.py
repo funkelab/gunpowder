@@ -24,6 +24,7 @@ def test_output():
     labels_spec = ArraySpec(
         roi=Roi((0, 0, 0), (1000, 1000, 1000)), voxel_size=(4, 4, 4)
     )
+    assert raw_spec.roi is not None and raw_spec.voxel_size is not None
 
     roi = raw_spec.roi / raw_spec.voxel_size
     meshgrids = np.meshgrid(

@@ -112,9 +112,9 @@ class IntensityAugment(BatchFilter):
             + "). Consider using Normalize before."
         )
         if self.clip:
-            assert (
-                raw.data.min() >= 0 and raw.data.max() <= 1
-            ), "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
+            assert raw.data.min() >= 0 and raw.data.max() <= 1, (
+                "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
+            )
 
         if self.z_section_wise:
             slab = [-1] * len(raw.data.shape)

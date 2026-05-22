@@ -244,7 +244,7 @@ class Train(GenericTrain):
                 "Torch train node only supports return types of tuple",
                 f"and torch.Tensor from model.forward(). not {type(model_outputs)}",
             )
-        outputs.update(self.intermediate_layers)
+        outputs.update(self.intermediate_layers)  # ty: ignore[no-matching-overload]
 
         # Some inputs to the loss should come from the batch, not the model
         provided_loss_inputs = self.__collect_provided_loss_inputs(batch)
@@ -258,7 +258,7 @@ class Train(GenericTrain):
         # Update device loss inputs with tensors from outputs if available
         flipped_outputs = {v: outputs[k] for k, v in self.outputs.items()}
         device_loss_inputs = {
-            k[5:]: flipped_outputs.get(v, device_loss_inputs.get(k))
+            k[5:]: flipped_outputs.get(v, device_loss_inputs.get(k))  # ty: ignore[not-subscriptable]
             for k, v in self.loss_inputs.items()
         }
 
@@ -273,9 +273,9 @@ class Train(GenericTrain):
         for k, v in list(device_loss_inputs.items()):
             if isinstance(k, str):
                 device_loss_kwargs[k] = device_loss_inputs.pop(k)
-        assert (
-            len(device_loss_inputs) == 0
-        ), f"Not all loss inputs could be interpreted. Failed keys: {device_loss_inputs.keys()}"
+        assert len(device_loss_inputs) == 0, (
+            f"Not all loss inputs could be interpreted. Failed keys: {device_loss_inputs.keys()}"
+        )
 
         self.retain_gradients(request, outputs)
 
@@ -367,7 +367,7 @@ class Train(GenericTrain):
                 if array_key in batch.arrays:
                     arrays[array_name] = batch.arrays[array_key].data
                 elif not expect_missing_arrays:
-                    logger.warn(msg)
+                    logger.warning(msg)
                 else:
                     logger.debug(msg)
             elif isinstance(array_key, np.ndarray):

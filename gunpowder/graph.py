@@ -1,7 +1,7 @@
 import itertools
 import logging
 from copy import deepcopy
-from typing import Any, Dict, Iterator, Optional, Set
+from typing import Any, Dict, Iterable, Iterator, Optional, Set
 
 import networkx as nx
 import numpy as np
@@ -62,9 +62,9 @@ class Node(Freezable):
         if "__" not in attr:
             return self.attrs[attr]
         else:
-            return super().__getattr__(attr)
+            return super().__getattr__(attr)  # ty: ignore[unresolved-attribute]
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr, value):  # ty: ignore[invalid-method-override]
         if "__" not in attr:
             self.attrs[attr] = value
         else:
@@ -204,7 +204,7 @@ class Graph(Freezable):
             A spec describing the data.
     """
 
-    def __init__(self, nodes: Iterator[Node], edges: Iterator[Edge], spec: GraphSpec):
+    def __init__(self, nodes: Iterable[Node], edges: Iterable[Edge], spec: GraphSpec):
         self.__spec = spec
         self.__graph = self.create_graph(nodes, edges)
 
@@ -224,7 +224,7 @@ class Graph(Freezable):
             else self.__graph.is_directed()
         )
 
-    def create_graph(self, nodes: Iterator[Node], edges: Iterator[Edge]):
+    def create_graph(self, nodes: Iterable[Node], edges: Iterable[Edge]):
         if self.__spec.directed is None:
             logger.debug(
                 "Trying to create a Graph without specifying directionality. Using default Directed!"
@@ -444,9 +444,9 @@ class Graph(Freezable):
         )
 
         for node in trimmed.nodes:
-            assert roi.contains(
-                node.location
-            ), f"Failed to properly contain node {node.id} at {node.location}"
+            assert roi.contains(node.location), (
+                f"Failed to properly contain node {node.id} at {node.location}"
+            )
 
         return trimmed
 
@@ -537,9 +537,9 @@ class Graph(Freezable):
         self_roi = self.spec.roi
         other_roi = other.spec.roi
 
-        assert self_roi.contains(other_roi) or other_roi.contains(
-            self_roi
-        ), "Can not merge graphs that are not contained in each other."
+        assert self_roi.contains(other_roi) or other_roi.contains(self_roi), (
+            "Can not merge graphs that are not contained in each other."
+        )
 
         # make sure self contains other
         if not self_roi.contains(other_roi):

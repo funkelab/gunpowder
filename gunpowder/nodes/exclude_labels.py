@@ -50,9 +50,9 @@ class ExcludeLabels(BatchFilter):
         self.background_value = background_value
 
     def setup(self):
-        assert (
-            self.labels in self.spec
-        ), "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+        assert self.labels in self.spec, (
+            "ExcludeLabels can only be used if GT_LABELS is provided upstream."
+        )
         if self.ignore_mask:
             self.provides(self.ignore_mask, self.spec[self.labels])
 

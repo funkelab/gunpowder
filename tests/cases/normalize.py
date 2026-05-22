@@ -10,6 +10,7 @@ def test_output():
     raw_spec = ArraySpec(
         roi=Roi((0, 0, 0), (10, 10, 10)), voxel_size=(1, 1, 1), dtype=np.uint8
     )
+    assert raw_spec.roi is not None and raw_spec.voxel_size is not None
     raw_data = np.zeros(raw_spec.roi.shape / raw_spec.voxel_size, dtype=np.uint8) + 128
     raw_array = Array(raw_data, raw_spec)
     pipeline = ArraySource(raw_key, raw_array) + Normalize(raw_key)

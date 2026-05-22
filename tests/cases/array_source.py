@@ -1,17 +1,17 @@
 import numpy as np
-from funlib.geometry import Roi
+from funlib.geometry import Coordinate, Roi
 from funlib.persistence import prepare_ds
 
 from gunpowder import ArrayKey, ArraySpec, BatchRequest, build
 from gunpowder.nodes import ArraySource
 
 
-def test_array_source(tmpdir):
+def test_array_source(tmp_path):
     array = prepare_ds(
-        tmpdir / "data.zarr",
+        tmp_path / "data.zarr",
         shape=(100, 102, 108),
-        offset=(100, 50, 0),
-        voxel_size=(1, 2, 3),
+        offset=Coordinate(100, 50, 0),
+        voxel_size=Coordinate(1, 2, 3),
         dtype="uint8",
     )
     array[:] = np.arange(100 * 102 * 108).reshape((100, 102, 108)) % 255

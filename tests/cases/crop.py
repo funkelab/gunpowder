@@ -28,6 +28,7 @@ def test_output():
         roi=Roi((200, 20, 20), (1800, 180, 180)), voxel_size=(20, 2, 2)
     )
     pre_spec = GraphSpec(roi=Roi((200, 20, 20), (1800, 180, 180)))
+    assert raw_spec.roi is not None and raw_spec.voxel_size is not None
 
     raw_data = np.zeros(raw_spec.roi.shape / raw_spec.voxel_size)
 

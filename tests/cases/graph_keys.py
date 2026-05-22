@@ -8,6 +8,6 @@ from gunpowder import GraphKey, GraphKeys
 def test_register():
     GraphKey("TEST_GRAPH")
 
-    assert GraphKeys.TEST_GRAPH
+    assert GraphKeys.TEST_GRAPH  # ty: ignore[unresolved-attribute]
     with pytest.raises(AttributeError):
         getattr(GraphKeys, "TEST_GRAPH_2")

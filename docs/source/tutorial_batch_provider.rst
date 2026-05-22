@@ -50,7 +50,7 @@ have a look at the following preliminaries:
     gt_data = gt_data[np.newaxis,:].astype(np.float32)
 
     # store image in zarr container
-    f = zarr.open('sample_data.zarr', 'w')
+    f = zarr.open('sample_data.zarr', mode='w')
     f['raw'] = raw_data
     f['raw'].attrs['resolution'] = (1, 1)
     f['ground_truth'] = gt_data
@@ -83,7 +83,7 @@ attribute ``resolution = (1, 1)``:
 
 .. jupyter-execute::
 
-  imshow(zarr.open('sample_data.zarr')['raw'][:])
+  imshow(zarr.open('sample_data.zarr', mode="r")['raw'][:])
 
 The basics: ``prepare`` and ``process``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

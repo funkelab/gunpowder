@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from .array_spec import ArraySpec
 from .freezable import Freezable
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class Array(Freezable):
             The data to be stored in the array. Will be converted to a numpy
             array, if necessary.
 
-        spec (:class:`ArraySpec`, optional):
+        spec (:class:`ArraySpec`):
 
             A spec describing the data.
 
@@ -28,13 +29,14 @@ class Array(Freezable):
             Optional attributes to describe this array.
     """
 
-    def __init__(self, data, spec=None, attrs=None):
+    spec: ArraySpec
+    data: np.ndarray
+    attrs: dict
+
+    def __init__(self, data, spec: ArraySpec, attrs: dict | None = None):
         self.spec = spec.copy()
         self.data = np.asarray(data)
-        self.attrs = attrs
-
-        if attrs is None:
-            self.attrs = {}
+        self.attrs = attrs if attrs is not None else {}
 
         if spec is not None and spec.roi is not None and spec.voxel_size is not None:
             for d in range(len(spec.voxel_size)):
@@ -47,17 +49,18 @@ class Array(Freezable):
                     data.shape,
                 )
                 if spec.roi.offset[d] is not None:
-                    assert (
-                        spec.roi.offset[d] % spec.voxel_size[d] == 0
-                    ), "ROI offset %s must be a multiple of voxel size %s" % (
-                        spec.roi.offset,
-                        spec.voxel_size,
+                    assert spec.roi.offset[d] % spec.voxel_size[d] == 0, (
+                        "ROI offset %s must be a multiple of voxel size %s"
+                        % (
+                            spec.roi.offset,
+                            spec.voxel_size,
+                        )
                     )
 
         if spec.dtype is not None:
-            assert (
-                data.dtype == spec.dtype
-            ), "data dtype %s does not match spec dtype %s" % (data.dtype, spec.dtype)
+            assert data.dtype == spec.dtype, (
+                "data dtype %s does not match spec dtype %s" % (data.dtype, spec.dtype)
+            )
 
         self.freeze()
 
@@ -75,9 +78,12 @@ class Array(Freezable):
                 Make a copy of the data.
         """
 
-        assert self.spec.roi.contains(
-            roi
-        ), "Requested crop ROI (%s) doesn't fit in array (%s)" % (roi, self.spec.roi)
+        assert self.spec.roi is not None and self.spec.voxel_size is not None, (
+            "Cannot crop an Array without a spatial ROI"
+        )
+        assert self.spec.roi.contains(roi), (
+            "Requested crop ROI (%s) doesn't fit in array (%s)" % (roi, self.spec.roi)
+        )
 
         if self.spec.roi == roi and not copy:
             return self
@@ -116,13 +122,13 @@ class Array(Freezable):
         self_roi = self.spec.roi
         array_roi = array.spec.roi
 
-        assert self_roi.contains(array_roi) or array_roi.contains(
-            self_roi
-        ), "Can not merge arrays that are not contained in each other."
+        assert self_roi.contains(array_roi) or array_roi.contains(self_roi), (
+            "Can not merge arrays that are not contained in each other."
+        )
 
-        assert (
-            self.spec.voxel_size == array.spec.voxel_size
-        ), "Can not merge arrays with different voxel sizes."
+        assert self.spec.voxel_size == array.spec.voxel_size, (
+            "Can not merge arrays with different voxel sizes."
+        )
 
         # make sure self contains array
         if not self_roi.contains(array_roi):

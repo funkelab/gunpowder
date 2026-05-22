@@ -1,15 +1,12 @@
 import logging
 import warnings
-from collections.abc import MutableMapping
-from typing import Union
 
-from zarr import N5FSStore, N5Store
-from zarr._storage.store import BaseStore
+import zarr
+from zarr.abc.store import Store
 
 from gunpowder.array import ArrayKey
 from gunpowder.batch_request import BatchRequest
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import ZarrFile
 from gunpowder.roi import Roi
 
 from .batch_filter import BatchFilter
@@ -30,15 +27,15 @@ class ZarrWrite(BatchFilter):
             A dictionary from array keys to names of the datasets to store them
             in.
 
-        store (``string`` or ``BaseStore``):
+        store (``string`` or ``zarr.abc.store.Store``):
 
             The directory to save the zarr container. Will be created, if it does
             not exist.
 
         compression_type (``string`` or ``int``):
 
-            Compression strategy.  Legal values are ``gzip``, ``szip``,
-            ``lzf``. If an integer between 1 and 10, this indicates ``gzip``
+            Compression strategy. Legal values are ``gzip`` and ``zstd``.
+            If an integer between 1 and 10, this indicates ``gzip``
             compression level.
 
         dataset_dtypes (``dict``, :class:`ArrayKey` -> data type):
@@ -55,7 +52,7 @@ class ZarrWrite(BatchFilter):
         output_filename="output.hdf",
         compression_type=None,
         dataset_dtypes=None,
-        store: Union[BaseStore, MutableMapping, str] = None,
+        store: Store | str | None = None,
     ):
         self.store = store if store is not None else f"{output_dir}/{output_filename}"
         if store is None:
@@ -102,13 +99,29 @@ class ZarrWrite(BatchFilter):
             dataset.attrs["offset"] = offset
 
     def _rev_metadata(self):
-        with ZarrFile(self.store, mode="a") as store:
-            return isinstance(store.chunk_store, N5Store) or isinstance(
-                store.chunk_store, N5FSStore
+        return False
+
+    def _get_compressors(self):
+        if self.compression_type is None:
+            return None
+        from zarr.codecs import GzipCodec, ZstdCodec
+
+        if isinstance(self.compression_type, int):
+            return [GzipCodec(level=self.compression_type)]
+        compression_map = {
+            "gzip": GzipCodec,
+            "zstd": ZstdCodec,
+        }
+        codec_cls = compression_map.get(self.compression_type)
+        if codec_cls is None:
+            raise ValueError(
+                f"Unsupported compression type: {self.compression_type!r}. "
+                f"Supported types: {list(compression_map.keys())}"
             )
+        return [codec_cls()]
 
     def _open_file(self, store):
-        return ZarrFile(store, mode="a")
+        return zarr.open(store, mode="a")
 
     def setup(self):
         for key in self.dataset_names.keys():
@@ -122,118 +135,118 @@ class ZarrWrite(BatchFilter):
         return deps
 
     def init_datasets(self, batch):
-        with self._open_file(self.store) as data_file:
-            for array_key, dataset_name in self.dataset_names.items():
-                logger.debug("Initializing dataset for %s", array_key)
+        data_file = self._open_file(self.store)
+        for array_key, dataset_name in self.dataset_names.items():
+            logger.debug("Initializing dataset for %s", array_key)
 
-                assert array_key in self.spec, (
-                    "Asked to store %s, but is not provided upstream." % array_key
+            assert array_key in self.spec, (
+                "Asked to store %s, but is not provided upstream." % array_key
+            )
+            assert array_key in batch.arrays, (
+                "Asked to store %s, but is not part of batch." % array_key
+            )
+
+            array = batch.arrays[array_key]
+            dims = array.spec.roi.dims
+            batch_shape = array.data.shape
+
+            # if a dataset already exists, read its meta-information (if
+            # present)
+            if dataset_name in data_file:
+                offset = self._get_offset(data_file[dataset_name]) or Coordinate(
+                    (0,) * dims
                 )
-                assert array_key in batch.arrays, (
-                    "Asked to store %s, but is not part of batch." % array_key
-                )
 
-                array = batch.arrays[array_key]
-                dims = array.spec.roi.dims
-                batch_shape = array.data.shape
+            else:
+                provided_roi = self.spec[array_key].roi
 
-                # if a dataset already exists, read its meta-information (if
-                # present)
-                if dataset_name in data_file:
-                    offset = self._get_offset(data_file[dataset_name]) or Coordinate(
-                        (0,) * dims
+                if provided_roi is None:
+                    raise RuntimeError(
+                        "Dataset %s does not exist in %s, and no ROI is "
+                        "provided for %s. I don't know how to initialize "
+                        "the dataset." % (dataset_name, self.store, array_key)
                     )
 
+                offset = provided_roi.offset
+                voxel_size = array.spec.voxel_size
+                data_shape = provided_roi.shape // voxel_size
+
+                logger.debug("Shape in voxels: %s", data_shape)
+                # add channel dimensions (if present)
+                data_shape = batch_shape[:-dims] + data_shape
+                logger.debug("Shape with channel dimensions: %s", data_shape)
+
+                if array_key in self.dataset_dtypes:
+                    dtype = self.dataset_dtypes[array_key]
                 else:
-                    provided_roi = self.spec[array_key].roi
-
-                    if provided_roi is None:
-                        raise RuntimeError(
-                            "Dataset %s does not exist in %s, and no ROI is "
-                            "provided for %s. I don't know how to initialize "
-                            "the dataset." % (dataset_name, self.store, array_key)
-                        )
-
-                    offset = provided_roi.offset
-                    voxel_size = array.spec.voxel_size
-                    data_shape = provided_roi.shape // voxel_size
-
-                    logger.debug("Shape in voxels: %s", data_shape)
-                    # add channel dimensions (if present)
-                    data_shape = batch_shape[:-dims] + data_shape
-                    logger.debug("Shape with channel dimensions: %s", data_shape)
-
-                    if array_key in self.dataset_dtypes:
-                        dtype = self.dataset_dtypes[array_key]
-                    else:
-                        dtype = batch.arrays[array_key].data.dtype
-
-                    logger.debug(
-                        "create_dataset: %s, %s, %s, %s, offset=%s, resolution=%s",
-                        dataset_name,
-                        data_shape,
-                        self.compression_type,
-                        dtype,
-                        offset,
-                        voxel_size,
-                    )
-
-                    dataset = data_file.create_dataset(
-                        name=dataset_name,
-                        shape=data_shape,
-                        compression=self.compression_type,
-                        dtype=dtype,
-                    )
-
-                    self._set_offset(dataset, offset)
-                    self._set_voxel_size(dataset, voxel_size)
+                    dtype = batch.arrays[array_key].data.dtype
 
                 logger.debug(
-                    "%s (%s in %s) has offset %s",
-                    array_key,
+                    "create_dataset: %s, %s, %s, %s, offset=%s, resolution=%s",
                     dataset_name,
-                    self.store,
+                    data_shape,
+                    self.compression_type,
+                    dtype,
                     offset,
+                    voxel_size,
                 )
-                self.dataset_offsets[array_key] = offset
+
+                compressors = self._get_compressors()
+                dataset = data_file.create_array(
+                    name=dataset_name,
+                    shape=data_shape,
+                    dtype=dtype,
+                    compressors=compressors,
+                )
+
+                self._set_offset(dataset, offset)
+                self._set_voxel_size(dataset, voxel_size)
+
+            logger.debug(
+                "%s (%s in %s) has offset %s",
+                array_key,
+                dataset_name,
+                self.store,
+                offset,
+            )
+            self.dataset_offsets[array_key] = offset
 
     def process(self, batch, request):
         if not self.dataset_offsets:
             self.init_datasets(batch)
 
-        with self._open_file(self.store) as data_file:
-            for array_key, dataset_name in self.dataset_names.items():
-                dataset = data_file[dataset_name]
+        data_file = self._open_file(self.store)
+        for array_key, dataset_name in self.dataset_names.items():
+            dataset = data_file[dataset_name]
 
-                array_roi = batch.arrays[array_key].spec.roi
-                voxel_size = self.spec[array_key].voxel_size
-                dims = array_roi.dims
-                channel_slices = (slice(None),) * max(0, len(dataset.shape) - dims)
+            array_roi = batch.arrays[array_key].spec.roi
+            voxel_size = self.spec[array_key].voxel_size
+            dims = array_roi.dims
+            channel_slices = (slice(None),) * max(0, len(dataset.shape) - dims)
 
-                dataset_roi = Roi(
-                    self.dataset_offsets[array_key],
-                    Coordinate(dataset.shape[-dims:]) * voxel_size,
+            dataset_roi = Roi(
+                self.dataset_offsets[array_key],
+                Coordinate(dataset.shape[-dims:]) * voxel_size,
+            )
+            common_roi = array_roi.intersect(dataset_roi)
+
+            if common_roi.empty:
+                logger.warning(
+                    "array %s with ROI %s lies outside of dataset ROI %s, "
+                    "skipping writing" % (array_key, array_roi, dataset_roi)
                 )
-                common_roi = array_roi.intersect(dataset_roi)
+                continue
 
-                if common_roi.empty:
-                    logger.warn(
-                        "array %s with ROI %s lies outside of dataset ROI %s, "
-                        "skipping writing" % (array_key, array_roi, dataset_roi)
-                    )
-                    continue
+            dataset_voxel_roi = (
+                common_roi - self.dataset_offsets[array_key]
+            ) // voxel_size
+            dataset_voxel_slices = dataset_voxel_roi.to_slices()
+            array_voxel_roi = (common_roi - array_roi.offset) // voxel_size
+            array_voxel_slices = array_voxel_roi.to_slices()
 
-                dataset_voxel_roi = (
-                    common_roi - self.dataset_offsets[array_key]
-                ) // voxel_size
-                dataset_voxel_slices = dataset_voxel_roi.to_slices()
-                array_voxel_roi = (common_roi - array_roi.offset) // voxel_size
-                array_voxel_slices = array_voxel_roi.to_slices()
+            logger.debug(
+                "writing %s to voxel coordinates %s" % (array_key, dataset_voxel_roi)
+            )
 
-                logger.debug(
-                    "writing %s to voxel coordinates %s"
-                    % (array_key, dataset_voxel_roi)
-                )
-
-                data = batch.arrays[array_key].data[channel_slices + array_voxel_slices]
-                dataset[channel_slices + dataset_voxel_slices] = data
+            data = batch.arrays[array_key].data[channel_slices + array_voxel_slices]
+            dataset[channel_slices + dataset_voxel_slices] = data

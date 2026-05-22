@@ -215,6 +215,7 @@ class DefectAugment(BatchFilter):
                 raw.data[section_selector] = section
 
             elif augmentation_type == "artifact":
+                assert self.artifact_source is not None
                 section = raw.data[section_selector]
 
                 alpha_voxel_size = self.artifact_source.spec[

@@ -27,6 +27,7 @@ def test_padding(mode):
     graph_key = GraphKey("TEST_GRAPH")
 
     array_spec = ArraySpec(roi=Roi((200, 20, 20), (600, 60, 60)), voxel_size=(20, 2, 2))
+    assert array_spec.roi is not None and array_spec.voxel_size is not None
     roi_voxel = array_spec.roi / array_spec.voxel_size
     data = np.zeros(roi_voxel.shape, dtype=np.uint32)
     data[:, ::2] = 100

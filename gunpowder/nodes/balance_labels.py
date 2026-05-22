@@ -132,13 +132,14 @@ class BalanceLabels(BatchFilter):
         # set error_scale to 0 in masked-out areas
         for key in self.masks:
             mask = batch.arrays[key]
-            assert (
-                labels.data.shape == mask.data.shape
-            ), "Shape of mask %s %s does not match %s %s" % (
-                mask,
-                mask.data.shape,
-                self.labels,
-                labels.data.shape,
+            assert labels.data.shape == mask.data.shape, (
+                "Shape of mask %s %s does not match %s %s"
+                % (
+                    mask,
+                    mask.data.shape,
+                    self.labels,
+                    labels.data.shape,
+                )
             )
             error_scale *= mask.data
 

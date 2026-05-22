@@ -53,15 +53,20 @@ class Crop(BatchFilter):
 
     def setup(self):
         spec = self.spec[self.key]
+        assert spec.roi is not None
 
         if self.roi is not None:
-            assert spec.roi.contains(
-                self.roi
-            ), "Crop ROI is not contained in upstream ROI."
+            assert spec.roi.contains(self.roi), (
+                "Crop ROI is not contained in upstream ROI."
+            )
 
             cropped_roi = self.roi
 
         else:
+            assert (
+                self.fraction_negative is not None
+                and self.fraction_positive is not None
+            )
             total_fraction = tuple(
                 n + p for n, p in zip(self.fraction_negative, self.fraction_positive)
             )
