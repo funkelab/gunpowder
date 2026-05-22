@@ -1,19 +1,18 @@
 import logging
 import warnings
-from collections.abc import MutableMapping
-from typing import Union
-
 import numpy as np
+import zarr
+from zarr.abc.store import Store
 
 from gunpowder.array import Array
 from gunpowder.array_spec import ArraySpec
 from gunpowder.batch import Batch
 from gunpowder.coordinate import Coordinate
-from gunpowder.ext import ZarrFile
 from gunpowder.profiling import Timing
 from gunpowder.roi import Roi
 
 from .batch_provider import BatchProvider
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ class ZarrSource(BatchProvider):
 
     def __init__(
         self,
-        store: Union[MutableMapping, str] = None,
+        store: Store | str | None = None,
         datasets=None,
         array_specs=None,
         channels_first=True,
