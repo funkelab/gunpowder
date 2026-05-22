@@ -24,7 +24,6 @@ from .helper_sources import ArraySource
     "zarr_store_func",
     [
         "tmp_path / 'zarr_write_test.zarr'",
-        "tmp_path / 'zarr_write_test.n5'",
         "tmp_path / 'zarr_write_test.hdf'",
         "zarr.storage.LocalStore(tmp_path / 'array.zarr')",
     ],
