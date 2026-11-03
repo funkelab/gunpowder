@@ -1,20 +1,16 @@
-name: Publish
-
+name: publish
 on:
   push:
-    tags: "*"
-
+    tags: ["v*"]
 jobs:
-  build-n-publish:
-    name: Build and publish to PyPI
+  pypi:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # ready for trusted publishing once a PyPI publisher is registered
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - name: Build
-        run: uv build
-      - name: Publish to PyPI
-        if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: astral-sh/setup-uv@v6
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}

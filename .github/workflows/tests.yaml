@@ -1,0 +1,26 @@
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    name: py${{ matrix.python-version }} ${{ matrix.resolution }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # requires-python floor and newest
+        python-version: ["3.12", "3.14"]
+        # lowest-direct is not run: the scikit-image>=0.7 floor has no wheels
+        # for these interpreters and the sdist does not build.
+        resolution: ["highest"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --resolution ${{ matrix.resolution }}
+      - run: uv run pytest --cov=gunpowder --cov-report=term-missing --cov-report=xml
+      - uses: codecov/codecov-action@v5

@@ -1,6 +1,6 @@
 ![gunpowder](docs/source/img/gunpowder.svg)
 
-[![Tests](https://github.com/funkey/gunpowder/actions/workflows/test.yml/badge.svg)](https://github.com/funkey/gunpowder/actions/workflows/test.yml)
+[![Tests](https://github.com/funkey/gunpowder/actions/workflows/tests.yaml/badge.svg)](https://github.com/funkey/gunpowder/actions/workflows/tests.yaml)
 
 A library to facilitate machine learning on large, multi-dimensional images.
 
